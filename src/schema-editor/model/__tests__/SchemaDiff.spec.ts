@@ -108,7 +108,6 @@ describe('SchemaDiff', () => {
 
       const nameNode = tree.root().child('name') as StringNode;
       nameNode.setDefaultValue('modified');
-      tree.notifyChange();
 
       const patches = diff.getPatches();
 

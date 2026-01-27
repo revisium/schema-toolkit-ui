@@ -89,8 +89,6 @@ export class SchemaEngine {
   }
 
   public get isDirty(): boolean {
-    const _ = this._tree.version;
-    void _;
     return this._diff.isDirty();
   }
 
@@ -103,20 +101,15 @@ export class SchemaEngine {
   }
 
   public get validationErrors(): readonly ValidationError[] {
-    const _ = this._tree.version;
-    void _;
     return this._schemaValidator.validate(this._tree.root());
   }
 
   public validateFormulas(): FormulaValidationError[] {
-    const _ = this._tree.version;
-    void _;
     return this._formulaValidator.validate();
   }
 
   public markAsSaved(): void {
     this._diff.markAsSaved(this.getPlainSchema());
-    this._tree.notifyChange();
   }
 
   public revert(): void {
@@ -179,7 +172,6 @@ export class SchemaEngine {
       deprecated:
         'deprecated' in metadata ? metadata.deprecated : currentMeta.deprecated,
     });
-    this._tree.notifyChange();
   }
 
   public updateDefaultValue(
@@ -191,7 +183,6 @@ export class SchemaEngine {
       return;
     }
     node.setDefaultValue(value);
-    this._tree.notifyChange();
   }
 
   public addChild(parentId: string, name: string): SchemaNode {
@@ -266,7 +257,6 @@ export class SchemaEngine {
       return false;
     }
     (node as StringNode).setForeignKey(tableId || undefined);
-    this._tree.notifyChange();
     return true;
   }
 
@@ -288,7 +278,6 @@ export class SchemaEngine {
       } else {
         this._tree.unregisterFormula(nodeId);
       }
-      this._tree.notifyChange();
       return { success: true };
     } catch (error) {
       const errorMessage =

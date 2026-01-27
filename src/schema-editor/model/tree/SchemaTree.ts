@@ -17,7 +17,6 @@ export class SchemaTree implements NodeTree {
   private readonly mutator: TreeMutator;
   private readonly formulaIndex: FormulaDependencyIndex;
   private _rootNode: SchemaNode;
-  private _version = 0;
 
   constructor(rootNode: SchemaNode) {
     this._rootNode = rootNode;
@@ -27,14 +26,6 @@ export class SchemaTree implements NodeTree {
     this.rebuildIndex();
 
     makeAutoObservable(this, {}, { autoBind: true });
-  }
-
-  public get version(): number {
-    return this._version;
-  }
-
-  public notifyChange(): void {
-    this.incrementVersion();
   }
 
   public root(): SchemaNode {
@@ -226,11 +217,6 @@ export class SchemaTree implements NodeTree {
 
   private rebuildIndex(): void {
     this.nodeIndex.rebuild(this._rootNode);
-    this.incrementVersion();
-  }
-
-  private incrementVersion(): void {
-    this._version++;
   }
 
   private collectFormulaDependents(

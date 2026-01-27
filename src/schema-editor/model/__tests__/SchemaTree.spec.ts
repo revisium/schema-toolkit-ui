@@ -364,34 +364,6 @@ describe('SchemaTree', () => {
     });
   });
 
-  describe('version', () => {
-    it('increments on addChildTo', () => {
-      const tree = createTree({ name: stringField() });
-      const v1 = tree.version;
-
-      tree.addChildTo(tree.root().id(), NodeFactory.string('new'));
-
-      expect(tree.version).toBeGreaterThan(v1);
-    });
-
-    it('increments on renameNode', () => {
-      const tree = createTree({ name: stringField() });
-      const v1 = tree.version;
-
-      tree.renameNode(tree.root().children()[0].id(), 'newName');
-
-      expect(tree.version).toBeGreaterThan(v1);
-    });
-
-    it('increments on notifyChange', () => {
-      const tree = createTree({ name: stringField() });
-      const v1 = tree.version;
-
-      tree.notifyChange();
-
-      expect(tree.version).toBeGreaterThan(v1);
-    });
-  });
 });
 
 describe('SchemaParser', () => {
