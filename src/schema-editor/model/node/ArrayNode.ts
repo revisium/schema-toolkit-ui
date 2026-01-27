@@ -42,7 +42,7 @@ export class ArrayNode implements SchemaNode {
     return this._metadata;
   }
 
-  child(): SchemaNode {
+  property(): SchemaNode {
     return NULL_NODE;
   }
 
@@ -50,7 +50,7 @@ export class ArrayNode implements SchemaNode {
     return this._items;
   }
 
-  children(): readonly SchemaNode[] {
+  properties(): readonly SchemaNode[] {
     return [this._items];
   }
 
@@ -102,19 +102,19 @@ export class ArrayNode implements SchemaNode {
     this._metadata = meta;
   }
 
-  addChild(): void {
+  addProperty(): void {
     // No-op for ArrayNode
   }
 
-  removeChild(): void {
+  removeProperty(): void {
     // No-op for ArrayNode
   }
 
-  removeChildById(): void {
+  removePropertyById(): void {
     // No-op for ArrayNode
   }
 
-  replaceChild(): void {
+  replaceProperty(): void {
     // No-op for ArrayNode
   }
 

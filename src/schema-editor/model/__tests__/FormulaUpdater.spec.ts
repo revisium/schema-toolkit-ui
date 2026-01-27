@@ -32,7 +32,7 @@ const createTreeWithFormulas = (properties: Record<string, unknown>) => {
 const findNode = (tree: SchemaTree, name: string) => {
   return tree
     .root()
-    .children()
+    .properties()
     .find((c) => c.name() === name)!;
 };
 
@@ -42,7 +42,7 @@ const findNestedNode = (
   childName: string,
 ) => {
   const parent = findNode(tree, parentName);
-  return parent.children().find((c) => c.name() === childName)!;
+  return parent.properties().find((c) => c.name() === childName)!;
 };
 
 describe('FormulaUpdater', () => {
@@ -246,7 +246,7 @@ describe('FormulaUpdater', () => {
       const updater = new FormulaUpdater(tree);
       const priceNode = findNode(tree, 'price');
 
-      tree.root().removeChild('price');
+      tree.root().removeProperty('price');
 
       const updates = updater.updateFormulasOnRename(
         priceNode.id(),

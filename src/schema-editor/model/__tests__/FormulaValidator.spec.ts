@@ -43,7 +43,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const totalNode = root.child('total');
+      const totalNode = root.property('total');
       const formula = new ParsedFormula(
         tree,
         totalNode.id(),
@@ -74,7 +74,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const totalNode = root.child('total');
+      const totalNode = root.property('total');
       const formula = new ParsedFormula(
         tree,
         totalNode.id(),
@@ -118,7 +118,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const totalNode = root.child('item').child('total');
+      const totalNode = root.property('item').property('total');
       const formula = new ParsedFormula(
         tree,
         totalNode.id(),
@@ -163,7 +163,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const computedNode = root.child('items').items().child('computed');
+      const computedNode = root.property('items').items().property('computed');
       const formula = new ParsedFormula(tree, computedNode.id(), 'price + tax');
       computedNode.setFormula(formula);
       tree.registerFormula(computedNode.id(), formula);
@@ -194,7 +194,7 @@ describe('FormulaValidator', () => {
       const tree = new SchemaTree(root);
       const validator = new FormulaValidator(tree);
 
-      const nameNode = root.child('name');
+      const nameNode = root.property('name');
       const error = validator.validateNode(nameNode.id());
 
       expect(error).toBeNull();
@@ -215,7 +215,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const bNode = root.child('b');
+      const bNode = root.property('b');
       const formula = new ParsedFormula(tree, bNode.id(), 'a + 1');
       bNode.setFormula(formula);
       tree.registerFormula(bNode.id(), formula);
@@ -241,7 +241,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const resultNode = root.child('result');
+      const resultNode = root.property('result');
       const formula = new ParsedFormula(tree, resultNode.id(), 'source + 1');
       resultNode.setFormula(formula);
       tree.registerFormula(resultNode.id(), formula);
@@ -272,7 +272,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const xNode = root.child('x');
+      const xNode = root.property('x');
       const formula = new ParsedFormula(tree, xNode.id(), 'dep * 2');
       xNode.setFormula(formula);
       tree.registerFormula(xNode.id(), formula);
@@ -300,7 +300,7 @@ describe('FormulaValidator', () => {
       const root = parser.parse(schema);
       const tree = new SchemaTree(root);
 
-      const xNode = root.child('x');
+      const xNode = root.property('x');
       const formula = new ParsedFormula(tree, xNode.id(), 'dep * 2');
       xNode.setFormula(formula);
       tree.registerFormula(xNode.id(), formula);

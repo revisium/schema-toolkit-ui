@@ -31,7 +31,7 @@ export class SchemaValidator {
     }
 
     if (node.isObject()) {
-      const children = node.children();
+      const children = node.properties();
       const nameSet = new Set<string>();
       for (const child of children) {
         const name = child.name();

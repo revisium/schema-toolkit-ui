@@ -17,8 +17,8 @@ describe('TreeMutator', () => {
 
       mutator.setNodeAt(root, new SimplePath('field'), newNode);
 
-      expect(root.children()).toHaveLength(1);
-      expect(root.child('field').name()).toBe('field');
+      expect(root.properties()).toHaveLength(1);
+      expect(root.property('field').name()).toBe('field');
     });
 
     it('adds node at nested path', () => {
@@ -28,8 +28,8 @@ describe('TreeMutator', () => {
 
       mutator.setNodeAt(root, new SimplePath('parent.value'), newNode);
 
-      expect(child.children()).toHaveLength(1);
-      expect(child.child('value').name()).toBe('value');
+      expect(child.properties()).toHaveLength(1);
+      expect(child.property('value').name()).toBe('value');
     });
 
     it('throws error when trying to replace root', () => {
@@ -59,7 +59,7 @@ describe('TreeMutator', () => {
 
       mutator.setNodeAt(root, new SimplePath('items[*].name'), newField);
 
-      expect(itemsNode.child('name').name()).toBe('name');
+      expect(itemsNode.property('name').name()).toBe('name');
     });
 
     it('does nothing if intermediate path does not exist', () => {
@@ -68,7 +68,7 @@ describe('TreeMutator', () => {
 
       mutator.setNodeAt(root, new SimplePath('nonexistent.value'), newNode);
 
-      expect(root.children()).toHaveLength(0);
+      expect(root.properties()).toHaveLength(0);
     });
 
     it('replaces existing node preserving order', () => {
@@ -80,10 +80,10 @@ describe('TreeMutator', () => {
       const replacement = NodeFactory.number('second');
       mutator.setNodeAt(root, new SimplePath('second'), replacement);
 
-      expect(root.children()).toHaveLength(3);
-      const names = root.children().map((c) => c.name());
+      expect(root.properties()).toHaveLength(3);
+      const names = root.properties().map((c) => c.name());
       expect(names).toEqual(['first', 'second', 'third']);
-      expect(root.child('second').nodeType()).toBe('number');
+      expect(root.property('second').nodeType()).toBe('number');
     });
   });
 
@@ -94,7 +94,7 @@ describe('TreeMutator', () => {
 
       mutator.removeNodeAt(root, new SimplePath('field'));
 
-      expect(root.children()).toHaveLength(0);
+      expect(root.properties()).toHaveLength(0);
     });
 
     it('removes node at nested path', () => {
@@ -104,8 +104,8 @@ describe('TreeMutator', () => {
 
       mutator.removeNodeAt(root, new SimplePath('parent.value'));
 
-      expect(parent.children()).toHaveLength(0);
-      expect(root.child('parent').children()).toHaveLength(0);
+      expect(parent.properties()).toHaveLength(0);
+      expect(root.property('parent').properties()).toHaveLength(0);
     });
 
     it('throws error when trying to remove root', () => {
@@ -134,7 +134,7 @@ describe('TreeMutator', () => {
 
       mutator.removeNodeAt(root, new SimplePath('items[*].name'));
 
-      expect(itemsNode.children()).toHaveLength(0);
+      expect(itemsNode.properties()).toHaveLength(0);
     });
 
     it('does nothing if path does not exist', () => {
@@ -142,7 +142,7 @@ describe('TreeMutator', () => {
 
       mutator.removeNodeAt(root, new SimplePath('nonexistent'));
 
-      expect(root.children()).toHaveLength(0);
+      expect(root.properties()).toHaveLength(0);
     });
 
     it('does nothing if intermediate node does not exist', () => {
@@ -150,7 +150,7 @@ describe('TreeMutator', () => {
 
       mutator.removeNodeAt(root, new SimplePath('parent.child'));
 
-      expect(root.children()).toHaveLength(0);
+      expect(root.properties()).toHaveLength(0);
     });
 
     it('does nothing if array items do not exist', () => {

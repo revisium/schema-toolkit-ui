@@ -62,7 +62,7 @@ export class BooleanNode implements SchemaNode {
     return this._formula !== undefined;
   }
 
-  child(): SchemaNode {
+  property(): SchemaNode {
     return NULL_NODE;
   }
 
@@ -70,7 +70,7 @@ export class BooleanNode implements SchemaNode {
     return NULL_NODE;
   }
 
-  children(): readonly SchemaNode[] {
+  properties(): readonly SchemaNode[] {
     return [];
   }
 
@@ -118,19 +118,19 @@ export class BooleanNode implements SchemaNode {
     this._formula = formula;
   }
 
-  addChild(): void {
+  addProperty(): void {
     // No-op for BooleanNode
   }
 
-  removeChild(): void {
+  removeProperty(): void {
     // No-op for BooleanNode
   }
 
-  removeChildById(): void {
+  removePropertyById(): void {
     // No-op for BooleanNode
   }
 
-  replaceChild(): void {
+  replaceProperty(): void {
     // No-op for BooleanNode
   }
 

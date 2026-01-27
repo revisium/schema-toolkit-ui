@@ -20,7 +20,7 @@ class NullNodeImpl implements SchemaNode {
     return EMPTY_METADATA;
   }
 
-  child(): SchemaNode {
+  property(): SchemaNode {
     return this;
   }
 
@@ -28,7 +28,7 @@ class NullNodeImpl implements SchemaNode {
     return this;
   }
 
-  children(): readonly SchemaNode[] {
+  properties(): readonly SchemaNode[] {
     return [];
   }
 
@@ -80,19 +80,19 @@ class NullNodeImpl implements SchemaNode {
     throw new Error('Cannot modify null node');
   }
 
-  addChild(): void {
+  addProperty(): void {
     throw new Error('Cannot modify null node');
   }
 
-  removeChild(): void {
+  removeProperty(): void {
     throw new Error('Cannot modify null node');
   }
 
-  removeChildById(): void {
+  removePropertyById(): void {
     throw new Error('Cannot modify null node');
   }
 
-  replaceChild(): void {
+  replaceProperty(): void {
     throw new Error('Cannot modify null node');
   }
 

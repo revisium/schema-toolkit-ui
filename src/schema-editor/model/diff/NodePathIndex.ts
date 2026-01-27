@@ -83,7 +83,7 @@ export class NodePathIndex {
     }
 
     if (node.isObject()) {
-      for (const child of node.children()) {
+      for (const child of node.properties()) {
         const childPath = this.navigator.buildChildPath(path, child.name());
         this.collectNodePaths(child, childPath, map);
       }

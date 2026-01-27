@@ -49,7 +49,7 @@ export const objectTypeDescriptor: TypeDescriptor<
     const properties: Record<string, JsonSchemaType> = {};
     const required: string[] = [];
 
-    for (const child of node.children()) {
+    for (const child of node.properties()) {
       const childName = child.name();
       properties[childName] = context.serialize(child);
       required.push(childName);

@@ -8,9 +8,9 @@ export interface SchemaNode {
   nodeType(): NodeType;
   metadata(): NodeMetadata;
 
-  child(name: string): SchemaNode;
+  property(name: string): SchemaNode;
   items(): SchemaNode;
-  children(): readonly SchemaNode[];
+  properties(): readonly SchemaNode[];
 
   isObject(): boolean;
   isArray(): boolean;
@@ -30,9 +30,9 @@ export interface SchemaNode {
   setFormula(formula: Formula | undefined): void;
   setDefaultValue(value: unknown): void;
 
-  addChild(node: SchemaNode): void;
-  removeChild(name: string): void;
-  removeChildById(id: string): void;
-  replaceChild(name: string, node: SchemaNode): void;
+  addProperty(node: SchemaNode): void;
+  removeProperty(name: string): void;
+  removePropertyById(id: string): void;
+  replaceProperty(name: string, node: SchemaNode): void;
   setItems(node: SchemaNode): void;
 }

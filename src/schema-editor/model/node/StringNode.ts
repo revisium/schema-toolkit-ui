@@ -100,7 +100,7 @@ export class StringNode implements SchemaNode {
     return this._formula !== undefined;
   }
 
-  child(): SchemaNode {
+  property(): SchemaNode {
     return NULL_NODE;
   }
 
@@ -108,7 +108,7 @@ export class StringNode implements SchemaNode {
     return NULL_NODE;
   }
 
-  children(): readonly SchemaNode[] {
+  properties(): readonly SchemaNode[] {
     return [];
   }
 
@@ -168,19 +168,19 @@ export class StringNode implements SchemaNode {
     this._formula = formula;
   }
 
-  addChild(): void {
+  addProperty(): void {
     // No-op for StringNode
   }
 
-  removeChild(): void {
+  removeProperty(): void {
     // No-op for StringNode
   }
 
-  removeChildById(): void {
+  removePropertyById(): void {
     // No-op for StringNode
   }
 
-  replaceChild(): void {
+  replaceProperty(): void {
     // No-op for StringNode
   }
 

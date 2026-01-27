@@ -18,8 +18,8 @@ describe('ObjectNode', () => {
     it('creates node with children', () => {
       const child = new StringNode('str-1', 'name');
       const node = new ObjectNode('obj-1', 'user', [child]);
-      expect(node.children()).toHaveLength(1);
-      expect(node.children()[0]).toBe(child);
+      expect(node.properties()).toHaveLength(1);
+      expect(node.properties()[0]).toBe(child);
     });
 
     it('creates node with metadata', () => {
@@ -63,12 +63,12 @@ describe('ObjectNode', () => {
     it('child() returns matching child by name', () => {
       const child = new StringNode('str-1', 'email');
       const node = new ObjectNode('obj-1', 'user', [child]);
-      expect(node.child('email')).toBe(child);
+      expect(node.property('email')).toBe(child);
     });
 
     it('child() returns NULL_NODE for non-existent child', () => {
       const node = new ObjectNode('obj-1', 'user');
-      expect(node.child('missing').isNull()).toBe(true);
+      expect(node.property('missing').isNull()).toBe(true);
     });
 
     it('items() returns NULL_NODE', () => {
@@ -94,53 +94,53 @@ describe('ObjectNode', () => {
     it('addChild adds child to end', () => {
       const node = new ObjectNode('obj-1', 'user');
       const child = new StringNode('str-1', 'name');
-      node.addChild(child);
-      expect(node.children()).toContain(child);
+      node.addProperty(child);
+      expect(node.properties()).toContain(child);
     });
 
     it('removeChild removes child by name', () => {
       const child = new StringNode('str-1', 'name');
       const node = new ObjectNode('obj-1', 'user', [child]);
-      node.removeChild('name');
-      expect(node.children()).toHaveLength(0);
+      node.removeProperty('name');
+      expect(node.properties()).toHaveLength(0);
     });
 
     it('removeChild does nothing for non-existent name', () => {
       const child = new StringNode('str-1', 'name');
       const node = new ObjectNode('obj-1', 'user', [child]);
-      node.removeChild('missing');
-      expect(node.children()).toHaveLength(1);
+      node.removeProperty('missing');
+      expect(node.properties()).toHaveLength(1);
     });
 
-    it('removeChildById removes child by id', () => {
+    it('removePropertyById removes child by id', () => {
       const child = new StringNode('str-1', 'name');
       const node = new ObjectNode('obj-1', 'user', [child]);
-      node.removeChildById('str-1');
-      expect(node.children()).toHaveLength(0);
+      node.removePropertyById('str-1');
+      expect(node.properties()).toHaveLength(0);
     });
 
-    it('removeChildById does nothing for non-existent id', () => {
+    it('removePropertyById does nothing for non-existent id', () => {
       const child = new StringNode('str-1', 'name');
       const node = new ObjectNode('obj-1', 'user', [child]);
-      node.removeChildById('missing');
-      expect(node.children()).toHaveLength(1);
+      node.removePropertyById('missing');
+      expect(node.properties()).toHaveLength(1);
     });
 
     it('replaceChild replaces existing child', () => {
       const child1 = new StringNode('str-1', 'name');
       const child2 = new NumberNode('num-1', 'name');
       const node = new ObjectNode('obj-1', 'user', [child1]);
-      node.replaceChild('name', child2);
-      expect(node.children()[0]).toBe(child2);
+      node.replaceProperty('name', child2);
+      expect(node.properties()[0]).toBe(child2);
     });
 
     it('replaceChild does nothing for non-existent name', () => {
       const child1 = new StringNode('str-1', 'name');
       const child2 = new NumberNode('num-1', 'other');
       const node = new ObjectNode('obj-1', 'user', [child1]);
-      node.replaceChild('missing', child2);
-      expect(node.children()).toHaveLength(1);
-      expect(node.children()[0]).toBe(child1);
+      node.replaceProperty('missing', child2);
+      expect(node.properties()).toHaveLength(1);
+      expect(node.properties()[0]).toBe(child1);
     });
 
     it('setChildren replaces all children', () => {
@@ -148,8 +148,8 @@ describe('ObjectNode', () => {
       const child2 = new NumberNode('num-1', 'age');
       const node = new ObjectNode('obj-1', 'user', [child1]);
       node.setChildren([child2]);
-      expect(node.children()).toHaveLength(1);
-      expect(node.children()[0]).toBe(child2);
+      expect(node.properties()).toHaveLength(1);
+      expect(node.properties()[0]).toBe(child2);
     });
 
     it('setItems is no-op', () => {
@@ -222,7 +222,7 @@ describe('ArrayNode', () => {
   describe('child access', () => {
     it('child() returns NULL_NODE', () => {
       const node = new ArrayNode('arr-1', 'tags', createItemsNode());
-      expect(node.child().isNull()).toBe(true);
+      expect(node.property().isNull()).toBe(true);
     });
 
     it('items() returns items node', () => {
@@ -234,7 +234,7 @@ describe('ArrayNode', () => {
     it('children() returns array with items', () => {
       const items = createItemsNode();
       const node = new ArrayNode('arr-1', 'tags', items);
-      expect(node.children()).toEqual([items]);
+      expect(node.properties()).toEqual([items]);
     });
   });
 
@@ -262,28 +262,28 @@ describe('ArrayNode', () => {
 
     it('addChild is no-op', () => {
       const node = new ArrayNode('arr-1', 'tags', createItemsNode());
-      node.addChild();
-      expect(node.children()).toHaveLength(1);
+      node.addProperty();
+      expect(node.properties()).toHaveLength(1);
     });
 
     it('removeChild is no-op', () => {
       const items = createItemsNode();
       const node = new ArrayNode('arr-1', 'tags', items);
-      node.removeChild();
+      node.removeProperty();
       expect(node.items()).toBe(items);
     });
 
-    it('removeChildById is no-op', () => {
+    it('removePropertyById is no-op', () => {
       const items = createItemsNode();
       const node = new ArrayNode('arr-1', 'tags', items);
-      node.removeChildById();
+      node.removePropertyById();
       expect(node.items()).toBe(items);
     });
 
     it('replaceChild is no-op', () => {
       const items = createItemsNode();
       const node = new ArrayNode('arr-1', 'tags', items);
-      node.replaceChild();
+      node.replaceProperty();
       expect(node.items()).toBe(items);
     });
   });
@@ -361,7 +361,7 @@ describe('StringNode', () => {
     const node = new StringNode('str-1', 'email');
 
     it('child() returns NULL_NODE', () => {
-      expect(node.child().isNull()).toBe(true);
+      expect(node.property().isNull()).toBe(true);
     });
 
     it('items() returns NULL_NODE', () => {
@@ -369,7 +369,7 @@ describe('StringNode', () => {
     });
 
     it('children() returns empty array', () => {
-      expect(node.children()).toEqual([]);
+      expect(node.properties()).toEqual([]);
     });
   });
 
@@ -449,26 +449,26 @@ describe('StringNode', () => {
 
     it('addChild is no-op', () => {
       const node = new StringNode('str-1', 'email');
-      node.addChild();
-      expect(node.children()).toEqual([]);
+      node.addProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('removeChild is no-op', () => {
       const node = new StringNode('str-1', 'email');
-      node.removeChild();
-      expect(node.children()).toEqual([]);
+      node.removeProperty();
+      expect(node.properties()).toEqual([]);
     });
 
-    it('removeChildById is no-op', () => {
+    it('removePropertyById is no-op', () => {
       const node = new StringNode('str-1', 'email');
-      node.removeChildById();
-      expect(node.children()).toEqual([]);
+      node.removePropertyById();
+      expect(node.properties()).toEqual([]);
     });
 
     it('replaceChild is no-op', () => {
       const node = new StringNode('str-1', 'email');
-      node.replaceChild();
-      expect(node.children()).toEqual([]);
+      node.replaceProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('setItems is no-op', () => {
@@ -541,7 +541,7 @@ describe('NumberNode', () => {
     const node = new NumberNode('num-1', 'age');
 
     it('child() returns NULL_NODE', () => {
-      expect(node.child().isNull()).toBe(true);
+      expect(node.property().isNull()).toBe(true);
     });
 
     it('items() returns NULL_NODE', () => {
@@ -549,7 +549,7 @@ describe('NumberNode', () => {
     });
 
     it('children() returns empty array', () => {
-      expect(node.children()).toEqual([]);
+      expect(node.properties()).toEqual([]);
     });
   });
 
@@ -597,26 +597,26 @@ describe('NumberNode', () => {
 
     it('addChild is no-op', () => {
       const node = new NumberNode('num-1', 'age');
-      node.addChild();
-      expect(node.children()).toEqual([]);
+      node.addProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('removeChild is no-op', () => {
       const node = new NumberNode('num-1', 'age');
-      node.removeChild();
-      expect(node.children()).toEqual([]);
+      node.removeProperty();
+      expect(node.properties()).toEqual([]);
     });
 
-    it('removeChildById is no-op', () => {
+    it('removePropertyById is no-op', () => {
       const node = new NumberNode('num-1', 'age');
-      node.removeChildById();
-      expect(node.children()).toEqual([]);
+      node.removePropertyById();
+      expect(node.properties()).toEqual([]);
     });
 
     it('replaceChild is no-op', () => {
       const node = new NumberNode('num-1', 'age');
-      node.replaceChild();
-      expect(node.children()).toEqual([]);
+      node.replaceProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('setItems is no-op', () => {
@@ -689,7 +689,7 @@ describe('BooleanNode', () => {
     const node = new BooleanNode('bool-1', 'active');
 
     it('child() returns NULL_NODE', () => {
-      expect(node.child().isNull()).toBe(true);
+      expect(node.property().isNull()).toBe(true);
     });
 
     it('items() returns NULL_NODE', () => {
@@ -697,7 +697,7 @@ describe('BooleanNode', () => {
     });
 
     it('children() returns empty array', () => {
-      expect(node.children()).toEqual([]);
+      expect(node.properties()).toEqual([]);
     });
   });
 
@@ -747,26 +747,26 @@ describe('BooleanNode', () => {
 
     it('addChild is no-op', () => {
       const node = new BooleanNode('bool-1', 'active');
-      node.addChild();
-      expect(node.children()).toEqual([]);
+      node.addProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('removeChild is no-op', () => {
       const node = new BooleanNode('bool-1', 'active');
-      node.removeChild();
-      expect(node.children()).toEqual([]);
+      node.removeProperty();
+      expect(node.properties()).toEqual([]);
     });
 
-    it('removeChildById is no-op', () => {
+    it('removePropertyById is no-op', () => {
       const node = new BooleanNode('bool-1', 'active');
-      node.removeChildById();
-      expect(node.children()).toEqual([]);
+      node.removePropertyById();
+      expect(node.properties()).toEqual([]);
     });
 
     it('replaceChild is no-op', () => {
       const node = new BooleanNode('bool-1', 'active');
-      node.replaceChild();
-      expect(node.children()).toEqual([]);
+      node.replaceProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('setItems is no-op', () => {
@@ -841,7 +841,7 @@ describe('RefNode', () => {
     const node = new RefNode('ref-1', 'file', 'File');
 
     it('child() returns NULL_NODE', () => {
-      expect(node.child().isNull()).toBe(true);
+      expect(node.property().isNull()).toBe(true);
     });
 
     it('items() returns NULL_NODE', () => {
@@ -849,7 +849,7 @@ describe('RefNode', () => {
     });
 
     it('children() returns empty array', () => {
-      expect(node.children()).toEqual([]);
+      expect(node.properties()).toEqual([]);
     });
   });
 
@@ -875,26 +875,26 @@ describe('RefNode', () => {
 
     it('addChild is no-op', () => {
       const node = new RefNode('ref-1', 'file', 'File');
-      node.addChild();
-      expect(node.children()).toEqual([]);
+      node.addProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('removeChild is no-op', () => {
       const node = new RefNode('ref-1', 'file', 'File');
-      node.removeChild();
-      expect(node.children()).toEqual([]);
+      node.removeProperty();
+      expect(node.properties()).toEqual([]);
     });
 
-    it('removeChildById is no-op', () => {
+    it('removePropertyById is no-op', () => {
       const node = new RefNode('ref-1', 'file', 'File');
-      node.removeChildById();
-      expect(node.children()).toEqual([]);
+      node.removePropertyById();
+      expect(node.properties()).toEqual([]);
     });
 
     it('replaceChild is no-op', () => {
       const node = new RefNode('ref-1', 'file', 'File');
-      node.replaceChild();
-      expect(node.children()).toEqual([]);
+      node.replaceProperty();
+      expect(node.properties()).toEqual([]);
     });
 
     it('setItems is no-op', () => {

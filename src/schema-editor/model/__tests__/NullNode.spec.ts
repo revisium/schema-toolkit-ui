@@ -48,11 +48,11 @@ describe('NULL_NODE', () => {
     });
 
     it('children returns empty array', () => {
-      expect(NULL_NODE.children()).toEqual([]);
+      expect(NULL_NODE.properties()).toEqual([]);
     });
 
     it('child returns NULL_NODE', () => {
-      expect(NULL_NODE.child('any')).toBe(NULL_NODE);
+      expect(NULL_NODE.property('any')).toBe(NULL_NODE);
     });
 
     it('items returns NULL_NODE', () => {
@@ -74,25 +74,25 @@ describe('NULL_NODE', () => {
     });
 
     it('addChild throws error', () => {
-      expect(() => NULL_NODE.addChild(NULL_NODE)).toThrow(
+      expect(() => NULL_NODE.addProperty(NULL_NODE)).toThrow(
         'Cannot modify null node',
       );
     });
 
     it('removeChild throws error', () => {
-      expect(() => NULL_NODE.removeChild('name')).toThrow(
+      expect(() => NULL_NODE.removeProperty('name')).toThrow(
         'Cannot modify null node',
       );
     });
 
-    it('removeChildById throws error', () => {
-      expect(() => NULL_NODE.removeChildById('id')).toThrow(
+    it('removePropertyById throws error', () => {
+      expect(() => NULL_NODE.removePropertyById('id')).toThrow(
         'Cannot modify null node',
       );
     });
 
     it('replaceChild throws error', () => {
-      expect(() => NULL_NODE.replaceChild('name', NULL_NODE)).toThrow(
+      expect(() => NULL_NODE.replaceProperty('name', NULL_NODE)).toThrow(
         'Cannot modify null node',
       );
     });

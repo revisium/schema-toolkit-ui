@@ -97,7 +97,7 @@ export class SchemaEngine {
     if (!root.isObject()) {
       return false;
     }
-    return root.children().length > 0;
+    return root.properties().length > 0;
   }
 
   public get validationErrors(): readonly ValidationError[] {

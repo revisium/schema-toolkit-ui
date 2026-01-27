@@ -34,7 +34,7 @@ export class TreeNodeIndex {
     this.pathIndex.set(node.id(), path);
 
     if (node.isObject()) {
-      for (const child of node.children()) {
+      for (const child of node.properties()) {
         this.collectNodes(child, path.child(child.name()));
       }
     } else if (node.isArray()) {

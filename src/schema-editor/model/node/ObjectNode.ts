@@ -42,7 +42,7 @@ export class ObjectNode implements SchemaNode {
     return this._metadata;
   }
 
-  child(name: string): SchemaNode {
+  property(name: string): SchemaNode {
     for (const prop of this._children) {
       if (prop.name() === name) {
         return prop;
@@ -55,7 +55,7 @@ export class ObjectNode implements SchemaNode {
     return NULL_NODE;
   }
 
-  children(): readonly SchemaNode[] {
+  properties(): readonly SchemaNode[] {
     return this._children;
   }
 
@@ -107,25 +107,25 @@ export class ObjectNode implements SchemaNode {
     this._metadata = meta;
   }
 
-  addChild(node: SchemaNode): void {
+  addProperty(node: SchemaNode): void {
     this._children.push(node);
   }
 
-  removeChild(name: string): void {
+  removeProperty(name: string): void {
     const index = this._children.findIndex((c) => c.name() === name);
     if (index >= 0) {
       this._children.splice(index, 1);
     }
   }
 
-  removeChildById(id: string): void {
+  removePropertyById(id: string): void {
     const index = this._children.findIndex((c) => c.id() === id);
     if (index >= 0) {
       this._children.splice(index, 1);
     }
   }
 
-  replaceChild(name: string, node: SchemaNode): void {
+  replaceProperty(name: string, node: SchemaNode): void {
     const index = this._children.findIndex((c) => c.name() === name);
     if (index >= 0) {
       this._children[index] = node;

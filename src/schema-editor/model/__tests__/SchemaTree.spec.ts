@@ -34,7 +34,7 @@ describe('SchemaTree', () => {
 
     it('returns child node by id', () => {
       const tree = createTree({ name: stringField() });
-      const nameNode = tree.root().children()[0];
+      const nameNode = tree.root().properties()[0];
       expect(tree.nodeById(nameNode.id()).name()).toBe('name');
     });
 
@@ -54,7 +54,7 @@ describe('SchemaTree', () => {
 
     it('returns correct path for child', () => {
       const tree = createTree({ name: stringField() });
-      const nameNode = tree.root().children()[0];
+      const nameNode = tree.root().properties()[0];
       const path = tree.pathOf(nameNode.id());
       expect(path.asJsonPointer()).toBe('/properties/name');
     });
@@ -67,9 +67,9 @@ describe('SchemaTree', () => {
           }),
         }),
       });
-      const userNode = tree.root().children()[0];
-      const addressNode = userNode.children()[0];
-      const cityNode = addressNode.children()[0];
+      const userNode = tree.root().properties()[0];
+      const addressNode = userNode.properties()[0];
+      const cityNode = addressNode.properties()[0];
 
       expect(tree.pathOf(cityNode.id()).asJsonPointer()).toBe(
         '/properties/user/properties/address/properties/city',
@@ -80,18 +80,18 @@ describe('SchemaTree', () => {
   describe('renameNode', () => {
     it('renames a field', () => {
       const tree = createTree({ name: stringField() });
-      const nameNode = tree.root().children()[0];
+      const nameNode = tree.root().properties()[0];
 
       tree.renameNode(nameNode.id(), 'title');
 
       expect(nameNode.name()).toBe('title');
-      expect(tree.root().child('title').isNull()).toBe(false);
-      expect(tree.root().child('name').isNull()).toBe(true);
+      expect(tree.root().property('title').isNull()).toBe(false);
+      expect(tree.root().property('name').isNull()).toBe(true);
     });
 
     it('updates path index after rename', () => {
       const tree = createTree({ name: stringField() });
-      const nameNode = tree.root().children()[0];
+      const nameNode = tree.root().properties()[0];
 
       tree.renameNode(nameNode.id(), 'title');
 
@@ -108,13 +108,13 @@ describe('SchemaTree', () => {
 
       const secondNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'second')!;
       tree.renameNode(secondNode.id(), 'renamed');
 
       const names = tree
         .root()
-        .children()
+        .properties()
         .map((c) => c.name());
       expect(names).toEqual(['first', 'renamed', 'third']);
     });
@@ -127,8 +127,8 @@ describe('SchemaTree', () => {
 
       tree.addChildTo(tree.root().id(), newNode);
 
-      expect(tree.root().children()).toHaveLength(2);
-      expect(tree.root().child('newField').isNull()).toBe(false);
+      expect(tree.root().properties()).toHaveLength(2);
+      expect(tree.root().property('newField').isNull()).toBe(false);
     });
 
     it('indexes new node', () => {
@@ -145,7 +145,7 @@ describe('SchemaTree', () => {
 
     it('does nothing for non-object node', () => {
       const tree = createTree({ name: stringField() });
-      const nameNode = tree.root().children()[0];
+      const nameNode = tree.root().properties()[0];
       const newNode = NodeFactory.string('child');
 
       tree.addChildTo(nameNode.id(), newNode);
@@ -159,19 +159,19 @@ describe('SchemaTree', () => {
       const tree = createTree({ name: stringField(), age: numberField() });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
       const path = tree.pathOf(nameNode.id());
 
       tree.removeNodeAt(path);
 
-      expect(tree.root().children()).toHaveLength(1);
-      expect(tree.root().child('name').isNull()).toBe(true);
+      expect(tree.root().properties()).toHaveLength(1);
+      expect(tree.root().property('name').isNull()).toBe(true);
     });
 
     it('removes node from index', () => {
       const tree = createTree({ name: stringField() });
-      const nameNode = tree.root().children()[0];
+      const nameNode = tree.root().properties()[0];
       const nodeId = nameNode.id();
       const path = tree.pathOf(nodeId);
 
@@ -184,7 +184,7 @@ describe('SchemaTree', () => {
   describe('canMoveNode', () => {
     it('returns false when moving to self', () => {
       const tree = createTree({ name: stringField() });
-      const nameNode = tree.root().children()[0];
+      const nameNode = tree.root().properties()[0];
 
       expect(tree.canMoveNode(nameNode.id(), nameNode.id())).toBe(false);
     });
@@ -193,11 +193,11 @@ describe('SchemaTree', () => {
       const tree = createTree({ name: stringField(), age: numberField() });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
       const ageNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'age')!;
 
       expect(tree.canMoveNode(nameNode.id(), ageNode.id())).toBe(false);
@@ -209,8 +209,8 @@ describe('SchemaTree', () => {
           child: objectField({}),
         }),
       });
-      const parentNode = tree.root().children()[0];
-      const childNode = parentNode.children()[0];
+      const parentNode = tree.root().properties()[0];
+      const childNode = parentNode.properties()[0];
 
       expect(tree.canMoveNode(parentNode.id(), childNode.id())).toBe(false);
     });
@@ -221,8 +221,8 @@ describe('SchemaTree', () => {
           child: stringField(),
         }),
       });
-      const parentNode = tree.root().children()[0];
-      const childNode = parentNode.children()[0];
+      const parentNode = tree.root().properties()[0];
+      const childNode = parentNode.properties()[0];
 
       expect(tree.canMoveNode(childNode.id(), parentNode.id())).toBe(false);
     });
@@ -234,7 +234,7 @@ describe('SchemaTree', () => {
       });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
 
       expect(tree.canMoveNode(nameNode.id(), tree.root().id())).toBe(false);
@@ -247,11 +247,11 @@ describe('SchemaTree', () => {
       });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
       const containerNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'container')!;
 
       expect(tree.canMoveNode(nameNode.id(), containerNode.id())).toBe(true);
@@ -264,11 +264,11 @@ describe('SchemaTree', () => {
       });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
       const arrNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'arr')!;
       const itemsNode = arrNode.items();
 
@@ -283,11 +283,11 @@ describe('SchemaTree', () => {
       });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
       const arrNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'arr')!;
       const itemsNode = arrNode.items();
 
@@ -304,17 +304,17 @@ describe('SchemaTree', () => {
       });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
       const containerNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'container')!;
 
       tree.moveNode(nameNode.id(), containerNode.id());
 
-      expect(tree.root().child('name').isNull()).toBe(true);
-      expect(containerNode.child('name').isNull()).toBe(false);
+      expect(tree.root().property('name').isNull()).toBe(true);
+      expect(containerNode.property('name').isNull()).toBe(false);
     });
 
     it('updates path after move', () => {
@@ -324,11 +324,11 @@ describe('SchemaTree', () => {
       });
       const nameNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'name')!;
       const containerNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'container')!;
 
       tree.moveNode(nameNode.id(), containerNode.id());
@@ -406,7 +406,7 @@ describe('SchemaParser', () => {
       const root = parser.parse(schema);
       const pending = parser.getPendingFormulas();
 
-      const numNode = root.children().find((c) => c.name() === 'num');
+      const numNode = root.properties().find((c) => c.name() === 'num');
       expect(numNode).toBeDefined();
       expect(numNode!.isArray()).toBe(true);
 
@@ -429,7 +429,7 @@ describe('SchemaParser', () => {
 
       const tree = new SchemaTree(root);
 
-      const numNode = root.children().find((c) => c.name() === 'num');
+      const numNode = root.properties().find((c) => c.name() === 'num');
       const itemsNode = numNode!.items();
 
       const indexedNode = tree.nodeById(itemsNode.id());
@@ -449,7 +449,7 @@ describe('SchemaParser', () => {
 
       const tree = new SchemaTree(root);
 
-      const numNode = root.children().find((c) => c.name() === 'num');
+      const numNode = root.properties().find((c) => c.name() === 'num');
       const itemsNode = numNode!.items();
 
       const itemsPath = tree.pathOf(itemsNode.id());
@@ -467,7 +467,7 @@ describe('SchemaParser', () => {
 
       const tree = new SchemaTree(root);
 
-      const numNode = root.children().find((c) => c.name() === 'num');
+      const numNode = root.properties().find((c) => c.name() === 'num');
       const itemsNode = numNode!.items();
 
       const formula = new ParsedFormula(tree, itemsNode.id(), 'value * 2');

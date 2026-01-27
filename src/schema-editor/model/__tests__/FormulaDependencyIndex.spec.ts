@@ -36,7 +36,7 @@ describe('FormulaDependencyIndex', () => {
 
       const priceNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'price')!;
       const dependents = tree.getFormulaDependents(priceNode.id());
 
@@ -53,7 +53,7 @@ describe('FormulaDependencyIndex', () => {
 
       const priceNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'price')!;
       const dependents = tree.getFormulaDependents(priceNode.id());
 
@@ -71,7 +71,7 @@ describe('FormulaDependencyIndex', () => {
 
       const priceNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'price')!;
       const dependents = tree.getFormulaDependents(priceNode.id());
 
@@ -88,11 +88,11 @@ describe('FormulaDependencyIndex', () => {
 
       const priceNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'price')!;
       const totalNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'total')!;
 
       expect(tree.getFormulaDependents(priceNode.id())).toHaveLength(1);
@@ -112,7 +112,7 @@ describe('FormulaDependencyIndex', () => {
 
       const priceNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'price')!;
       expect(tree.hasFormulaDependents(priceNode.id())).toBe(true);
     });
@@ -125,7 +125,7 @@ describe('FormulaDependencyIndex', () => {
 
       const priceNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'price')!;
       expect(tree.hasFormulaDependents(priceNode.id())).toBe(false);
     });
@@ -140,8 +140,8 @@ describe('FormulaDependencyIndex', () => {
         }),
       });
 
-      const orderNode = tree.root().children()[0];
-      const priceNode = orderNode.children().find((c) => c.name() === 'price')!;
+      const orderNode = tree.root().properties()[0];
+      const priceNode = orderNode.properties().find((c) => c.name() === 'price')!;
 
       const dependents = tree.getFormulaDependents(priceNode.id());
       expect(dependents).toHaveLength(1);
@@ -156,7 +156,7 @@ describe('FormulaDependencyIndex', () => {
         }),
       });
 
-      const orderNode = tree.root().children()[0];
+      const orderNode = tree.root().properties()[0];
       const dependents = tree.getFormulaDependents(orderNode.id());
 
       expect(dependents).toHaveLength(1);
@@ -173,7 +173,7 @@ describe('FormulaDependencyIndex', () => {
 
       const totalNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'total')!;
       const formula = tree.getFormulaByNodeId(totalNode.id());
 
@@ -186,7 +186,7 @@ describe('FormulaDependencyIndex', () => {
         price: numberField(),
       });
 
-      const priceNode = tree.root().children()[0];
+      const priceNode = tree.root().properties()[0];
       expect(tree.getFormulaByNodeId(priceNode.id())).toBeNull();
     });
   });
@@ -200,7 +200,7 @@ describe('FormulaDependencyIndex', () => {
 
       const priceNode = tree
         .root()
-        .children()
+        .properties()
         .find((c) => c.name() === 'price')!;
       expect(tree.getFormulaDependents(priceNode.id())).toHaveLength(1);
 

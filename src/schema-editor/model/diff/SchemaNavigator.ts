@@ -90,7 +90,7 @@ export class SchemaNavigator {
       if (!nextPart || !current.isObject()) {
         return null;
       }
-      const child = current.children().find((c) => c.name() === nextPart);
+      const child = current.properties().find((c) => c.name() === nextPart);
       return child ?? null;
     }
 

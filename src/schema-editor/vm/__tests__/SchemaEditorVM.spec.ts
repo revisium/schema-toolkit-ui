@@ -110,8 +110,8 @@ describe('SchemaEditorVM', () => {
 
       editor.rootNodeVM.addChild('field1');
 
-      expect(editor.engine.root().children()).toHaveLength(1);
-      expect(editor.engine.root().child('field1').isNull()).toBe(false);
+      expect(editor.engine.root().properties()).toHaveLength(1);
+      expect(editor.engine.root().property('field1').isNull()).toBe(false);
     });
   });
 
@@ -139,7 +139,7 @@ describe('SchemaEditorVM', () => {
 
       editor.rootNodeVM.removeChild(nameVM);
 
-      expect(editor.engine.root().children()).toHaveLength(0);
+      expect(editor.engine.root().properties()).toHaveLength(0);
     });
   });
 

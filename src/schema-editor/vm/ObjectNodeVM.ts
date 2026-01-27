@@ -39,7 +39,7 @@ export class ObjectNodeVM extends BaseNodeVM {
 
   private initChildren(): void {
     this.childrenList = this._node
-      .children()
+      .properties()
       .map((child) => createNodeVM(child, this._editor, this));
   }
 

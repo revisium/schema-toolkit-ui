@@ -295,7 +295,7 @@ export class PatchBuilder {
     }
 
     const baseProps = baseSchema.properties || {};
-    const currentChildren = node.children();
+    const currentChildren = node.properties();
 
     for (const child of currentChildren) {
       const childBasePath = `${basePath}/properties/${child.name()}`;

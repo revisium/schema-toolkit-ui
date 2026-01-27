@@ -84,16 +84,16 @@ describe('NodeFactory', () => {
 
     it('creates ObjectNode with empty children by default', () => {
       const node = NodeFactory.object('user');
-      expect(node.children()).toEqual([]);
+      expect(node.properties()).toEqual([]);
     });
 
     it('creates ObjectNode with children', () => {
       const child1 = NodeFactory.string('name');
       const child2 = NodeFactory.number('age');
       const node = NodeFactory.object('user', [child1, child2]);
-      expect(node.children()).toHaveLength(2);
-      expect(node.children()[0]).toBe(child1);
-      expect(node.children()[1]).toBe(child2);
+      expect(node.properties()).toHaveLength(2);
+      expect(node.properties()[0]).toBe(child1);
+      expect(node.properties()[1]).toBe(child2);
     });
 
     it('creates ObjectNode with unique id', () => {
@@ -155,9 +155,9 @@ describe('NodeFactory', () => {
         address,
       ]);
 
-      expect(user.children()).toHaveLength(2);
-      expect(user.child('address').isObject()).toBe(true);
-      expect(user.child('address').children()).toHaveLength(2);
+      expect(user.properties()).toHaveLength(2);
+      expect(user.property('address').isObject()).toBe(true);
+      expect(user.property('address').properties()).toHaveLength(2);
     });
 
     it('creates array of objects structure', () => {
@@ -169,7 +169,7 @@ describe('NodeFactory', () => {
 
       expect(items.isArray()).toBe(true);
       expect(items.items().isObject()).toBe(true);
-      expect(items.items().children()).toHaveLength(2);
+      expect(items.items().properties()).toHaveLength(2);
     });
 
     it('creates deeply nested structure', () => {
@@ -178,9 +178,9 @@ describe('NodeFactory', () => {
       const level1 = NodeFactory.array('level1', level2);
       const root = NodeFactory.object('root', [level1]);
 
-      expect(root.child('level1').isArray()).toBe(true);
-      expect(root.child('level1').items().isObject()).toBe(true);
-      expect(root.child('level1').items().child('value').nodeType()).toBe(
+      expect(root.property('level1').isArray()).toBe(true);
+      expect(root.property('level1').items().isObject()).toBe(true);
+      expect(root.property('level1').items().property('value').nodeType()).toBe(
         NodeType.String,
       );
     });

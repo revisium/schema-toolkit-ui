@@ -35,7 +35,7 @@ describe('SchemaValidator', () => {
 
     it('detects empty field name', () => {
       const root = parseSchema({ name: stringField() });
-      root.children()[0].setName('');
+      root.properties()[0].setName('');
 
       const errors = validator.validate(root);
 
@@ -49,7 +49,7 @@ describe('SchemaValidator', () => {
         name: stringField(),
         other: stringField(),
       });
-      root.children()[1].setName('name');
+      root.properties()[1].setName('name');
 
       const errors = validator.validate(root);
 
@@ -60,7 +60,7 @@ describe('SchemaValidator', () => {
 
     it('detects invalid field name starting with number', () => {
       const root = parseSchema({ name: stringField() });
-      root.children()[0].setName('123abc');
+      root.properties()[0].setName('123abc');
 
       const errors = validator.validate(root);
 
@@ -70,7 +70,7 @@ describe('SchemaValidator', () => {
 
     it('detects invalid field name starting with __', () => {
       const root = parseSchema({ name: stringField() });
-      root.children()[0].setName('__reserved');
+      root.properties()[0].setName('__reserved');
 
       const errors = validator.validate(root);
 
@@ -80,7 +80,7 @@ describe('SchemaValidator', () => {
 
     it('detects invalid field name with special characters', () => {
       const root = parseSchema({ name: stringField() });
-      root.children()[0].setName('field@name');
+      root.properties()[0].setName('field@name');
 
       const errors = validator.validate(root);
 
@@ -108,8 +108,8 @@ describe('SchemaValidator', () => {
           name: stringField(),
         }),
       });
-      const userNode = root.children()[0];
-      userNode.children()[0].setName('');
+      const userNode = root.properties()[0];
+      userNode.properties()[0].setName('');
 
       const errors = validator.validate(root);
 
@@ -125,9 +125,9 @@ describe('SchemaValidator', () => {
           }),
         ),
       });
-      const itemsNode = root.children()[0];
+      const itemsNode = root.properties()[0];
       const itemNode = itemsNode.items();
-      itemNode.children()[0].setName('');
+      itemNode.properties()[0].setName('');
 
       const errors = validator.validate(root);
 
@@ -137,7 +137,7 @@ describe('SchemaValidator', () => {
 
     it('returns nodeId for each error', () => {
       const root = parseSchema({ name: stringField() });
-      const nameNode = root.children()[0];
+      const nameNode = root.properties()[0];
       nameNode.setName('');
 
       const errors = validator.validate(root);
@@ -151,9 +151,9 @@ describe('SchemaValidator', () => {
         other: stringField(),
         third: stringField(),
       });
-      root.children()[0].setName('');
-      root.children()[1].setName('123invalid');
-      root.children()[2].setName('__reserved');
+      root.properties()[0].setName('');
+      root.properties()[1].setName('123invalid');
+      root.properties()[2].setName('__reserved');
 
       const errors = validator.validate(root);
 

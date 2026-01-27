@@ -25,7 +25,7 @@ describe('SchemaEngine', () => {
       const engine = new SchemaEngine(schema);
 
       expect(engine.root().isObject()).toBe(true);
-      expect(engine.root().children()).toHaveLength(1);
+      expect(engine.root().properties()).toHaveLength(1);
     });
 
     it('should parse formulas during initialization', () => {
@@ -41,7 +41,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      const totalNode = engine.root().child('total');
+      const totalNode = engine.root().property('total');
 
       expect(totalNode.hasFormula()).toBe(true);
       expect(totalNode.formula()?.expression()).toBe('price * quantity');
@@ -58,7 +58,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      const valueNode = engine.root().child('value');
+      const valueNode = engine.root().property('value');
 
       expect(valueNode.hasFormula()).toBe(false);
     });
@@ -89,7 +89,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      const nameNode = engine.root().child('name');
+      const nameNode = engine.root().property('name');
       nameNode.setName('');
 
       const errors = engine.validationErrors;
@@ -133,7 +133,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      engine.tree.renameNode(engine.root().child('name').id(), 'title');
+      engine.tree.renameNode(engine.root().property('name').id(), 'title');
 
       expect(engine.isDirty).toBe(true);
     });
@@ -146,7 +146,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      engine.tree.renameNode(engine.root().child('name').id(), 'title');
+      engine.tree.renameNode(engine.root().property('name').id(), 'title');
       expect(engine.isDirty).toBe(true);
 
       engine.markAsSaved();
@@ -162,13 +162,13 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      engine.tree.renameNode(engine.root().child('name').id(), 'title');
-      expect(engine.root().child('title').isNull()).toBe(false);
+      engine.tree.renameNode(engine.root().property('name').id(), 'title');
+      expect(engine.root().property('title').isNull()).toBe(false);
 
       engine.revert();
 
-      expect(engine.root().child('name').isNull()).toBe(false);
-      expect(engine.root().child('title').isNull()).toBe(true);
+      expect(engine.root().property('name').isNull()).toBe(false);
+      expect(engine.root().property('title').isNull()).toBe(true);
       expect(engine.isDirty).toBe(false);
     });
 
@@ -184,14 +184,14 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      const totalId = engine.root().child('total').id();
+      const totalId = engine.root().property('total').id();
 
       engine.tree.unregisterFormula(totalId);
-      engine.root().child('total').setFormula(undefined);
+      engine.root().property('total').setFormula(undefined);
 
       engine.revert();
 
-      const totalNode = engine.root().child('total');
+      const totalNode = engine.root().property('total');
       expect(totalNode.hasFormula()).toBe(true);
       expect(totalNode.formula()?.expression()).toBe('price * 2');
     });
@@ -214,7 +214,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      engine.tree.renameNode(engine.root().child('name').id(), 'title');
+      engine.tree.renameNode(engine.root().property('name').id(), 'title');
 
       const patches = engine.getPatches();
 
@@ -227,7 +227,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      engine.tree.renameNode(engine.root().child('name').id(), 'title');
+      engine.tree.renameNode(engine.root().property('name').id(), 'title');
 
       const richPatches = engine.getRichPatches();
 
@@ -242,7 +242,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      engine.tree.renameNode(engine.root().child('name').id(), 'title');
+      engine.tree.renameNode(engine.root().property('name').id(), 'title');
 
       const plainSchema = engine.getPlainSchema();
 
@@ -277,7 +277,7 @@ describe('SchemaEngine', () => {
       });
 
       const engine = new SchemaEngine(schema);
-      const priceId = engine.root().child('price').id();
+      const priceId = engine.root().property('price').id();
 
       const dependents = engine.getFormulaDependents(priceId);
 
@@ -297,7 +297,7 @@ describe('SchemaEngine', () => {
 
       expect(result.isNull()).toBe(false);
       expect(result.name()).toBe('newField');
-      expect(engine.root().child('newField').isNull()).toBe(false);
+      expect(engine.root().property('newField').isNull()).toBe(false);
     });
 
     it('should return null node when parent is not object', () => {
@@ -305,7 +305,7 @@ describe('SchemaEngine', () => {
         name: { type: 'string', default: '' },
       });
       const engine = new SchemaEngine(schema);
-      const nameId = engine.root().child('name').id();
+      const nameId = engine.root().property('name').id();
 
       const result = engine.addChild(nameId, 'child');
 
@@ -329,13 +329,13 @@ describe('SchemaEngine', () => {
         age: { type: 'number', default: 0 },
       });
       const engine = new SchemaEngine(schema);
-      const nameId = engine.root().child('name').id();
+      const nameId = engine.root().property('name').id();
 
       const removed = engine.removeNode(nameId);
 
       expect(removed).toBe(true);
-      expect(engine.root().child('name').isNull()).toBe(true);
-      expect(engine.root().children()).toHaveLength(1);
+      expect(engine.root().property('name').isNull()).toBe(true);
+      expect(engine.root().properties()).toHaveLength(1);
     });
 
     it('should return false when node not found', () => {
@@ -365,7 +365,7 @@ describe('SchemaEngine', () => {
         name: { type: 'string', default: '' },
       });
       const engine = new SchemaEngine(schema);
-      const nameId = engine.root().child('name').id();
+      const nameId = engine.root().property('name').id();
       const newNode = engine.createNumberNode('name');
 
       const result = engine.replaceNode(nameId, newNode);
@@ -373,7 +373,7 @@ describe('SchemaEngine', () => {
       expect(result).not.toBeNull();
       expect(result?.replacedNodeId).toBe(nameId);
       expect(result?.newNodeId).toBe(newNode.id());
-      expect(engine.root().child('name').nodeType()).toBe('number');
+      expect(engine.root().property('name').nodeType()).toBe('number');
     });
 
     it('should preserve field order', () => {
@@ -383,14 +383,14 @@ describe('SchemaEngine', () => {
         third: { type: 'string', default: '' },
       });
       const engine = new SchemaEngine(schema);
-      const secondId = engine.root().child('second').id();
+      const secondId = engine.root().property('second').id();
       const newNode = engine.createNumberNode('second');
 
       engine.replaceNode(secondId, newNode);
 
       const names = engine
         .root()
-        .children()
+        .properties()
         .map((c) => c.name());
       expect(names).toEqual(['first', 'second', 'third']);
     });
@@ -412,13 +412,13 @@ describe('SchemaEngine', () => {
         name: { type: 'string', default: '' },
       });
       const engine = new SchemaEngine(schema);
-      const nameId = engine.root().child('name').id();
+      const nameId = engine.root().property('name').id();
 
       const result = engine.wrapInArray(nameId);
 
       expect(result).not.toBeNull();
       expect(result?.replacedNodeId).toBe(nameId);
-      const nameNode = engine.root().child('name');
+      const nameNode = engine.root().property('name');
       expect(nameNode.isArray()).toBe(true);
       expect(nameNode.items().nodeType()).toBe('string');
     });
@@ -430,13 +430,13 @@ describe('SchemaEngine', () => {
         third: { type: 'string', default: '' },
       });
       const engine = new SchemaEngine(schema);
-      const secondId = engine.root().child('second').id();
+      const secondId = engine.root().property('second').id();
 
       engine.wrapInArray(secondId);
 
       const names = engine
         .root()
-        .children()
+        .properties()
         .map((c) => c.name());
       expect(names).toEqual(['first', 'second', 'third']);
     });
@@ -459,7 +459,7 @@ describe('SchemaEngine', () => {
         },
       });
       const engine = new SchemaEngine(schema);
-      const itemsId = engine.root().child('items').id();
+      const itemsId = engine.root().property('items').id();
 
       const result = engine.wrapInArray(itemsId);
 
@@ -473,12 +473,12 @@ describe('SchemaEngine', () => {
         ref: { type: 'string', default: '' },
       });
       const engine = new SchemaEngine(schema);
-      const refId = engine.root().child('ref').id();
+      const refId = engine.root().property('ref').id();
 
       const success = engine.updateForeignKey(refId, 'otherTable');
 
       expect(success).toBe(true);
-      expect(engine.root().child('ref').foreignKey()).toBe('otherTable');
+      expect(engine.root().property('ref').foreignKey()).toBe('otherTable');
     });
 
     it('should clear foreign key when empty string', () => {
@@ -486,12 +486,12 @@ describe('SchemaEngine', () => {
         ref: { type: 'string', default: '', 'x-foreignKey': 'oldTable' },
       });
       const engine = new SchemaEngine(schema);
-      const refId = engine.root().child('ref').id();
+      const refId = engine.root().property('ref').id();
 
       const success = engine.updateForeignKey(refId, '');
 
       expect(success).toBe(true);
-      expect(engine.root().child('ref').foreignKey()).toBeUndefined();
+      expect(engine.root().property('ref').foreignKey()).toBeUndefined();
     });
 
     it('should return false when node is not string', () => {
@@ -499,7 +499,7 @@ describe('SchemaEngine', () => {
         count: { type: 'number', default: 0 },
       });
       const engine = new SchemaEngine(schema);
-      const countId = engine.root().child('count').id();
+      const countId = engine.root().property('count').id();
 
       const success = engine.updateForeignKey(countId, 'table');
 
@@ -523,13 +523,13 @@ describe('SchemaEngine', () => {
         total: { type: 'number', default: 0 },
       });
       const engine = new SchemaEngine(schema);
-      const totalId = engine.root().child('total').id();
+      const totalId = engine.root().property('total').id();
 
       const result = engine.updateFormula(totalId, 'price * 2');
 
       expect(result.success).toBe(true);
-      expect(engine.root().child('total').hasFormula()).toBe(true);
-      expect(engine.root().child('total').formula()?.expression()).toBe(
+      expect(engine.root().property('total').hasFormula()).toBe(true);
+      expect(engine.root().property('total').formula()?.expression()).toBe(
         'price * 2',
       );
     });
@@ -545,12 +545,12 @@ describe('SchemaEngine', () => {
         },
       });
       const engine = new SchemaEngine(schema);
-      const totalId = engine.root().child('total').id();
+      const totalId = engine.root().property('total').id();
 
       const result = engine.updateFormula(totalId, undefined);
 
       expect(result.success).toBe(true);
-      expect(engine.root().child('total').hasFormula()).toBe(false);
+      expect(engine.root().property('total').hasFormula()).toBe(false);
     });
 
     it('should return error for invalid formula', () => {
@@ -558,7 +558,7 @@ describe('SchemaEngine', () => {
         value: { type: 'number', default: 0 },
       });
       const engine = new SchemaEngine(schema);
-      const valueId = engine.root().child('value').id();
+      const valueId = engine.root().property('value').id();
 
       const result = engine.updateFormula(valueId, 'invalid +++');
 

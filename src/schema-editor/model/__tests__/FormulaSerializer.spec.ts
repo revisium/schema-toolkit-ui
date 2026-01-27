@@ -200,31 +200,31 @@ describe('FormulaSerializer', () => {
 
 function createSimpleTree(): SchemaTree {
   const root = new ObjectNode('root', 'root');
-  root.addChild(new NumberNode('a', 'a'));
-  root.addChild(new NumberNode('b', 'b'));
-  root.addChild(new NumberNode('sum', 'sum'));
+  root.addProperty(new NumberNode('a', 'a'));
+  root.addProperty(new NumberNode('b', 'b'));
+  root.addProperty(new NumberNode('sum', 'sum'));
   return new SchemaTree(root);
 }
 
 function createTreeWithField(name: string): SchemaTree {
   const root = new ObjectNode('root', 'root');
-  root.addChild(new NumberNode(name, name));
+  root.addProperty(new NumberNode(name, name));
   return new SchemaTree(root);
 }
 
 function createTreeWithBooleans(): SchemaTree {
   const root = new ObjectNode('root', 'root');
-  root.addChild(new BooleanNode('flag', 'flag'));
-  root.addChild(new BooleanNode('result', 'result'));
+  root.addProperty(new BooleanNode('flag', 'flag'));
+  root.addProperty(new BooleanNode('result', 'result'));
   return new SchemaTree(root);
 }
 
 function createNestedTree(): SchemaTree {
   const root = new ObjectNode('root', 'root');
   const nested = new ObjectNode('nested', 'nested');
-  nested.addChild(new NumberNode('value', 'value'));
-  root.addChild(nested);
-  root.addChild(new NumberNode('result', 'result'));
+  nested.addProperty(new NumberNode('value', 'value'));
+  root.addProperty(nested);
+  root.addProperty(new NumberNode('result', 'result'));
   return new SchemaTree(root);
 }
 
@@ -235,7 +235,7 @@ function createTreeWithArray(): SchemaTree {
     'items',
     new NumberNode('items-item', 'items-item'),
   );
-  root.addChild(arrayNode);
-  root.addChild(new NumberNode('result', 'result'));
+  root.addProperty(arrayNode);
+  root.addProperty(new NumberNode('result', 'result'));
   return new SchemaTree(root);
 }

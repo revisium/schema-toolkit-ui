@@ -55,11 +55,11 @@ export class TreeMutator {
     isLastSegment: boolean,
   ): void {
     if (isLastSegment) {
-      current.removeChild(childName);
+      current.removeProperty(childName);
       return;
     }
 
-    const existingChild = current.child(childName);
+    const existingChild = current.property(childName);
     if (!existingChild.isNull()) {
       this.removeNodeAtInternal(existingChild, segments, index + 1);
     }
@@ -123,16 +123,16 @@ export class TreeMutator {
   ): void {
     if (isLastSegment) {
       newNode.setName(childName);
-      const existingChild = current.child(childName);
+      const existingChild = current.property(childName);
       if (existingChild.isNull()) {
-        current.addChild(newNode);
+        current.addProperty(newNode);
       } else {
-        current.replaceChild(childName, newNode);
+        current.replaceProperty(childName, newNode);
       }
       return;
     }
 
-    const existingChild = current.child(childName);
+    const existingChild = current.property(childName);
     if (!existingChild.isNull()) {
       this.updateNodeAt(existingChild, segments, index + 1, newNode);
     }

@@ -145,7 +145,7 @@ export class FormulaUpdater {
     }
 
     if (node.isObject()) {
-      for (const child of node.children()) {
+      for (const child of node.properties()) {
         this.updateFormulasInsideMovedNode(child.id(), updates);
       }
     }

@@ -56,7 +56,7 @@ export class FormulaValidator {
     }
 
     if (node.isObject()) {
-      for (const child of node.children()) {
+      for (const child of node.properties()) {
         const childPath = currentPath
           ? `${currentPath}.${child.name()}`
           : child.name();

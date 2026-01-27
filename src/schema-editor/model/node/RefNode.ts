@@ -65,7 +65,7 @@ export class RefNode implements SchemaNode {
     return undefined;
   }
 
-  child(): SchemaNode {
+  property(): SchemaNode {
     return NULL_NODE;
   }
 
@@ -73,7 +73,7 @@ export class RefNode implements SchemaNode {
     return NULL_NODE;
   }
 
-  children(): readonly SchemaNode[] {
+  properties(): readonly SchemaNode[] {
     return [];
   }
 
@@ -109,19 +109,19 @@ export class RefNode implements SchemaNode {
     this._ref = ref;
   }
 
-  addChild(): void {
+  addProperty(): void {
     // No-op for RefNode
   }
 
-  removeChild(): void {
+  removeProperty(): void {
     // No-op for RefNode
   }
 
-  removeChildById(): void {
+  removePropertyById(): void {
     // No-op for RefNode
   }
 
-  replaceChild(): void {
+  replaceProperty(): void {
     // No-op for RefNode
   }
 

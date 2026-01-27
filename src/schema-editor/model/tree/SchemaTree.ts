@@ -52,7 +52,7 @@ export class SchemaTree implements NodeTree {
     let current: SchemaNode = this._rootNode;
     for (const segment of path.segments()) {
       if (segment.isProperty()) {
-        current = current.child(segment.propertyName());
+        current = current.property(segment.propertyName());
       } else {
         current = current.items();
       }
@@ -96,7 +96,7 @@ export class SchemaTree implements NodeTree {
     if (parent.isNull() || !parent.isObject()) {
       return;
     }
-    parent.addChild(node);
+    parent.addProperty(node);
     this.rebuildIndex();
   }
 
@@ -135,7 +135,7 @@ export class SchemaTree implements NodeTree {
     }
 
     if (current.isObject()) {
-      for (const child of current.children()) {
+      for (const child of current.properties()) {
         if (this.findValidDropTarget(child, nodeId)) {
           return true;
         }
@@ -172,7 +172,7 @@ export class SchemaTree implements NodeTree {
     const oldPath = sourcePath;
 
     this.mutator.removeNodeAtInternal(this._rootNode, sourcePath.segments(), 0);
-    targetParent.addChild(node);
+    targetParent.addProperty(node);
     this.rebuildIndex();
 
     const newPath = this.pathOf(nodeId);
@@ -276,7 +276,7 @@ export class SchemaTree implements NodeTree {
     }
 
     if (node.isObject()) {
-      for (const child of node.children()) {
+      for (const child of node.properties()) {
         this.collectFormulaDependents(child.id(), result, seen);
       }
     }

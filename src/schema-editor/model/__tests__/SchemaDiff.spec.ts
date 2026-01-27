@@ -42,7 +42,7 @@ describe('SchemaDiff', () => {
         value: numberField(),
       });
 
-      const nestedNode = tree.root().child('nested');
+      const nestedNode = tree.root().property('nested');
       const newNode = NodeFactory.string('new');
       tree.addChildTo(nestedNode.id(), newNode);
 
@@ -68,7 +68,7 @@ describe('SchemaDiff', () => {
         value: numberField(),
       });
 
-      const nestedNode = tree.root().child('nested');
+      const nestedNode = tree.root().property('nested');
       const newNode = NodeFactory.string('new');
       tree.addChildTo(nestedNode.id(), newNode);
 
@@ -106,7 +106,7 @@ describe('SchemaDiff', () => {
         name: stringField('initial'),
       });
 
-      const nameNode = tree.root().child('name') as StringNode;
+      const nameNode = tree.root().property('name') as StringNode;
       nameNode.setDefaultValue('modified');
 
       const patches = diff.getPatches();
@@ -124,7 +124,7 @@ describe('SchemaDiff', () => {
         age: numberField(),
       });
 
-      const nameNode = tree.root().child('name');
+      const nameNode = tree.root().property('name');
       tree.removeNodeAt(tree.pathOf(nameNode.id()));
 
       const patches = diff.getPatches();
@@ -142,8 +142,8 @@ describe('SchemaDiff', () => {
         }),
       });
 
-      const nestedNode = tree.root().child('nested');
-      const fieldANode = nestedNode.child('fieldA');
+      const nestedNode = tree.root().property('nested');
+      const fieldANode = nestedNode.property('fieldA');
       tree.removeNodeAt(tree.pathOf(fieldANode.id()));
 
       const patches = diff.getPatches();
@@ -163,8 +163,8 @@ describe('SchemaDiff', () => {
         }),
       });
 
-      const nestedNode = tree.root().child('nested');
-      const fieldANode = nestedNode.child('fieldA');
+      const nestedNode = tree.root().property('nested');
+      const fieldANode = nestedNode.property('fieldA');
       tree.removeNodeAt(tree.pathOf(fieldANode.id()));
 
       const richPatches = diff.getRichPatches();
@@ -183,7 +183,7 @@ describe('SchemaDiff', () => {
         oldName: stringField(),
       });
 
-      const node = tree.root().child('oldName');
+      const node = tree.root().property('oldName');
       tree.renameNode(node.id(), 'newName');
 
       const patches = diff.getPatches();
