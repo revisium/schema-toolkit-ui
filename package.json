@@ -52,25 +52,38 @@
     "storybook:build": "storybook build"
   },
   "peerDependencies": {
+    "@atlaskit/drag-and-drop": "^0.15.1",
     "@chakra-ui/react": "^3.0.0",
+    "@codemirror/lang-json": "^6.0.0",
     "@emotion/react": "^11.0.0",
+    "@uiw/codemirror-theme-github": "^4.0.0",
+    "@uiw/react-codemirror": "^4.0.0",
+    "mobx": "^6.0.0",
+    "mobx-react-lite": "^4.0.0",
     "next-themes": "^0.4.0",
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "react-icons": "^5.0.0",
+    "react-use": "^17.0.0"
   },
   "devDependencies": {
+    "@atlaskit/drag-and-drop": "^0.15.1",
     "@chakra-ui/react": "^3.3.2",
+    "@codemirror/lang-json": "^6.0.1",
     "@emotion/react": "^11.14.0",
     "@eslint/js": "^9.15.0",
     "@jest/globals": "^29.7.0",
     "@storybook/react": "^10.2.0",
     "@storybook/react-vite": "^10.2.0",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^24.10.7",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
+    "@uiw/codemirror-theme-github": "^4.23.7",
+    "@uiw/react-codemirror": "^4.23.7",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^10.1.8",
@@ -81,10 +94,14 @@
     "globals": "^15.12.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "mobx": "^6.13.5",
+    "mobx-react-lite": "^4.1.0",
     "next-themes": "^0.4.4",
     "prettier": "^3.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-icons": "^5.4.0",
+    "react-use": "^17.6.0",
     "storybook": "^10.2.0",
     "ts-jest": "^29.2.5",
     "tsdown": "^0.20.1",
@@ -93,7 +110,7 @@
     "vite": "^6.0.7"
   },
   "dependencies": {
-    "@revisium/schema-toolkit": "^0.13.0"
+    "@revisium/formula": "^0.7.0"
   },
   "engines": {
     "node": ">=20.16.0"
