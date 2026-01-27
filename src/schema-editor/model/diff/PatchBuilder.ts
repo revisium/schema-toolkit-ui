@@ -48,8 +48,7 @@ export class PatchBuilder {
     ]);
 
     this.buildReplacePatches(context, patches, addRemovePaths);
-    patches.push(...addPatches);
-    patches.push(...removePatches);
+    patches.push(...addPatches, ...removePatches);
 
     return patches;
   }

@@ -69,7 +69,7 @@ export const NodeWrapper: FC<NodeWrapperProps> = observer(
           {isCollapsible && (
             <IconButton
               className={collapseButtonClass}
-              visibility={!isCollapsed ? 'hidden' : 'visible'}
+              visibility={isCollapsed ? 'visible' : 'hidden'}
               _hover={{ backgroundColor: 'transparent' }}
               ml="-8px"
               position="absolute"

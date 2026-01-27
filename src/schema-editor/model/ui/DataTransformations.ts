@@ -210,8 +210,8 @@ function parseTypeString(typeStr: string): {
   baseType: SchemaType;
   itemsType?: SchemaType;
 } {
-  const arrayMatch = typeStr.match(/^array<(.+)>$/);
-  if (arrayMatch && arrayMatch[1]) {
+  const arrayMatch = /^array<(.+)>$/.exec(typeStr);
+  if (arrayMatch?.[1]) {
     return { baseType: 'array', itemsType: toSchemaType(arrayMatch[1]) };
   }
   return { baseType: toSchemaType(typeStr) };

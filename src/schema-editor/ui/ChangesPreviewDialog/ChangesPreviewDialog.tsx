@@ -98,9 +98,9 @@ const TransformationInfoRow: FC<{ info: TransformationInfo }> = ({ info }) => {
   return (
     <VStack align="stretch" gap={1} pl={2}>
       <Flex align="center" gap={2} fontSize="xs" flexWrap="wrap">
-        {info.steps.map((step, index) => (
-          <Flex key={index} align="center" gap={1}>
-            {index > 0 && <Text color="gray.400">+</Text>}
+        {info.steps.map((step, stepIndex) => (
+          <Flex key={step.name} align="center" gap={1}>
+            {stepIndex > 0 && <Text color="gray.400">+</Text>}
             <Badge size="sm" colorPalette="gray" variant="subtle">
               {step.name}
             </Badge>
@@ -677,16 +677,16 @@ const ErrorsList: FC<ErrorsListProps> = ({
       </Text>
     </Box>
     <VStack align="stretch" gap={0} divideY="1px" divideColor="gray.100">
-      {validationErrors.map((error, index) => (
+      {validationErrors.map((error) => (
         <ErrorItem
-          key={`validation-${index}`}
+          key={`validation-${error.message}`}
           message={error.message}
           type="validation"
         />
       ))}
-      {formulaErrors.map((error, index) => (
+      {formulaErrors.map((error) => (
         <ErrorItem
-          key={`formula-${index}`}
+          key={`formula-${error.fieldPath ?? ''}-${error.message}`}
           message={error.message}
           type="formula"
           fieldPath={error.fieldPath}
@@ -745,8 +745,11 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                         maxHeight="400px"
                         overflowY="auto"
                       >
-                        {richPatches.map((richPatch, index) => (
-                          <PatchRow key={index} richPatch={richPatch} />
+                        {richPatches.map((richPatch) => (
+                          <PatchRow
+                            key={richPatch.patch.path}
+                            richPatch={richPatch}
+                          />
                         ))}
                       </Box>
 

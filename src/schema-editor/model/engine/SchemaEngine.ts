@@ -89,7 +89,8 @@ export class SchemaEngine {
   }
 
   public get isDirty(): boolean {
-    void this._tree.version;
+    const _ = this._tree.version;
+    void _;
     return this._diff.isDirty();
   }
 
@@ -102,12 +103,14 @@ export class SchemaEngine {
   }
 
   public get validationErrors(): readonly ValidationError[] {
-    void this._tree.version;
+    const _ = this._tree.version;
+    void _;
     return this._schemaValidator.validate(this._tree.root());
   }
 
   public validateFormulas(): FormulaValidationError[] {
-    void this._tree.version;
+    const _ = this._tree.version;
+    void _;
     return this._formulaValidator.validate();
   }
 

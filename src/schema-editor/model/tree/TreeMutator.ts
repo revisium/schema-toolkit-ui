@@ -32,34 +32,52 @@ export class TreeMutator {
       return;
     }
 
+    const isLastSegment = index === segments.length - 1;
+
     if (segment.isProperty()) {
-      const childName = segment.propertyName();
+      this.removePropertySegment(
+        current,
+        segment.propertyName(),
+        segments,
+        index,
+        isLastSegment,
+      );
+    } else if (segment.isItems()) {
+      this.removeItemsSegment(current, segments, index, isLastSegment);
+    }
+  }
 
-      if (index === segments.length - 1) {
-        current.removeChild(childName);
-        return;
-      }
-
-      const existingChild = current.child(childName);
-      if (existingChild.isNull()) {
-        return;
-      }
-
-      this.removeNodeAtInternal(existingChild, segments, index + 1);
+  private removePropertySegment(
+    current: SchemaNode,
+    childName: string,
+    segments: readonly PathSegment[],
+    index: number,
+    isLastSegment: boolean,
+  ): void {
+    if (isLastSegment) {
+      current.removeChild(childName);
       return;
     }
 
-    if (segment.isItems()) {
-      if (index === segments.length - 1) {
-        current.setItems(NULL_NODE);
-        return;
-      }
+    const existingChild = current.child(childName);
+    if (!existingChild.isNull()) {
+      this.removeNodeAtInternal(existingChild, segments, index + 1);
+    }
+  }
 
-      const existingItems = current.items();
-      if (existingItems.isNull()) {
-        return;
-      }
+  private removeItemsSegment(
+    current: SchemaNode,
+    segments: readonly PathSegment[],
+    index: number,
+    isLastSegment: boolean,
+  ): void {
+    if (isLastSegment) {
+      current.setItems(NULL_NODE);
+      return;
+    }
 
+    const existingItems = current.items();
+    if (!existingItems.isNull()) {
       this.removeNodeAtInternal(existingItems, segments, index + 1);
     }
   }
@@ -79,40 +97,61 @@ export class TreeMutator {
       return;
     }
 
+    const isLastSegment = index === segments.length - 1;
+
     if (segment.isProperty()) {
-      const childName = segment.propertyName();
+      this.updatePropertySegment(
+        current,
+        segment.propertyName(),
+        segments,
+        index,
+        newNode,
+        isLastSegment,
+      );
+    } else if (segment.isItems()) {
+      this.updateItemsSegment(current, segments, index, newNode, isLastSegment);
+    }
+  }
 
-      if (index === segments.length - 1) {
-        newNode.setName(childName);
-        const existingChild = current.child(childName);
-        if (existingChild.isNull()) {
-          current.addChild(newNode);
-        } else {
-          current.replaceChild(childName, newNode);
-        }
-        return;
-      }
-
+  private updatePropertySegment(
+    current: SchemaNode,
+    childName: string,
+    segments: readonly PathSegment[],
+    index: number,
+    newNode: SchemaNode,
+    isLastSegment: boolean,
+  ): void {
+    if (isLastSegment) {
+      newNode.setName(childName);
       const existingChild = current.child(childName);
       if (existingChild.isNull()) {
-        return;
+        current.addChild(newNode);
+      } else {
+        current.replaceChild(childName, newNode);
       }
-
-      this.updateNodeAt(existingChild, segments, index + 1, newNode);
       return;
     }
 
-    if (segment.isItems()) {
-      if (index === segments.length - 1) {
-        current.setItems(newNode);
-        return;
-      }
+    const existingChild = current.child(childName);
+    if (!existingChild.isNull()) {
+      this.updateNodeAt(existingChild, segments, index + 1, newNode);
+    }
+  }
 
-      const existingItems = current.items();
-      if (existingItems.isNull()) {
-        return;
-      }
+  private updateItemsSegment(
+    current: SchemaNode,
+    segments: readonly PathSegment[],
+    index: number,
+    newNode: SchemaNode,
+    isLastSegment: boolean,
+  ): void {
+    if (isLastSegment) {
+      current.setItems(newNode);
+      return;
+    }
 
+    const existingItems = current.items();
+    if (!existingItems.isNull()) {
       this.updateNodeAt(existingItems, segments, index + 1, newNode);
     }
   }

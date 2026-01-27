@@ -110,7 +110,7 @@ export class FormulaSerializer {
     if (seg.isProperty()) {
       parts.push(seg.propertyName());
     } else {
-      const lastPart = parts[parts.length - 1];
+      const lastPart = parts.at(-1);
       if (lastPart && lastPart !== '..') {
         parts[parts.length - 1] = lastPart + '[*]';
       }
@@ -135,8 +135,8 @@ export class FormulaSerializer {
   private extractLastPropertyName(
     segments: readonly { isProperty(): boolean; propertyName(): string }[],
   ): string {
-    const lastSeg = segments[segments.length - 1];
-    if (lastSeg && lastSeg.isProperty()) {
+    const lastSeg = segments.at(-1);
+    if (lastSeg?.isProperty()) {
       return lastSeg.propertyName();
     }
     return '';

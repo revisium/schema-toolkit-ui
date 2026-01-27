@@ -4,7 +4,10 @@ export class FormulaExpressionReplacer {
     oldPath: string,
     newPath: string,
   ): string {
-    const escapedOldPath = oldPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedOldPath = oldPath.replaceAll(
+      /[.*+?^${}()|[\]\\]/g,
+      String.raw`\$&`,
+    );
     const regex = new RegExp(
       `(?<![a-zA-Z0-9_])${escapedOldPath}(?![a-zA-Z0-9_])`,
       'g',
@@ -43,7 +46,7 @@ export class FormulaExpressionReplacer {
     oldName: string,
     newName: string,
   ): string {
-    const prefixMatch = path.match(/^((?:\.\.\/)+|\.\/)?(.*)$/);
+    const prefixMatch = /^((?:\.\.\/)+|\.\/)?(.*)$/.exec(path);
     if (!prefixMatch) {
       return path;
     }

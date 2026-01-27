@@ -91,7 +91,7 @@ export class ParsedFormula implements Formula {
 
     while (!basePath.isEmpty()) {
       const lastSegment = basePath.lastSegment();
-      if (lastSegment && lastSegment.isItems()) {
+      if (lastSegment?.isItems()) {
         basePath = basePath.parent();
       } else {
         basePath = basePath.parent();

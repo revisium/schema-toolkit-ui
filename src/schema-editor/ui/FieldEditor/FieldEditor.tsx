@@ -37,7 +37,7 @@ export const FieldEditor: FC<FieldEditorProps> = observer(
         <Flex
           data-testid={isDrop ? `${dataTestId}-drop` : undefined}
           ref={dragAndDropRef}
-          flex={!hasName ? 1 : 0}
+          flex={hasName ? 0 : 1}
           position="relative"
           whiteSpace="nowrap"
           borderWidth={1}

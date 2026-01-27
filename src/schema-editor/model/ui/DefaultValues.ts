@@ -33,52 +33,59 @@ function getForeignKeyTableId(schema: JsonSchemaType): string | undefined {
   return undefined;
 }
 
+function getDefaultForPrimitive(
+  schema: JsonSchemaType,
+  fallback: unknown,
+): unknown {
+  return 'default' in schema ? schema.default : fallback;
+}
+
+function getDefaultForArray(schema: JsonSchemaType): unknown {
+  if ('default' in schema) {
+    return schema.default;
+  }
+  const arrSchema = schema as { items?: JsonSchemaType };
+  if (arrSchema.items) {
+    return [getDefaultValueFromSchema(arrSchema.items)];
+  }
+  return [];
+}
+
+function getDefaultForObject(schema: JsonSchemaType): unknown {
+  if ('default' in schema) {
+    return schema.default;
+  }
+  const objSchema = schema as { properties?: Record<string, JsonSchemaType> };
+  if (!objSchema.properties) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(objSchema.properties).map(([key, propSchema]) => [
+      key,
+      getDefaultValueFromSchema(propSchema),
+    ]),
+  );
+}
+
+const typeHandlers: Record<string, (schema: JsonSchemaType) => unknown> = {
+  string: (schema) => getDefaultForPrimitive(schema, ''),
+  number: (schema) => getDefaultForPrimitive(schema, 0),
+  boolean: (schema) => getDefaultForPrimitive(schema, false),
+  array: getDefaultForArray,
+  object: getDefaultForObject,
+};
+
 export function getDefaultValueFromSchema(schema: JsonSchemaType): unknown {
   if ('$ref' in schema) {
     return null;
   }
 
-  if ('type' in schema) {
-    switch (schema.type) {
-      case 'string':
-        return 'default' in schema ? schema.default : '';
-      case 'number':
-        return 'default' in schema ? schema.default : 0;
-      case 'boolean':
-        return 'default' in schema ? schema.default : false;
-      case 'array': {
-        if ('default' in schema) {
-          return schema.default;
-        }
-        const arrSchema = schema;
-        if (arrSchema.items) {
-          const itemDefault = getDefaultValueFromSchema(arrSchema.items);
-          return [itemDefault];
-        }
-        return [];
-      }
-      case 'object': {
-        if ('default' in schema) {
-          return schema.default;
-        }
-        const objSchema = schema;
-        if (objSchema.properties) {
-          const result: Record<string, unknown> = {};
-          for (const [key, propSchema] of Object.entries(
-            objSchema.properties,
-          )) {
-            result[key] = getDefaultValueFromSchema(propSchema);
-          }
-          return result;
-        }
-        return {};
-      }
-      default:
-        return null;
-    }
+  if (!('type' in schema)) {
+    return null;
   }
 
-  return null;
+  const handler = typeHandlers[schema.type];
+  return handler ? handler(schema) : null;
 }
 
 interface AddPatch {

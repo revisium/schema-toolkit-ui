@@ -1,9 +1,9 @@
 import { makeAutoObservable } from 'mobx';
 import { ViewerSwitcherMode, type JsonPatch } from '../types';
-import type { JsonObjectSchema } from '../model';
 import {
   SchemaEngine,
   getDefaultValueFromSchema,
+  type JsonObjectSchema,
   type RichPatch,
   type ValidationError,
   type FormulaValidationError,
@@ -16,7 +16,6 @@ import { PrimitiveNodeVM } from './PrimitiveNodeVM';
 
 // Import all VM classes to ensure they are registered
 import './ArrayNodeVM';
-import './PrimitiveNodeVM';
 import './ForeignKeyNodeVM';
 import './RefNodeVM';
 

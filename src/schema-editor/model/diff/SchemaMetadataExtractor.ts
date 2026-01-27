@@ -64,7 +64,7 @@ export class SchemaMetadataExtractor {
       return undefined;
     }
     const s = schema as SchemaWithFormula;
-    if (s['x-formula'] && s['x-formula'].expression) {
+    if (s['x-formula']?.expression) {
       return s['x-formula'].expression;
     }
     return undefined;

@@ -119,7 +119,7 @@ class SegmentPathImpl implements Path {
   }
 
   lastSegment(): PathSegment | null {
-    return this.segs[this.segs.length - 1] ?? null;
+    return this.segs.at(-1) ?? null;
   }
 }
 

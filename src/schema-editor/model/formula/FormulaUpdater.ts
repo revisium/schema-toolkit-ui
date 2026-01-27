@@ -98,31 +98,48 @@ export class FormulaUpdater {
     nodeId: string,
     updates: FormulaUpdate[],
   ): void {
+    this.tryUpdateNodeFormula(nodeId, updates);
+    this.recursivelyUpdateChildFormulas(nodeId, updates);
+  }
+
+  private tryUpdateNodeFormula(nodeId: string, updates: FormulaUpdate[]): void {
     const formula = this.tree.getFormulaByNodeId(nodeId);
-    if (formula) {
-      const node = this.tree.nodeById(nodeId);
-      if (!node.isNull()) {
-        const oldExpression = formula.expression();
-        const newExpression = this.updateFormulaAfterOwnerMove(formula, nodeId);
-        if (newExpression !== oldExpression) {
-          this.applyFormulaUpdate(node, nodeId, newExpression);
-          updates.push({ formulaNodeId: nodeId, oldExpression, newExpression });
-        }
-      }
+    if (!formula) {
+      return;
     }
 
     const node = this.tree.nodeById(nodeId);
-    if (!node.isNull()) {
-      if (node.isObject()) {
-        for (const child of node.children()) {
-          this.updateFormulasInsideMovedNode(child.id(), updates);
-        }
+    if (node.isNull()) {
+      return;
+    }
+
+    const oldExpression = formula.expression();
+    const newExpression = this.updateFormulaAfterOwnerMove(formula, nodeId);
+    if (newExpression !== oldExpression) {
+      this.applyFormulaUpdate(node, nodeId, newExpression);
+      updates.push({ formulaNodeId: nodeId, oldExpression, newExpression });
+    }
+  }
+
+  private recursivelyUpdateChildFormulas(
+    nodeId: string,
+    updates: FormulaUpdate[],
+  ): void {
+    const node = this.tree.nodeById(nodeId);
+    if (node.isNull()) {
+      return;
+    }
+
+    if (node.isObject()) {
+      for (const child of node.children()) {
+        this.updateFormulasInsideMovedNode(child.id(), updates);
       }
-      if (node.isArray()) {
-        const items = node.items();
-        if (!items.isNull()) {
-          this.updateFormulasInsideMovedNode(items.id(), updates);
-        }
+    }
+
+    if (node.isArray()) {
+      const items = node.items();
+      if (!items.isNull()) {
+        this.updateFormulasInsideMovedNode(items.id(), updates);
       }
     }
   }
@@ -233,38 +250,36 @@ export class FormulaUpdater {
     for (const dep of formula.dependencies()) {
       if (this.isAncestorOrSelf(movedNodeId, dep.targetNodeId())) {
         const originalPath = dep.originalPath();
-
-        if (originalPath.startsWith('/')) {
-          const newAbsPath = this.pathConverter.pathToAbsolute(newPath);
-          result = this.expressionReplacer.replacePathInExpression(
-            result,
-            originalPath,
-            newAbsPath,
-          );
-        } else {
-          const newRelPath = this.pathConverter.computeRelativePath(
-            formulaPath,
-            newPath,
-          );
-          if (newRelPath) {
-            result = this.expressionReplacer.replacePathInExpression(
-              result,
-              originalPath,
-              newRelPath,
-            );
-          } else {
-            const newAbsPath = this.pathConverter.pathToAbsolute(newPath);
-            result = this.expressionReplacer.replacePathInExpression(
-              result,
-              originalPath,
-              newAbsPath,
-            );
-          }
-        }
+        const replacementPath = this.computeReplacementPathForMove(
+          originalPath,
+          formulaPath,
+          newPath,
+        );
+        result = this.expressionReplacer.replacePathInExpression(
+          result,
+          originalPath,
+          replacementPath,
+        );
       }
     }
 
     return result;
+  }
+
+  private computeReplacementPathForMove(
+    originalPath: string,
+    formulaPath: Path,
+    newPath: Path,
+  ): string {
+    if (originalPath.startsWith('/')) {
+      return this.pathConverter.pathToAbsolute(newPath);
+    }
+
+    const newRelPath = this.pathConverter.computeRelativePath(
+      formulaPath,
+      newPath,
+    );
+    return newRelPath ?? this.pathConverter.pathToAbsolute(newPath);
   }
 
   private isAncestorOrSelf(ancestorId: string, nodeId: string): boolean {

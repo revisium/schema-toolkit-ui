@@ -32,7 +32,7 @@ export class FormulaPathConverter {
   }
 
   public isComplexRelativePath(path: string): boolean {
-    const match = path.match(/^(\.\.\/)+/);
+    const match = /^(\.\.\/)+/.exec(path);
     if (!match) {
       return false;
     }
