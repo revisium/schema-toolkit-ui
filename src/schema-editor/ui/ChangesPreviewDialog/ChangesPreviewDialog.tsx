@@ -679,7 +679,7 @@ const ErrorsList: FC<ErrorsListProps> = ({
     <VStack align="stretch" gap={0} divideY="1px" divideColor="gray.100">
       {validationErrors.map((error) => (
         <ErrorItem
-          key={`validation-${error.message}`}
+          key={`validation-${error.nodeId}`}
           message={error.message}
           type="validation"
         />

@@ -1,6 +1,7 @@
 import type { Path } from './Path';
 import type { PathSegment } from './PathSegment';
 import { PropertySegment, ITEMS_SEGMENT } from './PathSegment';
+import { ParsedPathBase } from './ParsedPathBase';
 
 class EmptyPathImpl implements Path {
   segments(): readonly PathSegment[] {
@@ -125,51 +126,12 @@ class SegmentPathImpl implements Path {
 
 export const EMPTY_PATH: Path = new EmptyPathImpl();
 
-export class PathFromSegments implements Path {
-  private readonly inner: Path;
+export class PathFromSegments extends ParsedPathBase {
+  protected readonly parsed: Path;
 
   constructor(segments: readonly PathSegment[]) {
-    this.inner =
+    super();
+    this.parsed =
       segments.length === 0 ? EMPTY_PATH : new SegmentPathImpl(segments);
-  }
-
-  segments(): readonly PathSegment[] {
-    return this.inner.segments();
-  }
-
-  asJsonPointer(): string {
-    return this.inner.asJsonPointer();
-  }
-
-  asSimple(): string {
-    return this.inner.asSimple();
-  }
-
-  parent(): Path {
-    return this.inner.parent();
-  }
-
-  child(name: string): Path {
-    return this.inner.child(name);
-  }
-
-  childItems(): Path {
-    return this.inner.childItems();
-  }
-
-  equals(other: Path): boolean {
-    return this.inner.equals(other);
-  }
-
-  isEmpty(): boolean {
-    return this.inner.isEmpty();
-  }
-
-  length(): number {
-    return this.inner.length();
-  }
-
-  lastSegment(): PathSegment | null {
-    return this.inner.lastSegment();
   }
 }

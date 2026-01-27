@@ -1,25 +1,13 @@
+import { JsonPointerPath } from '../path/JsonPointerPath';
+
 export class PatchPathUtils {
   public getFieldNameFromPath(path: string): string {
-    const parts = path.split('/').filter(Boolean);
-    const segments: string[] = [];
-
-    let i = 0;
-    while (i < parts.length) {
-      const part = parts[i];
-      if (part === 'properties' && i + 1 < parts.length) {
-        segments.push(parts[i + 1] ?? '');
-        i += 2;
-      } else if (part === 'items') {
-        if (segments.length > 0) {
-          segments[segments.length - 1] += '[*]';
-        }
-        i += 1;
-      } else {
-        i += 1;
-      }
+    try {
+      const parsed = new JsonPointerPath(path);
+      return parsed.asSimple();
+    } catch {
+      return '';
     }
-
-    return segments.join('.');
   }
 
   public isRenameMove(fromPath: string, toPath: string): boolean {

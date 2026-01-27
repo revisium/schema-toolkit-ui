@@ -363,7 +363,6 @@ describe('SchemaTree', () => {
       expect(tree.countNodes()).toBe(3);
     });
   });
-
 });
 
 describe('SchemaParser', () => {
