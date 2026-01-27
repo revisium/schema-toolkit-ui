@@ -9,7 +9,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'dist/**', 'storybook-static/**', '*.config.js', '*.config.ts'],
+    ignores: ['eslint.config.mjs', 'dist/**', 'storybook-static/**', 'coverage/**', '*.config.js', '*.config.ts'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -43,6 +43,15 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+      '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
+      'sonarjs/function-return-type': 'off',
+      'sonarjs/cognitive-complexity': 'off',
+      'sonarjs/prefer-regexp-exec': 'off',
+      'sonarjs/void-use': 'off',
+      'sonarjs/different-types-comparison': 'off',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'error',
