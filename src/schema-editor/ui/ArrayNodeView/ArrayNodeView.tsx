@@ -130,7 +130,7 @@ const ArrayItemsChildren: FC<ArrayItemsChildrenProps> = observer(
               <CreateButton
                 dataTestId={`${dataTestId}-create-field-button`}
                 title="Field"
-                onClick={() => itemsVm.addChild('')}
+                onClick={() => itemsVm.addProperty('')}
               />
             </Box>
           )}

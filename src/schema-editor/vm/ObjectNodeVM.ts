@@ -7,7 +7,7 @@ import type { SchemaEditorVM } from './SchemaEditorVM';
 
 export class ObjectNodeVM extends BaseNodeVM {
   public isCollapsedState: boolean;
-  public childrenList: NodeVM[] = [];
+  public propertyList: NodeVM[] = [];
 
   constructor(
     node: SchemaNode,
@@ -21,14 +21,14 @@ export class ObjectNodeVM extends BaseNodeVM {
 
     makeObservable(this, {
       isCollapsedState: observable,
-      childrenList: observable.shallow,
+      propertyList: observable.shallow,
       isCollapsed: computed,
       children: computed,
       showAddButton: computed,
       toggleCollapsed: action.bound,
-      addChild: action.bound,
-      removeChild: action.bound,
-      replaceChild: action.bound,
+      addProperty: action.bound,
+      removeProperty: action.bound,
+      replaceProperty: action.bound,
       moveNodeHere: action.bound,
       removeSelf: action.bound,
       changeType: action.bound,
@@ -38,7 +38,7 @@ export class ObjectNodeVM extends BaseNodeVM {
   }
 
   private initChildren(): void {
-    this.childrenList = this._node
+    this.propertyList = this._node
       .properties()
       .map((child) => createNodeVM(child, this._editor, this));
   }
@@ -56,7 +56,7 @@ export class ObjectNodeVM extends BaseNodeVM {
   }
 
   public get children(): readonly NodeVM[] {
-    return this.childrenList;
+    return this.propertyList;
   }
 
   public get showAddButton(): boolean {
@@ -67,25 +67,25 @@ export class ObjectNodeVM extends BaseNodeVM {
     return true;
   }
 
-  public addChild(name: string): void {
+  public addProperty(name: string): void {
     const newNode = this._editor.engine.addChild(this.nodeId, name);
     if (!newNode.isNull()) {
       const childVM = createNodeVM(newNode, this._editor, this);
-      this.childrenList.push(childVM);
+      this.propertyList.push(childVM);
     }
   }
 
-  public removeChild(childVM: NodeVM): void {
+  public removeProperty(childVM: NodeVM): void {
     const removed = this._editor.engine.removeNode(childVM.nodeId);
     if (removed) {
-      const index = this.childrenList.indexOf(childVM);
+      const index = this.propertyList.indexOf(childVM);
       if (index >= 0) {
-        this.childrenList.splice(index, 1);
+        this.propertyList.splice(index, 1);
       }
     }
   }
 
-  public replaceChild(childVM: NodeVM, typeId: string): void {
+  public replaceProperty(childVM: NodeVM, typeId: string): void {
     const currentNode = childVM.node;
     if (currentNode.isNull()) {
       return;
@@ -96,7 +96,7 @@ export class ObjectNodeVM extends BaseNodeVM {
       if (result) {
         const arrayNode = this._editor.engine.nodeById(result.newNodeId);
         const newVM = createNodeVM(arrayNode, this._editor, this);
-        this.replaceChildVM(childVM, newVM);
+        this.replacePropertyVM(childVM, newVM);
       }
       return;
     }
@@ -106,15 +106,15 @@ export class ObjectNodeVM extends BaseNodeVM {
       const result = this._editor.engine.replaceNode(childVM.nodeId, newNode);
       if (result) {
         const newVM = createNodeVM(newNode, this._editor, this);
-        this.replaceChildVM(childVM, newVM);
+        this.replacePropertyVM(childVM, newVM);
       }
     }
   }
 
-  private replaceChildVM(oldVM: NodeVM, newVM: NodeVM): void {
-    const index = this.childrenList.indexOf(oldVM);
+  private replacePropertyVM(oldVM: NodeVM, newVM: NodeVM): void {
+    const index = this.propertyList.indexOf(oldVM);
     if (index >= 0) {
-      this.childrenList[index] = newVM;
+      this.propertyList[index] = newVM;
     }
   }
 
@@ -128,33 +128,33 @@ export class ObjectNodeVM extends BaseNodeVM {
 
     const movedNode = this._editor.engine.nodeById(fromNodeId);
     if (!movedNode.isNull()) {
-      this._editor.rootNodeVM.removeChildVMByNodeId(fromNodeId);
+      this._editor.rootNodeVM.removePropertyVMByNodeId(fromNodeId);
       const movedVM = createNodeVM(movedNode, this._editor, this);
-      this.childrenList.push(movedVM);
+      this.propertyList.push(movedVM);
     }
   }
 
   public removeSelf(): void {
     if (this._parent) {
-      this._parent.removeChild(this);
+      this._parent.removeProperty(this);
     }
   }
 
   public changeType(typeId: string): void {
     if (this._parent) {
-      this._parent.replaceChild(this, typeId);
+      this._parent.replaceProperty(this, typeId);
     }
   }
 
-  public removeChildVMByNodeId(nodeId: string): boolean {
-    const index = this.childrenList.findIndex((vm) => vm.nodeId === nodeId);
+  public removePropertyVMByNodeId(nodeId: string): boolean {
+    const index = this.propertyList.findIndex((vm) => vm.nodeId === nodeId);
     if (index >= 0) {
-      this.childrenList.splice(index, 1);
+      this.propertyList.splice(index, 1);
       return true;
     }
-    for (const child of this.childrenList) {
+    for (const child of this.propertyList) {
       if (child instanceof ObjectNodeVM) {
-        const found = child.removeChildVMByNodeId(nodeId);
+        const found = child.removePropertyVMByNodeId(nodeId);
         if (found) {
           return true;
         }

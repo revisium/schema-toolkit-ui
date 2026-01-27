@@ -91,14 +91,14 @@ describe('SchemaEditorVM', () => {
     });
   });
 
-  describe('addChild', () => {
+  describe('addProperty', () => {
     it('should add child to ObjectNodeVM', () => {
       const schema = createSchema({
         existing: { type: 'string', default: '' },
       });
       const editor = new SchemaEditorVM(schema);
 
-      editor.rootNodeVM.addChild('newField');
+      editor.rootNodeVM.addProperty('newField');
 
       expect(editor.rootNodeVM.children).toHaveLength(2);
       expect(editor.rootNodeVM.children[1].name).toBe('newField');
@@ -108,14 +108,14 @@ describe('SchemaEditorVM', () => {
       const schema = createSchema({});
       const editor = new SchemaEditorVM(schema);
 
-      editor.rootNodeVM.addChild('field1');
+      editor.rootNodeVM.addProperty('field1');
 
       expect(editor.engine.root().properties()).toHaveLength(1);
       expect(editor.engine.root().property('field1').isNull()).toBe(false);
     });
   });
 
-  describe('removeChild', () => {
+  describe('removeProperty', () => {
     it('should remove child from ObjectNodeVM', () => {
       const schema = createSchema({
         name: { type: 'string', default: '' },
@@ -124,7 +124,7 @@ describe('SchemaEditorVM', () => {
       const editor = new SchemaEditorVM(schema);
       const nameVM = editor.rootNodeVM.children[0];
 
-      editor.rootNodeVM.removeChild(nameVM);
+      editor.rootNodeVM.removeProperty(nameVM);
 
       expect(editor.rootNodeVM.children).toHaveLength(1);
       expect(editor.rootNodeVM.children[0].name).toBe('age');
@@ -137,13 +137,13 @@ describe('SchemaEditorVM', () => {
       const editor = new SchemaEditorVM(schema);
       const nameVM = editor.rootNodeVM.children[0];
 
-      editor.rootNodeVM.removeChild(nameVM);
+      editor.rootNodeVM.removeProperty(nameVM);
 
       expect(editor.engine.root().properties()).toHaveLength(0);
     });
   });
 
-  describe('replaceChild (changeType)', () => {
+  describe('replaceProperty (changeType)', () => {
     it('should replace primitive with different type', () => {
       const schema = createSchema({
         value: { type: 'string', default: '' },
@@ -247,7 +247,7 @@ describe('SchemaEditorVM', () => {
       const editor = new SchemaEditorVM(schema);
       const originalRootVM = editor.rootNodeVM;
 
-      editor.rootNodeVM.addChild('newField');
+      editor.rootNodeVM.addProperty('newField');
       expect(editor.rootNodeVM.children).toHaveLength(2);
 
       editor.revert();
@@ -266,7 +266,7 @@ describe('SchemaEditorVM', () => {
 
       expect(editor.isDirty).toBe(false);
 
-      editor.rootNodeVM.addChild('newField');
+      editor.rootNodeVM.addProperty('newField');
 
       expect(editor.isDirty).toBe(true);
     });

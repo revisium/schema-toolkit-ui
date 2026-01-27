@@ -36,13 +36,13 @@ export class ForeignKeyNodeVM extends BaseNodeVM {
 
   public removeSelf(): void {
     if (this._parent) {
-      this._parent.removeChild(this);
+      this._parent.removeProperty(this);
     }
   }
 
   public changeType(typeId: string): void {
     if (this._parent) {
-      this._parent.replaceChild(this, typeId);
+      this._parent.replaceProperty(this, typeId);
     }
   }
 }

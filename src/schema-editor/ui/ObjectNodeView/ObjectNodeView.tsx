@@ -63,7 +63,7 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
               <CreateButton
                 dataTestId={`${dataTestId}-create-field-button`}
                 title="Field"
-                onClick={() => viewModel.addChild('')}
+                onClick={() => viewModel.addProperty('')}
               />
             </Box>
           )}
