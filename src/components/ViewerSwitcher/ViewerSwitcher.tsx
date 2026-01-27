@@ -93,9 +93,9 @@ export const ViewerSwitcher: React.FC<ViewerSwitcherProps> = ({
             closeDelay={0}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <Icon size="sm">{currentMode.icon}</Icon>
+              <Icon boxSize={4}>{currentMode.icon}</Icon>
               <Icon
-                size="xs"
+                boxSize={3}
                 color="gray.400"
                 className="caret"
                 opacity={0}
@@ -119,7 +119,7 @@ export const ViewerSwitcher: React.FC<ViewerSwitcherProps> = ({
                   cursor="pointer"
                 >
                   <Menu.ItemIndicator />
-                  <Icon size="sm" mr="8px">
+                  <Icon boxSize={4} mr="8px">
                     {item.icon}
                   </Icon>
                   {item.label}

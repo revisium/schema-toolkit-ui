@@ -9,7 +9,7 @@ export class FormulaPathConverter {
     for (const seg of segments) {
       if (seg.isProperty()) {
         parts.push(seg.propertyName());
-      } else if (seg.isItems()) {
+      } else if (seg.isItems() && parts.length > 0) {
         parts[parts.length - 1] += '[*]';
       }
     }

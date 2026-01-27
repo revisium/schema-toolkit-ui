@@ -45,12 +45,18 @@ export class FormulaUpdater {
       );
 
       if (newExpression !== oldExpression) {
-        this.applyFormulaUpdate(formulaNode, dep.formulaNodeId, newExpression);
-        updates.push({
-          formulaNodeId: dep.formulaNodeId,
-          oldExpression,
+        const success = this.applyFormulaUpdate(
+          formulaNode,
+          dep.formulaNodeId,
           newExpression,
-        });
+        );
+        if (success) {
+          updates.push({
+            formulaNodeId: dep.formulaNodeId,
+            oldExpression,
+            newExpression,
+          });
+        }
       }
     }
 
@@ -80,12 +86,18 @@ export class FormulaUpdater {
       );
 
       if (newExpression !== oldExpression) {
-        this.applyFormulaUpdate(formulaNode, dep.formulaNodeId, newExpression);
-        updates.push({
-          formulaNodeId: dep.formulaNodeId,
-          oldExpression,
+        const success = this.applyFormulaUpdate(
+          formulaNode,
+          dep.formulaNodeId,
           newExpression,
-        });
+        );
+        if (success) {
+          updates.push({
+            formulaNodeId: dep.formulaNodeId,
+            oldExpression,
+            newExpression,
+          });
+        }
       }
     }
 
@@ -116,8 +128,10 @@ export class FormulaUpdater {
     const oldExpression = formula.expression();
     const newExpression = this.updateFormulaAfterOwnerMove(formula, nodeId);
     if (newExpression !== oldExpression) {
-      this.applyFormulaUpdate(node, nodeId, newExpression);
-      updates.push({ formulaNodeId: nodeId, oldExpression, newExpression });
+      const success = this.applyFormulaUpdate(node, nodeId, newExpression);
+      if (success) {
+        updates.push({ formulaNodeId: nodeId, oldExpression, newExpression });
+      }
     }
   }
 

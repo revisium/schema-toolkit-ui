@@ -12,7 +12,8 @@ export class FormulaExpressionReplacer {
       `(?<![a-zA-Z0-9_])${escapedOldPath}(?![a-zA-Z0-9_])`,
       'g',
     );
-    return expression.replace(regex, newPath);
+    const safeNewPath = newPath.replaceAll('$', '$$$$');
+    return expression.replace(regex, safeNewPath);
   }
 
   public replaceNameInPath(

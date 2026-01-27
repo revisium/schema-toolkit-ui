@@ -16,6 +16,7 @@ export class NodePathIndex {
   public rebuild(): void {
     this.nodeIdToPath.clear();
     this.nodeIdReplacements.clear();
+    this.replacedPaths.clear();
     this.collectNodePaths(this.tree.root(), '');
   }
 

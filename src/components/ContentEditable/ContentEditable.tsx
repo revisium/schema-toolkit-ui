@@ -165,7 +165,6 @@ export const ContentEditable: React.FC<ContentEditableBoxProps> = ({
         color="blackAlpha.800"
         textDecoration={textDecoration}
         data-testid={dataTestId}
-        autoFocus
         ref={ref}
         contentEditable
         spellCheck={'false'}
@@ -174,7 +173,6 @@ export const ContentEditable: React.FC<ContentEditableBoxProps> = ({
         width="100%"
         onBlur={handleBlur}
         onFocus={onFocus}
-        onChange={handleChange}
         onInput={handleChange}
         onKeyDown={handleKeyDown}
       ></Box>

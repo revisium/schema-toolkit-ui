@@ -109,7 +109,7 @@ export class FormulaSerializer {
   ): void {
     if (seg.isProperty()) {
       parts.push(seg.propertyName());
-    } else {
+    } else if (parts.length > 0) {
       const lastPart = parts.at(-1);
       if (lastPart && lastPart !== '..') {
         parts[parts.length - 1] = lastPart + '[*]';

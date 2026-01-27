@@ -23,7 +23,7 @@ export class SimplePath implements Path {
         throw new Error(`Invalid simple path: empty segment in "${this.path}"`);
       }
 
-      const bracketMatch = /^([^[]+)\[(\d+|\*)?\]$/.exec(part);
+      const bracketMatch = /^([^[]+)\[(?:\d+|\*)?\]$/.exec(part);
       if (bracketMatch) {
         const propertyName = bracketMatch[1];
         if (propertyName) {

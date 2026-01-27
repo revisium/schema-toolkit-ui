@@ -177,9 +177,7 @@ export class SchemaEngine {
           ? metadata.description || undefined
           : currentMeta.description,
       deprecated:
-        'deprecated' in metadata
-          ? metadata.deprecated || undefined
-          : currentMeta.deprecated,
+        'deprecated' in metadata ? metadata.deprecated : currentMeta.deprecated,
     });
     this._tree.notifyChange();
   }

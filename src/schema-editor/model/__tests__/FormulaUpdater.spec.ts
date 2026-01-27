@@ -237,7 +237,7 @@ describe('FormulaUpdater', () => {
   });
 
   describe('edge cases', () => {
-    it('updates formula even when field is removed from tree', () => {
+    it('does not report update when renamed field is removed from tree', () => {
       const tree = createTreeWithFormulas({
         price: numberField(),
         total: formulaField('price * 2'),
@@ -254,8 +254,7 @@ describe('FormulaUpdater', () => {
         'cost',
       );
 
-      expect(updates).toHaveLength(1);
-      expect(updates[0].newExpression).toBe('cost * 2');
+      expect(updates).toHaveLength(0);
     });
 
     it('handles multiple dependencies in single formula', () => {
