@@ -141,7 +141,9 @@ describe('FormulaDependencyIndex', () => {
       });
 
       const orderNode = tree.root().properties()[0];
-      const priceNode = orderNode.properties().find((c) => c.name() === 'price')!;
+      const priceNode = orderNode
+        .properties()
+        .find((c) => c.name() === 'price')!;
 
       const dependents = tree.getFormulaDependents(priceNode.id());
       expect(dependents).toHaveLength(1);

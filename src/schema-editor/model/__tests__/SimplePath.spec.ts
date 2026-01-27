@@ -123,6 +123,19 @@ describe('SimplePath', () => {
       const path2 = new SimplePath('user.email');
       expect(path1.equals(path2)).toBe(false);
     });
+
+    it('lastSegment returns last segment', () => {
+      const path = new SimplePath('user.name');
+      const last = path.lastSegment();
+      expect(last).not.toBeNull();
+      expect(last?.isProperty()).toBe(true);
+      expect(last?.propertyName()).toBe('name');
+    });
+
+    it('lastSegment returns null for empty path', () => {
+      const path = new SimplePath('');
+      expect(path.lastSegment()).toBeNull();
+    });
   });
 
   describe('asSimple', () => {

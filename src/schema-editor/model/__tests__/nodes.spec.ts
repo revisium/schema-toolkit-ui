@@ -159,6 +159,28 @@ describe('ObjectNode', () => {
     });
   });
 
+  describe('accessors', () => {
+    it('formula returns undefined', () => {
+      const node = new ObjectNode('obj-1', 'user');
+      expect(node.formula()).toBeUndefined();
+    });
+
+    it('hasFormula returns false', () => {
+      const node = new ObjectNode('obj-1', 'user');
+      expect(node.hasFormula()).toBe(false);
+    });
+
+    it('defaultValue returns undefined', () => {
+      const node = new ObjectNode('obj-1', 'user');
+      expect(node.defaultValue()).toBeUndefined();
+    });
+
+    it('foreignKey returns undefined', () => {
+      const node = new ObjectNode('obj-1', 'user');
+      expect(node.foreignKey()).toBeUndefined();
+    });
+  });
+
   describe('ref()', () => {
     it('throws error', () => {
       const node = new ObjectNode('obj-1', 'user');
@@ -285,6 +307,28 @@ describe('ArrayNode', () => {
       const node = new ArrayNode('arr-1', 'tags', items);
       node.replaceProperty();
       expect(node.items()).toBe(items);
+    });
+  });
+
+  describe('accessors', () => {
+    it('formula returns undefined', () => {
+      const node = new ArrayNode('arr-1', 'tags', createItemsNode());
+      expect(node.formula()).toBeUndefined();
+    });
+
+    it('hasFormula returns false', () => {
+      const node = new ArrayNode('arr-1', 'tags', createItemsNode());
+      expect(node.hasFormula()).toBe(false);
+    });
+
+    it('defaultValue returns undefined', () => {
+      const node = new ArrayNode('arr-1', 'tags', createItemsNode());
+      expect(node.defaultValue()).toBeUndefined();
+    });
+
+    it('foreignKey returns undefined', () => {
+      const node = new ArrayNode('arr-1', 'tags', createItemsNode());
+      expect(node.foreignKey()).toBeUndefined();
     });
   });
 
@@ -782,6 +826,13 @@ describe('BooleanNode', () => {
       expect(() => node.ref()).toThrow('BooleanNode has no ref');
     });
   });
+
+  describe('accessors', () => {
+    it('foreignKey returns undefined', () => {
+      const node = new BooleanNode('bool-1', 'active');
+      expect(node.foreignKey()).toBeUndefined();
+    });
+  });
 });
 
 describe('RefNode', () => {
@@ -901,6 +952,28 @@ describe('RefNode', () => {
       const node = new RefNode('ref-1', 'file', 'File');
       node.setItems();
       expect(node.items().isNull()).toBe(true);
+    });
+  });
+
+  describe('accessors', () => {
+    it('formula returns undefined', () => {
+      const node = new RefNode('ref-1', 'file', 'File');
+      expect(node.formula()).toBeUndefined();
+    });
+
+    it('hasFormula returns false', () => {
+      const node = new RefNode('ref-1', 'file', 'File');
+      expect(node.hasFormula()).toBe(false);
+    });
+
+    it('defaultValue returns undefined', () => {
+      const node = new RefNode('ref-1', 'file', 'File');
+      expect(node.defaultValue()).toBeUndefined();
+    });
+
+    it('foreignKey returns undefined', () => {
+      const node = new RefNode('ref-1', 'file', 'File');
+      expect(node.foreignKey()).toBeUndefined();
     });
   });
 });

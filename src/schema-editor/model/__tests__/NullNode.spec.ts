@@ -58,6 +58,22 @@ describe('NULL_NODE', () => {
     it('items returns NULL_NODE', () => {
       expect(NULL_NODE.items()).toBe(NULL_NODE);
     });
+
+    it('formula returns undefined', () => {
+      expect(NULL_NODE.formula()).toBeUndefined();
+    });
+
+    it('hasFormula returns false', () => {
+      expect(NULL_NODE.hasFormula()).toBe(false);
+    });
+
+    it('defaultValue returns undefined', () => {
+      expect(NULL_NODE.defaultValue()).toBeUndefined();
+    });
+
+    it('foreignKey returns undefined', () => {
+      expect(NULL_NODE.foreignKey()).toBeUndefined();
+    });
   });
 
   describe('mutators that throw', () => {
@@ -99,6 +115,18 @@ describe('NULL_NODE', () => {
 
     it('setItems throws error', () => {
       expect(() => NULL_NODE.setItems(NULL_NODE)).toThrow(
+        'Cannot modify null node',
+      );
+    });
+
+    it('setFormula throws error', () => {
+      expect(() => NULL_NODE.setFormula(undefined)).toThrow(
+        'Cannot modify null node',
+      );
+    });
+
+    it('setDefaultValue throws error', () => {
+      expect(() => NULL_NODE.setDefaultValue(null)).toThrow(
         'Cannot modify null node',
       );
     });
