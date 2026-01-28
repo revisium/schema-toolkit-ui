@@ -23,7 +23,10 @@ export class SchemaDiff {
   }
 
   public getBaseSchema(): JsonObjectSchema {
-    return this.serializer.serialize(this.baseTree.root()) as JsonObjectSchema;
+    return this.serializer.serializeWithTree(
+      this.baseTree.root(),
+      this.baseTree,
+    ) as JsonObjectSchema;
   }
 
   public trackReplacement(oldNodeId: string, newNodeId: string): void {
@@ -41,7 +44,10 @@ export class SchemaDiff {
   }
 
   public getCurrentSchema(): JsonObjectSchema {
-    return this.serializer.serialize(this.tree.root()) as JsonObjectSchema;
+    return this.serializer.serializeWithTree(
+      this.tree.root(),
+      this.tree,
+    ) as JsonObjectSchema;
   }
 
   private createPatchBuilder(): PatchBuilder {

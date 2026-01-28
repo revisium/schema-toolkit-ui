@@ -12,7 +12,6 @@ import {
   type ContentMediaType,
 } from '../../node/StringNode';
 import { PRIMITIVE_CAPABILITIES } from './TypeCapabilities';
-import { FormulaSerializer } from '../../formula/FormulaSerializer';
 
 function isStringSchema(schema: JsonSchemaType): schema is JsonStringSchema {
   return 'type' in schema && schema.type === 'string';
@@ -59,7 +58,7 @@ export const stringDescriptor: TypeDescriptor<JsonStringSchema, StringNode> = {
     return node;
   },
 
-  serialize(node: StringNode, _context: SerializeContext): JsonStringSchema {
+  serialize(node: StringNode, context: SerializeContext): JsonStringSchema {
     const result: JsonStringSchema = {
       type: 'string',
       default: node.defaultValue() ?? '',
@@ -81,7 +80,7 @@ export const stringDescriptor: TypeDescriptor<JsonStringSchema, StringNode> = {
     const formula = node.formula();
     if (formula) {
       result.readOnly = true;
-      result['x-formula'] = FormulaSerializer.toXFormula(formula);
+      result['x-formula'] = context.serializeFormula(node.id(), formula);
     }
 
     return result;

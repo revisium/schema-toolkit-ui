@@ -5,10 +5,10 @@ import type { Path } from '../path/Path';
 import { NULL_NODE } from '../node/NullNode';
 import {
   FormulaDependencyIndex,
+  FormulaSerializer,
   type FormulaDependent,
-} from '../formula/FormulaDependencyIndex';
-import type { Formula } from '../formula/Formula';
-import { FormulaUpdater } from '../formula/FormulaUpdater';
+  type Formula,
+} from '../formula';
 import { TreeNodeIndex } from './TreeNodeIndex';
 import { TreeMutator } from './TreeMutator';
 
@@ -88,11 +88,8 @@ export class SchemaTree implements NodeTree {
       return;
     }
 
-    const oldName = node.name();
     node.setName(newName);
-
     this.rebuildIndex();
-    new FormulaUpdater(this).updateFormulasOnRename(id, oldName, newName);
   }
 
   public addChildTo(parentId: string, node: SchemaNode): void {
@@ -118,12 +115,10 @@ export class SchemaTree implements NodeTree {
     }
     const toPath = this.pathOf(toNodeId);
     const fromPath = this.pathOf(fromNodeId);
-    const fromPointer = fromPath.asJsonPointer();
-    const toPointer = toPath.asJsonPointer();
-    if (toPointer === fromPointer || toPointer.startsWith(fromPointer + '/')) {
+    if (toPath.equals(fromPath) || toPath.isChildOf(fromPath)) {
       return false;
     }
-    if (this.isCurrentParent(fromPath, toPath)) {
+    if (fromPath.parent().equals(toPath)) {
       return false;
     }
     return true;
@@ -156,11 +151,6 @@ export class SchemaTree implements NodeTree {
     return false;
   }
 
-  private isCurrentParent(fromPath: Path, toPath: Path): boolean {
-    const fromParent = fromPath.parent();
-    return fromParent.asJsonPointer() === toPath.asJsonPointer();
-  }
-
   public moveNode(nodeId: string, targetParentId: string): void {
     const node = this.nodeById(nodeId);
     const targetParent = this.nodeById(targetParentId);
@@ -173,14 +163,9 @@ export class SchemaTree implements NodeTree {
       return;
     }
 
-    const oldPath = sourcePath;
-
     this.mutator.removeNodeAtInternal(this._rootNode, sourcePath.segments(), 0);
     targetParent.addProperty(node);
     this.rebuildIndex();
-
-    const newPath = this.pathOf(nodeId);
-    new FormulaUpdater(this).updateFormulasOnMove(nodeId, oldPath, newPath);
   }
 
   public registerFormula(formulaNodeId: string, formula: Formula): void {
@@ -188,7 +173,7 @@ export class SchemaTree implements NodeTree {
     if (node.isNull()) {
       return;
     }
-    this.formulaIndex.registerFormula(formulaNodeId, node.name(), formula);
+    this.formulaIndex.registerFormula(formulaNodeId, formula);
   }
 
   public unregisterFormula(formulaNodeId: string): void {
@@ -217,6 +202,10 @@ export class SchemaTree implements NodeTree {
 
   public clearFormulaIndex(): void {
     this.formulaIndex.clear();
+  }
+
+  public forEachFormula(callback: (nodeId: string) => void): void {
+    this.formulaIndex.forEachFormula(callback);
   }
 
   private rebuildIndex(): void {
@@ -279,10 +268,16 @@ export class SchemaTree implements NodeTree {
       return null;
     }
 
+    const expression = new FormulaSerializer(
+      this,
+      formulaNodeId,
+      formula,
+    ).serialize();
+
     return {
       formulaNodeId,
       fieldName: formulaNode.name(),
-      expression: formula.expression(),
+      expression,
     };
   }
 

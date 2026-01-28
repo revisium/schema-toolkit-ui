@@ -1,7 +1,8 @@
 import type { SchemaNode } from '../../node/SchemaNode';
 import type { NodeMetadata } from '../../node/NodeMetadata';
-import type { JsonSchemaType } from '../../schema/JsonSchema';
+import type { JsonSchemaType, XFormula } from '../../schema/JsonSchema';
 import type { TypeCapabilities } from './TypeCapabilities';
+import type { Formula } from '../../formula';
 
 export interface ParseContext {
   generateId: () => string;
@@ -11,6 +12,7 @@ export interface ParseContext {
 
 export interface SerializeContext {
   serialize: (node: SchemaNode) => JsonSchemaType;
+  serializeFormula: (nodeId: string, formula: Formula) => XFormula;
 }
 
 export interface TypeDescriptor<

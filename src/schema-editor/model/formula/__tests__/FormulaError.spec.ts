@@ -1,4 +1,4 @@
-import { FormulaError } from '../formula/FormulaError';
+import { FormulaError } from '..';
 
 describe('FormulaError', () => {
   describe('construction', () => {

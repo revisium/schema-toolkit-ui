@@ -1,9 +1,9 @@
 import { parseFormula, type ASTNode } from '@revisium/formula';
-import type { Path } from '../path/Path';
-import { PathFromSegments } from '../path/Paths';
-import { PropertySegment, ITEMS_SEGMENT } from '../path/PathSegment';
-import type { PathSegment } from '../path/PathSegment';
-import { PathUtils } from '../path/PathUtils';
+import type { Path } from '../../path/Path';
+import { PathFromSegments } from '../../path/Paths';
+import { PropertySegment, ITEMS_SEGMENT } from '../../path/PathSegment';
+import type { PathSegment } from '../../path/PathSegment';
+import { PathUtils } from '../../path/PathUtils';
 
 export class RelativePath {
   constructor(

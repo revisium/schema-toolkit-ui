@@ -1,20 +1,18 @@
 import { parseFormula, type ASTNode } from '@revisium/formula';
-import type { Formula } from './Formula';
-import type { FormulaDependency } from './FormulaDependency';
-import { ResolvedDependency } from './FormulaDependency';
-import type { NodeTree } from '../tree/NodeTree';
-import type { Path } from '../path/Path';
-import { FormulaError } from './FormulaError';
+import type { Formula } from '../core/Formula';
+import type { FormulaDependency } from '../core/FormulaDependency';
+import { ResolvedDependency } from '../core/FormulaDependency';
+import { FormulaError } from '../core/FormulaError';
+import type { NodeTree } from '../../tree/NodeTree';
+import type { Path } from '../../path/Path';
 import { RelativePath } from './RelativePath';
 
 export class ParsedFormula implements Formula {
   private readonly astNode: ASTNode;
   private readonly deps: readonly FormulaDependency[];
-  private readonly expr: string;
+  private readonly astPathToNodeId: ReadonlyMap<string, string>;
 
   constructor(tree: NodeTree, formulaNodeId: string, expression: string) {
-    this.expr = expression;
-
     const parseResult = parseFormula(expression);
     this.astNode = parseResult.ast;
 
@@ -24,6 +22,8 @@ export class ParsedFormula implements Formula {
     }
 
     const deps: FormulaDependency[] = [];
+    const astPathToNodeId = new Map<string, string>();
+
     for (const depPath of parseResult.dependencies) {
       const targetNodeId = this.resolveDependencyPath(
         tree,
@@ -44,17 +44,16 @@ export class ParsedFormula implements Formula {
           'Self-reference detected',
         );
       }
-      deps.push(new ResolvedDependency(depPath, targetNodeId));
+      deps.push(new ResolvedDependency(targetNodeId));
+      astPathToNodeId.set(depPath, targetNodeId);
     }
+
     this.deps = deps;
+    this.astPathToNodeId = astPathToNodeId;
   }
 
   version(): number {
     return 1;
-  }
-
-  expression(): string {
-    return this.expr;
   }
 
   ast(): ASTNode {
@@ -63,6 +62,10 @@ export class ParsedFormula implements Formula {
 
   dependencies(): readonly FormulaDependency[] {
     return this.deps;
+  }
+
+  getNodeIdForAstPath(astPath: string): string | null {
+    return this.astPathToNodeId.get(astPath) ?? null;
   }
 
   private resolveDependencyPath(
@@ -91,10 +94,8 @@ export class ParsedFormula implements Formula {
 
     while (!basePath.isEmpty()) {
       const lastSegment = basePath.lastSegment();
-      if (lastSegment?.isItems()) {
-        basePath = basePath.parent();
-      } else {
-        basePath = basePath.parent();
+      basePath = basePath.parent();
+      if (!lastSegment?.isItems()) {
         break;
       }
     }

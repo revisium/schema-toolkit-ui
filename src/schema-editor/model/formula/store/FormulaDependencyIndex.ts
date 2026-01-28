@@ -1,5 +1,5 @@
 import { makeAutoObservable, observable } from 'mobx';
-import type { Formula } from './Formula';
+import type { Formula } from '../core/Formula';
 
 export interface FormulaDependent {
   formulaNodeId: string;
@@ -15,11 +15,7 @@ export class FormulaDependencyIndex {
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
-  registerFormula(
-    formulaNodeId: string,
-    _fieldName: string,
-    formula: Formula,
-  ): void {
+  registerFormula(formulaNodeId: string, formula: Formula): void {
     this.unregisterFormula(formulaNodeId);
 
     this.formulasByNodeId.set(formulaNodeId, formula);
@@ -51,23 +47,8 @@ export class FormulaDependencyIndex {
     return dependents ? Array.from(dependents) : [];
   }
 
-  hasDependents(nodeId: string): boolean {
-    const dependents = this.dependentsMap.get(nodeId);
-    return dependents !== undefined && dependents.size > 0;
-  }
-
   getFormula(nodeId: string): Formula | null {
     return this.formulasByNodeId.get(nodeId) ?? null;
-  }
-
-  updateFormulaExpression(
-    formulaNodeId: string,
-    fieldName: string,
-    newExpression: string,
-    createFormula: (expression: string) => Formula,
-  ): void {
-    const newFormula = createFormula(newExpression);
-    this.registerFormula(formulaNodeId, fieldName, newFormula);
   }
 
   clear(): void {

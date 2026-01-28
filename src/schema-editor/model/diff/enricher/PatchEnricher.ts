@@ -39,7 +39,12 @@ export class PatchEnricher {
       defaultChange,
       descriptionChange,
       deprecatedChange,
-    } = this.metadataExtractor.computeMetadataChanges(null, currentNode);
+    } = this.metadataExtractor.computeMetadataChanges(
+      this.baseTree,
+      null,
+      this.currentTree,
+      currentNode,
+    );
 
     return {
       patch,
@@ -57,12 +62,30 @@ export class PatchEnricher {
     const isRename = this.isRenameMove(fromPath, patch.path);
     const movesIntoArray = this.movesIntoArrayBoundary(fromPath, patch.path);
 
+    const baseNode = this.getNodeAtPath(this.baseTree, fromPath);
+    const currentNode = this.getNodeAtPath(this.currentTree, patch.path);
+
+    const baseFormula = this.metadataExtractor.getFormulaExpression(
+      this.baseTree,
+      baseNode,
+    );
+    const currentFormula = this.metadataExtractor.getFormulaExpression(
+      this.currentTree,
+      currentNode,
+    );
+
+    const formulaChange =
+      baseFormula !== currentFormula
+        ? { fromFormula: baseFormula, toFormula: currentFormula }
+        : undefined;
+
     return {
       patch,
       fieldName,
-      metadataChanges: [],
+      metadataChanges: formulaChange ? ['formula'] : [],
       isRename: isRename || undefined,
       movesIntoArray: movesIntoArray || undefined,
+      formulaChange,
     };
   }
 
@@ -76,7 +99,12 @@ export class PatchEnricher {
       defaultChange,
       descriptionChange,
       deprecatedChange,
-    } = this.metadataExtractor.computeMetadataChanges(baseNode, currentNode);
+    } = this.metadataExtractor.computeMetadataChanges(
+      this.baseTree,
+      baseNode,
+      this.currentTree,
+      currentNode,
+    );
 
     const typeChanged = this.metadataExtractor.hasTypeChanged(
       baseNode,

@@ -7,7 +7,6 @@ import type { JsonNumberSchema, JsonSchemaType } from '../../schema/JsonSchema';
 import type { NodeMetadata } from '../../node/NodeMetadata';
 import { NumberNode, type NumberNodeOptions } from '../../node/NumberNode';
 import { PRIMITIVE_CAPABILITIES } from './TypeCapabilities';
-import { FormulaSerializer } from '../../formula/FormulaSerializer';
 
 function isNumberSchema(schema: JsonSchemaType): schema is JsonNumberSchema {
   return 'type' in schema && schema.type === 'number';
@@ -42,7 +41,7 @@ export const numberDescriptor: TypeDescriptor<JsonNumberSchema, NumberNode> = {
     return node;
   },
 
-  serialize(node: NumberNode, _context: SerializeContext): JsonNumberSchema {
+  serialize(node: NumberNode, context: SerializeContext): JsonNumberSchema {
     const result: JsonNumberSchema = {
       type: 'number',
       default: node.defaultValue() ?? 0,
@@ -51,7 +50,7 @@ export const numberDescriptor: TypeDescriptor<JsonNumberSchema, NumberNode> = {
     const formula = node.formula();
     if (formula) {
       result.readOnly = true;
-      result['x-formula'] = FormulaSerializer.toXFormula(formula);
+      result['x-formula'] = context.serializeFormula(node.id(), formula);
     }
 
     return result;

@@ -1,10 +1,9 @@
-import { FormulaSerializer } from '../formula/FormulaSerializer';
-import { ParsedFormula } from '../formula/ParsedFormula';
-import { SchemaTree } from '../tree/SchemaTree';
-import { NumberNode } from '../node/NumberNode';
-import { BooleanNode } from '../node/BooleanNode';
-import { ObjectNode } from '../node/ObjectNode';
-import { ArrayNode } from '../node/ArrayNode';
+import { FormulaSerializer, ParsedFormula } from '..';
+import { SchemaTree } from '../../tree/SchemaTree';
+import { NumberNode } from '../../node/NumberNode';
+import { BooleanNode } from '../../node/BooleanNode';
+import { ObjectNode } from '../../node/ObjectNode';
+import { ArrayNode } from '../../node/ArrayNode';
 
 describe('FormulaSerializer', () => {
   describe('toXFormula', () => {
@@ -12,7 +11,7 @@ describe('FormulaSerializer', () => {
       const tree = createSimpleTree();
       const formula = new ParsedFormula(tree, 'sum', 'a + b');
 
-      const xFormula = FormulaSerializer.toXFormula(formula);
+      const xFormula = FormulaSerializer.toXFormula(tree, 'sum', formula);
 
       expect(xFormula).toEqual({
         version: 1,
