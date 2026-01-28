@@ -13,7 +13,7 @@ export class PathUtils {
 
   static parseArrayNotation(part: string): ArrayNotationResult {
     const match = PathUtils.ARRAY_NOTATION_REGEX.exec(part);
-    if (match && match[1]) {
+    if (match?.[1]) {
       return { name: match[1], hasArray: true };
     }
     return { name: part, hasArray: false };
@@ -130,7 +130,7 @@ export class PathUtils {
     }
 
     const firstSeg = segments[0];
-    if (!firstSeg || !firstSeg.isProperty()) {
+    if (!firstSeg?.isProperty()) {
       return null;
     }
 
