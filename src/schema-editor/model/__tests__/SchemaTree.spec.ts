@@ -1,6 +1,6 @@
 import { SchemaTree } from '../tree/SchemaTree';
 import { SchemaParser, resetIdCounter } from '../schema/SchemaParser';
-import { NodeFactory } from '../factory/NodeFactory';
+import { NodeFactory } from '../node/NodeFactory';
 import { ParsedFormula } from '../formula/ParsedFormula';
 import { NumberNode } from '../node/NumberNode';
 import {

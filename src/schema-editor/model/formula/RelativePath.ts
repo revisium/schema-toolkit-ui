@@ -3,6 +3,7 @@ import type { Path } from '../path/Path';
 import { PathFromSegments } from '../path/Paths';
 import { PropertySegment, ITEMS_SEGMENT } from '../path/PathSegment';
 import type { PathSegment } from '../path/PathSegment';
+import { PathUtils } from '../path/PathUtils';
 
 export class RelativePath {
   constructor(
@@ -94,25 +95,10 @@ export class RelativePath {
       return [];
     }
 
-    const segments: PathSegment[] = [];
-    const parts = path.split('.');
-
-    for (const part of parts) {
-      if (!part) {
-        return null;
-      }
-
-      const bracketMatch = /^([^[]+)\[(\d+|\*)?]$/.exec(part);
-      if (bracketMatch) {
-        const propertyName = bracketMatch[1];
-        if (propertyName) {
-          segments.push(new PropertySegment(propertyName), ITEMS_SEGMENT);
-        }
-      } else {
-        segments.push(new PropertySegment(part));
-      }
+    try {
+      return PathUtils.simplePathToSegments(path);
+    } catch {
+      return null;
     }
-
-    return segments;
   }
 }

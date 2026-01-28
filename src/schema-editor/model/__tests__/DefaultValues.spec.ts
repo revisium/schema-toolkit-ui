@@ -1,7 +1,7 @@
 import {
   getDefaultValueFromSchema,
   getDefaultValueExample,
-} from '../ui/DefaultValues';
+} from '../utils/DefaultValues';
 import type { JsonSchemaType } from '../schema/JsonSchema';
 
 describe('DefaultValues', () => {

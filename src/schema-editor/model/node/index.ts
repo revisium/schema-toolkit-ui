@@ -13,3 +13,8 @@ export {
 export { NumberNode, type NumberNodeOptions } from './NumberNode';
 export { BooleanNode, type BooleanNodeOptions } from './BooleanNode';
 export { RefNode } from './RefNode';
+export {
+  NodeFactory,
+  type StringNodeFactoryOptions,
+  type RefNodeOptions,
+} from './NodeFactory';

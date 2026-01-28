@@ -1,5 +1,5 @@
 import { NodeType } from '../node/NodeType';
-import { defaultRegistry } from '../types/index';
+import { defaultRegistry } from '../parsing/index';
 
 export type ParsedDefaultValue = string | number | boolean | undefined;
 

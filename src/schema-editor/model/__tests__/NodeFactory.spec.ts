@@ -1,4 +1,4 @@
-import { NodeFactory } from '../factory/NodeFactory';
+import { NodeFactory } from '../node/NodeFactory';
 import { NodeType } from '../node/NodeType';
 
 describe('NodeFactory', () => {

@@ -1,5 +1,5 @@
 import { TreeMutator } from '../tree/TreeMutator';
-import { NodeFactory } from '../factory/NodeFactory';
+import { NodeFactory } from '../node/NodeFactory';
 import { SimplePath } from '../path/SimplePath';
 import { EMPTY_PATH } from '../path/Paths';
 

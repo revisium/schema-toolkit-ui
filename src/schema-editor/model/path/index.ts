@@ -8,3 +8,4 @@ export {
 export { EMPTY_PATH, PathFromSegments } from './Paths';
 export { SimplePath } from './SimplePath';
 export { JsonPointerPath } from './JsonPointerPath';
+export { PathUtils, type ArrayNotationResult } from './PathUtils';

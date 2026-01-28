@@ -2,21 +2,18 @@ import type {
   TypeDescriptor,
   ParseContext,
   SerializeContext,
-} from '../registry/TypeDescriptor';
-import type { JsonNumberSchema, JsonSchemaType } from '../schema/JsonSchema';
-import type { NodeMetadata } from '../node/NodeMetadata';
-import { NumberNode, type NumberNodeOptions } from '../node/NumberNode';
-import { PRIMITIVE_CAPABILITIES } from '../registry/TypeCapabilities';
-import { FormulaSerializer } from '../formula/FormulaSerializer';
+} from './TypeDescriptor';
+import type { JsonNumberSchema, JsonSchemaType } from '../../schema/JsonSchema';
+import type { NodeMetadata } from '../../node/NodeMetadata';
+import { NumberNode, type NumberNodeOptions } from '../../node/NumberNode';
+import { PRIMITIVE_CAPABILITIES } from './TypeCapabilities';
+import { FormulaSerializer } from '../../formula/FormulaSerializer';
 
 function isNumberSchema(schema: JsonSchemaType): schema is JsonNumberSchema {
   return 'type' in schema && schema.type === 'number';
 }
 
-export const numberTypeDescriptor: TypeDescriptor<
-  JsonNumberSchema,
-  NumberNode
-> = {
+export const numberDescriptor: TypeDescriptor<JsonNumberSchema, NumberNode> = {
   type: 'number',
 
   capabilities: PRIMITIVE_CAPABILITIES,

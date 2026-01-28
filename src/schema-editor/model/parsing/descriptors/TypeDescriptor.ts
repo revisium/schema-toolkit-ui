@@ -1,6 +1,6 @@
-import type { SchemaNode } from '../node/SchemaNode';
-import type { NodeMetadata } from '../node/NodeMetadata';
-import type { JsonSchemaType } from '../schema/JsonSchema';
+import type { SchemaNode } from '../../node/SchemaNode';
+import type { NodeMetadata } from '../../node/NodeMetadata';
+import type { JsonSchemaType } from '../../schema/JsonSchema';
 import type { TypeCapabilities } from './TypeCapabilities';
 
 export interface ParseContext {

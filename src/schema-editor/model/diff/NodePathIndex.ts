@@ -1,15 +1,12 @@
 import type { SchemaNode } from '../node/SchemaNode';
 import type { SchemaTree } from '../tree/SchemaTree';
-import type { SchemaNavigator } from './SchemaNavigator';
+import { PathUtils } from '../path/PathUtils';
 
 export class NodePathIndex {
   private readonly nodeIdToPath = new Map<string, string>();
   private readonly nodeIdReplacements = new Map<string, string>();
 
-  constructor(
-    private readonly tree: SchemaTree,
-    private readonly navigator: SchemaNavigator,
-  ) {
+  constructor(private readonly tree: SchemaTree) {
     this.rebuild();
   }
 
@@ -84,7 +81,7 @@ export class NodePathIndex {
 
     if (node.isObject()) {
       for (const child of node.properties()) {
-        const childPath = this.navigator.buildChildPath(path, child.name());
+        const childPath = PathUtils.buildChildJsonPointer(path, child.name());
         this.collectNodePaths(child, childPath, map);
       }
     }

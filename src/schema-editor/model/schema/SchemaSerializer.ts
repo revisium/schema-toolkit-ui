@@ -1,8 +1,10 @@
 import type { SchemaNode } from '../node/SchemaNode';
 import type { JsonSchemaType } from './JsonSchema';
-import type { TypeRegistry } from '../registry/TypeRegistry';
-import type { SerializeContext } from '../registry/TypeDescriptor';
-import { defaultRegistry } from '../types/index';
+import {
+  type TypeRegistry,
+  type SerializeContext,
+  defaultRegistry,
+} from '../parsing/index';
 
 export class SchemaSerializer {
   private readonly registry: TypeRegistry;
