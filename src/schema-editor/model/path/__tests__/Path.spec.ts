@@ -36,10 +36,10 @@ describe('Path', () => {
       expect(EMPTY_PATH.parent().isEmpty()).toBe(true);
     });
 
-    it('throws on childItems', () => {
-      expect(() => EMPTY_PATH.childItems()).toThrow(
-        'Cannot add items to empty path without property',
-      );
+    it('childItems creates items path for array root', () => {
+      const itemsPath = EMPTY_PATH.childItems();
+      expect(itemsPath.asJsonPointer()).toBe('/items');
+      expect(itemsPath.isEmpty()).toBe(false);
     });
   });
 

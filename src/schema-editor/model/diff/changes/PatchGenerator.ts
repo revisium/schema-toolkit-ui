@@ -4,7 +4,6 @@ import type { Path } from '../../path';
 import { jsonPointerToPath } from '../../path';
 import { SchemaSerializer } from '../../schema/SchemaSerializer';
 import { SchemaComparator } from '../SchemaComparator';
-import type { NodePathIndex } from '../index/NodePathIndex';
 import type { JsonPatch } from '../SchemaPatch';
 import type { RawChange } from './RawChange';
 import type { CoalescedChanges } from './ChangeCoalescer';
@@ -16,30 +15,33 @@ export class PatchGenerator {
   constructor(
     private readonly currentTree: SchemaTree,
     private readonly baseTree: SchemaTree,
-    private readonly baseIndex: NodePathIndex,
   ) {}
 
   public generate(coalesced: CoalescedChanges): JsonPatch[] {
     const patches: JsonPatch[] = [];
 
-    this.generateMovePatches(coalesced.moved, patches);
+    const movePatches = this.generateMovePatches(coalesced.moved);
+    patches.push(...movePatches);
 
     const addPatches = this.generateAddPatches(coalesced.added);
     const removePatches = this.generateRemovePatches(coalesced.removed);
 
-    const addRemovePaths = new Set([
+    const childChangePaths = new Set([
       ...addPatches.map((p) => p.path),
       ...removePatches.map((p) => p.path),
+      ...movePatches.flatMap((p) => [p.path, p.from ?? '']).filter(Boolean),
     ]);
 
-    this.generateReplacePatches(coalesced.modified, addRemovePaths, patches);
+    this.generateReplacePatches(coalesced.modified, childChangePaths, patches);
 
     patches.push(...addPatches, ...removePatches);
 
     return patches;
   }
 
-  private generateMovePatches(moved: RawChange[], patches: JsonPatch[]): void {
+  private generateMovePatches(moved: RawChange[]): JsonPatch[] {
+    const patches: JsonPatch[] = [];
+
     for (const change of moved) {
       if (!change.baseNode || !change.currentNode) {
         continue;
@@ -63,6 +65,8 @@ export class PatchGenerator {
         patches.push(modifyPatch);
       }
     }
+
+    return patches;
   }
 
   private generateModifyAfterMove(
@@ -133,11 +137,11 @@ export class PatchGenerator {
 
   private generateReplacePatches(
     modified: RawChange[],
-    addRemovePaths: Set<string>,
+    childChangePaths: Set<string>,
     patches: JsonPatch[],
   ): void {
     const replacedPaths: Path[] = [];
-    const addRemovePathObjects = [...addRemovePaths].map(jsonPointerToPath);
+    const childChangePathObjects = [...childChangePaths].map(jsonPointerToPath);
 
     for (const change of modified) {
       if (!change.currentNode || !change.baseNode) {
@@ -150,7 +154,7 @@ export class PatchGenerator {
         continue;
       }
 
-      if (this.hasChildIn(currentPath, addRemovePathObjects)) {
+      if (this.hasChildIn(currentPath, childChangePathObjects)) {
         continue;
       }
 
@@ -222,20 +226,25 @@ export class PatchGenerator {
       return false;
     }
 
-    const baseChildren = baseNode.properties();
-    const currentChildren = currentNode.properties();
-
-    for (const child of currentChildren) {
-      if (!this.baseIndex.hasNode(child.id())) {
-        return true;
-      }
+    if (this.hasMetadataChanged(currentNode, baseNode)) {
+      return false;
     }
 
-    if (baseChildren.length !== currentChildren.length) {
-      return true;
-    }
+    return true;
+  }
 
-    return false;
+  private hasMetadataChanged(
+    currentNode: SchemaNode,
+    baseNode: SchemaNode,
+  ): boolean {
+    const currentMeta = currentNode.metadata();
+    const baseMeta = baseNode.metadata();
+
+    return (
+      currentMeta.title !== baseMeta.title ||
+      currentMeta.description !== baseMeta.description ||
+      currentMeta.deprecated !== baseMeta.deprecated
+    );
   }
 
   private hasOnlyItemsChanges(
@@ -243,6 +252,10 @@ export class PatchGenerator {
     baseNode: SchemaNode,
   ): boolean {
     if (!baseNode.isArray()) {
+      return false;
+    }
+
+    if (this.hasMetadataChanged(currentNode, baseNode)) {
       return false;
     }
 

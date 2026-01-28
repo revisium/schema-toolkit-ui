@@ -21,7 +21,7 @@ export class PatchBuilder {
   ) {
     this.collector = new ChangeCollector(currentTree, baseTree, baseIndex);
     this.coalescer = new ChangeCoalescer(currentTree, baseTree, baseIndex);
-    this.generator = new PatchGenerator(currentTree, baseTree, baseIndex);
+    this.generator = new PatchGenerator(currentTree, baseTree);
     this.formulaDetector = new FormulaChangeDetector(currentTree, baseTree);
     this.enricher = new PatchEnricher(currentTree, baseTree);
   }

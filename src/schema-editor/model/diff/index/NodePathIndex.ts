@@ -78,9 +78,7 @@ export class NodePathIndex {
       return;
     }
 
-    if (!path.isEmpty()) {
-      this.nodeIdToPath.set(node.id(), path);
-    }
+    this.nodeIdToPath.set(node.id(), path);
 
     if (node.isObject()) {
       for (const child of node.properties()) {

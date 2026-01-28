@@ -38,3 +38,6 @@ export {
 
 // UI Components
 export { SchemaEditor } from './ui';
+
+// Hooks
+export { useFixZagNestedMenuDismiss } from './ui/hooks/useFixZagNestedMenuDismiss';

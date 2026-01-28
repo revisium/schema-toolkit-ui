@@ -22,10 +22,9 @@ beforeEach(() => {
   resetIdCounter();
 });
 
-const createTreeAndDiff = (
-  properties: Record<string, unknown>,
+const createTreeAndDiffFromSchema = (
+  schema: JsonSchemaType,
 ): { tree: SchemaTree; diff: SchemaDiff } => {
-  const schema: JsonObjectSchema = createSchema(properties);
   const parser = new SchemaParser();
   const root = parser.parse(schema);
   const tree = new SchemaTree(root);
@@ -45,6 +44,12 @@ const createTreeAndDiff = (
 
   const diff = new SchemaDiff(tree);
   return { tree, diff };
+};
+
+const createTreeAndDiff = (
+  properties: Record<string, unknown>,
+): { tree: SchemaTree; diff: SchemaDiff } => {
+  return createTreeAndDiffFromSchema(createSchema(properties));
 };
 
 const toJsonPatches = (patches: SchemaPatch[]): JsonPatch[] =>
@@ -317,7 +322,9 @@ describe('SchemaDiff', () => {
 
       const replacePatch = patches.find((p) => p.op === 'replace');
       expect(replacePatch).toBeDefined();
-      expect(replacePatch?.path).toBe('/properties/items/items');
+      expect(replacePatch?.path).toBe(
+        '/properties/items/items/properties/name',
+      );
     });
 
     it('generates move patch for renamed field inside array items', () => {
@@ -382,7 +389,7 @@ describe('SchemaDiff', () => {
 
       expect(patches).toHaveLength(1);
       expect(patches[0].op).toBe('replace');
-      expect(patches[0].path).toBe('/properties/nested');
+      expect(patches[0].path).toBe('/properties/nested/properties/value');
     });
 
     it('generates move patch for renamed nested field', () => {
@@ -1059,6 +1066,444 @@ describe('SchemaDiff', () => {
       const replacePatch = patches.find((p) => p.op === 'replace');
       expect(replacePatch).toBeDefined();
       expect((replacePatch?.value as { type: string }).type).toBe('array');
+    });
+  });
+
+  describe('root node changes', () => {
+    it('generates replace patch when root description changes', () => {
+      const { tree, diff } = createTreeAndDiff({
+        name: stringField(),
+      });
+
+      tree.root().setMetadata({ description: 'New root description' });
+
+      const patches = diff.getPatches();
+
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('');
+      expect(patches[0].descriptionChange).toBeDefined();
+      expect(patches[0].descriptionChange?.fromDescription).toBeUndefined();
+      expect(patches[0].descriptionChange?.toDescription).toBe(
+        'New root description',
+      );
+    });
+
+    it('generates replace patch when root deprecated changes', () => {
+      const { tree, diff } = createTreeAndDiff({
+        name: stringField(),
+      });
+
+      tree.root().setMetadata({ deprecated: true });
+
+      const patches = diff.getPatches();
+
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('');
+      expect(patches[0].deprecatedChange).toBeDefined();
+      expect(patches[0].deprecatedChange?.toDeprecated).toBe(true);
+    });
+
+    it('isDirty returns true when root metadata changes', () => {
+      const { tree, diff } = createTreeAndDiff({
+        name: stringField(),
+      });
+
+      expect(diff.isDirty()).toBe(false);
+
+      tree.root().setMetadata({ description: 'Changed' });
+
+      expect(diff.isDirty()).toBe(true);
+    });
+  });
+
+  describe('primitive root', () => {
+    it('string root - no changes', () => {
+      const { diff } = createTreeAndDiffFromSchema({
+        type: 'string',
+        default: 'hello',
+      });
+
+      expect(diff.isDirty()).toBe(false);
+      expect(diff.getPatches()).toHaveLength(0);
+    });
+
+    it('string root - description change', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'string',
+        default: 'hello',
+      });
+
+      tree.root().setMetadata({ description: 'A string value' });
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('');
+      expect(patches[0].descriptionChange?.toDescription).toBe(
+        'A string value',
+      );
+    });
+
+    it('string root - default value change', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'string',
+        default: 'hello',
+      });
+
+      (tree.root() as StringNode).setDefaultValue('world');
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('');
+    });
+
+    it('number root - default value change', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'number',
+        default: 0,
+      });
+
+      (tree.root() as NumberNode).setDefaultValue(42);
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('');
+    });
+
+    it('boolean root - deprecated change', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'boolean',
+        default: false,
+      });
+
+      tree.root().setMetadata({ deprecated: true });
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].deprecatedChange?.toDeprecated).toBe(true);
+    });
+  });
+
+  describe('array root', () => {
+    it('array root with primitive items - no changes', () => {
+      const { diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: { type: 'string', default: '' },
+      });
+
+      expect(diff.isDirty()).toBe(false);
+      expect(diff.getPatches()).toHaveLength(0);
+    });
+
+    it('array root - description change on root', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: { type: 'string', default: '' },
+      });
+
+      tree.root().setMetadata({ description: 'Array of strings' });
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('');
+    });
+
+    it('array root - items default value change', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: { type: 'string', default: 'initial' },
+      });
+
+      const items = tree.root().items();
+      (items as StringNode).setDefaultValue('changed');
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('/items');
+    });
+
+    it('array root with object items - add field to items', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', default: '' },
+          },
+          required: ['name'],
+          additionalProperties: false,
+        },
+      });
+
+      const items = tree.root().items();
+      tree.addChildTo(items.id(), NodeFactory.number('age'));
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = toJsonPatches(diff.getPatches());
+      expect(patches).toHaveLength(1);
+      expect(patches[0].op).toBe('add');
+      expect(patches[0].path).toBe('/items/properties/age');
+    });
+
+    it('array root with object items - remove field from items', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', default: '' },
+            age: { type: 'number', default: 0 },
+          },
+          required: ['name', 'age'],
+          additionalProperties: false,
+        },
+      });
+
+      const items = tree.root().items();
+      const ageNode = items.property('age');
+      tree.removeNodeAt(tree.pathOf(ageNode.id()));
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = toJsonPatches(diff.getPatches());
+      expect(patches).toHaveLength(1);
+      expect(patches[0].op).toBe('remove');
+      expect(patches[0].path).toBe('/items/properties/age');
+    });
+
+    it('array root with object items - rename field in items', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            oldName: { type: 'string', default: '' },
+          },
+          required: ['oldName'],
+          additionalProperties: false,
+        },
+      });
+
+      const items = tree.root().items();
+      const oldNameNode = items.property('oldName');
+      tree.renameNode(oldNameNode.id(), 'newName');
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = toJsonPatches(diff.getPatches());
+      expect(patches).toHaveLength(1);
+      expect(patches[0].op).toBe('move');
+      expect(patches[0].from).toBe('/items/properties/oldName');
+      expect(patches[0].path).toBe('/items/properties/newName');
+    });
+  });
+
+  describe('nested arrays', () => {
+    it('array of arrays - no changes', () => {
+      const { diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'array',
+          items: { type: 'string', default: '' },
+        },
+      });
+
+      expect(diff.isDirty()).toBe(false);
+      expect(diff.getPatches()).toHaveLength(0);
+    });
+
+    it('array of arrays - inner items change', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'array',
+          items: { type: 'string', default: 'initial' },
+        },
+      });
+
+      const outerItems = tree.root().items();
+      const innerItems = outerItems.items();
+      (innerItems as StringNode).setDefaultValue('changed');
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('/items/items');
+    });
+
+    it('array of arrays of objects - add field to innermost object', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              value: { type: 'number', default: 0 },
+            },
+            required: ['value'],
+            additionalProperties: false,
+          },
+        },
+      });
+
+      const outerItems = tree.root().items();
+      const innerItems = outerItems.items();
+      tree.addChildTo(innerItems.id(), NodeFactory.string('label'));
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = toJsonPatches(diff.getPatches());
+      expect(patches).toHaveLength(1);
+      expect(patches[0].op).toBe('add');
+      expect(patches[0].path).toBe('/items/items/properties/label');
+    });
+
+    it('array of arrays of objects - remove field from innermost object', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              value: { type: 'number', default: 0 },
+              label: { type: 'string', default: '' },
+            },
+            required: ['value', 'label'],
+            additionalProperties: false,
+          },
+        },
+      });
+
+      const outerItems = tree.root().items();
+      const innerItems = outerItems.items();
+      const labelNode = innerItems.property('label');
+      tree.removeNodeAt(tree.pathOf(labelNode.id()));
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = toJsonPatches(diff.getPatches());
+      expect(patches).toHaveLength(1);
+      expect(patches[0].op).toBe('remove');
+      expect(patches[0].path).toBe('/items/items/properties/label');
+    });
+
+    it('array of arrays of objects - rename field in innermost object', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              oldField: { type: 'string', default: '' },
+            },
+            required: ['oldField'],
+            additionalProperties: false,
+          },
+        },
+      });
+
+      const outerItems = tree.root().items();
+      const innerItems = outerItems.items();
+      const oldFieldNode = innerItems.property('oldField');
+      tree.renameNode(oldFieldNode.id(), 'newField');
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = toJsonPatches(diff.getPatches());
+      expect(patches).toHaveLength(1);
+      expect(patches[0].op).toBe('move');
+      expect(patches[0].from).toBe('/items/items/properties/oldField');
+      expect(patches[0].path).toBe('/items/items/properties/newField');
+    });
+
+    it('object with array of arrays field', () => {
+      const { tree, diff } = createTreeAndDiff({
+        matrix: arrayField(
+          arrayField({
+            type: 'number',
+            default: 0,
+          }),
+        ),
+      });
+
+      const matrixNode = tree.root().property('matrix');
+      const outerItems = matrixNode.items();
+      const innerItems = outerItems.items();
+      (innerItems as NumberNode).setDefaultValue(1);
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.op).toBe('replace');
+      expect(patches[0].patch.path).toBe('/properties/matrix/items/items');
+    });
+
+    it('deeply nested: array > array > array > object - add field', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'array',
+        items: {
+          type: 'array',
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                x: { type: 'number', default: 0 },
+              },
+              required: ['x'],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+
+      const level1 = tree.root().items();
+      const level2 = level1.items();
+      const level3 = level2.items();
+      tree.addChildTo(level3.id(), NodeFactory.number('y'));
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = toJsonPatches(diff.getPatches());
+      expect(patches).toHaveLength(1);
+      expect(patches[0].op).toBe('add');
+      expect(patches[0].path).toBe('/items/items/items/properties/y');
+    });
+
+    it('mixed: object > array > object > array > primitive - change innermost', () => {
+      const { tree, diff } = createTreeAndDiff({
+        users: arrayField(
+          objectField({
+            tags: arrayField({
+              type: 'string',
+              default: 'tag',
+            }),
+          }),
+        ),
+      });
+
+      const usersNode = tree.root().property('users');
+      const userItems = usersNode.items();
+      const tagsNode = userItems.property('tags');
+      const tagItems = tagsNode.items();
+      (tagItems as StringNode).setDefaultValue('new-tag');
+
+      expect(diff.isDirty()).toBe(true);
+      const patches = diff.getPatches();
+      expect(patches).toHaveLength(1);
+      expect(patches[0].patch.path).toBe(
+        '/properties/users/items/properties/tags/items',
+      );
     });
   });
 

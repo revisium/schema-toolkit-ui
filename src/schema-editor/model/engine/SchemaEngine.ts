@@ -119,9 +119,9 @@ export class SchemaEngine {
 
     this._tree.clearFormulaIndex();
     this._tree.replaceRoot(root);
-    this._diff.markAsSaved();
-
     this.applyPendingFormulas(parser.getPendingFormulas());
+
+    this._diff.markAsSaved();
   }
 
   public getPatches(): SchemaPatch[] {
