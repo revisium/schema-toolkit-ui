@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import { PiDotOutlineFill } from 'react-icons/pi';
 import { CreateButton } from '../../../components';
-import type { ArrayNodeVM } from '../../vm/ArrayNodeVM';
+import { ArrayNodeVM } from '../../vm/ArrayNodeVM';
 import type { NodeVM } from '../../vm/createNodeVM';
 import { ObjectNodeVM } from '../../vm/ObjectNodeVM';
 import { ForeignKeyNodeVM } from '../../vm/ForeignKeyNodeVM';
@@ -134,6 +134,14 @@ const ArrayItemsChildren: FC<ArrayItemsChildrenProps> = observer(
               />
             </Box>
           )}
+        </Flex>
+      );
+    }
+
+    if (itemsVm instanceof ArrayNodeVM) {
+      return (
+        <Flex flexDirection="column" width="100%">
+          <ArrayItemsView viewModel={itemsVm} dataTestId={dataTestId} />
         </Flex>
       );
     }

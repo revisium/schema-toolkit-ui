@@ -42,9 +42,6 @@ class PathImpl implements Path {
   }
 
   childItems(): Path {
-    if (this.segs.length === 0) {
-      throw new Error('Cannot add items to empty path without property');
-    }
     return new PathImpl([...this.segs, new ItemsSegment()]);
   }
 

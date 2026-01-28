@@ -1,3 +1,4 @@
+import { makeAutoObservable, observable } from 'mobx';
 import type { SchemaTree } from '../tree/SchemaTree';
 import type { JsonObjectSchema } from '../schema/JsonSchema';
 import { SchemaSerializer } from '../schema/SchemaSerializer';
@@ -15,6 +16,11 @@ export class SchemaDiff {
   constructor(private readonly tree: SchemaTree) {
     this.baseTree = tree.clone();
     this.baseIndex = new NodePathIndex(this.baseTree);
+    makeAutoObservable<SchemaDiff, 'baseTree'>(
+      this,
+      { baseTree: observable.ref },
+      { autoBind: true },
+    );
   }
 
   public markAsSaved(): void {

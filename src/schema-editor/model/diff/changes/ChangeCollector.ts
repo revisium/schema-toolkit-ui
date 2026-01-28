@@ -25,10 +25,6 @@ export class ChangeCollector {
   ): void {
     for (const nodeId of this.currentTree.nodeIds()) {
       const currentPath = this.currentTree.pathOf(nodeId);
-      if (currentPath.isEmpty()) {
-        continue;
-      }
-
       const currentNode = this.currentTree.nodeById(nodeId);
 
       if (this.baseIndex.hasNode(nodeId)) {

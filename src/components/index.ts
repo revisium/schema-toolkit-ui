@@ -1,4 +1,3 @@
-export * from './Button';
 export { Tooltip, type TooltipProps } from './Tooltip';
 export { ContentEditable } from './ContentEditable';
 export { GrayButton } from './GrayButton';

@@ -214,6 +214,41 @@ describe('SchemaEngine', () => {
         expect(expression).toBe('price * 2');
       }
     });
+
+    it('should not report formula changes after revert with schema containing formulas', () => {
+      const schema = createSchema({
+        price: { type: 'number', default: 0 },
+        quantity: { type: 'number', default: 1 },
+        discount: { type: 'number', default: 0 },
+        subtotal: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'price * quantity' },
+        },
+        total: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': {
+            version: 1,
+            expression: 'subtotal - subtotal * discount / 100',
+          },
+        },
+      });
+
+      const engine = new SchemaEngine(schema);
+      expect(engine.isDirty).toBe(false);
+      expect(engine.getPatches()).toHaveLength(0);
+
+      engine.addChild(engine.root().id(), 'test');
+      expect(engine.isDirty).toBe(true);
+
+      engine.revert();
+
+      expect(engine.isDirty).toBe(false);
+      expect(engine.getPatches()).toHaveLength(0);
+    });
   });
 
   describe('patches', () => {

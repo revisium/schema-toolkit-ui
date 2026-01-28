@@ -239,6 +239,68 @@ describe('SchemaEditorVM', () => {
     });
   });
 
+  describe('changeItemsType', () => {
+    it('should create nested array VM when changing items type to array', () => {
+      const schema = createSchema({
+        items: {
+          type: 'array',
+          items: { type: 'string', default: '' },
+        },
+      });
+      const editor = new SchemaEditorVM(schema);
+
+      const arrayVM = editor.rootNodeVM.children[0] as ArrayNodeVM;
+      expect(arrayVM).toBeInstanceOf(ArrayNodeVM);
+      expect(arrayVM.itemsVM).toBeInstanceOf(PrimitiveNodeVM);
+
+      arrayVM.changeItemsType('Array');
+
+      expect(arrayVM.itemsVM).toBeInstanceOf(ArrayNodeVM);
+      const innerArrayVM = arrayVM.itemsVM as ArrayNodeVM;
+      expect(innerArrayVM.itemsVM).toBeInstanceOf(PrimitiveNodeVM);
+    });
+
+    it('should update model correctly when changing string items to array', () => {
+      const schema = createSchema({
+        werwer: {
+          type: 'array',
+          items: { type: 'string', default: '' },
+        },
+      });
+      const editor = new SchemaEditorVM(schema);
+
+      const arrayVM = editor.rootNodeVM.children[0] as ArrayNodeVM;
+      arrayVM.changeItemsType('Array');
+
+      const arrayNode = editor.engine.root().property('werwer');
+      expect(arrayNode.isArray()).toBe(true);
+
+      const innerArrayNode = arrayNode.items();
+      expect(innerArrayNode.isArray()).toBe(true);
+
+      const innerStringNode = innerArrayNode.items();
+      expect(innerStringNode.isNull()).toBe(false);
+    });
+
+    it('inner array itemsVM should not be null after changeItemsType', () => {
+      const schema = createSchema({
+        data: {
+          type: 'array',
+          items: { type: 'string', default: '' },
+        },
+      });
+      const editor = new SchemaEditorVM(schema);
+
+      const outerArrayVM = editor.rootNodeVM.children[0] as ArrayNodeVM;
+      outerArrayVM.changeItemsType('Array');
+
+      const innerArrayVM = outerArrayVM.itemsVM as ArrayNodeVM;
+      expect(innerArrayVM).not.toBeNull();
+      expect(innerArrayVM.itemsVM).not.toBeNull();
+      expect(innerArrayVM.itemsVMRef).not.toBeNull();
+    });
+  });
+
   describe('revert', () => {
     it('should recreate VM tree after revert', () => {
       const schema = createSchema({
@@ -269,6 +331,43 @@ describe('SchemaEditorVM', () => {
       editor.rootNodeVM.addProperty('newField');
 
       expect(editor.isDirty).toBe(true);
+    });
+
+    it('should clear dirty state after markAsSaved', () => {
+      const schema = createSchema({
+        name: { type: 'string', default: '' },
+      });
+      const editor = new SchemaEditorVM(schema);
+
+      editor.rootNodeVM.addProperty('newField');
+      expect(editor.isDirty).toBe(true);
+
+      editor.markAsSaved();
+
+      expect(editor.isDirty).toBe(false);
+    });
+  });
+
+  describe('MobX reactivity', () => {
+    it('should trigger MobX reaction when markAsSaved clears dirty state', async () => {
+      const { autorun } = await import('mobx');
+
+      const schema = createSchema({
+        name: { type: 'string', default: '' },
+      });
+      const editor = new SchemaEditorVM(schema);
+
+      const dirtyValues: boolean[] = [];
+      const dispose = autorun(() => {
+        dirtyValues.push(editor.isDirty);
+      });
+
+      editor.rootNodeVM.addProperty('newField');
+      editor.markAsSaved();
+
+      dispose();
+
+      expect(dirtyValues).toEqual([false, true, false]);
     });
   });
 });

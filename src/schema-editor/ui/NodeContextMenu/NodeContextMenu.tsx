@@ -1,9 +1,10 @@
 import { Box, Menu, Portal } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import { FC } from 'react';
+import { FC, useRef } from 'react';
 import { PiTrash } from 'react-icons/pi';
 import { SettingsButton } from '../../../components';
 import type { BaseNodeVM } from '../../vm/BaseNodeVM';
+import { useFixZagNestedMenuDismiss } from '../hooks/useFixZagNestedMenuDismiss';
 import { DescriptionSubmenu } from './DescriptionSubmenu';
 import { FormulaSubmenu } from './FormulaSubmenu';
 import { DefaultValueSubmenu } from './DefaultValueSubmenu';
@@ -27,6 +28,9 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = observer(
     showDefault = false,
     onDelete,
   }) => {
+    const contentRef = useRef<HTMLDivElement>(null);
+    const handleInteractOutside = useFixZagNestedMenuDismiss(contentRef);
+
     const handleOpenChange = (details: { open: boolean }) => {
       viewModel.setSettingsOpen(details.open);
     };
@@ -36,6 +40,7 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = observer(
         open={viewModel.isSettingsOpen}
         onOpenChange={handleOpenChange}
         positioning={{ placement: 'bottom-start' }}
+        onInteractOutside={handleInteractOutside}
       >
         <Menu.Trigger asChild>
           <SettingsButton
