@@ -3,7 +3,7 @@ import { SchemaParser, resetIdCounter } from '../../schema/SchemaParser';
 import { SchemaDiff } from '../SchemaDiff';
 import { type SchemaPatch, type JsonPatch } from '../SchemaPatch';
 import { NodeFactory } from '../../node/NodeFactory';
-import { ParsedFormula } from '../../formula/ParsedFormula';
+import { ParsedFormula } from '../../formula';
 import {
   arrayField,
   createSchema,
@@ -532,6 +532,55 @@ describe('SchemaDiff', () => {
       expect(patches).toHaveLength(1);
       expect(patches[0].patch.op).toBe('move');
       expect(patches[0].isRename).toBe(true);
+    });
+
+    it('detects formula expression change when referenced field is renamed', () => {
+      const { tree, diff } = createTreeAndDiff({
+        price: numberField(),
+        total: formulaField('price * 2'),
+      });
+
+      tree.renameNode(tree.root().property('price').id(), 'cost');
+
+      const patches = diff.getPatches();
+
+      const renamePatch = patches.find(
+        (p) => p.patch.op === 'move' && p.isRename,
+      );
+      expect(renamePatch).toBeDefined();
+      expect(renamePatch?.patch.from).toBe('/properties/price');
+      expect(renamePatch?.patch.path).toBe('/properties/cost');
+
+      const formulaPatch = patches.find(
+        (p) => p.patch.path === '/properties/total' && p.formulaChange,
+      );
+      expect(formulaPatch).toBeDefined();
+      expect(formulaPatch?.formulaChange?.fromFormula).toBe('price * 2');
+      expect(formulaPatch?.formulaChange?.toFormula).toBe('cost * 2');
+    });
+
+    it('detects formula expression change when formula field is moved', () => {
+      const { tree, diff } = createTreeAndDiff({
+        price: numberField(),
+        total: formulaField('price * 2'),
+        group: objectField({}),
+      });
+
+      tree.moveNode(
+        tree.root().property('total').id(),
+        tree.root().property('group').id(),
+      );
+
+      const patches = diff.getPatches();
+
+      const movePatch = patches.find(
+        (p) => p.patch.op === 'move' && !p.isRename,
+      );
+      expect(movePatch).toBeDefined();
+      expect(movePatch?.patch.from).toBe('/properties/total');
+      expect(movePatch?.patch.path).toBe('/properties/group/properties/total');
+      expect(movePatch?.formulaChange?.fromFormula).toBe('price * 2');
+      expect(movePatch?.formulaChange?.toFormula).toBe('../price * 2');
     });
 
     describe('add patch metadata', () => {

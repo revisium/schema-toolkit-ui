@@ -4,8 +4,7 @@ import { SchemaDiff } from '../diff/SchemaDiff';
 import { SchemaParser } from '../schema/SchemaParser';
 import { SchemaValidator } from '../validation/SchemaValidator';
 import { FormulaValidator } from '../validation/FormulaValidator';
-import { ParsedFormula } from '../formula/ParsedFormula';
-import { FormulaError } from '../formula/FormulaError';
+import { ParsedFormula, FormulaError } from '../formula';
 import { NodeFactory } from '../node/NodeFactory';
 import { NodeType } from '../node/NodeType';
 import { NULL_NODE } from '../node/NullNode';
@@ -14,7 +13,7 @@ import type { SchemaPatch } from '../diff/index';
 import type { ValidationError } from '../validation/SchemaValidator';
 import type { FormulaValidationError } from '../validation/FormulaValidator';
 import type { SchemaNode } from '../node/SchemaNode';
-import type { FormulaDependent } from '../formula/index';
+import type { FormulaDependent } from '../formula';
 import type { StringNode } from '../node/StringNode';
 
 export interface ReplaceResult {

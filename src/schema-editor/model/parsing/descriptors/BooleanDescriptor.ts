@@ -10,7 +10,6 @@ import type {
 import type { NodeMetadata } from '../../node/NodeMetadata';
 import { BooleanNode, type BooleanNodeOptions } from '../../node/BooleanNode';
 import { PRIMITIVE_CAPABILITIES } from './TypeCapabilities';
-import { FormulaSerializer } from '../../formula/FormulaSerializer';
 
 function isBooleanSchema(schema: JsonSchemaType): schema is JsonBooleanSchema {
   return 'type' in schema && schema.type === 'boolean';
@@ -46,10 +45,7 @@ export const booleanDescriptor: TypeDescriptor<JsonBooleanSchema, BooleanNode> =
       return node;
     },
 
-    serialize(
-      node: BooleanNode,
-      _context: SerializeContext,
-    ): JsonBooleanSchema {
+    serialize(node: BooleanNode, context: SerializeContext): JsonBooleanSchema {
       const result: JsonBooleanSchema = {
         type: 'boolean',
         default: node.defaultValue() ?? false,
@@ -58,7 +54,7 @@ export const booleanDescriptor: TypeDescriptor<JsonBooleanSchema, BooleanNode> =
       const formula = node.formula();
       if (formula) {
         result.readOnly = true;
-        result['x-formula'] = FormulaSerializer.toXFormula(formula);
+        result['x-formula'] = context.serializeFormula(node.id(), formula);
       }
 
       return result;

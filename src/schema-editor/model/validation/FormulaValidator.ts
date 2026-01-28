@@ -30,7 +30,7 @@ export class FormulaValidator {
       if (targetNode.isNull()) {
         return {
           nodeId,
-          message: `Cannot resolve formula dependency: ${dep.originalPath()}`,
+          message: `Cannot resolve formula dependency: target node not found`,
           fieldPath: fieldPath || undefined,
         };
       }

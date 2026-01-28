@@ -1,6 +1,7 @@
 import { makeObservable, observable, computed, action } from 'mobx';
 import {
   parseDefaultValue,
+  FormulaSerializer,
   type SchemaNode,
   type FormulaDependent,
 } from '../model';
@@ -48,7 +49,15 @@ export class PrimitiveNodeVM extends BaseNodeVM {
     if (this.formulaInputValue !== null) {
       return this.formulaInputValue;
     }
-    return this._node.formula()?.expression() ?? '';
+    const formula = this._node.formula();
+    if (!formula) {
+      return '';
+    }
+    return new FormulaSerializer(
+      this._editor.engine.tree,
+      this.nodeId,
+      formula,
+    ).serialize();
   }
 
   public get defaultValue(): PrimitiveValue {

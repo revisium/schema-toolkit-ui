@@ -1,5 +1,6 @@
 import { SchemaEngine } from '../engine/SchemaEngine';
 import { resetIdCounter } from '../schema/SchemaParser';
+import { FormulaSerializer } from '../formula';
 import type { JsonObjectSchema } from '../schema/JsonSchema';
 
 beforeEach(() => {
@@ -44,7 +45,16 @@ describe('SchemaEngine', () => {
       const totalNode = engine.root().property('total');
 
       expect(totalNode.hasFormula()).toBe(true);
-      expect(totalNode.formula()?.expression()).toBe('price * quantity');
+      const formula = totalNode.formula();
+      expect(formula).toBeDefined();
+      if (formula) {
+        const expression = new FormulaSerializer(
+          engine.tree,
+          totalNode.id(),
+          formula,
+        ).serialize();
+        expect(expression).toBe('price * quantity');
+      }
     });
 
     it('should ignore invalid formulas during initialization', () => {
@@ -193,7 +203,16 @@ describe('SchemaEngine', () => {
 
       const totalNode = engine.root().property('total');
       expect(totalNode.hasFormula()).toBe(true);
-      expect(totalNode.formula()?.expression()).toBe('price * 2');
+      const formula = totalNode.formula();
+      expect(formula).toBeDefined();
+      if (formula) {
+        const expression = new FormulaSerializer(
+          engine.tree,
+          totalNode.id(),
+          formula,
+        ).serialize();
+        expect(expression).toBe('price * 2');
+      }
     });
   });
 
@@ -530,9 +549,17 @@ describe('SchemaEngine', () => {
 
       expect(result.success).toBe(true);
       expect(engine.root().property('total').hasFormula()).toBe(true);
-      expect(engine.root().property('total').formula()?.expression()).toBe(
-        'price * 2',
-      );
+      const totalNode = engine.root().property('total');
+      const formula = totalNode.formula();
+      expect(formula).toBeDefined();
+      if (formula) {
+        const expression = new FormulaSerializer(
+          engine.tree,
+          totalNode.id(),
+          formula,
+        ).serialize();
+        expect(expression).toBe('price * 2');
+      }
     });
 
     it('should clear formula when expression is undefined', () => {

@@ -1,6 +1,6 @@
-import { FormulaPathConverter } from '../formula/FormulaPathConverter';
-import { SimplePath } from '../path/SimplePath';
-import { EMPTY_PATH } from '../path/Paths';
+import { FormulaPathConverter } from '..';
+import { SimplePath } from '../../path/SimplePath';
+import { EMPTY_PATH } from '../../path/Paths';
 
 describe('FormulaPathConverter', () => {
   let converter: FormulaPathConverter;

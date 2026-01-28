@@ -1,16 +1,28 @@
 import type { SchemaNode } from '../node/SchemaNode';
+import type { NodeTree } from '../tree/NodeTree';
 import type { JsonSchemaType } from './JsonSchema';
 import {
   type TypeRegistry,
   type SerializeContext,
   defaultRegistry,
 } from '../parsing/index';
+import { FormulaSerializer } from '../formula';
 
 export class SchemaSerializer {
   private readonly registry: TypeRegistry;
+  private tree: NodeTree | null = null;
 
   constructor(registry: TypeRegistry = defaultRegistry) {
     this.registry = registry;
+  }
+
+  serializeWithTree(node: SchemaNode, tree: NodeTree): JsonSchemaType {
+    this.tree = tree;
+    try {
+      return this.serialize(node);
+    } finally {
+      this.tree = null;
+    }
   }
 
   serialize(node: SchemaNode): JsonSchemaType {
@@ -28,6 +40,14 @@ export class SchemaSerializer {
 
     const context: SerializeContext = {
       serialize: (n) => this.serialize(n),
+      serializeFormula: (nodeId, formula) => {
+        if (!this.tree) {
+          throw new Error(
+            'Cannot serialize formula without tree context. Use serializeWithTree.',
+          );
+        }
+        return FormulaSerializer.toXFormula(this.tree, nodeId, formula);
+      },
     };
 
     const result = descriptor.serialize(node, context);

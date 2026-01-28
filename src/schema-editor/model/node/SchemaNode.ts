@@ -1,6 +1,6 @@
 import type { NodeType } from './NodeType';
 import type { NodeMetadata } from './NodeMetadata';
-import type { Formula } from '../formula/Formula';
+import type { Formula } from '../formula';
 
 export interface SchemaNode {
   id(): string;

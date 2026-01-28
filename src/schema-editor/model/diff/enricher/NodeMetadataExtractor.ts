@@ -1,4 +1,6 @@
 import type { SchemaNode } from '../../node/SchemaNode';
+import type { NodeTree } from '../../tree/NodeTree';
+import { FormulaSerializer } from '../../formula/serialization/FormulaSerializer';
 import type {
   DefaultValueType,
   MetadataChangeType,
@@ -27,11 +29,18 @@ export class NodeMetadataExtractor {
     return node.nodeType();
   }
 
-  public getFormulaExpression(node: SchemaNode | null): string | undefined {
+  public getFormulaExpression(
+    tree: NodeTree,
+    node: SchemaNode | null,
+  ): string | undefined {
     if (!node || node.isNull()) {
       return undefined;
     }
-    return node.formula()?.expression();
+    const formula = node.formula();
+    if (!formula) {
+      return undefined;
+    }
+    return new FormulaSerializer(tree, node.id(), formula).serialize();
   }
 
   public getDefaultValue(node: SchemaNode | null): DefaultValueType {
@@ -71,7 +80,9 @@ export class NodeMetadataExtractor {
   }
 
   public computeMetadataChanges(
+    baseTree: NodeTree,
     baseNode: SchemaNode | null,
+    currentTree: NodeTree,
     currentNode: SchemaNode | null,
   ): MetadataChangesResult {
     const changes: MetadataChangeType[] = [];
@@ -105,8 +116,11 @@ export class NodeMetadataExtractor {
       };
     }
 
-    const baseFormula = this.getFormulaExpression(baseNode);
-    const currentFormula = this.getFormulaExpression(effectiveCurrentNode);
+    const baseFormula = this.getFormulaExpression(baseTree, baseNode);
+    const currentFormula = this.getFormulaExpression(
+      currentTree,
+      effectiveCurrentNode,
+    );
     if (baseFormula !== currentFormula) {
       changes.push('formula');
       formulaChange = { fromFormula: baseFormula, toFormula: currentFormula };

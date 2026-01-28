@@ -1,12 +1,12 @@
-import { SchemaTree } from '../tree/SchemaTree';
-import { SchemaParser, resetIdCounter } from '../schema/SchemaParser';
-import { ParsedFormula } from '../formula/ParsedFormula';
+import { SchemaTree } from '../../tree/SchemaTree';
+import { SchemaParser, resetIdCounter } from '../../schema/SchemaParser';
+import { ParsedFormula, FormulaSerializer } from '..';
 import {
   createSchema,
   numberField,
   objectField,
   formulaField,
-} from './test-helpers';
+} from '../../__tests__/test-helpers';
 
 beforeEach(() => {
   resetIdCounter();
@@ -180,7 +180,14 @@ describe('FormulaDependencyIndex', () => {
       const formula = tree.getFormulaByNodeId(totalNode.id());
 
       expect(formula).not.toBeNull();
-      expect(formula?.expression()).toBe('price * 2');
+      if (formula) {
+        const expression = new FormulaSerializer(
+          tree,
+          totalNode.id(),
+          formula,
+        ).serialize();
+        expect(expression).toBe('price * 2');
+      }
     });
 
     it('returns null for node without formula', () => {

@@ -1,4 +1,4 @@
-import { RelativePath } from '../formula/RelativePath';
+import { RelativePath } from '../formula';
 import { SimplePath } from '../path/SimplePath';
 import { EMPTY_PATH } from '../path/Paths';
 

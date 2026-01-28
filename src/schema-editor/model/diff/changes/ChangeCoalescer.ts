@@ -25,38 +25,52 @@ export class ChangeCoalescer {
 
     const topLevelMoves = this.filterTopLevelMoves(moved);
     const movedBaseNodes = new Set(moved.map((c) => c.baseNode));
-    const moveAffectedTopLevelPaths =
-      this.collectMoveAffectedTopLevelPaths(topLevelMoves);
+    const moveAffectedTopLevelNodeIds =
+      this.collectMoveAffectedTopLevelNodeIds(topLevelMoves);
 
     return {
       moved: topLevelMoves,
       added: this.filterTopLevelAdds(added),
       removed: this.filterTopLevelRemoves(removed, movedBaseNodes),
-      modified: this.filterModified(modified, moveAffectedTopLevelPaths),
+      modified: this.filterModified(modified, moveAffectedTopLevelNodeIds),
     };
   }
 
-  private collectMoveAffectedTopLevelPaths(
+  private collectMoveAffectedTopLevelNodeIds(
     topLevelMoves: RawChange[],
   ): Set<string> {
-    const paths = new Set<string>();
+    const nodeIds = new Set<string>();
     for (const change of topLevelMoves) {
       if (change.baseNode) {
-        const basePath = this.baseTree.pathOf(change.baseNode.id());
-        const topLevel = basePath.getTopLevel();
-        if (topLevel) {
-          paths.add(topLevel.asJsonPointer());
+        const topLevelNodeId = this.getTopLevelNodeId(
+          this.baseTree,
+          change.baseNode.id(),
+        );
+        if (topLevelNodeId) {
+          nodeIds.add(topLevelNodeId);
         }
       }
       if (change.currentNode) {
-        const currentPath = this.currentTree.pathOf(change.currentNode.id());
-        const topLevel = currentPath.getTopLevel();
-        if (topLevel) {
-          paths.add(topLevel.asJsonPointer());
+        const topLevelNodeId = this.getTopLevelNodeId(
+          this.currentTree,
+          change.currentNode.id(),
+        );
+        if (topLevelNodeId) {
+          nodeIds.add(topLevelNodeId);
         }
       }
     }
-    return paths;
+    return nodeIds;
+  }
+
+  private getTopLevelNodeId(tree: SchemaTree, nodeId: string): string | null {
+    const path = tree.pathOf(nodeId);
+    const topLevelPath = path.getTopLevel();
+    if (!topLevelPath) {
+      return null;
+    }
+    const topLevelNode = tree.nodeAt(topLevelPath);
+    return topLevelNode.isNull() ? null : topLevelNode.id();
   }
 
   private filterTopLevelMoves(moved: RawChange[]): RawChange[] {
@@ -149,16 +163,18 @@ export class ChangeCoalescer {
 
   private filterModified(
     modified: RawChange[],
-    moveAffectedTopLevelPaths: Set<string>,
+    moveAffectedTopLevelNodeIds: Set<string>,
   ): RawChange[] {
     return modified.filter((change) => {
       if (!change.currentNode) {
         return false;
       }
 
-      const currentPath = this.currentTree.pathOf(change.currentNode.id());
-      const topLevel = currentPath.getTopLevel();
-      if (topLevel && moveAffectedTopLevelPaths.has(topLevel.asJsonPointer())) {
+      const topLevelNodeId = this.getTopLevelNodeId(
+        this.currentTree,
+        change.currentNode.id(),
+      );
+      if (topLevelNodeId && moveAffectedTopLevelNodeIds.has(topLevelNodeId)) {
         return false;
       }
 

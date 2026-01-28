@@ -4,7 +4,7 @@ import { NodeType } from './NodeType';
 import type { NodeMetadata } from './NodeMetadata';
 import { EMPTY_METADATA } from './NodeMetadata';
 import { NULL_NODE } from './NullNode';
-import type { Formula } from '../formula/Formula';
+import type { Formula } from '../formula';
 
 export type StringFormat = 'date-time' | 'date' | 'time' | 'email' | 'regex';
 

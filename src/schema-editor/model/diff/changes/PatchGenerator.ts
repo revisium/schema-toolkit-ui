@@ -69,8 +69,14 @@ export class PatchGenerator {
     currentNode: SchemaNode,
     currentPath: string,
   ): JsonPatch | null {
-    const currentSchema = this.serializer.serialize(currentNode);
-    const baseSchema = this.serializer.serialize(baseNode);
+    const currentSchema = this.serializer.serializeWithTree(
+      currentNode,
+      this.currentTree,
+    );
+    const baseSchema = this.serializer.serializeWithTree(
+      baseNode,
+      this.baseTree,
+    );
 
     if (!this.comparator.areEqual(currentSchema, baseSchema)) {
       return {
@@ -92,7 +98,10 @@ export class PatchGenerator {
       }
 
       const currentPath = this.currentTree.pathOf(change.currentNode.id());
-      const schema = this.serializer.serialize(change.currentNode);
+      const schema = this.serializer.serializeWithTree(
+        change.currentNode,
+        this.currentTree,
+      );
       patches.push({
         op: 'add',
         path: currentPath.asJsonPointer(),
@@ -149,7 +158,10 @@ export class PatchGenerator {
         continue;
       }
 
-      const schema = this.serializer.serialize(change.currentNode);
+      const schema = this.serializer.serializeWithTree(
+        change.currentNode,
+        this.currentTree,
+      );
       patches.push({
         op: 'replace',
         path: currentPath,
@@ -164,8 +176,14 @@ export class PatchGenerator {
       return false;
     }
 
-    const currentSchema = this.serializer.serialize(change.currentNode);
-    const baseSchema = this.serializer.serialize(change.baseNode);
+    const currentSchema = this.serializer.serializeWithTree(
+      change.currentNode,
+      this.currentTree,
+    );
+    const baseSchema = this.serializer.serializeWithTree(
+      change.baseNode,
+      this.baseTree,
+    );
 
     if (this.comparator.areEqual(currentSchema, baseSchema)) {
       return false;

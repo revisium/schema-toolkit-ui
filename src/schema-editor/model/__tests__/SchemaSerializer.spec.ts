@@ -1,18 +1,11 @@
 import { SchemaSerializer } from '../schema/SchemaSerializer';
+import { SchemaTree } from '../tree/SchemaTree';
 import { NodeFactory } from '../node/NodeFactory';
 import { StringNode } from '../node/StringNode';
 import { NumberNode } from '../node/NumberNode';
 import { BooleanNode } from '../node/BooleanNode';
 import { NULL_NODE } from '../node/NullNode';
-import type { Formula } from '../formula/Formula';
-import type { ASTNode } from '@revisium/formula';
-
-const createMockFormula = (expression: string): Formula => ({
-  version: () => 1,
-  expression: () => expression,
-  ast: () => ({ type: 'NumberLiteral', value: 0 }) as ASTNode,
-  dependencies: () => [],
-});
+import { ParsedFormula } from '../formula';
 
 describe('SchemaSerializer', () => {
   let serializer: SchemaSerializer;
@@ -205,15 +198,23 @@ describe('SchemaSerializer', () => {
     });
 
     it('serializes string with formula', () => {
-      const node = new StringNode('id', 'computed');
-      node.setFormula(createMockFormula('"Hello, " + name'));
-      const result = serializer.serialize(node);
+      const root = NodeFactory.object('root', [
+        NodeFactory.string('name'),
+        new StringNode('computed-id', 'computed'),
+      ]);
+      const tree = new SchemaTree(root);
+      const computedNode = root.property('computed') as StringNode;
+      const formula = new ParsedFormula(tree, computedNode.id(), 'name');
+      computedNode.setFormula(formula);
+      tree.registerFormula(computedNode.id(), formula);
+
+      const result = serializer.serializeWithTree(computedNode, tree);
 
       expect(result).toEqual({
         type: 'string',
         default: '',
         readOnly: true,
-        'x-formula': { version: 1, expression: '"Hello, " + name' },
+        'x-formula': { version: 1, expression: 'name' },
       });
     });
   });
@@ -240,9 +241,22 @@ describe('SchemaSerializer', () => {
     });
 
     it('serializes number with formula', () => {
-      const node = new NumberNode('id', 'total');
-      node.setFormula(createMockFormula('price * quantity'));
-      const result = serializer.serialize(node);
+      const root = NodeFactory.object('root', [
+        NodeFactory.number('price'),
+        NodeFactory.number('quantity'),
+        new NumberNode('total-id', 'total'),
+      ]);
+      const tree = new SchemaTree(root);
+      const totalNode = root.property('total') as NumberNode;
+      const formula = new ParsedFormula(
+        tree,
+        totalNode.id(),
+        'price * quantity',
+      );
+      totalNode.setFormula(formula);
+      tree.registerFormula(totalNode.id(), formula);
+
+      const result = serializer.serializeWithTree(totalNode, tree);
 
       expect(result).toEqual({
         type: 'number',
@@ -275,9 +289,17 @@ describe('SchemaSerializer', () => {
     });
 
     it('serializes boolean with formula', () => {
-      const node = new BooleanNode('id', 'isPositive');
-      node.setFormula(createMockFormula('value > 0'));
-      const result = serializer.serialize(node);
+      const root = NodeFactory.object('root', [
+        NodeFactory.number('value'),
+        new BooleanNode('isPositive-id', 'isPositive'),
+      ]);
+      const tree = new SchemaTree(root);
+      const isPositiveNode = root.property('isPositive') as BooleanNode;
+      const formula = new ParsedFormula(tree, isPositiveNode.id(), 'value > 0');
+      isPositiveNode.setFormula(formula);
+      tree.registerFormula(isPositiveNode.id(), formula);
+
+      const result = serializer.serializeWithTree(isPositiveNode, tree);
 
       expect(result).toEqual({
         type: 'boolean',

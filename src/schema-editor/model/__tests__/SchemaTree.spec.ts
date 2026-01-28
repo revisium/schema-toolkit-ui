@@ -1,7 +1,7 @@
 import { SchemaTree } from '../tree/SchemaTree';
 import { SchemaParser, resetIdCounter } from '../schema/SchemaParser';
 import { NodeFactory } from '../node/NodeFactory';
-import { ParsedFormula } from '../formula/ParsedFormula';
+import { ParsedFormula, FormulaSerializer } from '../formula';
 import { NumberNode } from '../node/NumberNode';
 import {
   createSchema,
@@ -583,7 +583,16 @@ describe('SchemaTree.clone', () => {
 
       const clonedComputed = cloned.root().property('computed');
       expect(clonedComputed.hasFormula()).toBe(true);
-      expect(clonedComputed.formula()?.expression()).toBe('value * 2');
+      const clonedFormula = clonedComputed.formula();
+      expect(clonedFormula).toBeDefined();
+      if (clonedFormula) {
+        const expression = new FormulaSerializer(
+          cloned,
+          clonedComputed.id(),
+          clonedFormula,
+        ).serialize();
+        expect(expression).toBe('value * 2');
+      }
     });
   });
 
@@ -734,7 +743,12 @@ describe('SchemaParser', () => {
       const itemsNode = numNode!.items();
 
       const formula = new ParsedFormula(tree, itemsNode.id(), 'value * 2');
-      expect(formula.expression()).toBe('value * 2');
+      const expression = new FormulaSerializer(
+        tree,
+        itemsNode.id(),
+        formula,
+      ).serialize();
+      expect(expression).toBe('../value * 2');
       (itemsNode as NumberNode).setFormula(formula);
       expect((itemsNode as NumberNode).hasFormula()).toBe(true);
     });
