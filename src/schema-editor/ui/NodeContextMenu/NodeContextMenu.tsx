@@ -52,7 +52,7 @@ export const NodeContextMenu: FC<NodeContextMenuProps> = observer(
         </Menu.Trigger>
         <Portal>
           <Menu.Positioner>
-            <Menu.Content minW="220px">
+            <Menu.Content ref={contentRef} minW="220px">
               <DescriptionSubmenu
                 viewModel={viewModel}
                 dataTestId={dataTestId}

@@ -241,6 +241,7 @@ export class PatchGenerator {
     const baseMeta = baseNode.metadata();
 
     return (
+      currentMeta.title !== baseMeta.title ||
       currentMeta.description !== baseMeta.description ||
       currentMeta.deprecated !== baseMeta.deprecated
     );
