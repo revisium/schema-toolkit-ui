@@ -2,17 +2,17 @@ import type {
   TypeDescriptor,
   ParseContext,
   SerializeContext,
-} from '../registry/TypeDescriptor';
-import type { JsonRefSchema, JsonSchemaType } from '../schema/JsonSchema';
-import type { NodeMetadata } from '../node/NodeMetadata';
-import { RefNode } from '../node/RefNode';
-import { REF_CAPABILITIES } from '../registry/TypeCapabilities';
+} from './TypeDescriptor';
+import type { JsonRefSchema, JsonSchemaType } from '../../schema/JsonSchema';
+import type { NodeMetadata } from '../../node/NodeMetadata';
+import { RefNode } from '../../node/RefNode';
+import { REF_CAPABILITIES } from './TypeCapabilities';
 
 function isRefSchema(schema: JsonSchemaType): schema is JsonRefSchema {
   return '$ref' in schema;
 }
 
-export const refTypeDescriptor: TypeDescriptor<JsonRefSchema, RefNode> = {
+export const refDescriptor: TypeDescriptor<JsonRefSchema, RefNode> = {
   type: 'ref',
 
   capabilities: REF_CAPABILITIES,

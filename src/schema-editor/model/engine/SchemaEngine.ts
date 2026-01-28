@@ -6,7 +6,7 @@ import { SchemaValidator } from '../validation/SchemaValidator';
 import { FormulaValidator } from '../validation/FormulaValidator';
 import { ParsedFormula } from '../formula/ParsedFormula';
 import { FormulaError } from '../formula/FormulaError';
-import { NodeFactory } from '../factory/NodeFactory';
+import { NodeFactory } from '../node/NodeFactory';
 import { NodeType } from '../node/NodeType';
 import { NULL_NODE } from '../node/NullNode';
 import type { JsonObjectSchema } from '../schema/JsonSchema';

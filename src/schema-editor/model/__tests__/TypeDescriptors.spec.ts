@@ -1,19 +1,20 @@
 import { jest } from '@jest/globals';
-import { stringTypeDescriptor } from '../types/StringTypeDescriptor';
-import { numberTypeDescriptor } from '../types/NumberTypeDescriptor';
-import { booleanTypeDescriptor } from '../types/BooleanTypeDescriptor';
-import { objectTypeDescriptor } from '../types/ObjectTypeDescriptor';
-import { arrayTypeDescriptor } from '../types/ArrayTypeDescriptor';
-import { refTypeDescriptor } from '../types/RefTypeDescriptor';
 import {
+  stringDescriptor as stringTypeDescriptor,
+  numberDescriptor as numberTypeDescriptor,
+  booleanDescriptor as booleanTypeDescriptor,
+  objectDescriptor as objectTypeDescriptor,
+  arrayDescriptor as arrayTypeDescriptor,
+  refDescriptor as refTypeDescriptor,
   PRIMITIVE_CAPABILITIES,
   OBJECT_CAPABILITIES,
   ARRAY_CAPABILITIES,
   REF_CAPABILITIES,
-} from '../registry';
-import type { ParseContext, SerializeContext } from '../registry';
+  type ParseContext,
+  type SerializeContext,
+} from '../parsing/index';
 import type { JsonSchemaType } from '../schema/JsonSchema';
-import { NodeFactory } from '../factory/NodeFactory';
+import { NodeFactory } from '../node/NodeFactory';
 import { EMPTY_METADATA } from '../node/NodeMetadata';
 
 let idCounter = 0;

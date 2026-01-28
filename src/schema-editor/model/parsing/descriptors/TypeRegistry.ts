@@ -1,4 +1,4 @@
-import type { JsonSchemaType } from '../schema/JsonSchema';
+import type { JsonSchemaType } from '../../schema/JsonSchema';
 import type { TypeDescriptor } from './TypeDescriptor';
 
 export class TypeRegistry {

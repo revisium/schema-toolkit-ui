@@ -1,5 +1,6 @@
 import type { JsonSchemaType, JsonObjectSchema } from '../schema/JsonSchema';
-import type { SchemaNavigator } from './SchemaNavigator';
+import { PathUtils } from '../path/PathUtils';
+import { TreeNavigator } from '../tree/TreeNavigator';
 import type { JsonPatch } from './SchemaDiff';
 import {
   type RichPatch,
@@ -12,10 +13,7 @@ import {
 } from './RichPatch';
 
 export class PatchEnricher {
-  constructor(
-    private readonly navigator: SchemaNavigator,
-    private readonly baseSchema: JsonObjectSchema,
-  ) {}
+  constructor(private readonly baseSchema: JsonObjectSchema) {}
 
   public enrich(patches: JsonPatch[]): RichPatch[] {
     return patches.map((patch) => this.enrichPatch(patch));
@@ -79,7 +77,12 @@ export class PatchEnricher {
     };
   }
 
-  private getBaseSchemaAtPath(path: string): JsonSchemaType | null {
-    return this.navigator.getSchemaAtPath(this.baseSchema, path);
+  private getBaseSchemaAtPath(jsonPointer: string): JsonSchemaType | null {
+    try {
+      const path = PathUtils.jsonPointerToPath(jsonPointer);
+      return TreeNavigator.navigateSchema(this.baseSchema, path);
+    } catch {
+      return null;
+    }
   }
 }

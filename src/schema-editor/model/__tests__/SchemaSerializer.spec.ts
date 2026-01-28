@@ -1,5 +1,5 @@
 import { SchemaSerializer } from '../schema/SchemaSerializer';
-import { NodeFactory } from '../factory/NodeFactory';
+import { NodeFactory } from '../node/NodeFactory';
 import { StringNode } from '../node/StringNode';
 import { NumberNode } from '../node/NumberNode';
 import { BooleanNode } from '../node/BooleanNode';

@@ -1,4 +1,4 @@
-import { getTransformationInfoFromTypeChange } from '../ui/DataTransformations';
+import { getTransformationInfoFromTypeChange } from '../utils/DataTransformations';
 
 describe('DataTransformations', () => {
   describe('getTransformationInfoFromTypeChange', () => {

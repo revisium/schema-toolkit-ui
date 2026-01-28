@@ -1,6 +1,6 @@
 import type { JsonSchemaType } from '../schema/JsonSchema';
+import { PathUtils } from '../path/PathUtils';
 import { SchemaMetadataExtractor } from './SchemaMetadataExtractor';
-import { PatchPathUtils } from './PatchPathUtils';
 
 export type {
   RichPatch,
@@ -10,25 +10,35 @@ export type {
 } from './RichPatchTypes';
 
 const metadataExtractor = new SchemaMetadataExtractor();
-const pathUtils = new PatchPathUtils();
 
 export function getSchemaType(schema: JsonSchemaType | null): string {
   return metadataExtractor.getSchemaType(schema);
 }
 
-export function getFieldNameFromPath(path: string): string {
-  return pathUtils.getFieldNameFromPath(path);
+export function getFieldNameFromPath(jsonPointer: string): string {
+  try {
+    const path = PathUtils.jsonPointerToPath(jsonPointer);
+    return PathUtils.getFieldNameFromPath(path);
+  } catch {
+    return '';
+  }
 }
 
 export function isRenameMove(fromPath: string, toPath: string): boolean {
-  return pathUtils.isRenameMove(fromPath, toPath);
+  return (
+    PathUtils.getParentJsonPointer(fromPath) ===
+    PathUtils.getParentJsonPointer(toPath)
+  );
 }
 
 export function movesIntoArrayBoundary(
   fromPath: string,
   toPath: string,
 ): boolean {
-  return pathUtils.movesIntoArrayBoundary(fromPath, toPath);
+  return (
+    PathUtils.countArrayDepthFromJsonPointer(toPath) >
+    PathUtils.countArrayDepthFromJsonPointer(fromPath)
+  );
 }
 
 export function computeMetadataChanges(

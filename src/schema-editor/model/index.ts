@@ -16,6 +16,9 @@ export {
   BooleanNode,
   type BooleanNodeOptions,
   RefNode,
+  NodeFactory,
+  type StringNodeFactoryOptions,
+  type RefNodeOptions,
 } from './node/index';
 
 // Path types
@@ -33,13 +36,6 @@ export {
 
 // Tree types
 export { type NodeTree, SchemaTree } from './tree/index';
-
-// Factory
-export {
-  NodeFactory,
-  type StringNodeFactoryOptions,
-  type RefNodeOptions,
-} from './factory/index';
 
 // Schema conversion
 export {
@@ -92,7 +88,7 @@ export {
   type ParsedDefaultValue,
 } from './validation/index';
 
-// UI helpers
+// Utils
 export {
   type DataLossSeverity,
   type TransformationInfo,
@@ -102,7 +98,7 @@ export {
   getDefaultValueFromSchema,
   type SchemaValidationError,
   type FormulaError as FormulaErrorInfo,
-} from './ui/index';
+} from './utils/index';
 
 // Engine
 export {

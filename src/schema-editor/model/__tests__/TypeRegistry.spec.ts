@@ -1,11 +1,13 @@
-import { TypeRegistry } from '../registry/TypeRegistry';
-import { stringTypeDescriptor } from '../types/StringTypeDescriptor';
-import { numberTypeDescriptor } from '../types/NumberTypeDescriptor';
-import { booleanTypeDescriptor } from '../types/BooleanTypeDescriptor';
-import { objectTypeDescriptor } from '../types/ObjectTypeDescriptor';
-import { arrayTypeDescriptor } from '../types/ArrayTypeDescriptor';
-import { refTypeDescriptor } from '../types/RefTypeDescriptor';
-import { createDefaultRegistry } from '../types';
+import {
+  TypeRegistry,
+  stringDescriptor as stringTypeDescriptor,
+  numberDescriptor as numberTypeDescriptor,
+  booleanDescriptor as booleanTypeDescriptor,
+  objectDescriptor as objectTypeDescriptor,
+  arrayDescriptor as arrayTypeDescriptor,
+  refDescriptor as refTypeDescriptor,
+  createDefaultRegistry,
+} from '../parsing/index';
 
 describe('TypeRegistry', () => {
   describe('register()', () => {

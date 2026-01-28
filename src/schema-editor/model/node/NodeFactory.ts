@@ -1,11 +1,11 @@
 import { nanoid } from 'nanoid';
-import { StringNode, type ContentMediaType } from '../node/StringNode';
-import { NumberNode } from '../node/NumberNode';
-import { BooleanNode } from '../node/BooleanNode';
-import { ObjectNode } from '../node/ObjectNode';
-import { ArrayNode } from '../node/ArrayNode';
-import { RefNode } from '../node/RefNode';
-import type { SchemaNode } from '../node/SchemaNode';
+import { StringNode, type ContentMediaType } from './StringNode';
+import { NumberNode } from './NumberNode';
+import { BooleanNode } from './BooleanNode';
+import { ObjectNode } from './ObjectNode';
+import { ArrayNode } from './ArrayNode';
+import { RefNode } from './RefNode';
+import type { SchemaNode } from './SchemaNode';
 
 export interface StringNodeFactoryOptions {
   foreignKey?: string;

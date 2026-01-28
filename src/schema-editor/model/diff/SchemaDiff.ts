@@ -3,7 +3,6 @@ import type { JsonSchemaType, JsonObjectSchema } from '../schema/JsonSchema';
 import { SchemaSerializer } from '../schema/SchemaSerializer';
 import type { RichPatch } from './RichPatch';
 import { SchemaComparator } from './SchemaComparator';
-import { SchemaNavigator } from './SchemaNavigator';
 import { NodePathIndex } from './NodePathIndex';
 import { PatchBuilder } from './PatchBuilder';
 import { PatchEnricher } from './PatchEnricher';
@@ -17,7 +16,6 @@ export interface JsonPatch {
 
 export class SchemaDiff {
   private readonly comparator: SchemaComparator;
-  private readonly navigator: SchemaNavigator;
   private readonly baseIndex: NodePathIndex;
   private baseSchema: JsonObjectSchema;
 
@@ -27,8 +25,7 @@ export class SchemaDiff {
   ) {
     this.baseSchema = baseSchema;
     this.comparator = new SchemaComparator();
-    this.navigator = new SchemaNavigator(tree);
-    this.baseIndex = new NodePathIndex(tree, this.navigator);
+    this.baseIndex = new NodePathIndex(tree);
   }
 
   public markAsSaved(newBaseSchema: JsonObjectSchema): void {
@@ -67,13 +64,12 @@ export class SchemaDiff {
     return new PatchBuilder(
       this.tree,
       this.baseIndex,
-      this.navigator,
       this.comparator,
       this.baseSchema,
     );
   }
 
   private createPatchEnricher(): PatchEnricher {
-    return new PatchEnricher(this.navigator, this.baseSchema);
+    return new PatchEnricher(this.baseSchema);
   }
 }

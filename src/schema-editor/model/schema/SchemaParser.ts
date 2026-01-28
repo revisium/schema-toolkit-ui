@@ -1,9 +1,11 @@
 import type { JsonSchemaType } from './JsonSchema';
 import type { SchemaNode } from '../node/SchemaNode';
 import type { NodeMetadata } from '../node/NodeMetadata';
-import type { TypeRegistry } from '../registry/TypeRegistry';
-import type { ParseContext } from '../registry/TypeDescriptor';
-import { defaultRegistry } from '../types/index';
+import {
+  type TypeRegistry,
+  type ParseContext,
+  defaultRegistry,
+} from '../parsing/index';
 
 let idCounter = 0;
 

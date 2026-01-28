@@ -2,26 +2,23 @@ import type {
   TypeDescriptor,
   ParseContext,
   SerializeContext,
-} from '../registry/TypeDescriptor';
-import type { JsonStringSchema, JsonSchemaType } from '../schema/JsonSchema';
-import type { NodeMetadata } from '../node/NodeMetadata';
+} from './TypeDescriptor';
+import type { JsonStringSchema, JsonSchemaType } from '../../schema/JsonSchema';
+import type { NodeMetadata } from '../../node/NodeMetadata';
 import {
   StringNode,
   type StringNodeOptions,
   type StringFormat,
   type ContentMediaType,
-} from '../node/StringNode';
-import { PRIMITIVE_CAPABILITIES } from '../registry/TypeCapabilities';
-import { FormulaSerializer } from '../formula/FormulaSerializer';
+} from '../../node/StringNode';
+import { PRIMITIVE_CAPABILITIES } from './TypeCapabilities';
+import { FormulaSerializer } from '../../formula/FormulaSerializer';
 
 function isStringSchema(schema: JsonSchemaType): schema is JsonStringSchema {
   return 'type' in schema && schema.type === 'string';
 }
 
-export const stringTypeDescriptor: TypeDescriptor<
-  JsonStringSchema,
-  StringNode
-> = {
+export const stringDescriptor: TypeDescriptor<JsonStringSchema, StringNode> = {
   type: 'string',
 
   capabilities: PRIMITIVE_CAPABILITIES,

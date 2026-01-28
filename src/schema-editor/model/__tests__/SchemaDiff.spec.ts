@@ -1,7 +1,7 @@
 import { SchemaTree } from '../tree/SchemaTree';
 import { SchemaParser, resetIdCounter } from '../schema/SchemaParser';
 import { SchemaDiff } from '../diff/SchemaDiff';
-import { NodeFactory } from '../factory/NodeFactory';
+import { NodeFactory } from '../node/NodeFactory';
 import {
   createSchema,
   numberField,

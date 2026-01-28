@@ -2,8 +2,9 @@ import type { SchemaNode } from '../node/SchemaNode';
 import type { SchemaTree } from '../tree/SchemaTree';
 import type { JsonObjectSchema } from '../schema/JsonSchema';
 import { SchemaSerializer } from '../schema/SchemaSerializer';
+import { PathUtils } from '../path/PathUtils';
+import { TreeNavigator } from '../tree/TreeNavigator';
 import type { NodePathIndex } from './NodePathIndex';
-import type { SchemaNavigator } from './SchemaNavigator';
 import type { SchemaComparator } from './SchemaComparator';
 import type { JsonPatch } from './SchemaDiff';
 
@@ -25,7 +26,6 @@ export class PatchBuilder {
   constructor(
     private readonly tree: SchemaTree,
     private readonly baseIndex: NodePathIndex,
-    private readonly navigator: SchemaNavigator,
     private readonly comparator: SchemaComparator,
     private readonly baseSchema: JsonObjectSchema,
   ) {}
@@ -126,10 +126,7 @@ export class PatchBuilder {
     context: PatchContext,
   ): JsonPatch | null {
     const currentSchema = context.serializer.serialize(node);
-    const baseSchema = this.navigator.getSchemaAtPath(
-      this.baseSchema,
-      moved.from,
-    );
+    const baseSchema = this.getSchemaAtJsonPointer(moved.from);
     const isModified =
       baseSchema && !this.comparator.areEqual(currentSchema, baseSchema);
 
@@ -143,8 +140,8 @@ export class PatchBuilder {
     moved: MovedNode,
     context: PatchContext,
   ): void {
-    const fromTopLevel = this.navigator.getTopLevelPath(moved.from);
-    const toTopLevel = this.navigator.getTopLevelPath(moved.to);
+    const fromTopLevel = PathUtils.getTopLevelJsonPointer(moved.from);
+    const toTopLevel = PathUtils.getTopLevelJsonPointer(moved.to);
 
     if (fromTopLevel) {
       context.moveAffectedTopLevelPaths.add(fromTopLevel);
@@ -169,7 +166,7 @@ export class PatchBuilder {
 
       if (
         context.moveAffectedTopLevelPaths.has(
-          this.navigator.getTopLevelPath(currentPath) ?? '',
+          PathUtils.getTopLevelJsonPointer(currentPath) ?? '',
         )
       ) {
         continue;
@@ -233,10 +230,7 @@ export class PatchBuilder {
     }
 
     const currentSchema = context.serializer.serialize(node);
-    const baseSchema = this.navigator.getSchemaAtPath(
-      this.baseSchema,
-      basePath,
-    );
+    const baseSchema = this.getSchemaAtJsonPointer(basePath);
 
     if (baseSchema === null) {
       return false;
@@ -258,10 +252,7 @@ export class PatchBuilder {
   }
 
   private hasOnlyItemsChanges(node: SchemaNode, basePath: string): boolean {
-    const baseSchema = this.navigator.getSchemaAtPath(
-      this.baseSchema,
-      basePath,
-    );
+    const baseSchema = this.getSchemaAtJsonPointer(basePath);
     if (
       !baseSchema ||
       typeof baseSchema !== 'object' ||
@@ -282,10 +273,7 @@ export class PatchBuilder {
   }
 
   private hasOnlyChildChanges(node: SchemaNode, basePath: string): boolean {
-    const baseSchema = this.navigator.getSchemaAtPath(
-      this.baseSchema,
-      basePath,
-    );
+    const baseSchema = this.getSchemaAtJsonPointer(basePath);
     if (
       !baseSchema ||
       typeof baseSchema !== 'object' ||
@@ -302,10 +290,7 @@ export class PatchBuilder {
       if (!this.baseIndex.hasNode(child.id())) {
         return true;
       }
-      const childBaseSchema = this.navigator.getSchemaAtPath(
-        this.baseSchema,
-        childBasePath,
-      );
+      const childBaseSchema = this.getSchemaAtJsonPointer(childBasePath);
       if (childBaseSchema === null) {
         return true;
       }
@@ -395,5 +380,14 @@ export class PatchBuilder {
       }
     }
     return false;
+  }
+
+  private getSchemaAtJsonPointer(jsonPointer: string) {
+    try {
+      const path = PathUtils.jsonPointerToPath(jsonPointer);
+      return TreeNavigator.navigateSchema(this.baseSchema, path);
+    } catch {
+      return null;
+    }
   }
 }

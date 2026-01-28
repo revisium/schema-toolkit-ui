@@ -2,21 +2,18 @@ import type {
   TypeDescriptor,
   ParseContext,
   SerializeContext,
-} from '../registry/TypeDescriptor';
-import type { JsonObjectSchema, JsonSchemaType } from '../schema/JsonSchema';
-import type { NodeMetadata } from '../node/NodeMetadata';
-import type { SchemaNode } from '../node/SchemaNode';
-import { ObjectNode } from '../node/ObjectNode';
-import { OBJECT_CAPABILITIES } from '../registry/TypeCapabilities';
+} from './TypeDescriptor';
+import type { JsonObjectSchema, JsonSchemaType } from '../../schema/JsonSchema';
+import type { NodeMetadata } from '../../node/NodeMetadata';
+import type { SchemaNode } from '../../node/SchemaNode';
+import { ObjectNode } from '../../node/ObjectNode';
+import { OBJECT_CAPABILITIES } from './TypeCapabilities';
 
 function isObjectSchema(schema: JsonSchemaType): schema is JsonObjectSchema {
   return 'type' in schema && schema.type === 'object';
 }
 
-export const objectTypeDescriptor: TypeDescriptor<
-  JsonObjectSchema,
-  ObjectNode
-> = {
+export const objectDescriptor: TypeDescriptor<JsonObjectSchema, ObjectNode> = {
   type: 'object',
 
   capabilities: OBJECT_CAPABILITIES,

@@ -2,17 +2,17 @@ import type {
   TypeDescriptor,
   ParseContext,
   SerializeContext,
-} from '../registry/TypeDescriptor';
-import type { JsonArraySchema, JsonSchemaType } from '../schema/JsonSchema';
-import type { NodeMetadata } from '../node/NodeMetadata';
-import { ArrayNode } from '../node/ArrayNode';
-import { ARRAY_CAPABILITIES } from '../registry/TypeCapabilities';
+} from './TypeDescriptor';
+import type { JsonArraySchema, JsonSchemaType } from '../../schema/JsonSchema';
+import type { NodeMetadata } from '../../node/NodeMetadata';
+import { ArrayNode } from '../../node/ArrayNode';
+import { ARRAY_CAPABILITIES } from './TypeCapabilities';
 
 function isArraySchema(schema: JsonSchemaType): schema is JsonArraySchema {
   return 'type' in schema && schema.type === 'array';
 }
 
-export const arrayTypeDescriptor: TypeDescriptor<JsonArraySchema, ArrayNode> = {
+export const arrayDescriptor: TypeDescriptor<JsonArraySchema, ArrayNode> = {
   type: 'array',
 
   capabilities: ARRAY_CAPABILITIES,
