@@ -53,12 +53,10 @@ export {
   type Formula,
   type FormulaDependency,
   type FormulaDependent,
-  FormulaDependencyIndex,
   ResolvedDependency,
   FormulaError,
   FormulaSerializer,
   ParsedFormula,
-  RelativePath,
 } from './formula/index';
 
 // Diff
@@ -74,10 +72,8 @@ export {
 export {
   isValidFieldName,
   FIELD_NAME_ERROR_MESSAGE,
-  SchemaValidator,
   type ValidationError,
   type ValidationErrorType,
-  FormulaValidator,
   type FormulaValidationError,
   parseDefaultValue,
   type ParsedDefaultValue,

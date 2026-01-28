@@ -1,4 +1,4 @@
-import { RelativePath } from '../formula';
+import { RelativePath } from '../formula/parsing/RelativePath';
 import { EMPTY_PATH, jsonPointerToPath } from '../path';
 
 describe('RelativePath', () => {
