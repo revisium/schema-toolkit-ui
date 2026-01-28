@@ -157,10 +157,22 @@ export class PathUtils {
 
   static getParentJsonPointer(pointer: string): string {
     const parts = pointer.split('/').filter(Boolean);
-    if (parts.length <= 2) {
+    if (parts.length === 0) {
       return '';
     }
-    return '/' + parts.slice(0, -2).join('/');
+
+    const lastPart = parts[parts.length - 1];
+    if (lastPart === 'items') {
+      if (parts.length <= 1) {
+        return '';
+      }
+      return '/' + parts.slice(0, -1).join('/');
+    } else {
+      if (parts.length <= 2) {
+        return '';
+      }
+      return '/' + parts.slice(0, -2).join('/');
+    }
   }
 
   static countArrayDepth(path: Path): number {
@@ -168,7 +180,8 @@ export class PathUtils {
   }
 
   static countArrayDepthFromJsonPointer(pointer: string): number {
-    return (pointer.match(/\/items/g) || []).length;
+    return (pointer.match(/(?<=\/properties\/[^/]+)\/items(?=\/|$)/g) || [])
+      .length;
   }
 
   static getFieldNameFromPath(path: Path): string {
