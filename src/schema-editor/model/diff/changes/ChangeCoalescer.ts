@@ -81,26 +81,34 @@ export class ChangeCoalescer {
   }
 
   private filterTopLevelAdds(added: RawChange[]): RawChange[] {
+    const changesWithPaths = added
+      .flatMap((change) => {
+        if (!change.currentNode) {
+          return [];
+        }
+        return [
+          {
+            change,
+            path: this.currentTree.pathOf(change.currentNode.id()),
+          },
+        ];
+      })
+      .sort((a, b) => a.path.length() - b.path.length());
+
     const addedPaths: Path[] = [];
     const result: RawChange[] = [];
 
-    for (const change of added) {
-      if (!change.currentNode) {
+    for (const { change, path } of changesWithPaths) {
+      if (this.baseIndex.isChildOfReplacedPath(path)) {
         continue;
       }
 
-      const currentPath = this.currentTree.pathOf(change.currentNode.id());
-
-      if (this.baseIndex.isChildOfReplacedPath(currentPath)) {
-        continue;
-      }
-
-      if (this.isChildOfAnyPath(currentPath, addedPaths)) {
+      if (this.isChildOfAnyPath(path, addedPaths)) {
         continue;
       }
 
       result.push(change);
-      addedPaths.push(currentPath);
+      addedPaths.push(path);
     }
 
     return result;
@@ -110,26 +118,30 @@ export class ChangeCoalescer {
     removed: RawChange[],
     movedBaseNodes: Set<RawChange['baseNode']>,
   ): RawChange[] {
+    const changesWithPaths = removed
+      .flatMap((change) => {
+        if (!change.baseNode || movedBaseNodes.has(change.baseNode)) {
+          return [];
+        }
+        return [
+          {
+            change,
+            path: this.baseTree.pathOf(change.baseNode.id()),
+          },
+        ];
+      })
+      .sort((a, b) => a.path.length() - b.path.length());
+
     const removedPaths: Path[] = [];
     const result: RawChange[] = [];
 
-    for (const change of removed) {
-      if (!change.baseNode) {
-        continue;
-      }
-
-      if (movedBaseNodes.has(change.baseNode)) {
-        continue;
-      }
-
-      const basePath = this.baseTree.pathOf(change.baseNode.id());
-
-      if (this.isChildOfAnyPath(basePath, removedPaths)) {
+    for (const { change, path } of changesWithPaths) {
+      if (this.isChildOfAnyPath(path, removedPaths)) {
         continue;
       }
 
       result.push(change);
-      removedPaths.push(basePath);
+      removedPaths.push(path);
     }
 
     return result;

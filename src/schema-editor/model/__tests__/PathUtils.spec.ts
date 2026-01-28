@@ -135,6 +135,71 @@ describe('PathUtils', () => {
     });
   });
 
+  describe('isChildOfAnyJsonPointer', () => {
+    it('should return true if pointer is child of any parent', () => {
+      const parents = new Set(['/properties/a', '/properties/b']);
+      expect(
+        PathUtils.isChildOfAnyJsonPointer(
+          '/properties/a/properties/child',
+          parents,
+        ),
+      ).toBe(true);
+    });
+
+    it('should return false if pointer is not child of any parent', () => {
+      const parents = new Set(['/properties/a', '/properties/b']);
+      expect(PathUtils.isChildOfAnyJsonPointer('/properties/c', parents)).toBe(
+        false,
+      );
+    });
+
+    it('should return false for same path', () => {
+      const parents = new Set(['/properties/a']);
+      expect(PathUtils.isChildOfAnyJsonPointer('/properties/a', parents)).toBe(
+        false,
+      );
+    });
+
+    it('should handle empty parent in set', () => {
+      const parents = new Set(['']);
+      expect(
+        PathUtils.isChildOfAnyJsonPointer('/properties/user', parents),
+      ).toBe(true);
+      expect(PathUtils.isChildOfAnyJsonPointer('', parents)).toBe(false);
+    });
+  });
+
+  describe('hasChildJsonPointer', () => {
+    it('should return true if any pointer is child of parent', () => {
+      const pointers = new Set([
+        '/properties/a/properties/child',
+        '/properties/b',
+      ]);
+      expect(PathUtils.hasChildJsonPointer('/properties/a', pointers)).toBe(
+        true,
+      );
+    });
+
+    it('should return false if no pointer is child of parent', () => {
+      const pointers = new Set(['/properties/a', '/properties/b']);
+      expect(PathUtils.hasChildJsonPointer('/properties/c', pointers)).toBe(
+        false,
+      );
+    });
+
+    it('should return false for same path', () => {
+      const pointers = new Set(['/properties/a']);
+      expect(PathUtils.hasChildJsonPointer('/properties/a', pointers)).toBe(
+        false,
+      );
+    });
+
+    it('should handle empty parent', () => {
+      const pointers = new Set(['/properties/user', '']);
+      expect(PathUtils.hasChildJsonPointer('', pointers)).toBe(true);
+    });
+  });
+
   describe('getTopLevelPath', () => {
     it('should return null for empty path', () => {
       expect(PathUtils.getTopLevelPath(EMPTY_PATH)).toBeNull();

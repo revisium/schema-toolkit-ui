@@ -13,6 +13,16 @@ export class ChangeCollector {
     const changes: RawChange[] = [];
     const processedBaseNodeIds = new Set<string>();
 
+    this.collectCurrentTreeChanges(changes, processedBaseNodeIds);
+    this.collectRemovedNodes(changes, processedBaseNodeIds);
+
+    return changes;
+  }
+
+  private collectCurrentTreeChanges(
+    changes: RawChange[],
+    processedBaseNodeIds: Set<string>,
+  ): void {
     for (const nodeId of this.currentTree.nodeIds()) {
       const currentPath = this.currentTree.pathOf(nodeId);
       if (currentPath.isEmpty()) {
@@ -20,54 +30,67 @@ export class ChangeCollector {
       }
 
       const currentNode = this.currentTree.nodeById(nodeId);
-      const hasInBase = this.baseIndex.hasNode(nodeId);
 
-      if (!hasInBase) {
+      if (this.baseIndex.hasNode(nodeId)) {
+        this.collectExistingNodeChange(
+          nodeId,
+          currentNode,
+          currentPath,
+          changes,
+          processedBaseNodeIds,
+        );
+      } else {
         changes.push({
           type: 'added',
           baseNode: null,
           currentNode,
         });
-      } else {
-        processedBaseNodeIds.add(nodeId);
-
-        const originalNodeId = this.baseIndex.getOriginalNodeId(nodeId);
-        const baseNodeId = originalNodeId ?? nodeId;
-        const baseNode = this.baseTree.nodeById(baseNodeId);
-
-        if (originalNodeId) {
-          processedBaseNodeIds.add(originalNodeId);
-        }
-
-        const basePath = this.baseIndex.getPath(nodeId);
-
-        if (!basePath || !currentPath.equals(basePath)) {
-          changes.push({
-            type: 'moved',
-            baseNode,
-            currentNode,
-          });
-        } else {
-          changes.push({
-            type: 'modified',
-            baseNode,
-            currentNode,
-          });
-        }
       }
     }
+  }
 
+  private collectExistingNodeChange(
+    nodeId: string,
+    currentNode: ReturnType<SchemaTree['nodeById']>,
+    currentPath: ReturnType<SchemaTree['pathOf']>,
+    changes: RawChange[],
+    processedBaseNodeIds: Set<string>,
+  ): void {
+    processedBaseNodeIds.add(nodeId);
+
+    const originalNodeId = this.baseIndex.getOriginalNodeId(nodeId);
+    const baseNodeId = originalNodeId ?? nodeId;
+    const baseNode = this.baseTree.nodeById(baseNodeId);
+
+    if (originalNodeId) {
+      processedBaseNodeIds.add(originalNodeId);
+    }
+
+    const basePath = this.baseIndex.getPath(nodeId);
+    const isMoved = !basePath || !currentPath.equals(basePath);
+
+    changes.push({
+      type: isMoved ? 'moved' : 'modified',
+      baseNode,
+      currentNode,
+    });
+  }
+
+  private collectRemovedNodes(
+    changes: RawChange[],
+    processedBaseNodeIds: Set<string>,
+  ): void {
     for (const nodeId of this.baseIndex.nodeIds()) {
-      if (!processedBaseNodeIds.has(nodeId)) {
-        const baseNode = this.baseTree.nodeById(nodeId);
-        changes.push({
-          type: 'removed',
-          baseNode,
-          currentNode: null,
-        });
+      if (processedBaseNodeIds.has(nodeId)) {
+        continue;
       }
-    }
 
-    return changes;
+      const baseNode = this.baseTree.nodeById(nodeId);
+      changes.push({
+        type: 'removed',
+        baseNode,
+        currentNode: null,
+      });
+    }
   }
 }

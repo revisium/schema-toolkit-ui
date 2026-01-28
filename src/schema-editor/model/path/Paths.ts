@@ -151,7 +151,7 @@ class SegmentPathImpl implements Path {
 
   getTopLevel(): Path | null {
     const first = this.segs[0];
-    if (!first || !first.isProperty()) {
+    if (!first?.isProperty()) {
       return null;
     }
     return new SegmentPathImpl([first]);

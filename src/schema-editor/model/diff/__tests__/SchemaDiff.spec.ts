@@ -1012,6 +1012,43 @@ describe('SchemaDiff', () => {
       expect((replacePatch?.value as { type: string }).type).toBe('array');
     });
   });
+
+  describe('coalescing', () => {
+    it('should generate single add patch for parent when adding nested structure', () => {
+      const { tree, diff } = createTreeAndDiff({
+        existing: stringField(),
+      });
+
+      const parentNode = NodeFactory.object('parent');
+      tree.addChildTo(tree.root().id(), parentNode);
+      tree.addChildTo(parentNode.id(), NodeFactory.string('child1'));
+      tree.addChildTo(parentNode.id(), NodeFactory.string('child2'));
+
+      const patches = toJsonPatches(diff.getPatches());
+
+      const addPatches = patches.filter((p) => p.op === 'add');
+      expect(addPatches).toHaveLength(1);
+      expect(addPatches[0]?.path).toBe('/properties/parent');
+    });
+
+    it('should generate single remove patch for parent when removing nested structure', () => {
+      const { tree, diff } = createTreeAndDiff({
+        parent: objectField({
+          child1: stringField(),
+          child2: stringField(),
+        }),
+      });
+
+      const parentNode = tree.root().property('parent');
+      tree.removeNodeAt(tree.pathOf(parentNode.id()));
+
+      const patches = toJsonPatches(diff.getPatches());
+
+      const removePatches = patches.filter((p) => p.op === 'remove');
+      expect(removePatches).toHaveLength(1);
+      expect(removePatches[0]?.path).toBe('/properties/parent');
+    });
+  });
 });
 
 function applyPatches(

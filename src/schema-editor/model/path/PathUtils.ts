@@ -128,7 +128,7 @@ export class PathUtils {
     parentPointers: Set<string>,
   ): boolean {
     for (const parent of parentPointers) {
-      if (pointer.startsWith(parent + '/')) {
+      if (PathUtils.isChildOfJsonPointer(parent, pointer)) {
         return true;
       }
     }
@@ -140,7 +140,7 @@ export class PathUtils {
     pointers: Set<string>,
   ): boolean {
     for (const pointer of pointers) {
-      if (pointer.startsWith(parentPointer + '/')) {
+      if (PathUtils.isChildOfJsonPointer(parentPointer, pointer)) {
         return true;
       }
     }
