@@ -137,4 +137,16 @@ export class NumberNode implements SchemaNode {
   setItems(): void {
     // No-op for NumberNode
   }
+
+  clone(): NumberNode {
+    return new NumberNode(
+      this._id,
+      this._name,
+      {
+        defaultValue: this._defaultValue,
+        formula: this._formula,
+      },
+      { ...this._metadata },
+    );
+  }
 }

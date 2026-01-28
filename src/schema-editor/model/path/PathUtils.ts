@@ -123,6 +123,30 @@ export class PathUtils {
     return childPointer.startsWith(parentPointer + '/');
   }
 
+  static isChildOfAnyJsonPointer(
+    pointer: string,
+    parentPointers: Set<string>,
+  ): boolean {
+    for (const parent of parentPointers) {
+      if (PathUtils.isChildOfJsonPointer(parent, pointer)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static hasChildJsonPointer(
+    parentPointer: string,
+    pointers: Set<string>,
+  ): boolean {
+    for (const pointer of pointers) {
+      if (PathUtils.isChildOfJsonPointer(parentPointer, pointer)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static getTopLevelPath(path: Path): Path | null {
     const segments = path.segments();
     if (segments.length === 0) {

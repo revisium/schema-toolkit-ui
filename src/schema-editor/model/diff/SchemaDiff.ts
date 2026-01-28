@@ -1,75 +1,50 @@
 import type { SchemaTree } from '../tree/SchemaTree';
-import type { JsonSchemaType, JsonObjectSchema } from '../schema/JsonSchema';
+import type { JsonObjectSchema } from '../schema/JsonSchema';
 import { SchemaSerializer } from '../schema/SchemaSerializer';
-import type { RichPatch } from './RichPatch';
+import type { SchemaPatch } from './SchemaPatch';
 import { SchemaComparator } from './SchemaComparator';
-import { NodePathIndex } from './NodePathIndex';
+import { NodePathIndex } from './index/NodePathIndex';
 import { PatchBuilder } from './PatchBuilder';
-import { PatchEnricher } from './PatchEnricher';
-
-export interface JsonPatch {
-  op: 'add' | 'remove' | 'replace' | 'move';
-  path: string;
-  from?: string;
-  value?: JsonSchemaType;
-}
 
 export class SchemaDiff {
-  private readonly comparator: SchemaComparator;
+  private readonly serializer = new SchemaSerializer();
+  private readonly comparator = new SchemaComparator();
   private readonly baseIndex: NodePathIndex;
-  private baseSchema: JsonObjectSchema;
+  private baseTree: SchemaTree;
 
-  constructor(
-    private readonly tree: SchemaTree,
-    baseSchema: JsonObjectSchema,
-  ) {
-    this.baseSchema = baseSchema;
-    this.comparator = new SchemaComparator();
-    this.baseIndex = new NodePathIndex(tree);
+  constructor(private readonly tree: SchemaTree) {
+    this.baseTree = tree.clone();
+    this.baseIndex = new NodePathIndex(this.baseTree);
   }
 
-  public markAsSaved(newBaseSchema: JsonObjectSchema): void {
-    this.baseSchema = newBaseSchema;
-    this.baseIndex.rebuild();
+  public markAsSaved(): void {
+    this.baseTree = this.tree.clone();
+    this.baseIndex.rebuildFrom(this.baseTree);
   }
 
   public getBaseSchema(): JsonObjectSchema {
-    return this.baseSchema;
+    return this.serializer.serialize(this.baseTree.root()) as JsonObjectSchema;
   }
 
   public trackReplacement(oldNodeId: string, newNodeId: string): void {
     this.baseIndex.trackReplacement(oldNodeId, newNodeId);
   }
 
-  public getPatches(): JsonPatch[] {
+  public getPatches(): SchemaPatch[] {
     return this.createPatchBuilder().build();
-  }
-
-  public getRichPatches(): RichPatch[] {
-    const patches = this.getPatches();
-    return this.createPatchEnricher().enrich(patches);
   }
 
   public isDirty(): boolean {
     const currentSchema = this.getCurrentSchema();
-    return !this.comparator.areEqual(currentSchema, this.baseSchema);
+    const baseSchema = this.getBaseSchema();
+    return !this.comparator.areEqual(currentSchema, baseSchema);
   }
 
   public getCurrentSchema(): JsonObjectSchema {
-    const serializer = new SchemaSerializer();
-    return serializer.serialize(this.tree.root()) as JsonObjectSchema;
+    return this.serializer.serialize(this.tree.root()) as JsonObjectSchema;
   }
 
   private createPatchBuilder(): PatchBuilder {
-    return new PatchBuilder(
-      this.tree,
-      this.baseIndex,
-      this.comparator,
-      this.baseSchema,
-    );
-  }
-
-  private createPatchEnricher(): PatchEnricher {
-    return new PatchEnricher(this.baseSchema);
+    return new PatchBuilder(this.tree, this.baseTree, this.baseIndex);
   }
 }

@@ -11,4 +11,6 @@ export interface Path {
   isEmpty(): boolean;
   length(): number;
   lastSegment(): PathSegment | null;
+  isChildOf(parent: Path): boolean;
+  getTopLevel(): Path | null;
 }

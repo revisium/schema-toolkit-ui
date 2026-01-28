@@ -129,4 +129,10 @@ export class ArrayNode implements SchemaNode {
   setDefaultValue(): void {
     // No-op for ArrayNode
   }
+
+  clone(): ArrayNode {
+    return new ArrayNode(this._id, this._name, this._items.clone(), {
+      ...this._metadata,
+    });
+  }
 }

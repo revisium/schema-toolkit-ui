@@ -107,6 +107,10 @@ class NullNodeImpl implements SchemaNode {
   setDefaultValue(): void {
     throw new Error('Cannot modify null node');
   }
+
+  clone(): SchemaNode {
+    return this;
+  }
 }
 
 export const NULL_NODE: SchemaNode = new NullNodeImpl();

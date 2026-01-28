@@ -1,5 +1,12 @@
 import type { JsonSchemaType } from '../schema/JsonSchema';
 
+export interface JsonPatch {
+  op: 'add' | 'remove' | 'replace' | 'move';
+  path: string;
+  from?: string;
+  value?: JsonSchemaType;
+}
+
 export type MetadataChangeType =
   | 'formula'
   | 'description'
@@ -11,13 +18,8 @@ export type MetadataChangeType =
 
 export type DefaultValueType = string | number | boolean | undefined;
 
-export interface RichPatch {
-  patch: {
-    op: 'add' | 'remove' | 'replace' | 'move';
-    path: string;
-    from?: string;
-    value?: JsonSchemaType;
-  };
+export interface SchemaPatch {
+  patch: JsonPatch;
   fieldName: string;
   metadataChanges: MetadataChangeType[];
   typeChange?: {
@@ -46,20 +48,8 @@ export interface RichPatch {
 
 export interface MetadataChangesResult {
   metadataChanges: MetadataChangeType[];
-  formulaChange?: {
-    fromFormula: string | undefined;
-    toFormula: string | undefined;
-  };
-  defaultChange?: {
-    fromDefault: DefaultValueType;
-    toDefault: DefaultValueType;
-  };
-  descriptionChange?: {
-    fromDescription: string | undefined;
-    toDescription: string | undefined;
-  };
-  deprecatedChange?: {
-    fromDeprecated: boolean | undefined;
-    toDeprecated: boolean | undefined;
-  };
+  formulaChange?: SchemaPatch['formulaChange'];
+  defaultChange?: SchemaPatch['defaultChange'];
+  descriptionChange?: SchemaPatch['descriptionChange'];
+  deprecatedChange?: SchemaPatch['deprecatedChange'];
 }

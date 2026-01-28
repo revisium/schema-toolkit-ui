@@ -1,10 +1,11 @@
 import { makeAutoObservable } from 'mobx';
-import { ViewerSwitcherMode, type JsonPatch } from '../types';
+import { ViewerSwitcherMode } from '../types';
 import {
   SchemaEngine,
   getDefaultValueFromSchema,
   type JsonObjectSchema,
-  type RichPatch,
+  type SchemaPatch,
+  type JsonPatch,
   type ValidationError,
   type FormulaValidationError,
   type SchemaNode,
@@ -187,12 +188,12 @@ export class SchemaEditorVM {
     this._onSelectForeignKey?.(nodeVM);
   }
 
-  public getPatches(): JsonPatch[] {
-    return this._engine.getPatches() as JsonPatch[];
+  public getPatches(): SchemaPatch[] {
+    return this._engine.getPatches();
   }
 
-  public getRichPatches(): RichPatch[] {
-    return this._engine.getRichPatches();
+  public getJsonPatches(): JsonPatch[] {
+    return this._engine.getPatches().map((p) => p.patch);
   }
 
   public getPlainSchema(): JsonObjectSchema {

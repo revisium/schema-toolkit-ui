@@ -221,7 +221,7 @@ describe('SchemaEngine', () => {
       expect(patches.length).toBeGreaterThan(0);
     });
 
-    it('should return rich patches with metadata', () => {
+    it('should return patches with metadata (fieldName, isRename, etc.)', () => {
       const schema = createSchema({
         name: { type: 'string', default: '' },
       });
@@ -229,9 +229,10 @@ describe('SchemaEngine', () => {
       const engine = new SchemaEngine(schema);
       engine.tree.renameNode(engine.root().property('name').id(), 'title');
 
-      const richPatches = engine.getRichPatches();
+      const patches = engine.getPatches();
 
-      expect(richPatches.length).toBeGreaterThan(0);
+      expect(patches.length).toBeGreaterThan(0);
+      expect(patches[0].fieldName).toBeDefined();
     });
   });
 

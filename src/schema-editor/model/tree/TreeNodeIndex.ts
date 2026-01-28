@@ -25,6 +25,10 @@ export class TreeNodeIndex {
     return this.nodeIndex.size;
   }
 
+  public nodeIds(): IterableIterator<string> {
+    return this.nodeIndex.keys();
+  }
+
   private collectNodes(node: SchemaNode, path: Path): void {
     if (node.isNull()) {
       return;

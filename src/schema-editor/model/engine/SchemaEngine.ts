@@ -10,7 +10,7 @@ import { NodeFactory } from '../node/NodeFactory';
 import { NodeType } from '../node/NodeType';
 import { NULL_NODE } from '../node/NullNode';
 import type { JsonObjectSchema } from '../schema/JsonSchema';
-import type { JsonPatch, RichPatch } from '../diff/index';
+import type { SchemaPatch } from '../diff/index';
 import type { ValidationError } from '../validation/SchemaValidator';
 import type { FormulaValidationError } from '../validation/FormulaValidator';
 import type { SchemaNode } from '../node/SchemaNode';
@@ -37,10 +37,11 @@ export class SchemaEngine {
     const parser = new SchemaParser();
     const root = parser.parse(jsonSchema);
     this._tree = new SchemaTree(root);
-    this._diff = new SchemaDiff(this._tree, jsonSchema);
     this._formulaValidator = new FormulaValidator(this._tree);
 
     this.applyPendingFormulas(parser.getPendingFormulas());
+
+    this._diff = new SchemaDiff(this._tree);
 
     makeAutoObservable(this, {}, { autoBind: true });
   }
@@ -109,7 +110,7 @@ export class SchemaEngine {
   }
 
   public markAsSaved(): void {
-    this._diff.markAsSaved(this.getPlainSchema());
+    this._diff.markAsSaved();
   }
 
   public revert(): void {
@@ -119,17 +120,13 @@ export class SchemaEngine {
 
     this._tree.clearFormulaIndex();
     this._tree.replaceRoot(root);
-    this._diff.markAsSaved(baseSchema);
+    this._diff.markAsSaved();
 
     this.applyPendingFormulas(parser.getPendingFormulas());
   }
 
-  public getPatches(): JsonPatch[] {
+  public getPatches(): SchemaPatch[] {
     return this._diff.getPatches();
-  }
-
-  public getRichPatches(): RichPatch[] {
-    return this._diff.getRichPatches();
   }
 
   public getPlainSchema(): JsonObjectSchema {

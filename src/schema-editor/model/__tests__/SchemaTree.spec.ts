@@ -11,6 +11,9 @@ import {
   arrayField,
   formulaField,
   withDescription,
+  withDeprecated,
+  booleanField,
+  stringWithForeignKey,
 } from './test-helpers';
 
 beforeEach(() => {
@@ -361,6 +364,266 @@ describe('SchemaTree', () => {
         items: arrayField(stringField()),
       });
       expect(tree.countNodes()).toBe(3);
+    });
+  });
+});
+
+describe('SchemaTree.clone', () => {
+  describe('basic cloning', () => {
+    it('clones tree with single string field', () => {
+      const tree = createTree({ name: stringField() });
+      const cloned = tree.clone();
+
+      expect(cloned).not.toBe(tree);
+      expect(cloned.root()).not.toBe(tree.root());
+      expect(cloned.root().properties()).toHaveLength(1);
+    });
+
+    it('preserves node ids', () => {
+      const tree = createTree({ name: stringField() });
+      const originalNameId = tree.root().properties()[0].id();
+
+      const cloned = tree.clone();
+      const clonedNameId = cloned.root().properties()[0].id();
+
+      expect(clonedNameId).toBe(originalNameId);
+    });
+
+    it('cloned nodes are different instances', () => {
+      const tree = createTree({ name: stringField() });
+      const originalNameNode = tree.root().properties()[0];
+
+      const cloned = tree.clone();
+      const clonedNameNode = cloned.root().properties()[0];
+
+      expect(clonedNameNode).not.toBe(originalNameNode);
+    });
+
+    it('clones all node types', () => {
+      const tree = createTree({
+        str: stringField(),
+        num: numberField(),
+        bool: booleanField(),
+        obj: objectField({ nested: stringField() }),
+        arr: arrayField(stringField()),
+      });
+
+      const cloned = tree.clone();
+
+      expect(cloned.root().property('str').nodeType()).toBe('string');
+      expect(cloned.root().property('num').nodeType()).toBe('number');
+      expect(cloned.root().property('bool').nodeType()).toBe('boolean');
+      expect(cloned.root().property('obj').nodeType()).toBe('object');
+      expect(cloned.root().property('arr').nodeType()).toBe('array');
+    });
+  });
+
+  describe('deep cloning', () => {
+    it('clones nested object structure', () => {
+      const tree = createTree({
+        user: objectField({
+          address: objectField({
+            city: stringField(),
+          }),
+        }),
+      });
+
+      const cloned = tree.clone();
+
+      const originalCity = tree
+        .root()
+        .property('user')
+        .property('address')
+        .property('city');
+      const clonedCity = cloned
+        .root()
+        .property('user')
+        .property('address')
+        .property('city');
+
+      expect(clonedCity).not.toBe(originalCity);
+      expect(clonedCity.id()).toBe(originalCity.id());
+      expect(clonedCity.name()).toBe('city');
+    });
+
+    it('clones array with object items', () => {
+      const tree = createTree({
+        items: arrayField(
+          objectField({
+            name: stringField(),
+          }),
+        ),
+      });
+
+      const cloned = tree.clone();
+
+      const originalItems = tree.root().property('items').items();
+      const clonedItems = cloned.root().property('items').items();
+
+      expect(clonedItems).not.toBe(originalItems);
+      expect(clonedItems.id()).toBe(originalItems.id());
+      expect(clonedItems.property('name').isNull()).toBe(false);
+    });
+  });
+
+  describe('index integrity', () => {
+    it('cloned tree has working node index', () => {
+      const tree = createTree({
+        name: stringField(),
+        age: numberField(),
+      });
+
+      const cloned = tree.clone();
+
+      const nameNode = cloned.root().property('name');
+      const ageNode = cloned.root().property('age');
+
+      expect(cloned.nodeById(nameNode.id())).toBe(nameNode);
+      expect(cloned.nodeById(ageNode.id())).toBe(ageNode);
+    });
+
+    it('cloned tree has correct paths', () => {
+      const tree = createTree({
+        user: objectField({
+          name: stringField(),
+        }),
+      });
+
+      const cloned = tree.clone();
+
+      const userNode = cloned.root().property('user');
+      const nameNode = userNode.property('name');
+
+      expect(cloned.pathOf(userNode.id()).asJsonPointer()).toBe(
+        '/properties/user',
+      );
+      expect(cloned.pathOf(nameNode.id()).asJsonPointer()).toBe(
+        '/properties/user/properties/name',
+      );
+    });
+  });
+
+  describe('isolation', () => {
+    it('modifying cloned tree does not affect original', () => {
+      const tree = createTree({ name: stringField() });
+      const cloned = tree.clone();
+
+      const clonedNameNode = cloned.root().properties()[0];
+      cloned.renameNode(clonedNameNode.id(), 'title');
+
+      expect(cloned.root().property('title').isNull()).toBe(false);
+      expect(cloned.root().property('name').isNull()).toBe(true);
+
+      expect(tree.root().property('name').isNull()).toBe(false);
+      expect(tree.root().property('title').isNull()).toBe(true);
+    });
+
+    it('modifying original tree does not affect cloned', () => {
+      const tree = createTree({ name: stringField() });
+      const cloned = tree.clone();
+
+      const originalNameNode = tree.root().properties()[0];
+      tree.renameNode(originalNameNode.id(), 'title');
+
+      expect(tree.root().property('title').isNull()).toBe(false);
+      expect(tree.root().property('name').isNull()).toBe(true);
+
+      expect(cloned.root().property('name').isNull()).toBe(false);
+      expect(cloned.root().property('title').isNull()).toBe(true);
+    });
+
+    it('adding node to cloned tree does not affect original', () => {
+      const tree = createTree({ existing: stringField() });
+      const cloned = tree.clone();
+
+      const newNode = NodeFactory.string('newField');
+      cloned.addChildTo(cloned.root().id(), newNode);
+
+      expect(cloned.root().properties()).toHaveLength(2);
+      expect(tree.root().properties()).toHaveLength(1);
+    });
+  });
+
+  describe('metadata preservation', () => {
+    it('clones field with description', () => {
+      const tree = createTree({
+        name: withDescription(stringField(), 'User name'),
+      });
+
+      const cloned = tree.clone();
+
+      const clonedName = cloned.root().property('name');
+      expect(clonedName.metadata().description).toBe('User name');
+    });
+
+    it('clones field with deprecated flag', () => {
+      const tree = createTree({
+        oldField: withDeprecated(stringField()),
+      });
+
+      const cloned = tree.clone();
+
+      const clonedField = cloned.root().property('oldField');
+      expect(clonedField.metadata().deprecated).toBe(true);
+    });
+  });
+
+  describe('formula preservation', () => {
+    it('clones field with formula', () => {
+      const tree = createTree({
+        value: numberField(),
+        computed: formulaField('value * 2'),
+      });
+      const computedNode = tree.root().property('computed');
+      const formula = new ParsedFormula(tree, computedNode.id(), 'value * 2');
+      (computedNode as NumberNode).setFormula(formula);
+      tree.registerFormula(computedNode.id(), formula);
+
+      const cloned = tree.clone();
+
+      const clonedComputed = cloned.root().property('computed');
+      expect(clonedComputed.hasFormula()).toBe(true);
+      expect(clonedComputed.formula()?.expression()).toBe('value * 2');
+    });
+  });
+
+  describe('string node options', () => {
+    it('clones string with defaultValue', () => {
+      const tree = createTree({ name: stringField('default name') });
+
+      const cloned = tree.clone();
+
+      expect(cloned.root().property('name').defaultValue()).toBe(
+        'default name',
+      );
+    });
+
+    it('clones string with foreignKey', () => {
+      const tree = createTree({ ref: stringWithForeignKey('User') });
+
+      const cloned = tree.clone();
+
+      expect(cloned.root().property('ref').foreignKey()).toBe('User');
+    });
+  });
+
+  describe('number node options', () => {
+    it('clones number with defaultValue', () => {
+      const tree = createTree({ count: numberField(42) });
+
+      const cloned = tree.clone();
+
+      expect(cloned.root().property('count').defaultValue()).toBe(42);
+    });
+  });
+
+  describe('boolean node options', () => {
+    it('clones boolean with defaultValue', () => {
+      const tree = createTree({ active: booleanField(true) });
+
+      const cloned = tree.clone();
+
+      expect(cloned.root().property('active').defaultValue()).toBe(true);
     });
   });
 });
