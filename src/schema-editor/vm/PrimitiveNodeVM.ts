@@ -1,4 +1,4 @@
-import { makeObservable, observable, computed, action } from 'mobx';
+import { makeObservable, observable, computed, action, override } from 'mobx';
 import {
   parseDefaultValue,
   FormulaSerializer,
@@ -26,16 +26,16 @@ export class PrimitiveNodeVM extends BaseNodeVM {
     makeObservable(this, {
       formulaInputValue: observable,
       formulaErrorValue: observable,
-      hasFormula: computed,
-      formula: computed,
-      defaultValue: computed,
-      defaultValueAsString: computed,
+      hasFormula: override,
+      formula: override,
+      defaultValue: override,
+      defaultValueAsString: override,
       formulaError: computed,
-      formulaDependents: computed,
-      canDelete: computed,
-      deleteBlockedReason: computed,
-      setFormula: action.bound,
-      setDefault: action.bound,
+      formulaDependents: override,
+      canDelete: override,
+      deleteBlockedReason: override,
+      setFormula: override,
+      setDefault: override,
       removeSelf: action.bound,
       changeType: action.bound,
     });

@@ -6,7 +6,7 @@ import type { ObjectNodeVM } from '../../vm/ObjectNodeVM';
 import { NodeWrapper } from '../NodeWrapper/NodeWrapper';
 import { FieldEditor } from '../FieldEditor/FieldEditor';
 import { NodeIndicators } from '../NodeIndicators/NodeIndicators';
-import { NodeSettings } from '../NodeSettings/NodeSettings';
+import { NodeContextMenu } from '../NodeContextMenu';
 import { NodeView } from '../NodeView/NodeView';
 
 interface ObjectNodeViewProps {
@@ -23,7 +23,7 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
       <>
         <NodeIndicators viewModel={viewModel} />
         {viewModel.showMenu && (
-          <NodeSettings
+          <NodeContextMenu
             viewModel={viewModel}
             dataTestId={`${dataTestId}-setting-button`}
             showDelete={!isRoot}

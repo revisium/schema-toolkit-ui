@@ -4,7 +4,7 @@ import type { PrimitiveNodeVM } from '../../vm/PrimitiveNodeVM';
 import { NodeWrapper } from '../NodeWrapper/NodeWrapper';
 import { FieldEditor } from '../FieldEditor/FieldEditor';
 import { NodeIndicators } from '../NodeIndicators/NodeIndicators';
-import { NodeSettings } from '../NodeSettings/NodeSettings';
+import { NodeContextMenu } from '../NodeContextMenu';
 
 interface PrimitiveNodeViewProps {
   viewModel: PrimitiveNodeVM;
@@ -19,7 +19,7 @@ export const PrimitiveNodeView: FC<PrimitiveNodeViewProps> = observer(
       <>
         <NodeIndicators viewModel={viewModel} />
         {viewModel.showMenu && (
-          <NodeSettings
+          <NodeContextMenu
             viewModel={viewModel}
             dataTestId={`${dataTestId}-setting-button`}
             showDelete

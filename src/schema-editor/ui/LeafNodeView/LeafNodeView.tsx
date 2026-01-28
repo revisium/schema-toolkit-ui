@@ -4,7 +4,7 @@ import type { BaseNodeVM } from '../../vm/BaseNodeVM';
 import { NodeWrapper } from '../NodeWrapper/NodeWrapper';
 import { FieldEditor } from '../FieldEditor/FieldEditor';
 import { NodeIndicators } from '../NodeIndicators/NodeIndicators';
-import { NodeSettings } from '../NodeSettings/NodeSettings';
+import { NodeContextMenu } from '../NodeContextMenu';
 
 interface LeafNodeViewProps {
   viewModel: BaseNodeVM;
@@ -20,7 +20,7 @@ export const LeafNodeView: FC<LeafNodeViewProps> = observer(
       <>
         <NodeIndicators viewModel={viewModel} />
         {viewModel.showMenu && (
-          <NodeSettings
+          <NodeContextMenu
             viewModel={viewModel}
             dataTestId={`${dataTestId}-setting-button`}
             showDelete
