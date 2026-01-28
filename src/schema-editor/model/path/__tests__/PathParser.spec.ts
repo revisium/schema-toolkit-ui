@@ -50,4 +50,9 @@ describe('jsonPointerToPath', () => {
       'Invalid path segment: invalid in path /invalid',
     );
   });
+
+  it('returns empty path for /properties/ (root object path)', () => {
+    const path = jsonPointerToPath('/properties/');
+    expect(path.isEmpty()).toBe(true);
+  });
 });

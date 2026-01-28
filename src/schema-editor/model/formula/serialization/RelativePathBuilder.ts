@@ -1,20 +1,6 @@
 import type { Path, PathSegment } from '../../path';
 
 export class RelativePathBuilder {
-  public build(fromPath: Path, toPath: Path): string | null {
-    const fromSegments = fromPath.parent().segments();
-    const toSegments = toPath.segments();
-
-    const commonPrefixLen = this.findCommonPrefixLength(
-      fromSegments,
-      toSegments,
-    );
-    const upCount = fromSegments.length - commonPrefixLen;
-    const downParts = this.extractDownParts(toSegments, commonPrefixLen);
-
-    return this.formatPath(upCount, downParts);
-  }
-
   public buildWithArrayNotation(fromPath: Path, toPath: Path): string {
     const fromSegments = fromPath.parent().segments();
     const toSegments = toPath.segments();
@@ -56,35 +42,6 @@ export class RelativePathBuilder {
     }
 
     return commonPrefixLen;
-  }
-
-  private extractDownParts(
-    segments: readonly PathSegment[],
-    startIndex: number,
-  ): string[] {
-    const parts: string[] = [];
-
-    for (let i = startIndex; i < segments.length; i++) {
-      const seg = segments[i];
-      if (seg?.isProperty()) {
-        parts.push(seg.propertyName());
-      }
-    }
-
-    return parts;
-  }
-
-  private formatPath(upCount: number, downParts: string[]): string | null {
-    if (upCount === 0 && downParts.length > 0) {
-      return downParts.join('.');
-    }
-
-    if (upCount > 0) {
-      const ups = '../'.repeat(upCount);
-      return ups + downParts.join('.');
-    }
-
-    return null;
   }
 
   private buildPartsWithArrayNotation(
