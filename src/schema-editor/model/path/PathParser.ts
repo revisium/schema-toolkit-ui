@@ -13,12 +13,16 @@ export function jsonPointerToSegments(pointer: string): PathSegment[] {
   let i = 0;
   while (i < parts.length) {
     const part = parts[i];
-    if (part === 'properties' && i + 1 < parts.length) {
-      const name = parts[i + 1];
-      if (name !== undefined) {
-        segments.push(new PropertySegment(name));
+    if (part === 'properties') {
+      if (i + 1 < parts.length) {
+        const name = parts[i + 1];
+        if (name !== undefined) {
+          segments.push(new PropertySegment(name));
+        }
+        i += 2;
+      } else {
+        i += 1;
       }
-      i += 2;
     } else if (part === 'items') {
       segments.push(new ItemsSegment());
       i += 1;

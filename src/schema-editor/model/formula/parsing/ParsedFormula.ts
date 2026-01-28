@@ -68,6 +68,10 @@ export class ParsedFormula implements Formula {
     return this.astPathToNodeId.get(astPath) ?? null;
   }
 
+  astPaths(): readonly string[] {
+    return Array.from(this.astPathToNodeId.keys());
+  }
+
   private resolveDependencyPath(
     tree: NodeTree,
     formulaPath: Path,

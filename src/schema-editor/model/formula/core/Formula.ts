@@ -6,4 +6,5 @@ export interface Formula {
   ast(): ASTNode;
   dependencies(): readonly FormulaDependency[];
   getNodeIdForAstPath(astPath: string): string | null;
+  astPaths(): readonly string[];
 }
