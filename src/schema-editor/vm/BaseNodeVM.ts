@@ -1,6 +1,6 @@
 import { makeObservable, observable, computed, action } from 'mobx';
 import { getLabelByRef } from '../types';
-import { NodeType, type SchemaNode } from '../model';
+import { NodeType, type SchemaNode, type FormulaDependent } from '../model';
 import type { SchemaEditorVM } from './SchemaEditorVM';
 
 export abstract class BaseNodeVM {
@@ -38,6 +38,13 @@ export abstract class BaseNodeVM {
       hasDescription: computed,
       isDeprecated: computed,
       description: computed,
+      hasFormula: computed,
+      formula: computed,
+      formulaDependents: computed,
+      canDelete: computed,
+      deleteBlockedReason: computed,
+      defaultValue: computed,
+      defaultValueAsString: computed,
       validationError: computed,
       hasError: computed,
       errorMessage: computed,
@@ -49,6 +56,8 @@ export abstract class BaseNodeVM {
       rename: action.bound,
       setDescription: action.bound,
       setDeprecated: action.bound,
+      setFormula: action.bound,
+      setDefault: action.bound,
       handleFieldBlur: action.bound,
     });
   }
@@ -175,6 +184,34 @@ export abstract class BaseNodeVM {
     return this._node.metadata().description ?? '';
   }
 
+  public get hasFormula(): boolean {
+    return false;
+  }
+
+  public get formula(): string {
+    return '';
+  }
+
+  public get formulaDependents(): FormulaDependent[] {
+    return [];
+  }
+
+  public get canDelete(): boolean {
+    return true;
+  }
+
+  public get deleteBlockedReason(): string | null {
+    return null;
+  }
+
+  public get defaultValue(): unknown {
+    return undefined;
+  }
+
+  public get defaultValueAsString(): string {
+    return '';
+  }
+
   public get validationError(): string | null {
     const errors = this._editor.engine.validationErrors;
     const error = errors.find((e) => e.nodeId === this.nodeId);
@@ -216,6 +253,14 @@ export abstract class BaseNodeVM {
 
   public setDeprecated(value: boolean): void {
     this._editor.engine.updateNodeMetadata(this.nodeId, { deprecated: value });
+  }
+
+  public setFormula(_expression: string): void {
+    // Override in subclasses that support formulas
+  }
+
+  public setDefault(_value: string): void {
+    // Override in subclasses that support default values
   }
 
   public handleFieldBlur(): void {

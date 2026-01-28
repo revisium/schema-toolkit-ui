@@ -1,7 +1,12 @@
 import { Box, Flex, Icon, Text } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { FC, ReactNode } from 'react';
-import { PiDotsSixVerticalBold, PiWarningCircle } from 'react-icons/pi';
+import {
+  PiDotsSixVerticalBold,
+  PiWarningCircle,
+  PiWarning,
+  PiFunction,
+} from 'react-icons/pi';
 import { Tooltip } from '../../../components/Tooltip';
 import { ContentEditable } from '../../../components/ContentEditable';
 import type { BaseNodeVM } from '../../vm/BaseNodeVM';
@@ -103,29 +108,58 @@ export const FieldEditor: FC<FieldEditorProps> = observer(
           )}
         </Flex>
         {showTypeAndMenu && (
-          <Box className={hoverClass} opacity={applyHoverStyles ? 0 : 1}>
-            <Flex gap="0.5rem" alignItems="center">
-              {viewModel.showTypeSelector && (
-                <TypeMenu
-                  dataTestId={dataTestId}
-                  onSelect={onChangeType}
-                  open={viewModel.isMenuOpen}
-                  onOpenChange={viewModel.setMenuOpen}
-                  menuButton={
-                    <Text
-                      data-testid={`${dataTestId}-select-type-button`}
-                      color="gray.400"
-                      textDecoration="underline"
-                      cursor="pointer"
-                    >
-                      {viewModel.label}
-                    </Text>
-                  }
-                />
-              )}
-              {rightContent}
-            </Flex>
-          </Box>
+          <Flex gap="0.5rem" alignItems="center">
+            {viewModel.isDeprecated && (
+              <Tooltip content="Deprecated" positioning={{ placement: 'top' }}>
+                <Box
+                  color="orange.400"
+                  cursor="default"
+                  display="flex"
+                  alignItems="center"
+                >
+                  <PiWarning />
+                </Box>
+              </Tooltip>
+            )}
+            {viewModel.hasFormula && (
+              <Tooltip
+                content={`Formula: ${viewModel.formula}`}
+                positioning={{ placement: 'top' }}
+              >
+                <Box
+                  color="gray.400"
+                  cursor="default"
+                  display="flex"
+                  alignItems="center"
+                >
+                  <PiFunction />
+                </Box>
+              </Tooltip>
+            )}
+            <Box className={hoverClass} opacity={applyHoverStyles ? 0 : 1}>
+              <Flex gap="0.5rem" alignItems="center">
+                {viewModel.showTypeSelector && (
+                  <TypeMenu
+                    dataTestId={dataTestId}
+                    onSelect={onChangeType}
+                    open={viewModel.isMenuOpen}
+                    onOpenChange={viewModel.setMenuOpen}
+                    menuButton={
+                      <Text
+                        data-testid={`${dataTestId}-select-type-button`}
+                        color="gray.400"
+                        textDecoration="underline"
+                        cursor="pointer"
+                      >
+                        {viewModel.label}
+                      </Text>
+                    }
+                  />
+                )}
+                {rightContent}
+              </Flex>
+            </Box>
+          </Flex>
         )}
       </Flex>
     );

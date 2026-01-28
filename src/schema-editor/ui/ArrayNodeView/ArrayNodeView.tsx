@@ -10,7 +10,7 @@ import { ForeignKeyNodeVM } from '../../vm/ForeignKeyNodeVM';
 import { NodeWrapper } from '../NodeWrapper/NodeWrapper';
 import { FieldEditor } from '../FieldEditor/FieldEditor';
 import { NodeIndicators } from '../NodeIndicators/NodeIndicators';
-import { NodeSettings } from '../NodeSettings/NodeSettings';
+import { NodeContextMenu } from '../NodeContextMenu';
 import { TypeMenu } from '../TypeMenu/TypeMenu';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { NodeView } from '../NodeView/NodeView';
@@ -28,7 +28,7 @@ export const ArrayNodeView: FC<ArrayNodeViewProps> = observer(
       <>
         <NodeIndicators viewModel={viewModel} />
         {viewModel.showMenu && (
-          <NodeSettings
+          <NodeContextMenu
             viewModel={viewModel}
             dataTestId={`${dataTestId}-setting-button`}
             showDelete
@@ -230,7 +230,7 @@ const ArrayItemsField: FC<ArrayItemsFieldProps> = observer(
           <Flex gap="0.5rem" alignItems="center">
             <NodeIndicators viewModel={itemsVm} />
             {itemsVm.showMenu && (
-              <NodeSettings
+              <NodeContextMenu
                 viewModel={itemsVm}
                 dataTestId={`${dataTestId}-items-setting-button`}
                 showDelete={false}
