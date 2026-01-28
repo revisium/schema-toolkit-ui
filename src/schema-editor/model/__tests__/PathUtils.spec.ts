@@ -285,14 +285,16 @@ describe('PathUtils', () => {
     });
 
     it('should return array field as parent for /items segment', () => {
-      expect(
-        PathUtils.getParentJsonPointer('/properties/myArray/items'),
-      ).toBe('/properties/myArray');
+      expect(PathUtils.getParentJsonPointer('/properties/myArray/items')).toBe(
+        '/properties/myArray',
+      );
     });
 
     it('should return parent for path inside array items', () => {
       expect(
-        PathUtils.getParentJsonPointer('/properties/myArray/items/properties/name'),
+        PathUtils.getParentJsonPointer(
+          '/properties/myArray/items/properties/name',
+        ),
       ).toBe('/properties/myArray/items');
     });
 
@@ -303,7 +305,9 @@ describe('PathUtils', () => {
 
   describe('countArrayDepthFromJsonPointer', () => {
     it('should return 0 for path without arrays', () => {
-      expect(PathUtils.countArrayDepthFromJsonPointer('/properties/name')).toBe(0);
+      expect(PathUtils.countArrayDepthFromJsonPointer('/properties/name')).toBe(
+        0,
+      );
     });
 
     it('should return 1 for path with one array', () => {
@@ -322,13 +326,17 @@ describe('PathUtils', () => {
 
     it('should not count property named "items" as array depth', () => {
       expect(
-        PathUtils.countArrayDepthFromJsonPointer('/properties/items/properties/name'),
+        PathUtils.countArrayDepthFromJsonPointer(
+          '/properties/items/properties/name',
+        ),
       ).toBe(0);
     });
 
     it('should correctly count when property is named "items" and has array', () => {
       expect(
-        PathUtils.countArrayDepthFromJsonPointer('/properties/items/items/properties/value'),
+        PathUtils.countArrayDepthFromJsonPointer(
+          '/properties/items/items/properties/value',
+        ),
       ).toBe(1);
     });
   });

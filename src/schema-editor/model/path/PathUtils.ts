@@ -180,8 +180,21 @@ export class PathUtils {
   }
 
   static countArrayDepthFromJsonPointer(pointer: string): number {
-    return (pointer.match(/(?<=\/properties\/[^/]+)\/items(?=\/|$)/g) || [])
-      .length;
+    const parts = pointer.split('/').filter(Boolean);
+    let count = 0;
+
+    for (let i = 0; i < parts.length; i++) {
+      if (
+        parts[i] === 'items' &&
+        i >= 2 &&
+        parts[i - 2] === 'properties' &&
+        parts[i - 1] !== undefined
+      ) {
+        count++;
+      }
+    }
+
+    return count;
   }
 
   static getFieldNameFromPath(path: Path): string {
