@@ -43,6 +43,14 @@ class EmptyPathImpl implements Path {
   lastSegment(): PathSegment | null {
     return null;
   }
+
+  isChildOf(_parent: Path): boolean {
+    return false;
+  }
+
+  getTopLevel(): Path | null {
+    return null;
+  }
 }
 
 class SegmentPathImpl implements Path {
@@ -121,6 +129,32 @@ class SegmentPathImpl implements Path {
 
   lastSegment(): PathSegment | null {
     return this.segs.at(-1) ?? null;
+  }
+
+  isChildOf(parent: Path): boolean {
+    if (parent.isEmpty()) {
+      return true;
+    }
+    const parentSegs = parent.segments();
+    if (this.segs.length <= parentSegs.length) {
+      return false;
+    }
+    for (let i = 0; i < parentSegs.length; i++) {
+      const a = this.segs[i];
+      const b = parentSegs[i];
+      if (!a || !b || !a.equals(b)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  getTopLevel(): Path | null {
+    const first = this.segs[0];
+    if (!first || !first.isProperty()) {
+      return null;
+    }
+    return new SegmentPathImpl([first]);
   }
 }
 

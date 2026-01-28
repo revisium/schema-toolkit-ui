@@ -1,6 +1,7 @@
-export { SchemaDiff, type JsonPatch } from './SchemaDiff';
+export { SchemaDiff } from './SchemaDiff';
 export type {
-  RichPatch,
+  SchemaPatch,
+  JsonPatch,
   MetadataChangeType,
   DefaultValueType,
-} from './RichPatch';
+} from './SchemaPatch';

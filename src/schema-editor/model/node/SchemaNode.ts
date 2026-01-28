@@ -35,4 +35,6 @@ export interface SchemaNode {
   removePropertyById(id: string): void;
   replaceProperty(name: string, node: SchemaNode): void;
   setItems(node: SchemaNode): void;
+
+  clone(): SchemaNode;
 }

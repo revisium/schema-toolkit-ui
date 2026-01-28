@@ -74,4 +74,10 @@ export class FormulaDependencyIndex {
     this.dependentsMap.clear();
     this.formulasByNodeId.clear();
   }
+
+  forEachFormula(callback: (nodeId: string, formula: Formula) => void): void {
+    for (const [nodeId, formula] of this.formulasByNodeId) {
+      callback(nodeId, formula);
+    }
+  }
 }

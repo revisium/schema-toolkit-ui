@@ -187,4 +187,20 @@ export class StringNode implements SchemaNode {
   setItems(): void {
     // No-op for StringNode
   }
+
+  clone(): StringNode {
+    return new StringNode(
+      this._id,
+      this._name,
+      {
+        defaultValue: this._defaultValue,
+        foreignKey: this._foreignKey,
+        format: this._format,
+        contentMediaType: this._contentMediaType,
+        enumValues: this._enumValues ? [...this._enumValues] : undefined,
+        formula: this._formula,
+      },
+      { ...this._metadata },
+    );
+  }
 }

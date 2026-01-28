@@ -137,4 +137,16 @@ export class BooleanNode implements SchemaNode {
   setItems(): void {
     // No-op for BooleanNode
   }
+
+  clone(): BooleanNode {
+    return new BooleanNode(
+      this._id,
+      this._name,
+      {
+        defaultValue: this._defaultValue,
+        formula: this._formula,
+      },
+      { ...this._metadata },
+    );
+  }
 }

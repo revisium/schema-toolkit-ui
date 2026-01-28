@@ -33,7 +33,7 @@ import {
 } from 'react-icons/pi';
 import { IconType } from 'react-icons';
 import type {
-  RichPatch,
+  SchemaPatch,
   MetadataChangeType,
   DefaultValueType,
   TransformationInfo,
@@ -52,7 +52,7 @@ interface ChangesPreviewDialogProps {
   onClose: () => void;
   onApprove: () => void;
   onRevert: () => void;
-  richPatches: RichPatch[];
+  patches: SchemaPatch[];
   isLoading?: boolean;
   tableId: string;
   validationErrors?: SchemaValidationError[];
@@ -391,10 +391,10 @@ const DefaultChangeRow: FC<DefaultChangeRowProps> = ({
 };
 
 interface PatchRowProps {
-  richPatch: RichPatch;
+  schemaPatch: SchemaPatch;
 }
 
-const getFromFieldName = (patch: RichPatch['patch']): string => {
+const getFromFieldName = (patch: SchemaPatch['patch']): string => {
   if (patch.op === 'move' && patch.from) {
     const parts = patch.from.split('/').filter(Boolean);
     const segments: string[] = [];
@@ -420,8 +420,10 @@ const getFromFieldName = (patch: RichPatch['patch']): string => {
   return '';
 };
 
-const OperationDescription: FC<{ richPatch: RichPatch }> = ({ richPatch }) => {
-  const { patch, fieldName } = richPatch;
+const OperationDescription: FC<{ schemaPatch: SchemaPatch }> = ({
+  schemaPatch,
+}) => {
+  const { patch, fieldName } = schemaPatch;
   const IconComponent = operationIcons[patch.op as PatchOp];
 
   switch (patch.op) {
@@ -455,7 +457,7 @@ const OperationDescription: FC<{ richPatch: RichPatch }> = ({ richPatch }) => {
       );
     case 'move': {
       const fromField = getFromFieldName(patch);
-      if (richPatch.isRename) {
+      if (schemaPatch.isRename) {
         return (
           <Flex align="center" gap={1.5}>
             <Icon
@@ -483,7 +485,7 @@ const OperationDescription: FC<{ richPatch: RichPatch }> = ({ richPatch }) => {
             Moved field <Highlight>{fromField}</Highlight> to{' '}
             <Highlight>{fieldName}</Highlight>
           </Text>
-          {richPatch.movesIntoArray && (
+          {schemaPatch.movesIntoArray && (
             <Badge size="sm" colorPalette="yellow" variant="subtle">
               data will be cloned
             </Badge>
@@ -522,7 +524,7 @@ const OperationDescription: FC<{ richPatch: RichPatch }> = ({ richPatch }) => {
   }
 };
 
-const PatchRow: FC<PatchRowProps> = observer(({ richPatch }) => {
+const PatchRow: FC<PatchRowProps> = observer(({ schemaPatch }) => {
   const {
     patch,
     metadataChanges,
@@ -531,7 +533,7 @@ const PatchRow: FC<PatchRowProps> = observer(({ richPatch }) => {
     defaultChange,
     descriptionChange,
     deprecatedChange,
-  } = richPatch;
+  } = schemaPatch;
 
   const transformationInfo = useMemo(
     () =>
@@ -563,7 +565,7 @@ const PatchRow: FC<PatchRowProps> = observer(({ richPatch }) => {
       _last={{ borderBottom: 'none' }}
       _hover={{ bg: 'gray.50' }}
     >
-      <OperationDescription richPatch={richPatch} />
+      <OperationDescription schemaPatch={schemaPatch} />
 
       {defaultExample && (
         <Box mt={2} ml={8}>
@@ -702,13 +704,13 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
     onClose,
     onApprove,
     onRevert,
-    richPatches,
+    patches,
     isLoading,
     tableId,
     validationErrors = [],
     formulaErrors = [],
   }) => {
-    const hasChanges = richPatches.length > 0;
+    const hasChanges = patches.length > 0;
     const hasErrors = validationErrors.length > 0 || formulaErrors.length > 0;
     const canApply = hasChanges && !hasErrors;
 
@@ -745,10 +747,10 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                         maxHeight="400px"
                         overflowY="auto"
                       >
-                        {richPatches.map((richPatch) => (
+                        {patches.map((schemaPatch) => (
                           <PatchRow
-                            key={richPatch.patch.path}
-                            richPatch={richPatch}
+                            key={schemaPatch.patch.path}
+                            schemaPatch={schemaPatch}
                           />
                         ))}
                       </Box>
@@ -793,7 +795,7 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                         disabled={!canApply}
                         loading={isLoading}
                       >
-                        Apply Changes ({richPatches.length})
+                        Apply Changes ({patches.length})
                       </Button>
                     )}
                   </Flex>

@@ -69,8 +69,8 @@ export {
 // Diff
 export {
   SchemaDiff,
+  type SchemaPatch,
   type JsonPatch,
-  type RichPatch,
   type MetadataChangeType,
   type DefaultValueType,
 } from './diff/index';

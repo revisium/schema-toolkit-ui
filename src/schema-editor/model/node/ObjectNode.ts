@@ -147,4 +147,11 @@ export class ObjectNode implements SchemaNode {
   setChildren(children: SchemaNode[]): void {
     this._children = children;
   }
+
+  clone(): ObjectNode {
+    const clonedChildren = this._children.map((child) => child.clone());
+    return new ObjectNode(this._id, this._name, clonedChildren, {
+      ...this._metadata,
+    });
+  }
 }

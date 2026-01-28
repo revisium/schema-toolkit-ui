@@ -36,6 +36,10 @@ export class SchemaTree implements NodeTree {
     return this.nodeIndex.countNodes();
   }
 
+  public nodeIds(): IterableIterator<string> {
+    return this.nodeIndex.nodeIds();
+  }
+
   public nodeById(id: string): SchemaNode {
     return this.nodeIndex.getNode(id);
   }
@@ -217,6 +221,23 @@ export class SchemaTree implements NodeTree {
 
   private rebuildIndex(): void {
     this.nodeIndex.rebuild(this._rootNode);
+  }
+
+  public clone(): SchemaTree {
+    const clonedRoot = this._rootNode.clone();
+    const clonedTree = new SchemaTree(clonedRoot);
+    this.cloneFormulas(clonedTree);
+    return clonedTree;
+  }
+
+  private cloneFormulas(targetTree: SchemaTree): void {
+    this.formulaIndex.forEachFormula((nodeId) => {
+      const targetNode = targetTree.nodeById(nodeId);
+      const formula = targetNode.formula();
+      if (!targetNode.isNull() && formula) {
+        targetTree.registerFormula(nodeId, formula);
+      }
+    });
   }
 
   private collectFormulaDependents(

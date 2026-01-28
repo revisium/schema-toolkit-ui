@@ -136,4 +136,8 @@ export class RefNode implements SchemaNode {
   setDefaultValue(): void {
     // No-op for RefNode
   }
+
+  clone(): RefNode {
+    return new RefNode(this._id, this._name, this._ref, { ...this._metadata });
+  }
 }

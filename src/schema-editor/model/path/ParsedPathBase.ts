@@ -43,4 +43,12 @@ export abstract class ParsedPathBase implements Path {
   lastSegment(): PathSegment | null {
     return this.parsed.lastSegment();
   }
+
+  isChildOf(parent: Path): boolean {
+    return this.parsed.isChildOf(parent);
+  }
+
+  getTopLevel(): Path | null {
+    return this.parsed.getTopLevel();
+  }
 }
