@@ -52,6 +52,7 @@ export {
 export {
   type Formula,
   type FormulaDependency,
+  type FormulaDependent,
   ResolvedDependency,
   FormulaError,
   FormulaSerializer,
