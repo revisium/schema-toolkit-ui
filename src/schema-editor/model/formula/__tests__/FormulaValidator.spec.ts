@@ -2,7 +2,7 @@ import { SchemaTree } from '../../tree/SchemaTree';
 import { SchemaParser } from '../../schema/SchemaParser';
 import { ParsedFormula } from '..';
 import { FormulaValidator } from '../../validation/FormulaValidator';
-import { SimplePath } from '../../path/SimplePath';
+import { jsonPointerToPath } from '../../path';
 import type { JsonObjectSchema } from '../../schema/JsonSchema';
 
 describe('FormulaValidator', () => {
@@ -83,7 +83,7 @@ describe('FormulaValidator', () => {
       totalNode.setFormula(formula);
       tree.registerFormula(totalNode.id(), formula);
 
-      tree.removeNodeAt(new SimplePath('quantity'));
+      tree.removeNodeAt(jsonPointerToPath('/properties/quantity'));
 
       const validator = new FormulaValidator(tree);
       const errors = validator.validate();
@@ -126,7 +126,9 @@ describe('FormulaValidator', () => {
       totalNode.setFormula(formula);
       tree.registerFormula(totalNode.id(), formula);
 
-      tree.removeNodeAt(new SimplePath('item.discount'));
+      tree.removeNodeAt(
+        jsonPointerToPath('/properties/item/properties/discount'),
+      );
 
       const validator = new FormulaValidator(tree);
       const errors = validator.validate();
@@ -167,7 +169,9 @@ describe('FormulaValidator', () => {
       computedNode.setFormula(formula);
       tree.registerFormula(computedNode.id(), formula);
 
-      tree.removeNodeAt(new SimplePath('items[*].tax'));
+      tree.removeNodeAt(
+        jsonPointerToPath('/properties/items/items/properties/tax'),
+      );
 
       const validator = new FormulaValidator(tree);
       const errors = validator.validate();
@@ -245,7 +249,7 @@ describe('FormulaValidator', () => {
       resultNode.setFormula(formula);
       tree.registerFormula(resultNode.id(), formula);
 
-      tree.removeNodeAt(new SimplePath('source'));
+      tree.removeNodeAt(jsonPointerToPath('/properties/source'));
 
       const validator = new FormulaValidator(tree);
       const error = validator.validateNode(resultNode.id(), 'result');
@@ -278,7 +282,7 @@ describe('FormulaValidator', () => {
       xNode.setFormula(formula);
       tree.registerFormula(xNode.id(), formula);
 
-      tree.removeNodeAt(new SimplePath('dep'));
+      tree.removeNodeAt(jsonPointerToPath('/properties/dep'));
 
       const validator = new FormulaValidator(tree);
       const error = validator.validateNode(xNode.id(), 'nested.path.x');
@@ -306,7 +310,7 @@ describe('FormulaValidator', () => {
       xNode.setFormula(formula);
       tree.registerFormula(xNode.id(), formula);
 
-      tree.removeNodeAt(new SimplePath('dep'));
+      tree.removeNodeAt(jsonPointerToPath('/properties/dep'));
 
       const validator = new FormulaValidator(tree);
       const error = validator.validateNode(xNode.id(), '');

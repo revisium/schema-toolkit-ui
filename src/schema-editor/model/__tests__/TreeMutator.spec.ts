@@ -1,7 +1,6 @@
 import { TreeMutator } from '../tree/TreeMutator';
 import { NodeFactory } from '../node/NodeFactory';
-import { SimplePath } from '../path/SimplePath';
-import { EMPTY_PATH } from '../path/Paths';
+import { EMPTY_PATH, jsonPointerToPath } from '../path';
 
 describe('TreeMutator', () => {
   let mutator: TreeMutator;
@@ -15,7 +14,7 @@ describe('TreeMutator', () => {
       const root = NodeFactory.object('root');
       const newNode = NodeFactory.string('field');
 
-      mutator.setNodeAt(root, new SimplePath('field'), newNode);
+      mutator.setNodeAt(root, jsonPointerToPath('/properties/field'), newNode);
 
       expect(root.properties()).toHaveLength(1);
       expect(root.property('field').name()).toBe('field');
@@ -26,7 +25,11 @@ describe('TreeMutator', () => {
       const root = NodeFactory.object('root', [child]);
       const newNode = NodeFactory.string('value');
 
-      mutator.setNodeAt(root, new SimplePath('parent.value'), newNode);
+      mutator.setNodeAt(
+        root,
+        jsonPointerToPath('/properties/parent/properties/value'),
+        newNode,
+      );
 
       expect(child.properties()).toHaveLength(1);
       expect(child.property('value').name()).toBe('value');
@@ -46,7 +49,11 @@ describe('TreeMutator', () => {
       const root = NodeFactory.object('root', [arrayNode]);
       const newItems = NodeFactory.object('');
 
-      mutator.setNodeAt(root, new SimplePath('items[*]'), newItems);
+      mutator.setNodeAt(
+        root,
+        jsonPointerToPath('/properties/items/items'),
+        newItems,
+      );
 
       expect(arrayNode.items().isObject()).toBe(true);
     });
@@ -57,7 +64,11 @@ describe('TreeMutator', () => {
       const root = NodeFactory.object('root', [arrayNode]);
       const newField = NodeFactory.string('name');
 
-      mutator.setNodeAt(root, new SimplePath('items[*].name'), newField);
+      mutator.setNodeAt(
+        root,
+        jsonPointerToPath('/properties/items/items/properties/name'),
+        newField,
+      );
 
       expect(itemsNode.property('name').name()).toBe('name');
     });
@@ -66,7 +77,11 @@ describe('TreeMutator', () => {
       const root = NodeFactory.object('root');
       const newNode = NodeFactory.string('value');
 
-      mutator.setNodeAt(root, new SimplePath('nonexistent.value'), newNode);
+      mutator.setNodeAt(
+        root,
+        jsonPointerToPath('/properties/nonexistent/properties/value'),
+        newNode,
+      );
 
       expect(root.properties()).toHaveLength(0);
     });
@@ -78,7 +93,11 @@ describe('TreeMutator', () => {
       const root = NodeFactory.object('root', [first, second, third]);
 
       const replacement = NodeFactory.number('second');
-      mutator.setNodeAt(root, new SimplePath('second'), replacement);
+      mutator.setNodeAt(
+        root,
+        jsonPointerToPath('/properties/second'),
+        replacement,
+      );
 
       expect(root.properties()).toHaveLength(3);
       const names = root.properties().map((c) => c.name());
@@ -92,7 +111,7 @@ describe('TreeMutator', () => {
       const child = NodeFactory.string('field');
       const root = NodeFactory.object('root', [child]);
 
-      mutator.removeNodeAt(root, new SimplePath('field'));
+      mutator.removeNodeAt(root, jsonPointerToPath('/properties/field'));
 
       expect(root.properties()).toHaveLength(0);
     });
@@ -102,7 +121,10 @@ describe('TreeMutator', () => {
       const parent = NodeFactory.object('parent', [nestedChild]);
       const root = NodeFactory.object('root', [parent]);
 
-      mutator.removeNodeAt(root, new SimplePath('parent.value'));
+      mutator.removeNodeAt(
+        root,
+        jsonPointerToPath('/properties/parent/properties/value'),
+      );
 
       expect(parent.properties()).toHaveLength(0);
       expect(root.property('parent').properties()).toHaveLength(0);
@@ -121,7 +143,7 @@ describe('TreeMutator', () => {
       const arrayNode = NodeFactory.array('items', itemsNode);
       const root = NodeFactory.object('root', [arrayNode]);
 
-      mutator.removeNodeAt(root, new SimplePath('items[*]'));
+      mutator.removeNodeAt(root, jsonPointerToPath('/properties/items/items'));
 
       expect(arrayNode.items().isNull()).toBe(true);
     });
@@ -132,7 +154,10 @@ describe('TreeMutator', () => {
       const arrayNode = NodeFactory.array('items', itemsNode);
       const root = NodeFactory.object('root', [arrayNode]);
 
-      mutator.removeNodeAt(root, new SimplePath('items[*].name'));
+      mutator.removeNodeAt(
+        root,
+        jsonPointerToPath('/properties/items/items/properties/name'),
+      );
 
       expect(itemsNode.properties()).toHaveLength(0);
     });
@@ -140,7 +165,7 @@ describe('TreeMutator', () => {
     it('does nothing if path does not exist', () => {
       const root = NodeFactory.object('root');
 
-      mutator.removeNodeAt(root, new SimplePath('nonexistent'));
+      mutator.removeNodeAt(root, jsonPointerToPath('/properties/nonexistent'));
 
       expect(root.properties()).toHaveLength(0);
     });
@@ -148,7 +173,10 @@ describe('TreeMutator', () => {
     it('does nothing if intermediate node does not exist', () => {
       const root = NodeFactory.object('root');
 
-      mutator.removeNodeAt(root, new SimplePath('parent.child'));
+      mutator.removeNodeAt(
+        root,
+        jsonPointerToPath('/properties/parent/properties/child'),
+      );
 
       expect(root.properties()).toHaveLength(0);
     });
@@ -157,7 +185,10 @@ describe('TreeMutator', () => {
       const arrayNode = NodeFactory.array('items', NodeFactory.string(''));
       const root = NodeFactory.object('root', [arrayNode]);
 
-      mutator.removeNodeAt(root, new SimplePath('items[*].nonexistent'));
+      mutator.removeNodeAt(
+        root,
+        jsonPointerToPath('/properties/items/items/properties/nonexistent'),
+      );
     });
   });
 });

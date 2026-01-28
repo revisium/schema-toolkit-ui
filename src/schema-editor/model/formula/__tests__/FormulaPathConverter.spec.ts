@@ -1,6 +1,5 @@
 import { FormulaPathConverter } from '..';
-import { SimplePath } from '../../path/SimplePath';
-import { EMPTY_PATH } from '../../path/Paths';
+import { EMPTY_PATH, jsonPointerToPath } from '../../path';
 
 describe('FormulaPathConverter', () => {
   let converter: FormulaPathConverter;
@@ -11,12 +10,14 @@ describe('FormulaPathConverter', () => {
 
   describe('pathToAbsolute()', () => {
     it('converts simple path to absolute', () => {
-      const path = new SimplePath('fieldName');
+      const path = jsonPointerToPath('/properties/fieldName');
       expect(converter.pathToAbsolute(path)).toBe('/fieldName');
     });
 
     it('converts nested path to absolute', () => {
-      const path = new SimplePath('parent.child.value');
+      const path = jsonPointerToPath(
+        '/properties/parent/properties/child/properties/value',
+      );
       expect(converter.pathToAbsolute(path)).toBe('/parent.child.value');
     });
 
@@ -25,51 +26,59 @@ describe('FormulaPathConverter', () => {
     });
 
     it('converts path with array access to absolute', () => {
-      const path = new SimplePath('items[*].price');
+      const path = jsonPointerToPath(
+        '/properties/items/items/properties/price',
+      );
       expect(converter.pathToAbsolute(path)).toBe('/items[*].price');
     });
   });
 
   describe('computeRelativePath()', () => {
     it('returns simple name for sibling', () => {
-      const fromPath = new SimplePath('price');
-      const toPath = new SimplePath('quantity');
+      const fromPath = jsonPointerToPath('/properties/price');
+      const toPath = jsonPointerToPath('/properties/quantity');
       expect(converter.computeRelativePath(fromPath, toPath)).toBe('quantity');
     });
 
     it('returns nested path for deeper sibling', () => {
-      const fromPath = new SimplePath('fieldA');
-      const toPath = new SimplePath('nested.value');
+      const fromPath = jsonPointerToPath('/properties/fieldA');
+      const toPath = jsonPointerToPath('/properties/nested/properties/value');
       expect(converter.computeRelativePath(fromPath, toPath)).toBe(
         'nested.value',
       );
     });
 
     it('returns ../ for parent level', () => {
-      const fromPath = new SimplePath('parent.child');
-      const toPath = new SimplePath('sibling');
+      const fromPath = jsonPointerToPath('/properties/parent/properties/child');
+      const toPath = jsonPointerToPath('/properties/sibling');
       expect(converter.computeRelativePath(fromPath, toPath)).toBe(
         '../sibling',
       );
     });
 
     it('returns ../../ for grandparent level', () => {
-      const fromPath = new SimplePath('level1.level2.level3');
-      const toPath = new SimplePath('other');
+      const fromPath = jsonPointerToPath(
+        '/properties/level1/properties/level2/properties/level3',
+      );
+      const toPath = jsonPointerToPath('/properties/other');
       expect(converter.computeRelativePath(fromPath, toPath)).toBe(
         '../../other',
       );
     });
 
     it('returns null for same path (no relative needed)', () => {
-      const fromPath = new SimplePath('field');
+      const fromPath = jsonPointerToPath('/properties/field');
       const toPath = EMPTY_PATH;
       expect(converter.computeRelativePath(fromPath, toPath)).toBeNull();
     });
 
     it('returns nested path when target is deeper in shared parent', () => {
-      const fromPath = new SimplePath('parent.fieldA');
-      const toPath = new SimplePath('parent.nested.value');
+      const fromPath = jsonPointerToPath(
+        '/properties/parent/properties/fieldA',
+      );
+      const toPath = jsonPointerToPath(
+        '/properties/parent/properties/nested/properties/value',
+      );
       expect(converter.computeRelativePath(fromPath, toPath)).toBe(
         'nested.value',
       );

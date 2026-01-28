@@ -1,6 +1,7 @@
 import type { SchemaNode } from '../../node/SchemaNode';
 import type { SchemaTree } from '../../tree/SchemaTree';
-import { PathUtils } from '../../path/PathUtils';
+import type { Path } from '../../path';
+import { jsonPointerToPath } from '../../path';
 import { SchemaSerializer } from '../../schema/SchemaSerializer';
 import { SchemaComparator } from '../SchemaComparator';
 import type { NodePathIndex } from '../index/NodePathIndex';
@@ -135,22 +136,21 @@ export class PatchGenerator {
     addRemovePaths: Set<string>,
     patches: JsonPatch[],
   ): void {
-    const replacedPaths = new Set<string>();
+    const replacedPaths: Path[] = [];
+    const addRemovePathObjects = [...addRemovePaths].map(jsonPointerToPath);
 
     for (const change of modified) {
       if (!change.currentNode || !change.baseNode) {
         continue;
       }
 
-      const currentPath = this.currentTree
-        .pathOf(change.currentNode.id())
-        .asJsonPointer();
+      const currentPath = this.currentTree.pathOf(change.currentNode.id());
 
-      if (PathUtils.isChildOfAnyJsonPointer(currentPath, replacedPaths)) {
+      if (this.isChildOfAny(currentPath, replacedPaths)) {
         continue;
       }
 
-      if (PathUtils.hasChildJsonPointer(currentPath, addRemovePaths)) {
+      if (this.hasChildIn(currentPath, addRemovePathObjects)) {
         continue;
       }
 
@@ -164,11 +164,19 @@ export class PatchGenerator {
       );
       patches.push({
         op: 'replace',
-        path: currentPath,
+        path: currentPath.asJsonPointer(),
         value: schema,
       });
-      replacedPaths.add(currentPath);
+      replacedPaths.push(currentPath);
     }
+  }
+
+  private isChildOfAny(path: Path, parents: Path[]): boolean {
+    return parents.some((parent) => path.isChildOf(parent));
+  }
+
+  private hasChildIn(path: Path, candidates: Path[]): boolean {
+    return candidates.some((candidate) => candidate.isChildOf(path));
   }
 
   private isActuallyModified(change: RawChange): boolean {

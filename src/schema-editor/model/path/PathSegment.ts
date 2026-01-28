@@ -1,9 +1,4 @@
-export interface PathSegment {
-  isProperty(): boolean;
-  isItems(): boolean;
-  propertyName(): string;
-  equals(other: PathSegment): boolean;
-}
+import type { PathSegment } from './types';
 
 export class PropertySegment implements PathSegment {
   constructor(private readonly name: string) {}
@@ -42,5 +37,3 @@ export class ItemsSegment implements PathSegment {
     return other.isItems();
   }
 }
-
-export const ITEMS_SEGMENT = new ItemsSegment();

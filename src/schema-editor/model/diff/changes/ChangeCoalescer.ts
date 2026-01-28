@@ -1,4 +1,4 @@
-import type { Path } from '../../path/Path';
+import { type Path, EMPTY_PATH } from '../../path';
 import type { SchemaTree } from '../../tree/SchemaTree';
 import type { NodePathIndex } from '../index/NodePathIndex';
 import type { RawChange } from './RawChange';
@@ -65,11 +65,11 @@ export class ChangeCoalescer {
 
   private getTopLevelNodeId(tree: SchemaTree, nodeId: string): string | null {
     const path = tree.pathOf(nodeId);
-    const topLevelPath = path.getTopLevel();
-    if (!topLevelPath) {
+    const firstSeg = path.segments()[0];
+    if (!firstSeg?.isProperty()) {
       return null;
     }
-    const topLevelNode = tree.nodeAt(topLevelPath);
+    const topLevelNode = tree.nodeAt(EMPTY_PATH.child(firstSeg.propertyName()));
     return topLevelNode.isNull() ? null : topLevelNode.id();
   }
 

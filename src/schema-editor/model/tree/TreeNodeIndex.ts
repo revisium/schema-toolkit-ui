@@ -1,7 +1,7 @@
 import type { SchemaNode } from '../node/SchemaNode';
-import type { Path } from '../path/Path';
+import type { Path } from '../path';
+import { EMPTY_PATH } from '../path';
 import { NULL_NODE } from '../node/NullNode';
-import { EMPTY_PATH } from '../path/Paths';
 
 export class TreeNodeIndex {
   private readonly nodeIndex = new Map<string, SchemaNode>();
