@@ -1,9 +1,8 @@
 import { parseFormula, type ASTNode } from '@revisium/formula';
-import type { Path } from '../../path/Path';
-import { PathFromSegments } from '../../path/Paths';
-import { PropertySegment, ITEMS_SEGMENT } from '../../path/PathSegment';
-import type { PathSegment } from '../../path/PathSegment';
-import { PathUtils } from '../../path/PathUtils';
+import type { Path } from '../../path';
+import { EMPTY_PATH } from '../../path';
+
+const ARRAY_NOTATION_REGEX = /^([^[]+)\[(?:\d+|\*)?\]$/;
 
 export class RelativePath {
   constructor(
@@ -20,43 +19,33 @@ export class RelativePath {
       return null;
     }
 
-    const baseSegments = [...this.basePath.segments()];
-    const resolved = this.astToSegments(ast, baseSegments);
-
-    if (!resolved) {
-      return null;
-    }
-
-    return new PathFromSegments(resolved);
+    return this.astToPath(ast, this.basePath);
   }
 
-  private astToSegments(
-    ast: ASTNode,
-    baseSegments: PathSegment[],
-  ): PathSegment[] | null {
+  private astToPath(ast: ASTNode, base: Path): Path | null {
     switch (ast.type) {
       case 'Identifier':
-        return [...baseSegments, new PropertySegment(ast.name)];
+        return base.child(ast.name);
 
       case 'MemberExpression': {
-        const objectPath = this.astToSegments(ast.object, baseSegments);
+        const objectPath = this.astToPath(ast.object, base);
         if (!objectPath) {
           return null;
         }
-        return [...objectPath, new PropertySegment(ast.property)];
+        return objectPath.child(ast.property);
       }
 
       case 'IndexExpression':
       case 'WildcardExpression': {
-        const objectPath = this.astToSegments(ast.object, baseSegments);
+        const objectPath = this.astToPath(ast.object, base);
         if (!objectPath) {
           return null;
         }
-        return [...objectPath, ITEMS_SEGMENT];
+        return objectPath.childItems();
       }
 
       case 'RelativePath':
-        return this.resolveRelativePathString(baseSegments, ast.path);
+        return this.resolveRelativePathString(base, ast.path);
 
       case 'RootPath':
         return this.resolveRootPath(ast.path);
@@ -66,39 +55,56 @@ export class RelativePath {
     }
   }
 
-  private resolveRelativePathString(
-    baseSegments: PathSegment[],
-    path: string,
-  ): PathSegment[] | null {
+  private resolveRelativePathString(base: Path, path: string): Path | null {
     const parts = path.split('/');
-    const result = [...baseSegments];
+    let result = base;
 
     for (const part of parts) {
       if (part === '..') {
-        if (result.length === 0) {
+        if (result.isEmpty()) {
           return null;
         }
-        result.pop();
+        result = result.parent();
       } else if (part === '.') {
         continue;
       } else if (part) {
-        result.push(new PropertySegment(part));
+        result = result.child(part);
       }
     }
 
     return result;
   }
 
-  private resolveRootPath(rootPath: string): PathSegment[] | null {
+  private resolveRootPath(rootPath: string): Path | null {
     const path = rootPath.startsWith('/') ? rootPath.slice(1) : rootPath;
     if (!path) {
-      return [];
+      return EMPTY_PATH;
     }
 
     try {
-      return PathUtils.simplePathToSegments(path);
+      return this.parseFormulaPath(path);
     } catch {
       return null;
     }
+  }
+
+  private parseFormulaPath(formulaPath: string): Path {
+    const parts = formulaPath.split('.');
+    let result: Path = EMPTY_PATH;
+
+    for (const part of parts) {
+      if (!part) {
+        throw new Error(`Invalid path: empty segment`);
+      }
+
+      const match = ARRAY_NOTATION_REGEX.exec(part);
+      if (match?.[1]) {
+        result = result.child(match[1]).childItems();
+      } else {
+        result = result.child(part);
+      }
+    }
+
+    return result;
   }
 }

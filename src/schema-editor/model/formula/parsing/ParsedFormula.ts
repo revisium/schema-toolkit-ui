@@ -4,7 +4,7 @@ import type { FormulaDependency } from '../core/FormulaDependency';
 import { ResolvedDependency } from '../core/FormulaDependency';
 import { FormulaError } from '../core/FormulaError';
 import type { NodeTree } from '../../tree/NodeTree';
-import type { Path } from '../../path/Path';
+import type { Path } from '../../path';
 import { RelativePath } from './RelativePath';
 
 export class ParsedFormula implements Formula {
@@ -93,9 +93,10 @@ export class ParsedFormula implements Formula {
     let basePath = formulaPath;
 
     while (!basePath.isEmpty()) {
-      const lastSegment = basePath.lastSegment();
+      const segs = basePath.segments();
+      const lastSeg = segs[segs.length - 1];
       basePath = basePath.parent();
-      if (!lastSegment?.isItems()) {
+      if (!lastSeg?.isItems()) {
         break;
       }
     }

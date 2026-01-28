@@ -1,6 +1,5 @@
 import type { SchemaNode } from '../node/SchemaNode';
-import type { Path } from '../path/Path';
-import type { PathSegment } from '../path/PathSegment';
+import type { Path, PathSegment } from '../path';
 import type { JsonSchemaType, JsonObjectSchema } from '../schema/JsonSchema';
 import { NULL_NODE } from '../node/NullNode';
 

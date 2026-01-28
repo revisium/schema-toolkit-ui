@@ -1,5 +1,4 @@
-import type { Path } from '../../path/Path';
-import type { PathSegment } from '../../path/PathSegment';
+import type { Path, PathSegment } from '../../path';
 
 export class RelativePathBuilder {
   public build(fromPath: Path, toPath: Path): string | null {

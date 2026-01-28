@@ -25,13 +25,8 @@ export {
 export {
   type Path,
   type PathSegment,
-  PropertySegment,
-  ItemsSegment,
-  ITEMS_SEGMENT,
   EMPTY_PATH,
-  PathFromSegments,
-  SimplePath,
-  JsonPointerPath,
+  jsonPointerToPath,
 } from './path/index';
 
 // Tree types

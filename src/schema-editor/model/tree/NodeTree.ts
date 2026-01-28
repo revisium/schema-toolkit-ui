@@ -1,5 +1,5 @@
 import type { SchemaNode } from '../node/SchemaNode';
-import type { Path } from '../path/Path';
+import type { Path } from '../path';
 
 export interface NodeTree {
   root(): SchemaNode;

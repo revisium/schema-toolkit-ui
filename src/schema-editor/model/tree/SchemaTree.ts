@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import type { NodeTree } from './NodeTree';
 import type { SchemaNode } from '../node/SchemaNode';
-import type { Path } from '../path/Path';
+import type { Path } from '../path';
 import { NULL_NODE } from '../node/NullNode';
 import {
   FormulaDependencyIndex,

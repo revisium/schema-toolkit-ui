@@ -1,4 +1,4 @@
-import type { Path } from '../../path/Path';
+import type { Path } from '../../path';
 import { RelativePathBuilder } from './RelativePathBuilder';
 
 export class FormulaPathConverter {

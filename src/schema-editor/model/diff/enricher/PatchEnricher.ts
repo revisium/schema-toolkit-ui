@@ -1,6 +1,6 @@
 import type { SchemaNode } from '../../node/SchemaNode';
 import type { SchemaTree } from '../../tree/SchemaTree';
-import { PathUtils } from '../../path/PathUtils';
+import { jsonPointerToPath } from '../../path';
 import { NodeMetadataExtractor } from './NodeMetadataExtractor';
 import type { JsonPatch, SchemaPatch } from '../SchemaPatch';
 
@@ -130,25 +130,39 @@ export class PatchEnricher {
 
   private getFieldNameFromPath(jsonPointer: string): string {
     try {
-      const path = PathUtils.jsonPointerToPath(jsonPointer);
-      return PathUtils.getFieldNameFromPath(path);
+      return jsonPointerToPath(jsonPointer).asSimple();
     } catch {
       return '';
     }
   }
 
-  private isRenameMove(fromPath: string, toPath: string): boolean {
-    return (
-      PathUtils.getParentJsonPointer(fromPath) ===
-      PathUtils.getParentJsonPointer(toPath)
-    );
+  private isRenameMove(fromPointer: string, toPointer: string): boolean {
+    try {
+      const fromParent = jsonPointerToPath(fromPointer).parent();
+      const toParent = jsonPointerToPath(toPointer).parent();
+      return fromParent.equals(toParent);
+    } catch {
+      return false;
+    }
   }
 
-  private movesIntoArrayBoundary(fromPath: string, toPath: string): boolean {
-    return (
-      PathUtils.countArrayDepthFromJsonPointer(toPath) >
-      PathUtils.countArrayDepthFromJsonPointer(fromPath)
-    );
+  private movesIntoArrayBoundary(
+    fromPointer: string,
+    toPointer: string,
+  ): boolean {
+    try {
+      const fromPath = jsonPointerToPath(fromPointer);
+      const toPath = jsonPointerToPath(toPointer);
+      const fromArrayDepth = this.countArrayDepth(fromPath);
+      const toArrayDepth = this.countArrayDepth(toPath);
+      return toArrayDepth > fromArrayDepth;
+    } catch {
+      return false;
+    }
+  }
+
+  private countArrayDepth(path: import('../../path').Path): number {
+    return path.segments().filter((seg) => seg.isItems()).length;
   }
 
   private getNodeAtPath(
@@ -156,7 +170,7 @@ export class PatchEnricher {
     jsonPointer: string,
   ): SchemaNode | null {
     try {
-      const path = PathUtils.jsonPointerToPath(jsonPointer);
+      const path = jsonPointerToPath(jsonPointer);
       const node = tree.nodeAt(path);
       return node.isNull() ? null : node;
     } catch {

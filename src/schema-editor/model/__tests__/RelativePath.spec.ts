@@ -1,6 +1,5 @@
 import { RelativePath } from '../formula';
-import { SimplePath } from '../path/SimplePath';
-import { EMPTY_PATH } from '../path/Paths';
+import { EMPTY_PATH, jsonPointerToPath } from '../path';
 
 describe('RelativePath', () => {
   describe('resolve()', () => {
@@ -15,7 +14,7 @@ describe('RelativePath', () => {
       });
 
       it('resolves identifier from nested path', () => {
-        const basePath = new SimplePath('parent');
+        const basePath = jsonPointerToPath('/properties/parent');
         const relative = new RelativePath(basePath, 'sibling');
         const resolved = relative.resolve();
 
@@ -52,7 +51,9 @@ describe('RelativePath', () => {
 
     describe('relative paths (..)', () => {
       it('resolves single parent reference', () => {
-        const basePath = new SimplePath('parent.child');
+        const basePath = jsonPointerToPath(
+          '/properties/parent/properties/child',
+        );
         const relative = new RelativePath(basePath, '../sibling');
         const resolved = relative.resolve();
 
@@ -63,7 +64,9 @@ describe('RelativePath', () => {
       });
 
       it('resolves multiple parent references', () => {
-        const basePath = new SimplePath('a.b.c');
+        const basePath = jsonPointerToPath(
+          '/properties/a/properties/b/properties/c',
+        );
         const relative = new RelativePath(basePath, '../../sibling');
         const resolved = relative.resolve();
 
@@ -74,7 +77,7 @@ describe('RelativePath', () => {
       });
 
       it('returns null when going above root', () => {
-        const basePath = new SimplePath('single');
+        const basePath = jsonPointerToPath('/properties/single');
         const relative = new RelativePath(basePath, '../../invalid');
         const resolved = relative.resolve();
 
@@ -84,7 +87,9 @@ describe('RelativePath', () => {
 
     describe('root paths (/)', () => {
       it('resolves absolute root path', () => {
-        const basePath = new SimplePath('nested.deep');
+        const basePath = jsonPointerToPath(
+          '/properties/nested/properties/deep',
+        );
         const relative = new RelativePath(basePath, '/rootField');
         const resolved = relative.resolve();
 
@@ -93,7 +98,9 @@ describe('RelativePath', () => {
       });
 
       it('resolves absolute nested path', () => {
-        const basePath = new SimplePath('somewhere.else');
+        const basePath = jsonPointerToPath(
+          '/properties/somewhere/properties/else',
+        );
         const relative = new RelativePath(basePath, '/config.settings');
         const resolved = relative.resolve();
 
@@ -132,7 +139,7 @@ describe('RelativePath', () => {
       });
 
       it('resolves nested array access in root path', () => {
-        const basePath = new SimplePath('other');
+        const basePath = jsonPointerToPath('/properties/other');
         const relative = new RelativePath(basePath, '/data.items[*].value');
         const resolved = relative.resolve();
 

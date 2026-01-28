@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { TreeNavigator } from '../tree/TreeNavigator';
 import { SchemaParser, resetIdCounter } from '../schema/SchemaParser';
-import { EMPTY_PATH, PathFromSegments } from '../path/Paths';
-import { PropertySegment, ITEMS_SEGMENT } from '../path/PathSegment';
+import { EMPTY_PATH, jsonPointerToPath } from '../path';
 import {
   createSchema,
   stringField,
@@ -32,7 +31,7 @@ describe('TreeNavigator', () => {
 
     it('returns child node for property path', () => {
       const root = parseSchema({ name: stringField() });
-      const path = new PathFromSegments([new PropertySegment('name')]);
+      const path = jsonPointerToPath('/properties/name');
 
       const result = TreeNavigator.navigateNode(root, path);
 
@@ -49,11 +48,9 @@ describe('TreeNavigator', () => {
           }),
         }),
       });
-      const path = new PathFromSegments([
-        new PropertySegment('user'),
-        new PropertySegment('profile'),
-        new PropertySegment('age'),
-      ]);
+      const path = jsonPointerToPath(
+        '/properties/user/properties/profile/properties/age',
+      );
 
       const result = TreeNavigator.navigateNode(root, path);
 
@@ -66,10 +63,7 @@ describe('TreeNavigator', () => {
       const root = parseSchema({
         items: arrayField(stringField()),
       });
-      const path = new PathFromSegments([
-        new PropertySegment('items'),
-        ITEMS_SEGMENT,
-      ]);
+      const path = jsonPointerToPath('/properties/items/items');
 
       const result = TreeNavigator.navigateNode(root, path);
 
@@ -85,11 +79,7 @@ describe('TreeNavigator', () => {
           }),
         ),
       });
-      const path = new PathFromSegments([
-        new PropertySegment('users'),
-        ITEMS_SEGMENT,
-        new PropertySegment('name'),
-      ]);
+      const path = jsonPointerToPath('/properties/users/items/properties/name');
 
       const result = TreeNavigator.navigateNode(root, path);
 
@@ -100,7 +90,7 @@ describe('TreeNavigator', () => {
 
     it('returns NULL_NODE for non-existent property', () => {
       const root = parseSchema({ name: stringField() });
-      const path = new PathFromSegments([new PropertySegment('unknown')]);
+      const path = jsonPointerToPath('/properties/unknown');
 
       const result = TreeNavigator.navigateNode(root, path);
 
@@ -109,10 +99,7 @@ describe('TreeNavigator', () => {
 
     it('returns NULL_NODE when accessing property on non-object', () => {
       const root = parseSchema({ name: stringField() });
-      const path = new PathFromSegments([
-        new PropertySegment('name'),
-        new PropertySegment('nested'),
-      ]);
+      const path = jsonPointerToPath('/properties/name/properties/nested');
 
       const result = TreeNavigator.navigateNode(root, path);
 
@@ -121,10 +108,7 @@ describe('TreeNavigator', () => {
 
     it('returns NULL_NODE when accessing items on non-array', () => {
       const root = parseSchema({ name: stringField() });
-      const path = new PathFromSegments([
-        new PropertySegment('name'),
-        ITEMS_SEGMENT,
-      ]);
+      const path = jsonPointerToPath('/properties/name/items');
 
       const result = TreeNavigator.navigateNode(root, path);
 
@@ -142,7 +126,7 @@ describe('TreeNavigator', () => {
 
     it('returns property schema for property path', () => {
       const schema = createSchema({ name: stringField() });
-      const path = new PathFromSegments([new PropertySegment('name')]);
+      const path = jsonPointerToPath('/properties/name');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -158,11 +142,9 @@ describe('TreeNavigator', () => {
           }),
         }),
       });
-      const path = new PathFromSegments([
-        new PropertySegment('user'),
-        new PropertySegment('profile'),
-        new PropertySegment('age'),
-      ]);
+      const path = jsonPointerToPath(
+        '/properties/user/properties/profile/properties/age',
+      );
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -174,10 +156,7 @@ describe('TreeNavigator', () => {
       const schema = createSchema({
         items: arrayField(numberField()),
       });
-      const path = new PathFromSegments([
-        new PropertySegment('items'),
-        ITEMS_SEGMENT,
-      ]);
+      const path = jsonPointerToPath('/properties/items/items');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -193,11 +172,7 @@ describe('TreeNavigator', () => {
           }),
         ),
       });
-      const path = new PathFromSegments([
-        new PropertySegment('users'),
-        ITEMS_SEGMENT,
-        new PropertySegment('name'),
-      ]);
+      const path = jsonPointerToPath('/properties/users/items/properties/name');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -207,7 +182,7 @@ describe('TreeNavigator', () => {
 
     it('returns null for non-existent property', () => {
       const schema = createSchema({ name: stringField() });
-      const path = new PathFromSegments([new PropertySegment('unknown')]);
+      const path = jsonPointerToPath('/properties/unknown');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -216,10 +191,7 @@ describe('TreeNavigator', () => {
 
     it('returns null when accessing property on non-object', () => {
       const schema = createSchema({ name: stringField() });
-      const path = new PathFromSegments([
-        new PropertySegment('name'),
-        new PropertySegment('nested'),
-      ]);
+      const path = jsonPointerToPath('/properties/name/properties/nested');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -228,10 +200,7 @@ describe('TreeNavigator', () => {
 
     it('returns null when accessing items on non-array', () => {
       const schema = createSchema({ name: stringField() });
-      const path = new PathFromSegments([
-        new PropertySegment('name'),
-        ITEMS_SEGMENT,
-      ]);
+      const path = jsonPointerToPath('/properties/name/items');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -244,7 +213,7 @@ describe('TreeNavigator', () => {
         additionalProperties: false,
         required: [],
       };
-      const path = new PathFromSegments([new PropertySegment('name')]);
+      const path = jsonPointerToPath('/properties/name');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
@@ -255,10 +224,7 @@ describe('TreeNavigator', () => {
       const schema = createSchema({
         arr: { type: 'array' },
       });
-      const path = new PathFromSegments([
-        new PropertySegment('arr'),
-        ITEMS_SEGMENT,
-      ]);
+      const path = jsonPointerToPath('/properties/arr/items');
 
       const result = TreeNavigator.navigateSchema(schema, path);
 
