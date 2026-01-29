@@ -28,9 +28,13 @@ export class RelativePathBuilder {
       const fromSeg = fromSegments[i];
       const toSeg = toSegments[i];
 
-      if (
-        fromSeg &&
-        toSeg &&
+      if (!fromSeg || !toSeg) {
+        break;
+      }
+
+      if (fromSeg.isItems() && toSeg.isItems()) {
+        commonPrefixLen++;
+      } else if (
         fromSeg.isProperty() &&
         toSeg.isProperty() &&
         fromSeg.propertyName() === toSeg.propertyName()

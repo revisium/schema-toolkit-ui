@@ -84,7 +84,9 @@ export class ArrayNodeVM extends BaseNodeVM {
   }
 
   public changeType(typeId: string): void {
-    if (this._parent) {
+    if (this._isRoot) {
+      this._editor.changeRootType(typeId);
+    } else if (this._parent) {
       this._parent.replaceProperty(this, typeId);
     }
   }

@@ -37,3 +37,7 @@ export function jsonPointerToSegments(pointer: string): PathSegment[] {
 export function jsonPointerToPath(pointer: string): Path {
   return createPath(jsonPointerToSegments(pointer));
 }
+
+export function jsonPointerToSimplePath(pointer: string): string {
+  return jsonPointerToPath(pointer).asSimple();
+}

@@ -26,11 +26,18 @@ export interface FormulaUpdateResult {
   error?: string;
 }
 
+interface FormulaParseError {
+  nodeId: string;
+  expression: string;
+  message: string;
+}
+
 export class SchemaEngine {
   private readonly _tree: SchemaTree;
   private readonly _diff: SchemaDiff;
   private readonly _schemaValidator = new SchemaValidator();
   private readonly _formulaValidator: FormulaValidator;
+  private _formulaParseErrors: FormulaParseError[] = [];
 
   constructor(jsonSchema: JsonObjectSchema) {
     const parser = new SchemaParser();
@@ -38,7 +45,9 @@ export class SchemaEngine {
     this._tree = new SchemaTree(root);
     this._formulaValidator = new FormulaValidator(this._tree);
 
-    this.applyPendingFormulas(parser.getPendingFormulas());
+    this._formulaParseErrors = this.applyPendingFormulas(
+      parser.getPendingFormulas(),
+    );
 
     this._diff = new SchemaDiff(this._tree);
 
@@ -47,7 +56,9 @@ export class SchemaEngine {
 
   private applyPendingFormulas(
     pending: { nodeId: string; expression: string }[],
-  ): void {
+  ): FormulaParseError[] {
+    const errors: FormulaParseError[] = [];
+
     for (const { nodeId, expression } of pending) {
       const node = this._tree.nodeById(nodeId);
       if (node.isNull()) {
@@ -58,10 +69,23 @@ export class SchemaEngine {
         const formula = new ParsedFormula(this._tree, nodeId, expression);
         node.setFormula(formula);
         this._tree.registerFormula(nodeId, formula);
-      } catch {
-        // Ignore formula parse errors during initial load
+      } catch (error) {
+        const message = this.extractErrorMessage(error);
+        errors.push({ nodeId, expression, message });
       }
     }
+
+    return errors;
+  }
+
+  private extractErrorMessage(error: unknown): string {
+    if (error instanceof FormulaError) {
+      return error.message;
+    }
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'Unknown formula error';
   }
 
   public get tree(): SchemaTree {
@@ -94,10 +118,13 @@ export class SchemaEngine {
 
   public get isValid(): boolean {
     const root = this._tree.root();
-    if (!root.isObject()) {
+    if (root.isNull()) {
       return false;
     }
-    return root.properties().length > 0;
+    if (root.isObject()) {
+      return root.properties().length > 0;
+    }
+    return true;
   }
 
   public get validationErrors(): readonly ValidationError[] {
@@ -105,7 +132,14 @@ export class SchemaEngine {
   }
 
   public validateFormulas(): FormulaValidationError[] {
-    return this._formulaValidator.validate();
+    const validatorErrors = this._formulaValidator.validate();
+    const parseErrors: FormulaValidationError[] = this._formulaParseErrors.map(
+      (e) => ({
+        nodeId: e.nodeId,
+        message: e.message,
+      }),
+    );
+    return [...parseErrors, ...validatorErrors];
   }
 
   public markAsSaved(): void {
@@ -119,7 +153,9 @@ export class SchemaEngine {
 
     this._tree.clearFormulaIndex();
     this._tree.replaceRoot(root);
-    this.applyPendingFormulas(parser.getPendingFormulas());
+    this._formulaParseErrors = this.applyPendingFormulas(
+      parser.getPendingFormulas(),
+    );
 
     this._diff.markAsSaved();
   }
@@ -247,6 +283,38 @@ export class SchemaEngine {
     };
   }
 
+  public replaceRootWith(newNode: SchemaNode): ReplaceResult | null {
+    const currentRoot = this._tree.root();
+    if (currentRoot.isNull()) {
+      return null;
+    }
+    const oldId = currentRoot.id();
+    newNode.setName(currentRoot.name());
+    this._tree.replaceRoot(newNode);
+    this._diff.trackReplacement(oldId, newNode.id());
+    return {
+      replacedNodeId: oldId,
+      newNodeId: newNode.id(),
+    };
+  }
+
+  public wrapRootInArray(): ReplaceResult | null {
+    const currentRoot = this._tree.root();
+    if (currentRoot.isNull() || currentRoot.isArray()) {
+      return null;
+    }
+    const oldId = currentRoot.id();
+    const name = currentRoot.name();
+    const arrayNode = NodeFactory.array(name, currentRoot);
+    currentRoot.setName('');
+    this._tree.replaceRoot(arrayNode);
+    this._diff.trackReplacement(oldId, arrayNode.id());
+    return {
+      replacedNodeId: oldId,
+      newNodeId: arrayNode.id(),
+    };
+  }
+
   public updateForeignKey(nodeId: string, tableId: string): boolean {
     const node = this._tree.nodeById(nodeId);
     if (node.isNull() || node.nodeType() !== NodeType.String) {
@@ -274,6 +342,9 @@ export class SchemaEngine {
       } else {
         this._tree.unregisterFormula(nodeId);
       }
+      this._formulaParseErrors = this._formulaParseErrors.filter(
+        (e) => e.nodeId !== nodeId,
+      );
       return { success: true };
     } catch (error) {
       const errorMessage =

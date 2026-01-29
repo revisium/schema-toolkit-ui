@@ -37,6 +37,7 @@ export function createNodeVM(
   node: SchemaNode,
   editor: SchemaEditorVM,
   parent: ObjectNodeVMType | null,
+  isRoot: boolean = false,
 ): NodeVM {
   if (node.isObject()) {
     const VMClass = registry.ObjectNodeVM;
@@ -45,7 +46,7 @@ export function createNodeVM(
         'ObjectNodeVM not registered. Import ObjectNodeVM before using createNodeVM.',
       );
     }
-    return new VMClass(node, editor, parent);
+    return new VMClass(node, editor, parent, isRoot);
   }
 
   if (node.isArray()) {
@@ -55,7 +56,7 @@ export function createNodeVM(
         'ArrayNodeVM not registered. Import ArrayNodeVM before using createNodeVM.',
       );
     }
-    return new VMClass(node, editor, parent);
+    return new VMClass(node, editor, parent, isRoot);
   }
 
   if (node.isRef()) {
@@ -65,7 +66,7 @@ export function createNodeVM(
         'RefNodeVM not registered. Import RefNodeVM before using createNodeVM.',
       );
     }
-    return new VMClass(node, editor, parent as ObjectNodeVMType);
+    return new VMClass(node, editor, parent as ObjectNodeVMType, isRoot);
   }
 
   if (node.foreignKey() !== undefined) {
@@ -75,7 +76,7 @@ export function createNodeVM(
         'ForeignKeyNodeVM not registered. Import ForeignKeyNodeVM before using createNodeVM.',
       );
     }
-    return new VMClass(node, editor, parent as ObjectNodeVMType);
+    return new VMClass(node, editor, parent as ObjectNodeVMType, isRoot);
   }
 
   const VMClass = registry.PrimitiveNodeVM;
@@ -84,5 +85,5 @@ export function createNodeVM(
       'PrimitiveNodeVM not registered. Import PrimitiveNodeVM before using createNodeVM.',
     );
   }
-  return new VMClass(node, editor, parent as ObjectNodeVMType);
+  return new VMClass(node, editor, parent as ObjectNodeVMType, isRoot);
 }

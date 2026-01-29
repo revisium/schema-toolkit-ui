@@ -128,7 +128,10 @@ export class ObjectNodeVM extends BaseNodeVM {
 
     const movedNode = this._editor.engine.nodeById(fromNodeId);
     if (!movedNode.isNull()) {
-      this._editor.rootNodeVM.removePropertyVMByNodeId(fromNodeId);
+      const rootVM = this._editor.rootNodeVM;
+      if (rootVM instanceof ObjectNodeVM) {
+        rootVM.removePropertyVMByNodeId(fromNodeId);
+      }
       const movedVM = createNodeVM(movedNode, this._editor, this);
       this.propertyList.push(movedVM);
     }
@@ -141,7 +144,9 @@ export class ObjectNodeVM extends BaseNodeVM {
   }
 
   public changeType(typeId: string): void {
-    if (this._parent) {
+    if (this._isRoot) {
+      this._editor.changeRootType(typeId);
+    } else if (this._parent) {
       this._parent.replaceProperty(this, typeId);
     }
   }

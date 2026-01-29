@@ -7,11 +7,10 @@ import { CloseButton } from '../../../components';
 import { BackButton } from '../../../components/BackButton';
 import { JsonCard } from '../../../components/JsonCard';
 import { SchemaEditorVM, type ForeignKeySelectionCallback } from '../../vm';
-import { ObjectNodeView } from '../ObjectNodeView/ObjectNodeView';
+import { NodeView } from '../NodeView/NodeView';
 import { ChangesPreviewDialog } from '../ChangesPreviewDialog/ChangesPreviewDialog';
-import { CreateTableDialog } from '../CreateTableDialog/CreateTableDialog';
 
-interface SchemaEditorProps {
+export interface SchemaEditorProps {
   viewModel: SchemaEditorVM;
   mode: 'creating' | 'updating';
   onApprove: () => Promise<void>;
@@ -80,11 +79,11 @@ export const SchemaEditor: FC<SchemaEditorProps> = observer(
                 size="sm"
                 variant="ghost"
                 onClick={handleApproveClick}
-                disabled={viewModel.isApproveDisabled}
+                disabled={viewModel.isApproveDisabled && !viewModel.hasErrors}
                 loading={viewModel.loading}
                 data-testid="schema-editor-create-button"
               >
-                Create Table
+                {viewModel.hasErrors ? 'Review Errors' : 'Create Table'}
               </Button>
             ) : (
               (viewModel.isDirty || viewModel.hasErrors) && (
@@ -98,7 +97,7 @@ export const SchemaEditor: FC<SchemaEditorProps> = observer(
                 >
                   {viewModel.hasErrors
                     ? 'Review Errors'
-                    : `Apply Changes (${viewModel.patchesCount})`}
+                    : `Apply Changes (${viewModel.totalChangesCount})`}
                 </Button>
               )
             )}
@@ -113,11 +112,7 @@ export const SchemaEditor: FC<SchemaEditorProps> = observer(
         </Flex>
         {viewModel.viewMode === ViewerSwitcherMode.Tree && (
           <Box paddingBottom="4rem">
-            <ObjectNodeView
-              viewModel={viewModel.rootNodeVM}
-              dataTestId="root"
-              isRoot
-            />
+            <NodeView viewModel={viewModel.rootNodeVM} dataTestId="root" />
           </Box>
         )}
         {viewModel.viewMode === ViewerSwitcherMode.Json && (
@@ -127,29 +122,31 @@ export const SchemaEditor: FC<SchemaEditorProps> = observer(
           />
         )}
 
-        {mode === 'creating' && (
-          <CreateTableDialog
-            isOpen={viewModel.isChangesDialogOpen}
-            onClose={viewModel.closeChangesDialog}
-            onApprove={handleConfirmApprove}
-            viewModel={viewModel}
-            isLoading={viewModel.loading}
-          />
-        )}
-
-        {mode === 'updating' && (
-          <ChangesPreviewDialog
-            isOpen={viewModel.isChangesDialogOpen}
-            onClose={viewModel.closeChangesDialog}
-            onApprove={handleConfirmApprove}
-            onRevert={handleRevert}
-            patches={viewModel.getPatches()}
-            isLoading={viewModel.loading}
-            tableId={viewModel.tableId}
-            validationErrors={viewModel.validationErrors as never}
-            formulaErrors={viewModel.formulaErrors as never}
-          />
-        )}
+        <ChangesPreviewDialog
+          isOpen={viewModel.isChangesDialogOpen}
+          onClose={viewModel.closeChangesDialog}
+          onApprove={handleConfirmApprove}
+          onRevert={handleRevert}
+          patches={viewModel.getPatches()}
+          isLoading={viewModel.loading}
+          tableId={viewModel.tableId}
+          tableIdChange={
+            viewModel.isTableIdChanged
+              ? {
+                  initialTableId: viewModel.initialTableId,
+                  currentTableId: viewModel.tableId,
+                }
+              : undefined
+          }
+          tableIdError={viewModel.tableIdError}
+          validationErrors={viewModel.validationErrors as never}
+          formulaErrors={viewModel.formulaErrors as never}
+          mode={mode}
+          createDialogViewMode={viewModel.createDialogViewMode}
+          onCreateDialogViewModeChange={viewModel.setCreateDialogViewMode}
+          exampleData={viewModel.getExampleData() as JsonValue}
+          schemaData={viewModel.getPlainSchema() as unknown as JsonValue}
+        />
       </Flex>
     );
   },

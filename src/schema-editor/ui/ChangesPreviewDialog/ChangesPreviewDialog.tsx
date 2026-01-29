@@ -6,6 +6,7 @@ import {
   Icon,
   IconButton,
   Portal,
+  SegmentGroup,
   Text,
   VStack,
 } from '@chakra-ui/react';
@@ -35,7 +36,6 @@ import { IconType } from 'react-icons';
 import type {
   SchemaPatch,
   MetadataChangeType,
-  DefaultValueType,
   TransformationInfo,
   DataLossSeverity,
   DefaultValueExample,
@@ -45,7 +45,15 @@ import type {
 import {
   getTransformationInfoFromTypeChange,
   getDefaultValueExample,
+  jsonPointerToSimplePath,
 } from '../../model';
+import { JsonCard } from '../../../components/JsonCard';
+import type { JsonValue } from '../../types';
+
+interface TableIdChangeInfo {
+  initialTableId: string;
+  currentTableId: string;
+}
 
 interface ChangesPreviewDialogProps {
   isOpen: boolean;
@@ -55,8 +63,15 @@ interface ChangesPreviewDialogProps {
   patches: SchemaPatch[];
   isLoading?: boolean;
   tableId: string;
+  tableIdChange?: TableIdChangeInfo;
+  tableIdError?: string | null;
   validationErrors?: SchemaValidationError[];
   formulaErrors?: FormulaErrorInfo[];
+  mode: 'creating' | 'updating';
+  createDialogViewMode?: 'Example' | 'Schema';
+  onCreateDialogViewModeChange?: (mode: 'Example' | 'Schema') => void;
+  exampleData?: JsonValue;
+  schemaData?: JsonValue;
 }
 
 type PatchOp = 'add' | 'remove' | 'move' | 'replace';
@@ -212,182 +227,53 @@ const MetadataChangesRow: FC<{ changes: MetadataChangeType[] }> = ({
   );
 };
 
-interface DescriptionChangeRowProps {
-  fromDescription: string | undefined;
-  toDescription: string | undefined;
+const CodeBox: FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Box
+    as="code"
+    px={1}
+    py={0.5}
+    bg="gray.100"
+    borderRadius="sm"
+    fontFamily="mono"
+  >
+    {children}
+  </Box>
+);
+
+interface ValueChangeRowProps {
+  label: string;
+  fromValue: string;
+  toValue: string;
 }
 
-const DescriptionChangeRow: FC<DescriptionChangeRowProps> = ({
-  fromDescription,
-  toDescription,
-}) => {
-  return (
-    <Flex
-      align="center"
-      gap={2}
-      fontSize="xs"
-      color="gray.500"
-      pl={2}
-      flexWrap="wrap"
-    >
-      <Text color="gray.400">description:</Text>
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {fromDescription === undefined
-          ? '(none)'
-          : JSON.stringify(fromDescription)}
-      </Box>
-      <Icon as={PiArrowRight} color="gray.400" flexShrink={0} />
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {toDescription === undefined ? '(none)' : JSON.stringify(toDescription)}
-      </Box>
-    </Flex>
-  );
-};
+const ValueChangeRow: FC<ValueChangeRowProps> = ({
+  label,
+  fromValue,
+  toValue,
+}) => (
+  <Flex
+    align="center"
+    gap={2}
+    fontSize="xs"
+    color="gray.500"
+    pl={2}
+    flexWrap="wrap"
+  >
+    <Text color="gray.400">{label}:</Text>
+    <CodeBox>{fromValue}</CodeBox>
+    <Icon as={PiArrowRight} color="gray.400" flexShrink={0} />
+    <CodeBox>{toValue}</CodeBox>
+  </Flex>
+);
 
-interface DeprecatedChangeRowProps {
-  fromDeprecated: boolean | undefined;
-  toDeprecated: boolean | undefined;
-}
-
-const DeprecatedChangeRow: FC<DeprecatedChangeRowProps> = ({
-  fromDeprecated,
-  toDeprecated,
-}) => {
-  return (
-    <Flex
-      align="center"
-      gap={2}
-      fontSize="xs"
-      color="gray.500"
-      pl={2}
-      flexWrap="wrap"
-    >
-      <Text color="gray.400">deprecated:</Text>
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {fromDeprecated === undefined ? '(none)' : String(fromDeprecated)}
-      </Box>
-      <Icon as={PiArrowRight} color="gray.400" flexShrink={0} />
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {toDeprecated === undefined ? '(none)' : String(toDeprecated)}
-      </Box>
-    </Flex>
-  );
-};
-
-interface FormulaChangeRowProps {
-  fromFormula: string | undefined;
-  toFormula: string | undefined;
-}
-
-const FormulaChangeRow: FC<FormulaChangeRowProps> = ({
-  fromFormula,
-  toFormula,
-}) => {
-  return (
-    <Flex
-      align="center"
-      gap={2}
-      fontSize="xs"
-      color="gray.500"
-      pl={2}
-      flexWrap="wrap"
-    >
-      <Text color="gray.400">formula:</Text>
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {fromFormula ?? '(none)'}
-      </Box>
-      <Icon as={PiArrowRight} color="gray.400" flexShrink={0} />
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {toFormula ?? '(none)'}
-      </Box>
-    </Flex>
-  );
-};
-
-interface DefaultChangeRowProps {
-  fromDefault: DefaultValueType;
-  toDefault: DefaultValueType;
-}
-
-const DefaultChangeRow: FC<DefaultChangeRowProps> = ({
-  fromDefault,
-  toDefault,
-}) => {
-  return (
-    <Flex
-      align="center"
-      gap={2}
-      fontSize="xs"
-      color="gray.500"
-      pl={2}
-      flexWrap="wrap"
-    >
-      <Text color="gray.400">default:</Text>
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {fromDefault === undefined ? '(none)' : JSON.stringify(fromDefault)}
-      </Box>
-      <Icon as={PiArrowRight} color="gray.400" flexShrink={0} />
-      <Box
-        as="code"
-        px={1}
-        py={0.5}
-        bg="gray.100"
-        borderRadius="sm"
-        fontFamily="mono"
-      >
-        {toDefault === undefined ? '(none)' : JSON.stringify(toDefault)}
-      </Box>
-    </Flex>
-  );
+const formatChangeValue = (value: unknown): string => {
+  if (value === undefined) {
+    return '(none)';
+  }
+  if (typeof value === 'string') {
+    return value || '(none)';
+  }
+  return JSON.stringify(value);
 };
 
 interface PatchRowProps {
@@ -396,26 +282,7 @@ interface PatchRowProps {
 
 const getFromFieldName = (patch: SchemaPatch['patch']): string => {
   if (patch.op === 'move' && patch.from) {
-    const parts = patch.from.split('/').filter(Boolean);
-    const segments: string[] = [];
-
-    let i = 0;
-    while (i < parts.length) {
-      const part = parts[i];
-      if (part === 'properties' && i + 1 < parts.length) {
-        segments.push(parts[i + 1] ?? '');
-        i += 2;
-      } else if (part === 'items') {
-        if (segments.length > 0) {
-          segments[segments.length - 1] += '[*]';
-        }
-        i += 1;
-      } else {
-        i += 1;
-      }
-    }
-
-    return segments.join('.');
+    return jsonPointerToSimplePath(patch.from);
   }
   return '';
 };
@@ -581,36 +448,40 @@ const PatchRow: FC<PatchRowProps> = observer(({ schemaPatch }) => {
 
       {formulaChange && (
         <Box mt={2} ml={8}>
-          <FormulaChangeRow
-            fromFormula={formulaChange.fromFormula}
-            toFormula={formulaChange.toFormula}
+          <ValueChangeRow
+            label="formula"
+            fromValue={formatChangeValue(formulaChange.fromFormula)}
+            toValue={formatChangeValue(formulaChange.toFormula)}
           />
         </Box>
       )}
 
       {defaultChange && (
         <Box mt={2} ml={8}>
-          <DefaultChangeRow
-            fromDefault={defaultChange.fromDefault}
-            toDefault={defaultChange.toDefault}
+          <ValueChangeRow
+            label="default"
+            fromValue={formatChangeValue(defaultChange.fromDefault)}
+            toValue={formatChangeValue(defaultChange.toDefault)}
           />
         </Box>
       )}
 
       {descriptionChange && (
         <Box mt={2} ml={8}>
-          <DescriptionChangeRow
-            fromDescription={descriptionChange.fromDescription}
-            toDescription={descriptionChange.toDescription}
+          <ValueChangeRow
+            label="description"
+            fromValue={formatChangeValue(descriptionChange.fromDescription)}
+            toValue={formatChangeValue(descriptionChange.toDescription)}
           />
         </Box>
       )}
 
       {deprecatedChange && (
         <Box mt={2} ml={8}>
-          <DeprecatedChangeRow
-            fromDeprecated={deprecatedChange.fromDeprecated}
-            toDeprecated={deprecatedChange.toDeprecated}
+          <ValueChangeRow
+            label="deprecated"
+            fromValue={formatChangeValue(deprecatedChange.fromDeprecated)}
+            toValue={formatChangeValue(deprecatedChange.toDeprecated)}
           />
         </Box>
       )}
@@ -624,9 +495,35 @@ const PatchRow: FC<PatchRowProps> = observer(({ schemaPatch }) => {
   );
 });
 
+const TableIdChangeRow: FC<{ change: TableIdChangeInfo }> = ({ change }) => {
+  return (
+    <Box
+      borderBottom="1px solid"
+      borderColor="gray.100"
+      py={4}
+      px={5}
+      _last={{ borderBottom: 'none' }}
+      _hover={{ bg: 'gray.50' }}
+    >
+      <Flex align="center" gap={1.5}>
+        <Icon
+          as={PiArrowsLeftRightLight}
+          color="gray.400"
+          boxSize={4}
+          flexShrink={0}
+        />
+        <Text fontSize="sm" color="gray.600">
+          Table renamed from <Highlight>{change.initialTableId}</Highlight> to{' '}
+          <Highlight>{change.currentTableId}</Highlight>
+        </Text>
+      </Flex>
+    </Box>
+  );
+};
+
 interface ErrorItemProps {
   message: string;
-  type?: 'validation' | 'formula';
+  type?: 'validation' | 'formula' | 'tableId';
   fieldPath?: string;
 }
 
@@ -638,6 +535,11 @@ const ErrorItem: FC<ErrorItemProps> = ({ message, type, fieldPath }) => (
         {type === 'formula' && (
           <Badge size="sm" colorPalette="gray" variant="subtle" mr={2}>
             formula
+          </Badge>
+        )}
+        {type === 'tableId' && (
+          <Badge size="sm" colorPalette="gray" variant="subtle" mr={2}>
+            table name
           </Badge>
         )}
         {fieldPath && (
@@ -654,11 +556,13 @@ const ErrorItem: FC<ErrorItemProps> = ({ message, type, fieldPath }) => (
 interface ErrorsListProps {
   validationErrors: SchemaValidationError[];
   formulaErrors: FormulaErrorInfo[];
+  tableIdError?: string | null;
 }
 
 const ErrorsList: FC<ErrorsListProps> = ({
   validationErrors,
   formulaErrors,
+  tableIdError,
 }) => (
   <Box
     border="1px solid"
@@ -679,6 +583,9 @@ const ErrorsList: FC<ErrorsListProps> = ({
       </Text>
     </Box>
     <VStack align="stretch" gap={0} divideY="1px" divideColor="gray.100">
+      {tableIdError && (
+        <ErrorItem key="tableId-error" message={tableIdError} type="tableId" />
+      )}
       {validationErrors.map((error) => (
         <ErrorItem
           key={`validation-${error.nodeId}`}
@@ -707,12 +614,31 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
     patches,
     isLoading,
     tableId,
+    tableIdChange,
+    tableIdError,
     validationErrors = [],
     formulaErrors = [],
+    mode,
+    createDialogViewMode = 'Example',
+    onCreateDialogViewModeChange,
+    exampleData,
+    schemaData,
   }) => {
-    const hasChanges = patches.length > 0;
-    const hasErrors = validationErrors.length > 0 || formulaErrors.length > 0;
-    const canApply = hasChanges && !hasErrors;
+    const isCreating = mode === 'creating';
+    const hasSchemaChanges = patches.length > 0;
+    const hasTableIdChange = Boolean(tableIdChange);
+    const hasChanges = hasSchemaChanges || hasTableIdChange;
+    const hasErrors =
+      validationErrors.length > 0 ||
+      formulaErrors.length > 0 ||
+      Boolean(tableIdError);
+    const canCreate = !hasErrors;
+    const canUpdate = hasChanges && !hasErrors;
+    const canApply = isCreating ? canCreate : canUpdate;
+    const totalChangesCount = patches.length + (hasTableIdChange ? 1 : 0);
+    const applyButtonText = isCreating
+      ? 'Create Table'
+      : `Apply Changes (${totalChangesCount})`;
 
     return (
       <DialogRoot
@@ -725,7 +651,11 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
           <DialogPositioner>
             <DialogContent maxWidth="700px">
               <DialogHeader>
-                <DialogTitle>Review Changes for "{tableId}"</DialogTitle>
+                <DialogTitle>
+                  {isCreating
+                    ? `Create Table "${tableId}"`
+                    : `Review Changes for "${tableId}"`}
+                </DialogTitle>
               </DialogHeader>
 
               <DialogBody>
@@ -734,10 +664,11 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                     <ErrorsList
                       validationErrors={validationErrors}
                       formulaErrors={formulaErrors}
+                      tableIdError={tableIdError}
                     />
                   )}
 
-                  {hasChanges && (
+                  {!hasErrors && hasChanges && !isCreating && (
                     <>
                       <Box
                         border="1px solid"
@@ -747,6 +678,9 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                         maxHeight="400px"
                         overflowY="auto"
                       >
+                        {tableIdChange && (
+                          <TableIdChangeRow change={tableIdChange} />
+                        )}
                         {patches.map((schemaPatch) => (
                           <PatchRow
                             key={schemaPatch.patch.path}
@@ -755,35 +689,67 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                         ))}
                       </Box>
 
-                      {!hasErrors && (
-                        <Text fontSize="xs" color="gray.500">
-                          Data in existing rows will be automatically
-                          transformed according to the new schema.
-                        </Text>
-                      )}
+                      <Text fontSize="xs" color="gray.500">
+                        Data in existing rows will be automatically transformed
+                        according to the new schema.
+                      </Text>
                     </>
                   )}
-                  {!hasChanges && !hasErrors && (
+                  {!hasErrors && !hasChanges && !isCreating && (
                     <Flex justify="center" align="center" minHeight="100px">
                       <Text color="gray.400" fontSize="sm">
                         No changes to apply
                       </Text>
                     </Flex>
                   )}
+                  {!hasErrors && isCreating && (
+                    <>
+                      <SegmentGroup.Root
+                        size="sm"
+                        value={createDialogViewMode}
+                        onValueChange={(details) =>
+                          onCreateDialogViewModeChange?.(
+                            details.value as 'Example' | 'Schema',
+                          )
+                        }
+                      >
+                        <SegmentGroup.Indicator />
+                        <SegmentGroup.Items items={['Example', 'Schema']} />
+                      </SegmentGroup.Root>
+                      <Box
+                        border="1px solid"
+                        borderColor="gray.200"
+                        borderRadius="md"
+                        overflow="hidden"
+                        maxHeight="400px"
+                        overflowY="auto"
+                      >
+                        {createDialogViewMode === 'Example' ? (
+                          <JsonCard readonly data={exampleData ?? null} />
+                        ) : (
+                          <JsonCard readonly data={schemaData ?? null} />
+                        )}
+                      </Box>
+                    </>
+                  )}
                 </VStack>
               </DialogBody>
 
               <DialogFooter>
                 <Flex justify="space-between" width="100%">
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onRevert}
-                    disabled={!hasChanges && !hasErrors}
-                    title="Revert all changes"
-                  >
-                    <PiArrowCounterClockwiseBold />
-                  </IconButton>
+                  {isCreating ? (
+                    <Box />
+                  ) : (
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={onRevert}
+                      disabled={!hasChanges && !hasErrors}
+                      title="Revert all changes"
+                    >
+                      <PiArrowCounterClockwiseBold />
+                    </IconButton>
+                  )}
                   <Flex gap={2}>
                     <Button variant="outline" onClick={onClose}>
                       Cancel
@@ -795,7 +761,7 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                         disabled={!canApply}
                         loading={isLoading}
                       >
-                        Apply Changes ({patches.length})
+                        {applyButtonText}
                       </Button>
                     )}
                   </Flex>
