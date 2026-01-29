@@ -12,11 +12,10 @@ import { NodeView } from '../NodeView/NodeView';
 interface ObjectNodeViewProps {
   viewModel: ObjectNodeVM;
   dataTestId: string;
-  isRoot?: boolean;
 }
 
 export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
-  ({ viewModel, dataTestId, isRoot = false }) => {
+  ({ viewModel, dataTestId }) => {
     const hoverTargetClass = `hover-target-${viewModel.nodeId}`;
 
     const rightContent = (
@@ -26,7 +25,7 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
           <NodeContextMenu
             viewModel={viewModel}
             dataTestId={`${dataTestId}-setting-button`}
-            showDelete={!isRoot}
+            showDelete={!viewModel.isRoot}
             onDelete={viewModel.removeSelf}
           />
         )}

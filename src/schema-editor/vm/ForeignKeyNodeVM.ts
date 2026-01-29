@@ -10,8 +10,9 @@ export class ForeignKeyNodeVM extends BaseNodeVM {
     node: SchemaNode,
     editor: SchemaEditorVM,
     private readonly _parent: ObjectNodeVM | null,
+    isRoot: boolean = false,
   ) {
-    super(node, editor);
+    super(node, editor, isRoot);
 
     makeObservable(this, {
       foreignKeyValue: computed,
@@ -41,7 +42,9 @@ export class ForeignKeyNodeVM extends BaseNodeVM {
   }
 
   public changeType(typeId: string): void {
-    if (this._parent) {
+    if (this._isRoot) {
+      this._editor.changeRootType(typeId);
+    } else if (this._parent) {
       this._parent.replaceProperty(this, typeId);
     }
   }

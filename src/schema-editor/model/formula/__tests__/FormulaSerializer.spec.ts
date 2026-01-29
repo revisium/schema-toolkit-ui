@@ -193,6 +193,19 @@ describe('FormulaSerializer', () => {
         const serializer = new FormulaSerializer(tree, 'result', formula);
         expect(serializer.serialize()).toBe('items[0]');
       });
+
+      it('serializes formula referencing sibling fields in array item object', () => {
+        const tree = createTreeWithArrayOfObjects();
+        // Path of 'total': items/items/total
+        // Path of 'price': items/items/price
+        // Path of 'quantity': items/items/quantity
+        // Common prefix: items/items
+        // So 'price' and 'quantity' are siblings to 'total', no ../ needed
+        const formula = new ParsedFormula(tree, 'total', 'price * quantity');
+
+        const serializer = new FormulaSerializer(tree, 'total', formula);
+        expect(serializer.serialize()).toBe('price * quantity');
+      });
     });
   });
 });
@@ -236,5 +249,16 @@ function createTreeWithArray(): SchemaTree {
   );
   root.addProperty(arrayNode);
   root.addProperty(new NumberNode('result', 'result'));
+  return new SchemaTree(root);
+}
+
+function createTreeWithArrayOfObjects(): SchemaTree {
+  const root = new ObjectNode('root', 'root');
+  const itemObject = new ObjectNode('item', 'item');
+  itemObject.addProperty(new NumberNode('price', 'price'));
+  itemObject.addProperty(new NumberNode('quantity', 'quantity'));
+  itemObject.addProperty(new NumberNode('total', 'total'));
+  const arrayNode = new ArrayNode('items', 'items', itemObject);
+  root.addProperty(arrayNode);
   return new SchemaTree(root);
 }

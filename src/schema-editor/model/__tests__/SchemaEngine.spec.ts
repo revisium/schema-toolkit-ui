@@ -1,6 +1,7 @@
 import { SchemaEngine } from '../engine/SchemaEngine';
 import { resetIdCounter } from '../schema/SchemaParser';
 import { FormulaSerializer } from '../formula';
+import { NodeFactory } from '../node/NodeFactory';
 import type { JsonObjectSchema } from '../schema/JsonSchema';
 
 beforeEach(() => {
@@ -85,12 +86,34 @@ describe('SchemaEngine', () => {
       expect(engine.isValid).toBe(true);
     });
 
-    it('should return isValid false when schema has no properties', () => {
+    it('should return isValid false when object root has no properties', () => {
       const schema = createSchema({});
 
       const engine = new SchemaEngine(schema);
 
       expect(engine.isValid).toBe(false);
+    });
+
+    it('should return isValid true for primitive root', () => {
+      const schema = createSchema({});
+      const engine = new SchemaEngine(schema);
+
+      engine.replaceRootWith(NodeFactory.string(''));
+
+      expect(engine.root().isObject()).toBe(false);
+      expect(engine.isValid).toBe(true);
+    });
+
+    it('should return isValid true for array root with items', () => {
+      const schema = createSchema({});
+      const engine = new SchemaEngine(schema);
+
+      const stringNode = NodeFactory.string('');
+      const arrayNode = NodeFactory.array('', stringNode);
+      engine.replaceRootWith(arrayNode);
+
+      expect(engine.root().isArray()).toBe(true);
+      expect(engine.isValid).toBe(true);
     });
 
     it('should return validation errors for empty field names', () => {
@@ -123,6 +146,47 @@ describe('SchemaEngine', () => {
       const errors = engine.validateFormulas();
 
       expect(errors).toHaveLength(0);
+    });
+
+    it('should return formula errors for formulas referencing unknown fields', () => {
+      const schema = createSchema({
+        value: { type: 'number', default: 0 },
+        computed: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'unknownField * 2' },
+        },
+      });
+
+      const engine = new SchemaEngine(schema);
+      const errors = engine.validateFormulas();
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('unknownField');
+    });
+
+    it('should return formula errors for multiple broken formulas', () => {
+      const schema = createSchema({
+        a: { type: 'number', default: 0 },
+        b: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'missingField1 + 1' },
+        },
+        c: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'missingField2 * 2' },
+        },
+      });
+
+      const engine = new SchemaEngine(schema);
+      const errors = engine.validateFormulas();
+
+      expect(errors).toHaveLength(2);
     });
   });
 
@@ -636,6 +700,27 @@ describe('SchemaEngine', () => {
       const result = engine.updateFormula('non-existent', 'expression');
 
       expect(result.success).toBe(false);
+    });
+
+    it('should clear parse error when formula is fixed', () => {
+      const schema = createSchema({
+        value: { type: 'number', default: 0 },
+        computed: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'unknownField * 2' },
+        },
+      });
+
+      const engine = new SchemaEngine(schema);
+      expect(engine.validateFormulas()).toHaveLength(1);
+
+      const computedId = engine.root().property('computed').id();
+      const result = engine.updateFormula(computedId, 'value * 2');
+
+      expect(result.success).toBe(true);
+      expect(engine.validateFormulas()).toHaveLength(0);
     });
   });
 

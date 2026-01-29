@@ -165,7 +165,7 @@ export abstract class BaseNodeVM {
   }
 
   public get showTypeSelector(): boolean {
-    return !this._isRoot;
+    return true;
   }
 
   public get showMenu(): boolean {
@@ -213,6 +213,9 @@ export abstract class BaseNodeVM {
   }
 
   public get validationError(): string | null {
+    if (this._isRoot && this._editor.tableIdError) {
+      return this._editor.tableIdError;
+    }
     const errors = this._editor.engine.validationErrors;
     const error = errors.find((e) => e.nodeId === this.nodeId);
     return error?.message ?? null;

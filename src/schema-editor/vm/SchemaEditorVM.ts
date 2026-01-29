@@ -10,9 +10,12 @@ import {
   type FormulaValidationError,
   type SchemaNode,
 } from '../model';
-import { createNodeByTypeId } from '../config';
-import { ObjectNodeVM } from './ObjectNodeVM';
-import type { NodeVM } from './createNodeVM';
+import {
+  isValidFieldName,
+  FIELD_NAME_ERROR_MESSAGE,
+} from '../model/validation/FieldNameValidator';
+import { createNodeByTypeId, SchemaTypeIds } from '../config';
+import { createNodeVM, type NodeVM } from './createNodeVM';
 import { PrimitiveNodeVM } from './PrimitiveNodeVM';
 
 // Import all VM classes to ensure they are registered
@@ -32,9 +35,10 @@ export interface SchemaEditorOptions {
 
 export class SchemaEditorVM {
   private readonly _engine: SchemaEngine;
-  private _rootNodeVM: ObjectNodeVM;
+  private _rootNodeVM: NodeVM;
 
   private _tableId: string;
+  private _initialTableId: string;
   private readonly _shouldCollapseAll: boolean;
   private _onSelectForeignKey: ForeignKeySelectionCallback | null = null;
 
@@ -47,6 +51,7 @@ export class SchemaEditorVM {
     this._engine = new SchemaEngine(jsonSchema);
 
     this._tableId = options.tableId ?? '';
+    this._initialTableId = this._tableId;
 
     const shouldCollapse = options.collapseComplexSchemas ?? false;
     const complexity =
@@ -54,7 +59,7 @@ export class SchemaEditorVM {
     const nodeCount = this._engine.countNodes();
     this._shouldCollapseAll = shouldCollapse && nodeCount >= complexity;
 
-    this._rootNodeVM = new ObjectNodeVM(this._engine.root(), this, null, true);
+    this._rootNodeVM = createNodeVM(this._engine.root(), this, null, true);
 
     makeAutoObservable(this, {}, { autoBind: true });
   }
@@ -69,6 +74,21 @@ export class SchemaEditorVM {
 
   public get tableId(): string {
     return this._tableId;
+  }
+
+  public get initialTableId(): string {
+    return this._initialTableId;
+  }
+
+  public get isTableIdChanged(): boolean {
+    return this._tableId !== this._initialTableId;
+  }
+
+  public get tableIdError(): string | null {
+    if (!isValidFieldName(this._tableId)) {
+      return FIELD_NAME_ERROR_MESSAGE;
+    }
+    return null;
   }
 
   public setTableId(value: string): void {
@@ -111,12 +131,12 @@ export class SchemaEditorVM {
     this._createDialogViewMode = mode;
   }
 
-  public get rootNodeVM(): ObjectNodeVM {
+  public get rootNodeVM(): NodeVM {
     return this._rootNodeVM;
   }
 
   public get isDirty(): boolean {
-    return this._engine.isDirty;
+    return this._engine.isDirty || this.isTableIdChanged;
   }
 
   public get isValid(): boolean {
@@ -129,6 +149,10 @@ export class SchemaEditorVM {
 
   public get patchesCount(): number {
     return this.getPatches().length;
+  }
+
+  public get totalChangesCount(): number {
+    return this.patchesCount + (this.isTableIdChanged ? 1 : 0);
   }
 
   public get validationErrors(): readonly ValidationError[] {
@@ -166,16 +190,46 @@ export class SchemaEditorVM {
   }
 
   public get hasErrors(): boolean {
-    return this.validationErrors.length > 0 || this.formulaErrors.length > 0;
+    return (
+      this.validationErrors.length > 0 ||
+      this.formulaErrors.length > 0 ||
+      this.tableIdError !== null
+    );
   }
 
   public markAsSaved(): void {
     this._engine.markAsSaved();
+    this._initialTableId = this._tableId;
   }
 
   public revert(): void {
     this._engine.revert();
-    this._rootNodeVM = new ObjectNodeVM(this._engine.root(), this, null, true);
+    this._tableId = this._initialTableId;
+    this._rootNodeVM = createNodeVM(this._engine.root(), this, null, true);
+  }
+
+  public changeRootType(typeId: string): void {
+    const currentRoot = this._engine.root();
+    if (currentRoot.isNull()) {
+      return;
+    }
+
+    if (typeId === SchemaTypeIds.Array && !currentRoot.isArray()) {
+      const result = this._engine.wrapRootInArray();
+      if (result) {
+        const arrayNode = this._engine.nodeById(result.newNodeId);
+        this._rootNodeVM = createNodeVM(arrayNode, this, null, true);
+      }
+      return;
+    }
+
+    const newNode = this.createNodeByTypeId(typeId, currentRoot.name());
+    if (newNode) {
+      const result = this._engine.replaceRootWith(newNode);
+      if (result) {
+        this._rootNodeVM = createNodeVM(newNode, this, null, true);
+      }
+    }
   }
 
   public setOnSelectForeignKey(

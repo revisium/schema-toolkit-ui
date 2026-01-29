@@ -27,6 +27,7 @@ export {
   type PathSegment,
   EMPTY_PATH,
   jsonPointerToPath,
+  jsonPointerToSimplePath,
 } from './path/index';
 
 // Tree types
