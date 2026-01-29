@@ -553,7 +553,7 @@ describe('SchemaEditorVM', () => {
       });
       const editor = new SchemaEditorVM(schema);
 
-      editor.rootNodeVM.addProperty('newField');
+      getObjectRoot(editor).addProperty('newField');
       expect(editor.isDirty).toBe(true);
 
       editor.markAsSaved();
@@ -576,7 +576,7 @@ describe('SchemaEditorVM', () => {
         dirtyValues.push(editor.isDirty);
       });
 
-      editor.rootNodeVM.addProperty('newField');
+      getObjectRoot(editor).addProperty('newField');
       editor.markAsSaved();
 
       dispose();
