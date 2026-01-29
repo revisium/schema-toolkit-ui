@@ -737,7 +737,9 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
 
               <DialogFooter>
                 <Flex justify="space-between" width="100%">
-                  {!isCreating ? (
+                  {isCreating ? (
+                    <Box />
+                  ) : (
                     <IconButton
                       variant="ghost"
                       size="sm"
@@ -747,8 +749,6 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                     >
                       <PiArrowCounterClockwiseBold />
                     </IconButton>
-                  ) : (
-                    <Box />
                   )}
                   <Flex gap={2}>
                     <Button variant="outline" onClick={onClose}>
