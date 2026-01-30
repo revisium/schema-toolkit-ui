@@ -1534,7 +1534,10 @@ describe('FormulaEngine - wildcard property access', () => {
           type: 'number',
           default: 0,
           readOnly: true,
-          'x-formula': { version: 1, expression: 'sum(values[*].nested.value)' },
+          'x-formula': {
+            version: 1,
+            expression: 'sum(values[*].nested.value)',
+          },
         },
       },
     };
