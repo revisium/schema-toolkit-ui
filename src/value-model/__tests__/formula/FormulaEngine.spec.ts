@@ -1430,3 +1430,267 @@ describe('FormulaEngine - negative array index', () => {
     engine.dispose();
   });
 });
+
+describe('FormulaEngine - wildcard property access', () => {
+  it('evaluates sum with wildcard property access items[*].price', () => {
+    const schema: SchemaDefinition = {
+      type: 'object',
+      properties: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', default: '' },
+              price: { type: 'number', default: 0 },
+            },
+          },
+          default: [],
+        },
+        total: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'sum(items[*].price)' },
+        },
+      },
+    };
+
+    const tree = createTree(schema, {
+      items: [
+        { name: 'A', price: 10 },
+        { name: 'B', price: 20 },
+        { name: 'C', price: 30 },
+      ],
+      total: 0,
+    });
+    const engine = new FormulaEngine(tree);
+
+    expect(tree.getValue('total')).toBe(60);
+
+    tree.setValue('items[0].price', 100);
+    expect(tree.getValue('total')).toBe(150);
+
+    engine.dispose();
+  });
+
+  it('evaluates avg with wildcard property access', () => {
+    const schema: SchemaDefinition = {
+      type: 'object',
+      properties: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              rating: { type: 'number', default: 0 },
+            },
+          },
+          default: [],
+        },
+        averageRating: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': {
+            version: 1,
+            expression: 'count(items) > 0 ? avg(items[*].rating) : 0',
+          },
+        },
+      },
+    };
+
+    const tree = createTree(schema, {
+      items: [{ rating: 10 }, { rating: 20 }, { rating: 30 }],
+      averageRating: 0,
+    });
+    const engine = new FormulaEngine(tree);
+
+    expect(tree.getValue('averageRating')).toBe(20);
+
+    engine.dispose();
+  });
+
+  it('evaluates deeply nested wildcard property access', () => {
+    const schema: SchemaDefinition = {
+      type: 'object',
+      properties: {
+        values: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              nested: {
+                type: 'object',
+                properties: {
+                  value: { type: 'number', default: 0 },
+                },
+              },
+            },
+          },
+          default: [],
+        },
+        total: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': {
+            version: 1,
+            expression: 'sum(values[*].nested.value)',
+          },
+        },
+      },
+    };
+
+    const tree = createTree(schema, {
+      values: [
+        { nested: { value: 1 } },
+        { nested: { value: 2 } },
+        { nested: { value: 3 } },
+      ],
+      total: 0,
+    });
+    const engine = new FormulaEngine(tree);
+
+    expect(tree.getValue('total')).toBe(6);
+
+    tree.setValue('values[1].nested.value', 10);
+    expect(tree.getValue('total')).toBe(14);
+
+    engine.dispose();
+  });
+
+  it('evaluates nested arrays with multiple wildcards', () => {
+    const schema: SchemaDefinition = {
+      type: 'object',
+      properties: {
+        orders: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    amount: { type: 'number', default: 0 },
+                  },
+                },
+                default: [],
+              },
+            },
+          },
+          default: [],
+        },
+        grandTotal: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': {
+            version: 1,
+            expression: 'sum(orders[*].items[*].amount)',
+          },
+        },
+      },
+    };
+
+    const tree = createTree(schema, {
+      orders: [
+        { items: [{ amount: 10 }, { amount: 20 }] },
+        { items: [{ amount: 30 }] },
+      ],
+      grandTotal: 0,
+    });
+    const engine = new FormulaEngine(tree);
+
+    expect(tree.getValue('grandTotal')).toBe(60);
+
+    tree.setValue('orders[0].items[0].amount', 100);
+    expect(tree.getValue('grandTotal')).toBe(150);
+
+    engine.dispose();
+  });
+
+  it('recalculates when array item is added with wildcard formula', () => {
+    const schema: SchemaDefinition = {
+      type: 'object',
+      properties: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              price: { type: 'number', default: 0 },
+            },
+          },
+          default: [],
+        },
+        total: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'sum(items[*].price)' },
+        },
+      },
+    };
+
+    const tree = createTree(schema, {
+      items: [{ price: 10 }, { price: 20 }],
+      total: 0,
+    });
+    const engine = new FormulaEngine(tree);
+
+    expect(tree.getValue('total')).toBe(30);
+
+    const itemsArray = tree.get('items');
+    if (itemsArray?.isArray()) {
+      itemsArray.pushValue({ price: 30 });
+    }
+
+    expect(tree.getValue('total')).toBe(60);
+
+    engine.dispose();
+  });
+
+  it('recalculates when array item is removed with wildcard formula', () => {
+    const schema: SchemaDefinition = {
+      type: 'object',
+      properties: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              price: { type: 'number', default: 0 },
+            },
+          },
+          default: [],
+        },
+        total: {
+          type: 'number',
+          default: 0,
+          readOnly: true,
+          'x-formula': { version: 1, expression: 'sum(items[*].price)' },
+        },
+      },
+    };
+
+    const tree = createTree(schema, {
+      items: [{ price: 10 }, { price: 20 }, { price: 30 }],
+      total: 0,
+    });
+    const engine = new FormulaEngine(tree);
+
+    expect(tree.getValue('total')).toBe(60);
+
+    const itemsArray = tree.get('items');
+    if (itemsArray?.isArray()) {
+      itemsArray.removeAt(1);
+    }
+
+    expect(tree.getValue('total')).toBe(40);
+
+    engine.dispose();
+  });
+});
