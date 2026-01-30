@@ -80,18 +80,26 @@ export class StringValueNode extends BasePrimitiveValueNode<string> {
     }
 
     const pattern = this.schema.pattern;
-    if (
-      pattern &&
-      this._value.length > 0 &&
-      !new RegExp(pattern).test(this._value)
-    ) {
-      errors.push({
-        severity: 'error',
-        type: 'pattern',
-        message: 'Value does not match pattern',
-        path: this.name,
-        params: { pattern },
-      });
+    if (pattern && this._value.length > 0) {
+      try {
+        if (!new RegExp(pattern).test(this._value)) {
+          errors.push({
+            severity: 'error',
+            type: 'pattern',
+            message: 'Value does not match pattern',
+            path: this.name,
+            params: { pattern },
+          });
+        }
+      } catch {
+        errors.push({
+          severity: 'error',
+          type: 'invalidPattern',
+          message: 'Invalid regex pattern in schema',
+          path: this.name,
+          params: { pattern },
+        });
+      }
     }
 
     const enumValues = this.schema.enum;

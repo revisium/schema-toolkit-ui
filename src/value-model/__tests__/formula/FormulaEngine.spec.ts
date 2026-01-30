@@ -1,7 +1,7 @@
 import { evaluateWithContext } from '@revisium/formula';
 import { createValueModel } from '../../index';
-import { resetNodeIdCounter } from '../../internal';
 import { FormulaEngine } from '../../formula';
+import { resetNodeIdCounter } from '../../node';
 import type { SchemaDefinition } from '../../core';
 
 const createTree = (schema: SchemaDefinition, value: unknown) =>

@@ -1,5 +1,5 @@
 import { createValueModel, StringValueNode } from '../../index';
-import { resetNodeIdCounter } from '../../internal';
+import { resetNodeIdCounter } from '../../node';
 import type { SchemaDefinition } from '../../core';
 
 beforeEach(() => {

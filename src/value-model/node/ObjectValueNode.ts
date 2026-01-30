@@ -67,6 +67,10 @@ export class ObjectValueNode extends BaseValueNode implements IObjectValueNode {
   }
 
   addChild(node: ValueNode): void {
+    const existing = this._children.get(node.name);
+    if (existing) {
+      existing.parent = null;
+    }
     node.parent = this;
     this._children.set(node.name, node);
   }

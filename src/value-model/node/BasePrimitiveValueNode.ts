@@ -56,6 +56,9 @@ export abstract class BasePrimitiveValueNode<
   }
 
   set value(newValue: T) {
+    if (this.isReadOnly) {
+      throw new Error(`Cannot set value on read-only field: ${this.name}`);
+    }
     this._value = newValue;
   }
 

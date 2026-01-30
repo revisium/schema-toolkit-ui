@@ -20,11 +20,21 @@ export class PatternValidator implements Validator {
       return null;
     }
 
-    if (!new RegExp(pattern).test(value)) {
+    try {
+      if (!new RegExp(pattern).test(value)) {
+        return {
+          severity: 'error',
+          type: this.type,
+          message: 'Value does not match pattern',
+          path: nodeName,
+          params: { pattern },
+        };
+      }
+    } catch {
       return {
         severity: 'error',
-        type: this.type,
-        message: 'Value does not match pattern',
+        type: 'invalidPattern',
+        message: 'Invalid regex pattern in schema',
         path: nodeName,
         params: { pattern },
       };

@@ -22,7 +22,7 @@ export abstract class BaseNumberBoundValidator implements Validator {
       return null;
     }
 
-    if (typeof value !== 'number') {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
       return null;
     }
 

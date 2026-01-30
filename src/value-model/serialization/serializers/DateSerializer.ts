@@ -14,7 +14,14 @@ export class DateSerializer implements Serializer {
     }
 
     if (typeof value === 'number') {
-      return new Date(value).toISOString();
+      if (!Number.isFinite(value)) {
+        return null;
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+      return date.toISOString();
     }
 
     return null;

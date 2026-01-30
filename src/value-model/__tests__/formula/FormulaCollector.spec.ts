@@ -1,6 +1,6 @@
 import { createValueModel } from '../../index';
-import { resetNodeIdCounter } from '../../internal';
 import { FormulaCollector } from '../../formula';
+import { resetNodeIdCounter } from '../../node';
 import type { SchemaDefinition } from '../../core';
 
 beforeEach(() => {
