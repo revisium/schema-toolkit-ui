@@ -11,8 +11,8 @@ export const arrayDefaultGenerator: DefaultValueGeneratorFn = () => [];
 export const objectDefaultGenerator: DefaultValueGeneratorFn = () => ({});
 
 export const uuidDefaultGenerator: DefaultValueGeneratorFn = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0; // eslint-disable-line sonarjs/pseudo-random
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replaceAll(/[xy]/g, (c) => {
+    const r = Math.trunc(Math.random() * 16); // eslint-disable-line sonarjs/pseudo-random
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });

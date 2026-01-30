@@ -152,7 +152,7 @@ export class ArrayValueNode extends BaseValueNode implements IArrayValueNode {
       throw new Error('No items schema');
     }
 
-    const itemValue = value !== undefined ? value : itemSchema.default;
+    const itemValue = value === undefined ? itemSchema.default : value;
     const node = this._nodeFactory.create(String(index), itemSchema, itemValue);
 
     this.propagateFactory(node);

@@ -1,6 +1,7 @@
 import { makeObservable, computed, action } from 'mobx';
 import type { Diagnostic, Change, JsonPatch } from '../core/types';
 import { Path } from '../core/Path';
+import type { PathSegment } from '../core/Path';
 import type { ValueNode, DirtyTrackable } from '../node/types';
 import { TreeIndex } from './TreeIndex';
 import { ChangeTracker } from './ChangeTracker';
@@ -51,24 +52,23 @@ export class ValueTree {
         return undefined;
       }
 
-      if (segment.type === 'property') {
-        if (current.isObject()) {
-          current = current.child(segment.name);
-        } else {
-          return undefined;
-        }
-      } else if (segment.type === 'index') {
-        if (current.isArray()) {
-          current = current.at(segment.index);
-        } else {
-          return undefined;
-        }
-      } else if (segment.type === 'items') {
-        return undefined;
-      }
+      current = this.resolveSegment(current, segment);
     }
 
     return current;
+  }
+
+  private resolveSegment(
+    node: ValueNode,
+    segment: PathSegment,
+  ): ValueNode | undefined {
+    if (segment.type === 'property' && node.isObject()) {
+      return node.child(segment.name);
+    }
+    if (segment.type === 'index' && node.isArray()) {
+      return node.at(segment.index);
+    }
+    return undefined;
   }
 
   pathOf(nodeOrId: ValueNode | string): Path {

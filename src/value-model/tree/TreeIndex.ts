@@ -80,7 +80,7 @@ export class TreeIndex {
     > = [];
     let current: ValueNode | null = node;
 
-    while (current && current.parent) {
+    while (current?.parent) {
       const parent: ValueNode = current.parent;
 
       if (parent.isObject()) {

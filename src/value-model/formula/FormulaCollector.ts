@@ -11,6 +11,13 @@ interface TraverseContext {
   arrayLevels: FormulaArrayLevel[];
 }
 
+type PathSegment =
+  | { type: 'property'; name: string }
+  | { type: 'index'; index: number };
+
+const INDEX_REGEX = /^\[(-?\d+)\]/;
+const PROP_REGEX = /^\.?([a-zA-Z_]\w*)/;
+
 export class FormulaCollector {
   private root: ValueNode | null = null;
 
@@ -223,53 +230,54 @@ export class FormulaCollector {
     current: ValueNode,
     target: ValueNode,
   ): ValueNode | null {
-    if (current.isObject()) {
-      for (const child of current.children) {
-        if (child === target) {
-          return current;
-        }
-        const found = this.findParentRecursive(child, target);
-        if (found) {
-          return found;
-        }
+    const children = this.getChildNodes(current);
+
+    for (const child of children) {
+      if (child === target) {
+        return current;
       }
-    } else if (current.isArray()) {
-      for (let i = 0; i < current.length; i++) {
-        const item = current.at(i);
-        if (item === target) {
-          return current;
-        }
-        if (item) {
-          const found = this.findParentRecursive(item, target);
-          if (found) {
-            return found;
-          }
-        }
+      const found = this.findParentRecursive(child, target);
+      if (found) {
+        return found;
       }
     }
 
     return null;
   }
 
-  private parsePathSegments(
-    pathStr: string,
-  ): Array<
-    { type: 'property'; name: string } | { type: 'index'; index: number }
-  > {
-    const segments: Array<
-      { type: 'property'; name: string } | { type: 'index'; index: number }
-    > = [];
+  private getChildNodes(node: ValueNode): ValueNode[] {
+    if (node.isObject()) {
+      return [...node.children];
+    }
+    if (node.isArray()) {
+      const items: ValueNode[] = [];
+      for (let i = 0; i < node.length; i++) {
+        const item = node.at(i);
+        if (item) {
+          items.push(item);
+        }
+      }
+      return items;
+    }
+    return [];
+  }
+
+  private parsePathSegments(pathStr: string): PathSegment[] {
+    const segments: PathSegment[] = [];
     let current = pathStr;
 
     while (current.length > 0) {
-      const indexMatch = current.match(/^\[(-?\d+)\]/);
+      const indexMatch = INDEX_REGEX.exec(current);
       if (indexMatch?.[1]) {
-        segments.push({ type: 'index', index: parseInt(indexMatch[1], 10) });
+        segments.push({
+          type: 'index',
+          index: Number.parseInt(indexMatch[1], 10),
+        });
         current = current.slice(indexMatch[0].length);
         continue;
       }
 
-      const propMatch = current.match(/^\.?([a-zA-Z_]\w*)/);
+      const propMatch = PROP_REGEX.exec(current);
       if (propMatch?.[1]) {
         segments.push({ type: 'property', name: propMatch[1] });
         current = current.slice(propMatch[0].length);

@@ -22,7 +22,7 @@ export abstract class BaseValueNode implements ValueNode {
   readonly schema: SchemaDefinition;
 
   private _parent: ValueNode | null = null;
-  private _name: string;
+  private readonly _name: string;
 
   constructor(id: string | undefined, name: string, schema: SchemaDefinition) {
     this.id = id ?? generateNodeId();

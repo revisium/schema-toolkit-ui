@@ -33,6 +33,17 @@ export class StringValueNode extends BasePrimitiveValueNode<string> {
   protected override computeErrors(): readonly Diagnostic[] {
     const errors: Diagnostic[] = [];
 
+    this.validateRequired(errors);
+    this.validateForeignKey(errors);
+    this.validateMinLength(errors);
+    this.validateMaxLength(errors);
+    this.validatePattern(errors);
+    this.validateEnum(errors);
+
+    return errors;
+  }
+
+  private validateRequired(errors: Diagnostic[]): void {
     if (this.schema.required && this._value === '') {
       errors.push({
         severity: 'error',
@@ -41,7 +52,9 @@ export class StringValueNode extends BasePrimitiveValueNode<string> {
         path: this.name,
       });
     }
+  }
 
+  private validateForeignKey(errors: Diagnostic[]): void {
     const foreignKey = this.schema.foreignKey;
     if (foreignKey && this._value === '') {
       errors.push({
@@ -52,7 +65,9 @@ export class StringValueNode extends BasePrimitiveValueNode<string> {
         params: { table: foreignKey },
       });
     }
+  }
 
+  private validateMinLength(errors: Diagnostic[]): void {
     const minLength = this.schema.minLength;
     if (
       minLength !== undefined &&
@@ -67,7 +82,9 @@ export class StringValueNode extends BasePrimitiveValueNode<string> {
         params: { min: minLength, actual: this._value.length },
       });
     }
+  }
 
+  private validateMaxLength(errors: Diagnostic[]): void {
     const maxLength = this.schema.maxLength;
     if (maxLength !== undefined && this._value.length > maxLength) {
       errors.push({
@@ -78,30 +95,36 @@ export class StringValueNode extends BasePrimitiveValueNode<string> {
         params: { max: maxLength, actual: this._value.length },
       });
     }
+  }
 
+  private validatePattern(errors: Diagnostic[]): void {
     const pattern = this.schema.pattern;
-    if (pattern && this._value.length > 0) {
-      try {
-        if (!new RegExp(pattern).test(this._value)) {
-          errors.push({
-            severity: 'error',
-            type: 'pattern',
-            message: 'Value does not match pattern',
-            path: this.name,
-            params: { pattern },
-          });
-        }
-      } catch {
+    if (!pattern || this._value.length === 0) {
+      return;
+    }
+
+    try {
+      if (!new RegExp(pattern).test(this._value)) {
         errors.push({
           severity: 'error',
-          type: 'invalidPattern',
-          message: 'Invalid regex pattern in schema',
+          type: 'pattern',
+          message: 'Value does not match pattern',
           path: this.name,
           params: { pattern },
         });
       }
+    } catch {
+      errors.push({
+        severity: 'error',
+        type: 'invalidPattern',
+        message: 'Invalid regex pattern in schema',
+        path: this.name,
+        params: { pattern },
+      });
     }
+  }
 
+  private validateEnum(errors: Diagnostic[]): void {
     const enumValues = this.schema.enum;
     if (
       enumValues &&
@@ -116,7 +139,5 @@ export class StringValueNode extends BasePrimitiveValueNode<string> {
         params: { allowed: enumValues, actual: this._value },
       });
     }
-
-    return errors;
   }
 }

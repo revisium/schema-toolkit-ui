@@ -10,6 +10,9 @@ export class Path {
     return new Path([]);
   }
 
+  private static readonly INDEX_REGEX = /^\[(\d+)\]/;
+  private static readonly PROP_REGEX = /^\.?([a-zA-Z_]\w*)/;
+
   static fromString(path: string): Path {
     if (!path || path === '') {
       return Path.empty();
@@ -19,9 +22,12 @@ export class Path {
     let current = path;
 
     while (current.length > 0) {
-      const indexMatch = current.match(/^\[(\d+)\]/);
-      if (indexMatch && indexMatch[1] !== undefined) {
-        segments.push({ type: 'index', index: parseInt(indexMatch[1], 10) });
+      const indexMatch = Path.INDEX_REGEX.exec(current);
+      if (indexMatch?.[1] !== undefined) {
+        segments.push({
+          type: 'index',
+          index: Number.parseInt(indexMatch[1], 10),
+        });
         current = current.slice(indexMatch[0].length);
         continue;
       }
@@ -32,8 +38,8 @@ export class Path {
         continue;
       }
 
-      const propMatch = current.match(/^\.?([a-zA-Z_]\w*)/);
-      if (propMatch && propMatch[1] !== undefined) {
+      const propMatch = Path.PROP_REGEX.exec(current);
+      if (propMatch?.[1] !== undefined) {
         segments.push({ type: 'property', name: propMatch[1] });
         current = current.slice(propMatch[0].length);
         continue;
@@ -66,7 +72,7 @@ export class Path {
   }
 
   last(): PathSegment | undefined {
-    return this._segments[this._segments.length - 1];
+    return this._segments.at(-1);
   }
 
   parent(): Path {

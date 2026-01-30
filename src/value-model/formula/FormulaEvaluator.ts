@@ -52,48 +52,60 @@ export class FormulaEvaluator {
     }
 
     if (field.arrayLevels.length > 0) {
-      const levels: Array<{
-        index: number;
-        length: number;
-        prev: unknown;
-        next: unknown;
-      }> = [];
-
-      // Build levels from innermost to outermost (reverse order)
-      // levels[0] = current (innermost), levels[1] = parent, levels[2] = root, etc.
-      for (let i = field.arrayLevels.length - 1; i >= 0; i--) {
-        const level = field.arrayLevels[i];
-        if (!level) continue;
-        const { array, index } = level;
-
-        let prev: unknown = null;
-        let next: unknown = null;
-
-        if (index > 0) {
-          const prevItem = array.at(index - 1);
-          if (prevItem) {
-            prev = this.getPlainNodeValue(prevItem);
-          }
-        }
-        if (index < array.length - 1) {
-          const nextItem = array.at(index + 1);
-          if (nextItem) {
-            next = this.getPlainNodeValue(nextItem);
-          }
-        }
-
-        levels.push({
-          index,
-          length: array.length,
-          prev,
-          next,
-        });
-      }
-
-      context.arrayContext = { levels };
+      context.arrayContext = { levels: this.buildArrayLevels(field) };
     }
 
     return context;
+  }
+
+  private buildArrayLevels(field: FormulaField) {
+    const levels: Array<{
+      index: number;
+      length: number;
+      prev: unknown;
+      next: unknown;
+    }> = [];
+
+    // Build levels from innermost to outermost (reverse order)
+    // levels[0] = current (innermost), levels[1] = parent, levels[2] = root, etc.
+    for (let i = field.arrayLevels.length - 1; i >= 0; i--) {
+      const level = field.arrayLevels[i];
+      if (!level) {
+        continue;
+      }
+      const { array, index } = level;
+
+      levels.push({
+        index,
+        length: array.length,
+        prev: this.getPrevItemValue(array, index),
+        next: this.getNextItemValue(array, index),
+      });
+    }
+
+    return levels;
+  }
+
+  private getPrevItemValue(
+    array: { at(i: number): ValueNode | undefined; length: number },
+    index: number,
+  ): unknown {
+    if (index <= 0) {
+      return null;
+    }
+    const prevItem = array.at(index - 1);
+    return prevItem ? this.getPlainNodeValue(prevItem) : null;
+  }
+
+  private getNextItemValue(
+    array: { at(i: number): ValueNode | undefined; length: number },
+    index: number,
+  ): unknown {
+    if (index >= array.length - 1) {
+      return null;
+    }
+    const nextItem = array.at(index + 1);
+    return nextItem ? this.getPlainNodeValue(nextItem) : null;
   }
 
   private getPlainObjectValue(node: ObjectValueNode): Record<string, unknown> {
