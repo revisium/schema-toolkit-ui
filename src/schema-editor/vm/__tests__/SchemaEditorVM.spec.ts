@@ -838,7 +838,7 @@ describe('SchemaEditorVM', () => {
       expect(getObjectRoot(editor).isCollapsed).toBe(false);
     });
 
-    it('should collapse large schemas when collapseComplexSchemas is true', () => {
+    it('should not collapse root node even for large schemas', () => {
       const schema = createLargeSchema(20);
 
       const editor = new SchemaEditorVM(schema, {
@@ -913,9 +913,10 @@ describe('SchemaEditorVM', () => {
 
       const imageNode = getObjectRoot(editor).children.find(
         (c) => c.name === 'image',
-      );
+      ) as RefNodeVM;
 
       expect(imageNode).toBeDefined();
+      expect(imageNode.isCollapsed).toBe(true);
     });
 
     it('should collapse arrays in large schemas', () => {

@@ -5,8 +5,7 @@ import type { RefNodeVM } from '../../vm/RefNodeVM';
 import { LeafNodeView } from '../LeafNodeView/LeafNodeView';
 import { NodeWrapper } from '../NodeWrapper/NodeWrapper';
 import { FieldEditor } from '../FieldEditor/FieldEditor';
-import { NodeIndicators } from '../NodeIndicators/NodeIndicators';
-import { NodeContextMenu } from '../NodeContextMenu';
+import { NodeRightContent } from '../NodeRightContent';
 import { NodeView } from '../NodeView/NodeView';
 
 interface RefNodeViewProps {
@@ -22,20 +21,6 @@ export const RefNodeView: FC<RefNodeViewProps> = observer(
 
     const hoverTargetClass = `hover-target-${viewModel.nodeId}`;
 
-    const rightContent = (
-      <>
-        <NodeIndicators viewModel={viewModel} />
-        {viewModel.showMenu && (
-          <NodeContextMenu
-            viewModel={viewModel}
-            dataTestId={`${dataTestId}-setting-button`}
-            showDelete={!viewModel.isRoot}
-            onDelete={viewModel.removeSelf}
-          />
-        )}
-      </>
-    );
-
     return (
       <NodeWrapper
         viewModel={viewModel}
@@ -49,7 +34,14 @@ export const RefNodeView: FC<RefNodeViewProps> = observer(
             dataTestId={dataTestId}
             hoverTargetClass={hoverTargetClass}
             onChangeType={viewModel.changeType}
-            rightContent={rightContent}
+            rightContent={
+              <NodeRightContent
+                viewModel={viewModel}
+                dataTestId={dataTestId}
+                showDelete={!viewModel.isRoot}
+                onDelete={viewModel.removeSelf}
+              />
+            }
           />
         }
       >

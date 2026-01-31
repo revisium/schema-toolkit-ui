@@ -39,9 +39,12 @@ export const systemSchemaRegistry: Record<string, JsonObjectSchema> = {
 };
 
 export const getResolvedSchema = (ref: string): JsonObjectSchema | null => {
-  return systemSchemaRegistry[ref] ?? null;
+  if (Object.hasOwn(systemSchemaRegistry, ref)) {
+    return systemSchemaRegistry[ref] ?? null;
+  }
+  return null;
 };
 
 export const isResolvableRef = (ref: string): boolean => {
-  return ref in systemSchemaRegistry;
+  return Object.hasOwn(systemSchemaRegistry, ref);
 };
