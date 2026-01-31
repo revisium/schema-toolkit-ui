@@ -37,8 +37,11 @@ export class ForeignKeyNodeVM extends BaseNodeVM {
     this._editor.engine.updateForeignKey(this.nodeId, tableId ?? '');
   }
 
-  public selectForeignKey(): void {
-    this._editor.triggerForeignKeySelection(this);
+  public async selectForeignKey(): Promise<void> {
+    const tableId = await this._editor.selectForeignKey();
+    if (tableId !== null) {
+      this.setForeignKey(tableId);
+    }
   }
 
   public removeSelf(): void {

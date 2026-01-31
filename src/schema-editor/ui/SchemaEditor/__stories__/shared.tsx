@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Box, Text, Button, VStack, Portal } from '@chakra-ui/react';
 import {
   DialogBackdrop,
@@ -11,7 +11,6 @@ import {
 } from '@chakra-ui/react/dialog';
 import { SchemaEditor } from '../SchemaEditor';
 import { SchemaEditorVM } from '../../../vm/SchemaEditorVM';
-import { ForeignKeyNodeVM } from '../../../vm/ForeignKeyNodeVM';
 import type { JsonObjectSchema } from '../../../model';
 
 export const AVAILABLE_TABLES = [
@@ -50,60 +49,56 @@ export const StoryWrapper = ({
   onCancel,
   setupViewModel,
 }: StoryWrapperProps) => {
+  const foreignKeyResolverRef = useRef<{
+    resolve: (value: string | null) => void;
+  } | null>(null);
+  const [isForeignKeyDialogOpen, setIsForeignKeyDialogOpen] = useState(false);
+
   const [viewModel] = useState(() => {
     const vm = new SchemaEditorVM(initialSchema, {
       tableId,
+      mode,
       collapseComplexSchemas: true,
+      onApprove: async () => {
+        if (vm.mode === 'creating') {
+          onCreateTable({
+            tableId: vm.tableId,
+            schema: vm.getPlainSchema(),
+          });
+        } else {
+          onApplyChanges({
+            tableId: vm.tableId,
+            initialTableId: vm.initialTableId,
+            isTableIdChanged: vm.isTableIdChanged,
+            patches: vm.getPatches(),
+            jsonPatches: vm.getJsonPatches(),
+          });
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return true;
+      },
+      onCancel,
+      onSelectForeignKey: () => {
+        return new Promise<string | null>((resolve) => {
+          foreignKeyResolverRef.current = { resolve };
+          setIsForeignKeyDialogOpen(true);
+        });
+      },
     });
     setupViewModel?.(vm);
     return vm;
   });
-  const [foreignKeyDialog, setForeignKeyDialog] = useState<{
-    isOpen: boolean;
-    nodeVM: ForeignKeyNodeVM | null;
-  }>({ isOpen: false, nodeVM: null });
 
-  const handleApprove = useCallback(async () => {
-    if (mode === 'creating') {
-      onCreateTable({
-        tableId: viewModel.tableId,
-        schema: viewModel.getPlainSchema(),
-      });
-    } else {
-      onApplyChanges({
-        tableId: viewModel.tableId,
-        initialTableId: viewModel.initialTableId,
-        isTableIdChanged: viewModel.isTableIdChanged,
-        patches: viewModel.getPatches(),
-        jsonPatches: viewModel.getJsonPatches(),
-      });
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    viewModel.markAsSaved();
-  }, [viewModel, mode, onCreateTable, onApplyChanges]);
-
-  const handleCancel = useCallback(() => {
-    onCancel();
-  }, [onCancel]);
-
-  const handleSelectForeignKey = useCallback((nodeVM: unknown) => {
-    if (nodeVM instanceof ForeignKeyNodeVM) {
-      setForeignKeyDialog({ isOpen: true, nodeVM });
-    }
+  const handleTableSelect = useCallback((selectedTableId: string) => {
+    foreignKeyResolverRef.current?.resolve(selectedTableId);
+    foreignKeyResolverRef.current = null;
+    setIsForeignKeyDialogOpen(false);
   }, []);
 
-  const handleTableSelect = useCallback(
-    (selectedTableId: string) => {
-      if (foreignKeyDialog.nodeVM) {
-        foreignKeyDialog.nodeVM.setForeignKey(selectedTableId);
-      }
-      setForeignKeyDialog({ isOpen: false, nodeVM: null });
-    },
-    [foreignKeyDialog.nodeVM],
-  );
-
   const handleDialogClose = useCallback(() => {
-    setForeignKeyDialog({ isOpen: false, nodeVM: null });
+    foreignKeyResolverRef.current?.resolve(null);
+    foreignKeyResolverRef.current = null;
+    setIsForeignKeyDialogOpen(false);
   }, []);
 
   return (
@@ -116,17 +111,11 @@ export const StoryWrapper = ({
         </Box>
       )}
       <Box p={4} bg="white" m={4} borderRadius="md" boxShadow="sm">
-        <SchemaEditor
-          viewModel={viewModel}
-          mode={mode}
-          onApprove={handleApprove}
-          onCancel={handleCancel}
-          onSelectForeignKey={handleSelectForeignKey}
-        />
+        <SchemaEditor model={viewModel} />
       </Box>
 
       <DialogRoot
-        open={foreignKeyDialog.isOpen}
+        open={isForeignKeyDialogOpen}
         onOpenChange={({ open }: { open: boolean }) =>
           !open && handleDialogClose()
         }

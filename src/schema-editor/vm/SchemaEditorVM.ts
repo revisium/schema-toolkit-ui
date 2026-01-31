@@ -25,12 +25,18 @@ import './RefNodeVM';
 
 const DEFAULT_COLLAPSE_COMPLEXITY = 14;
 
-export type ForeignKeySelectionCallback = (nodeVM: NodeVM) => void;
+export type SchemaEditorMode = 'creating' | 'updating';
+
+export type ForeignKeySelectionCallback = () => Promise<string | null>;
 
 export interface SchemaEditorOptions {
   tableId?: string;
+  mode?: SchemaEditorMode;
   collapseComplexSchemas?: boolean;
   collapseComplexity?: number;
+  onApprove?: () => Promise<boolean>;
+  onCancel?: () => void;
+  onSelectForeignKey?: ForeignKeySelectionCallback;
 }
 
 export class SchemaEditorVM {
@@ -40,7 +46,10 @@ export class SchemaEditorVM {
   private _tableId: string;
   private _initialTableId: string;
   private readonly _shouldCollapseAll: boolean;
-  private _onSelectForeignKey: ForeignKeySelectionCallback | null = null;
+  private readonly _mode: SchemaEditorMode;
+  private readonly _onApprove: (() => Promise<boolean>) | null;
+  private readonly _onCancel: (() => void) | null;
+  private readonly _onSelectForeignKey: ForeignKeySelectionCallback | null;
 
   private _loading = false;
   private _viewMode: ViewerSwitcherMode = ViewerSwitcherMode.Tree;
@@ -52,6 +61,10 @@ export class SchemaEditorVM {
 
     this._tableId = options.tableId ?? '';
     this._initialTableId = this._tableId;
+    this._mode = options.mode ?? 'creating';
+    this._onApprove = options.onApprove ?? null;
+    this._onCancel = options.onCancel ?? null;
+    this._onSelectForeignKey = options.onSelectForeignKey ?? null;
 
     const shouldCollapse = options.collapseComplexSchemas ?? false;
     const complexity =
@@ -62,6 +75,10 @@ export class SchemaEditorVM {
     this._rootNodeVM = createNodeVM(this._engine.root(), this, null, true);
 
     makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  public get mode(): SchemaEditorMode {
+    return this._mode;
   }
 
   public get engine(): SchemaEngine {
@@ -232,14 +249,31 @@ export class SchemaEditorVM {
     }
   }
 
-  public setOnSelectForeignKey(
-    callback: ForeignKeySelectionCallback | null,
-  ): void {
-    this._onSelectForeignKey = callback;
+  public async selectForeignKey(): Promise<string | null> {
+    if (!this._onSelectForeignKey) {
+      return null;
+    }
+    return this._onSelectForeignKey();
   }
 
-  public triggerForeignKeySelection(nodeVM: NodeVM): void {
-    this._onSelectForeignKey?.(nodeVM);
+  public async approve(): Promise<void> {
+    if (!this._onApprove) {
+      return;
+    }
+    this._loading = true;
+    try {
+      const success = await this._onApprove();
+      if (success) {
+        this.markAsSaved();
+        this.closeChangesDialog();
+      }
+    } finally {
+      this._loading = false;
+    }
+  }
+
+  public cancel(): void {
+    this._onCancel?.();
   }
 
   public getPatches(): SchemaPatch[] {
