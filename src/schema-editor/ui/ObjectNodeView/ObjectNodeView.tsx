@@ -1,12 +1,9 @@
-import { Box, Flex } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import { CreateButton } from '../../../components';
 import type { ObjectNodeVM } from '../../vm/ObjectNodeVM';
-import { NodeWrapper } from '../NodeWrapper/NodeWrapper';
-import { FieldEditor } from '../FieldEditor/FieldEditor';
-import { NodeRightContent } from '../NodeRightContent';
-import { NodeView } from '../NodeView/NodeView';
+import { CollapsibleNodeView } from '../CollapsibleNodeView';
 
 interface ObjectNodeViewProps {
   viewModel: ObjectNodeVM;
@@ -15,41 +12,12 @@ interface ObjectNodeViewProps {
 
 export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
   ({ viewModel, dataTestId }) => {
-    const hoverTargetClass = `hover-target-${viewModel.nodeId}`;
-
     return (
-      <NodeWrapper
+      <CollapsibleNodeView
         viewModel={viewModel}
-        isCollapsible={viewModel.isCollapsible}
-        isCollapsed={viewModel.isCollapsed}
-        onToggleCollapse={viewModel.toggleCollapsed}
-        hoverTargetClass={hoverTargetClass}
-        field={
-          <FieldEditor
-            viewModel={viewModel}
-            dataTestId={dataTestId}
-            hoverTargetClass={hoverTargetClass}
-            onChangeType={viewModel.changeType}
-            rightContent={
-              <NodeRightContent
-                viewModel={viewModel}
-                dataTestId={dataTestId}
-                showDelete={!viewModel.isRoot}
-                onDelete={viewModel.removeSelf}
-              />
-            }
-          />
-        }
-      >
-        <Flex flexDirection="column" width="100%">
-          {viewModel.children.map((childVm, index) => (
-            <NodeView
-              key={childVm.nodeId}
-              viewModel={childVm}
-              dataTestId={`${dataTestId}-${index}`}
-            />
-          ))}
-          {viewModel.showAddButton && (
+        dataTestId={dataTestId}
+        footer={
+          viewModel.showAddButton && (
             <Box ml="-14px">
               <CreateButton
                 dataTestId={`${dataTestId}-create-field-button`}
@@ -57,9 +25,9 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
                 onClick={() => viewModel.addProperty('')}
               />
             </Box>
-          )}
-        </Flex>
-      </NodeWrapper>
+          )
+        }
+      />
     );
   },
 );
