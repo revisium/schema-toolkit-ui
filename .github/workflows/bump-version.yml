@@ -27,7 +27,7 @@ jobs:
 
       - name: Verify branch and release type
         run: |
-          BRANCH=$(git symbolic-ref --short HEAD)
+          BRANCH="${{ github.ref_name }}"
           TYPE=${{ github.event.inputs.release_type }}
           echo "⎇ Running on branch: $BRANCH — release_type: $TYPE"
           if [[ "$BRANCH" == "master" ]]; then
@@ -59,12 +59,8 @@ jobs:
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
           echo "📦 New version: $NEW_TAG"
 
-          BRANCH=$(git symbolic-ref --short HEAD)
-          if [[ "$BRANCH" == "master" ]]; then
-            TARGET_BRANCH=master
-          else
-            TARGET_BRANCH=$BRANCH
-          fi
+          BRANCH="${{ github.ref_name }}"
+          TARGET_BRANCH="$BRANCH"
 
           git push https://x-access-token:$GH_PAT@github.com/${{ github.repository }} HEAD:${TARGET_BRANCH}
           git push https://x-access-token:$GH_PAT@github.com/${{ github.repository }} $NEW_TAG
