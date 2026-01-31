@@ -18,13 +18,15 @@ export class PatchGenerator {
   ) {}
 
   public generate(coalesced: CoalescedChanges): JsonPatch[] {
-    const patches: JsonPatch[] = [];
-
+    const movedNodeIds = this.collectMovedNodeIds(coalesced.moved);
     const movePatches = this.generateMovePatches(coalesced.moved);
-    patches.push(...movePatches);
-
-    const addPatches = this.generateAddPatches(coalesced.added);
+    const addPatches = this.generateAddPatches(coalesced.added, movedNodeIds);
     const removePatches = this.generateRemovePatches(coalesced.removed);
+
+    const { prerequisiteAdds, regularAdds } = this.partitionAddPatches(
+      addPatches,
+      movePatches,
+    );
 
     const childChangePaths = new Set([
       ...addPatches.map((p) => p.path),
@@ -32,11 +34,53 @@ export class PatchGenerator {
       ...movePatches.flatMap((p) => [p.path, p.from ?? '']).filter(Boolean),
     ]);
 
-    this.generateReplacePatches(coalesced.modified, childChangePaths, patches);
+    const replacePatches = this.generateReplacePatches(
+      coalesced.modified,
+      childChangePaths,
+    );
 
-    patches.push(...addPatches, ...removePatches);
+    return [
+      ...prerequisiteAdds,
+      ...movePatches,
+      ...replacePatches,
+      ...regularAdds,
+      ...removePatches,
+    ];
+  }
 
-    return patches;
+  private collectMovedNodeIds(moved: RawChange[]): Set<string> {
+    const nodeIds = new Set<string>();
+    for (const change of moved) {
+      if (change.currentNode) {
+        nodeIds.add(change.currentNode.id());
+      }
+    }
+    return nodeIds;
+  }
+
+  private partitionAddPatches(
+    addPatches: JsonPatch[],
+    movePatches: JsonPatch[],
+  ): { prerequisiteAdds: JsonPatch[]; regularAdds: JsonPatch[] } {
+    const moveDestinations = movePatches.map((p) => jsonPointerToPath(p.path));
+
+    const prerequisiteAdds: JsonPatch[] = [];
+    const regularAdds: JsonPatch[] = [];
+
+    for (const addPatch of addPatches) {
+      const addPath = jsonPointerToPath(addPatch.path);
+      const isPrerequisite = moveDestinations.some((moveDest) =>
+        moveDest.isChildOf(addPath),
+      );
+
+      if (isPrerequisite) {
+        prerequisiteAdds.push(addPatch);
+      } else {
+        regularAdds.push(addPatch);
+      }
+    }
+
+    return { prerequisiteAdds, regularAdds };
   }
 
   private generateMovePatches(moved: RawChange[]): JsonPatch[] {
@@ -94,7 +138,10 @@ export class PatchGenerator {
     return null;
   }
 
-  private generateAddPatches(added: RawChange[]): JsonPatch[] {
+  private generateAddPatches(
+    added: RawChange[],
+    movedNodeIds: Set<string>,
+  ): JsonPatch[] {
     const patches: JsonPatch[] = [];
 
     for (const change of added) {
@@ -106,6 +153,7 @@ export class PatchGenerator {
       const schema = this.serializer.serializeWithTree(
         change.currentNode,
         this.currentTree,
+        { excludeNodeIds: movedNodeIds },
       );
       patches.push({
         op: 'add',
@@ -138,8 +186,8 @@ export class PatchGenerator {
   private generateReplacePatches(
     modified: RawChange[],
     childChangePaths: Set<string>,
-    patches: JsonPatch[],
-  ): void {
+  ): JsonPatch[] {
+    const patches: JsonPatch[] = [];
     const replacedPaths: Path[] = [];
     const childChangePathObjects = [...childChangePaths].map(jsonPointerToPath);
 
@@ -173,6 +221,8 @@ export class PatchGenerator {
       });
       replacedPaths.push(currentPath);
     }
+
+    return patches;
   }
 
   private isChildOfAny(path: Path, parents: Path[]): boolean {

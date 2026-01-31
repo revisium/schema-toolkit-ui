@@ -23,5 +23,6 @@ export default defineConfig({
     '@uiw/react-codemirror',
     'react-icons',
     'react-use',
+    'nanoid',
   ],
 });
