@@ -18,8 +18,6 @@ export class PatchGenerator {
   ) {}
 
   public generate(coalesced: CoalescedChanges): JsonPatch[] {
-    const patches: JsonPatch[] = [];
-
     const movedNodeIds = this.collectMovedNodeIds(coalesced.moved);
     const movePatches = this.generateMovePatches(coalesced.moved);
     const addPatches = this.generateAddPatches(coalesced.added, movedNodeIds);
@@ -30,20 +28,24 @@ export class PatchGenerator {
       movePatches,
     );
 
-    patches.push(...prerequisiteAdds);
-    patches.push(...movePatches);
-
     const childChangePaths = new Set([
       ...addPatches.map((p) => p.path),
       ...removePatches.map((p) => p.path),
       ...movePatches.flatMap((p) => [p.path, p.from ?? '']).filter(Boolean),
     ]);
 
-    this.generateReplacePatches(coalesced.modified, childChangePaths, patches);
+    const replacePatches = this.generateReplacePatches(
+      coalesced.modified,
+      childChangePaths,
+    );
 
-    patches.push(...regularAdds, ...removePatches);
-
-    return patches;
+    return [
+      ...prerequisiteAdds,
+      ...movePatches,
+      ...replacePatches,
+      ...regularAdds,
+      ...removePatches,
+    ];
   }
 
   private collectMovedNodeIds(moved: RawChange[]): Set<string> {
@@ -184,8 +186,8 @@ export class PatchGenerator {
   private generateReplacePatches(
     modified: RawChange[],
     childChangePaths: Set<string>,
-    patches: JsonPatch[],
-  ): void {
+  ): JsonPatch[] {
+    const patches: JsonPatch[] = [];
     const replacedPaths: Path[] = [];
     const childChangePathObjects = [...childChangePaths].map(jsonPointerToPath);
 
@@ -219,6 +221,8 @@ export class PatchGenerator {
       });
       replacedPaths.push(currentPath);
     }
+
+    return patches;
   }
 
   private isChildOfAny(path: Path, parents: Path[]): boolean {
