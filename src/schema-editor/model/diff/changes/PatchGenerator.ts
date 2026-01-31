@@ -7,7 +7,6 @@ import { SchemaComparator } from '../SchemaComparator';
 import type { JsonPatch } from '../SchemaPatch';
 import type { RawChange } from './RawChange';
 import type { CoalescedChanges } from './ChangeCoalescer';
-import { ExcludingSchemaSerializer } from './ExcludingSchemaSerializer';
 
 export class PatchGenerator {
   private readonly serializer = new SchemaSerializer();
@@ -149,10 +148,10 @@ export class PatchGenerator {
       }
 
       const currentPath = this.currentTree.pathOf(change.currentNode.id());
-      const excludingSerializer = new ExcludingSchemaSerializer(movedNodeIds);
-      const schema = excludingSerializer.serializeWithTree(
+      const schema = this.serializer.serializeWithTree(
         change.currentNode,
         this.currentTree,
+        { excludeNodeIds: movedNodeIds },
       );
       patches.push({
         op: 'add',
