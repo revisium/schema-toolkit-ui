@@ -493,6 +493,80 @@ describe('SchemaDiff', () => {
       expect(replacePatch?.defaultChange?.toDefault).toBe('modified');
     });
 
+    it('does not report defaultChange when only formula changes in array items', () => {
+      const { tree, diff } = createTreeAndDiffFromSchema({
+        type: 'object',
+        required: ['levels', 'value'],
+        properties: {
+          levels: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['exp', 'label'],
+              properties: {
+                exp: {
+                  type: 'number',
+                  default: 0,
+                  readOnly: true,
+                  'x-formula': {
+                    version: 1,
+                    expression: '../../value + #index * 10',
+                  },
+                },
+                label: {
+                  type: 'string',
+                  default: '',
+                  readOnly: true,
+                  'x-formula': {
+                    version: 1,
+                    expression: '"Опыт: " + tostring(exp)',
+                  },
+                },
+              },
+              additionalProperties: false,
+            },
+          },
+          value: {
+            type: 'number',
+            default: 0,
+          },
+        },
+        additionalProperties: false,
+      } as JsonObjectSchema);
+
+      diff.markAsSaved();
+      expect(diff.isDirty()).toBe(false);
+
+      const levelsNode = tree.root().property('levels');
+      const itemsNode = levelsNode.items();
+      const labelNode = itemsNode.property('label');
+
+      const newFormula = new ParsedFormula(
+        tree,
+        labelNode.id(),
+        '"Опыт!: " + tostring(exp)',
+      );
+      labelNode.setFormula(newFormula);
+      tree.registerFormula(labelNode.id(), newFormula);
+
+      expect(diff.isDirty()).toBe(true);
+
+      const patches = diff.getPatches();
+
+      expect(patches).toHaveLength(1);
+      const replacePatch = patches[0];
+      expect(replacePatch.patch.op).toBe('replace');
+      expect(replacePatch.fieldName).toBe('levels[*].label');
+      expect(replacePatch.formulaChange).toBeDefined();
+      expect(replacePatch.formulaChange?.fromFormula).toBe(
+        '"Опыт: " + tostring(exp)',
+      );
+      expect(replacePatch.formulaChange?.toFormula).toBe(
+        '"Опыт!: " + tostring(exp)',
+      );
+      expect(replacePatch.defaultChange).toBeUndefined();
+    });
+
     it('detects description change', () => {
       const { tree, diff } = createTreeAndDiff({
         field: withDescription(stringField(), 'old description'),
@@ -884,6 +958,101 @@ describe('SchemaDiff', () => {
 
       expect(moveIndex).toBeLessThan(addIndex);
       expect(moveIndex).toBeLessThan(removeIndex);
+    });
+
+    it('add new parent, move field into it, add formula', () => {
+      const { tree, diff } = createTreeAndDiff({
+        test: numberField(),
+        werwer: numberField(),
+      });
+
+      const nestedNode = NodeFactory.object('nested');
+      tree.addChildTo(tree.root().id(), nestedNode);
+
+      const werwerNode = tree.root().property('werwer');
+      tree.moveNode(werwerNode.id(), nestedNode.id());
+
+      const movedNode = tree.root().property('nested').property('werwer');
+      const formula = new ParsedFormula(tree, movedNode.id(), '../test * 2');
+      movedNode.setFormula(formula);
+      tree.registerFormula(movedNode.id(), formula);
+
+      const patches = toJsonPatches(diff.getPatches());
+
+      expect(patches).toEqual([
+        {
+          op: 'add',
+          path: '/properties/nested',
+          value: {
+            type: 'object',
+            properties: {},
+            additionalProperties: false,
+            required: [],
+          },
+        },
+        {
+          op: 'move',
+          from: '/properties/werwer',
+          path: '/properties/nested/properties/werwer',
+        },
+        {
+          op: 'replace',
+          path: '/properties/nested/properties/werwer',
+          value: {
+            type: 'number',
+            default: 0,
+            readOnly: true,
+            'x-formula': { version: 1, expression: '../test * 2' },
+          },
+        },
+      ]);
+    });
+
+    it('move multiple fields into deeply nested new structure', () => {
+      const { tree, diff } = createTreeAndDiff({
+        fieldA: numberField(),
+        fieldB: stringField(),
+      });
+
+      const level1 = NodeFactory.object('level1');
+      tree.addChildTo(tree.root().id(), level1);
+      const level2 = NodeFactory.object('level2');
+      tree.addChildTo(level1.id(), level2);
+
+      tree.moveNode(tree.root().property('fieldA').id(), level2.id());
+      tree.moveNode(tree.root().property('fieldB').id(), level2.id());
+
+      const patches = toJsonPatches(diff.getPatches());
+
+      expect(patches).toEqual([
+        {
+          op: 'add',
+          path: '/properties/level1',
+          value: {
+            type: 'object',
+            properties: {
+              level2: {
+                type: 'object',
+                properties: {},
+                additionalProperties: false,
+                required: [],
+              },
+            },
+            additionalProperties: false,
+            required: ['level2'],
+          },
+        },
+        {
+          op: 'move',
+          from: '/properties/fieldA',
+          path: '/properties/level1/properties/level2/properties/fieldA',
+        },
+        {
+          op: 'move',
+          from: '/properties/fieldB',
+          path: '/properties/level1/properties/level2/properties/fieldB',
+        },
+      ]);
     });
 
     it.todo(
