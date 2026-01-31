@@ -9,6 +9,7 @@ import { ObjectNodeVM } from '../../vm/ObjectNodeVM';
 import { ForeignKeyNodeVM } from '../../vm/ForeignKeyNodeVM';
 import { NodeWrapper } from '../NodeWrapper/NodeWrapper';
 import { FieldEditor } from '../FieldEditor/FieldEditor';
+import { NodeRightContent } from '../NodeRightContent';
 import { NodeIndicators } from '../NodeIndicators/NodeIndicators';
 import { NodeContextMenu } from '../NodeContextMenu';
 import { TypeMenu } from '../TypeMenu/TypeMenu';
@@ -24,20 +25,6 @@ export const ArrayNodeView: FC<ArrayNodeViewProps> = observer(
   ({ viewModel, dataTestId }) => {
     const hoverTargetClass = `hover-target-${viewModel.nodeId}`;
 
-    const rightContent = (
-      <>
-        <NodeIndicators viewModel={viewModel} />
-        {viewModel.showMenu && (
-          <NodeContextMenu
-            viewModel={viewModel}
-            dataTestId={`${dataTestId}-setting-button`}
-            showDelete
-            onDelete={viewModel.removeSelf}
-          />
-        )}
-      </>
-    );
-
     return (
       <NodeWrapper
         viewModel={viewModel}
@@ -51,7 +38,13 @@ export const ArrayNodeView: FC<ArrayNodeViewProps> = observer(
             dataTestId={dataTestId}
             hoverTargetClass={hoverTargetClass}
             onChangeType={viewModel.changeType}
-            rightContent={rightContent}
+            rightContent={
+              <NodeRightContent
+                viewModel={viewModel}
+                dataTestId={dataTestId}
+                onDelete={viewModel.removeSelf}
+              />
+            }
           />
         }
       >

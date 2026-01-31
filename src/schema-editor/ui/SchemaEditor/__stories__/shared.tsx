@@ -51,7 +51,10 @@ export const StoryWrapper = ({
   setupViewModel,
 }: StoryWrapperProps) => {
   const [viewModel] = useState(() => {
-    const vm = new SchemaEditorVM(initialSchema, { tableId });
+    const vm = new SchemaEditorVM(initialSchema, {
+      tableId,
+      collapseComplexSchemas: true,
+    });
     setupViewModel?.(vm);
     return vm;
   });

@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import type { NodeTree } from './NodeTree';
 import type { SchemaNode } from '../node/SchemaNode';
-import type { Path } from '../path';
+import type { Path, PathSegment } from '../path';
 import { NULL_NODE } from '../node/NullNode';
 import {
   FormulaDependencyIndex,
@@ -121,7 +121,43 @@ export class SchemaTree implements NodeTree {
     if (fromPath.parent().equals(toPath)) {
       return false;
     }
+    if (this.isMovingOutOfArray(fromPath, toPath)) {
+      return false;
+    }
     return true;
+  }
+
+  private isMovingOutOfArray(fromPath: Path, toPath: Path): boolean {
+    const fromSegments = fromPath.segments();
+    const toSegments = toPath.segments();
+
+    for (let i = 0; i < fromSegments.length; i++) {
+      const fromSeg = fromSegments[i];
+      if (fromSeg?.isItems()) {
+        if (!toSegments[i]?.isItems()) {
+          return true;
+        }
+        if (this.hasPathPrefixMismatch(fromSegments, toSegments, i)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private hasPathPrefixMismatch(
+    fromSegments: readonly PathSegment[],
+    toSegments: readonly PathSegment[],
+    endIndex: number,
+  ): boolean {
+    for (let j = 0; j < endIndex; j++) {
+      const fromSeg = fromSegments[j];
+      const toSeg = toSegments[j];
+      if (!fromSeg || !toSeg || !fromSeg.equals(toSeg)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public hasValidDropTarget(nodeId: string): boolean {

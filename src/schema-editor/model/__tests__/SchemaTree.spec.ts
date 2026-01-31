@@ -279,6 +279,75 @@ describe('SchemaTree', () => {
       expect(tree.canMoveNode(nameNode.id(), itemsNode.id())).toBe(true);
     });
 
+    it('returns false when moving field out of array items to root', () => {
+      const tree = createTree({
+        items: arrayField(
+          objectField({
+            id: stringField(),
+            quantity: numberField(),
+          }),
+        ),
+      });
+      const arrNode = tree.root().property('items');
+      const itemsNode = arrNode.items();
+      const idNode = itemsNode.property('id');
+
+      expect(tree.canMoveNode(idNode.id(), tree.root().id())).toBe(false);
+    });
+
+    it('returns false when moving field out of array items to sibling object', () => {
+      const tree = createTree({
+        items: arrayField(
+          objectField({
+            id: stringField(),
+          }),
+        ),
+        container: objectField({}),
+      });
+      const arrNode = tree.root().property('items');
+      const itemsNode = arrNode.items();
+      const idNode = itemsNode.property('id');
+      const containerNode = tree.root().property('container');
+
+      expect(tree.canMoveNode(idNode.id(), containerNode.id())).toBe(false);
+    });
+
+    it('returns true when moving field within same array items', () => {
+      const tree = createTree({
+        items: arrayField(
+          objectField({
+            id: stringField(),
+            nested: objectField({}),
+          }),
+        ),
+      });
+      const arrNode = tree.root().property('items');
+      const itemsNode = arrNode.items();
+      const idNode = itemsNode.property('id');
+      const nestedNode = itemsNode.property('nested');
+
+      expect(tree.canMoveNode(idNode.id(), nestedNode.id())).toBe(true);
+    });
+
+    it('returns false when moving field from nested array to outer array', () => {
+      const tree = createTree({
+        outer: arrayField(
+          objectField({
+            inner: arrayField(
+              objectField({
+                value: stringField(),
+              }),
+            ),
+          }),
+        ),
+      });
+      const outerItems = tree.root().property('outer').items();
+      const innerItems = outerItems.property('inner').items();
+      const valueNode = innerItems.property('value');
+
+      expect(tree.canMoveNode(valueNode.id(), outerItems.id())).toBe(false);
+    });
+
     it('returns false when moving to array items that is not an object', () => {
       const tree = createTree({
         name: stringField(),

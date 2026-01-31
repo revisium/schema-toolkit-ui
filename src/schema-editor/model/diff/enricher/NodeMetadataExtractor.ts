@@ -79,6 +79,13 @@ export class NodeMetadataExtractor {
     return node.foreignKey();
   }
 
+  public getContentMediaType(node: SchemaNode | null): string | undefined {
+    if (!node || node.isNull()) {
+      return undefined;
+    }
+    return node.contentMediaType?.();
+  }
+
   public computeMetadataChanges(
     baseTree: NodeTree,
     baseNode: SchemaNode | null,
@@ -90,6 +97,8 @@ export class NodeMetadataExtractor {
     let defaultChange: MetadataChangesResult['defaultChange'];
     let descriptionChange: MetadataChangesResult['descriptionChange'];
     let deprecatedChange: MetadataChangesResult['deprecatedChange'];
+    let foreignKeyChange: MetadataChangesResult['foreignKeyChange'];
+    let contentMediaTypeChange: MetadataChangesResult['contentMediaTypeChange'];
 
     const effectiveCurrentNode = this.getEffectiveNodeForComparison(
       baseNode,
@@ -130,6 +139,10 @@ export class NodeMetadataExtractor {
     const currentForeignKey = this.getForeignKey(effectiveCurrentNode);
     if (baseForeignKey !== currentForeignKey) {
       changes.push('foreignKey');
+      foreignKeyChange = {
+        fromForeignKey: baseForeignKey,
+        toForeignKey: currentForeignKey,
+      };
     }
 
     const baseDefault = this.getDefaultValue(baseNode);
@@ -139,12 +152,25 @@ export class NodeMetadataExtractor {
       defaultChange = { fromDefault: baseDefault, toDefault: currentDefault };
     }
 
+    const baseContentMediaType = this.getContentMediaType(baseNode);
+    const currentContentMediaType =
+      this.getContentMediaType(effectiveCurrentNode);
+    if (baseContentMediaType !== currentContentMediaType) {
+      changes.push('contentMediaType');
+      contentMediaTypeChange = {
+        fromContentMediaType: baseContentMediaType,
+        toContentMediaType: currentContentMediaType,
+      };
+    }
+
     return {
       metadataChanges: changes,
       formulaChange,
       defaultChange,
       descriptionChange,
       deprecatedChange,
+      foreignKeyChange,
+      contentMediaTypeChange,
     };
   }
 

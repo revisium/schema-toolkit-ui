@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import type { RefNodeVM } from '../../vm/RefNodeVM';
 import { LeafNodeView } from '../LeafNodeView/LeafNodeView';
+import { CollapsibleNodeView } from '../CollapsibleNodeView';
 
 interface RefNodeViewProps {
   viewModel: RefNodeVM;
@@ -10,6 +11,12 @@ interface RefNodeViewProps {
 
 export const RefNodeView: FC<RefNodeViewProps> = observer(
   ({ viewModel, dataTestId }) => {
-    return <LeafNodeView viewModel={viewModel} dataTestId={dataTestId} />;
+    if (!viewModel.isCollapsible) {
+      return <LeafNodeView viewModel={viewModel} dataTestId={dataTestId} />;
+    }
+
+    return (
+      <CollapsibleNodeView viewModel={viewModel} dataTestId={dataTestId} />
+    );
   },
 );

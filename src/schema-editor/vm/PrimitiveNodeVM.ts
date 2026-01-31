@@ -21,8 +21,9 @@ export class PrimitiveNodeVM extends BaseNodeVM {
     editor: SchemaEditorVM,
     private readonly _parent: ObjectNodeVM | null,
     isRoot: boolean = false,
+    isReadonly: boolean = false,
   ) {
-    super(node, editor, isRoot);
+    super(node, editor, isRoot, isReadonly);
 
     makeObservable(this, {
       formulaInputValue: observable,
