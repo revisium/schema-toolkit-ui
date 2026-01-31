@@ -112,10 +112,17 @@ export class PatchEnricher {
       currentNode,
     );
 
-    const typeChanged = this.metadataExtractor.hasTypeChanged(
+    const isArrayMetadataPatch = this.isArrayMetadataOnlyPatch(
       baseNode,
       currentNode,
     );
+
+    const typeChanged = isArrayMetadataPatch
+      ? this.metadataExtractor.hasTypeChangedIgnoringItems(
+          baseNode,
+          currentNode,
+        )
+      : this.metadataExtractor.hasTypeChanged(baseNode, currentNode);
 
     return {
       patch,
@@ -128,12 +135,19 @@ export class PatchEnricher {
           }
         : undefined,
       formulaChange,
-      defaultChange,
+      defaultChange: isArrayMetadataPatch ? undefined : defaultChange,
       descriptionChange,
       deprecatedChange,
       foreignKeyChange,
       contentMediaTypeChange,
     };
+  }
+
+  private isArrayMetadataOnlyPatch(
+    baseNode: SchemaNode | null,
+    currentNode: SchemaNode | null,
+  ): boolean {
+    return Boolean(baseNode?.isArray() && currentNode?.isArray());
   }
 
   private getFieldNameFromPath(jsonPointer: string): string {
