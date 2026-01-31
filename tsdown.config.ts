@@ -24,5 +24,6 @@ export default defineConfig({
     'react-icons',
     'react-use',
     'nanoid',
+    '@revisium/formula',
   ],
 });
