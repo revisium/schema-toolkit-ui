@@ -34,7 +34,7 @@ export interface SchemaEditorOptions {
   mode?: SchemaEditorMode;
   collapseComplexSchemas?: boolean;
   collapseComplexity?: number;
-  onApprove?: () => Promise<void>;
+  onApprove?: () => Promise<boolean>;
   onCancel?: () => void;
   onSelectForeignKey?: ForeignKeySelectionCallback;
 }
@@ -47,7 +47,7 @@ export class SchemaEditorVM {
   private _initialTableId: string;
   private readonly _shouldCollapseAll: boolean;
   private readonly _mode: SchemaEditorMode;
-  private readonly _onApprove: (() => Promise<void>) | null;
+  private readonly _onApprove: (() => Promise<boolean>) | null;
   private readonly _onCancel: (() => void) | null;
   private readonly _onSelectForeignKey: ForeignKeySelectionCallback | null;
 
@@ -262,9 +262,11 @@ export class SchemaEditorVM {
     }
     this._loading = true;
     try {
-      await this._onApprove();
-      this.markAsSaved();
-      this.closeChangesDialog();
+      const success = await this._onApprove();
+      if (success) {
+        this.markAsSaved();
+        this.closeChangesDialog();
+      }
     } finally {
       this._loading = false;
     }
