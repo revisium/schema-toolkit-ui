@@ -519,7 +519,7 @@ describe('SchemaDiff', () => {
                   readOnly: true,
                   'x-formula': {
                     version: 1,
-                    expression: '"Опыт: " + tostring(exp)',
+                    expression: '"Exp:" + tostring(exp)',
                   },
                 },
               },
@@ -544,7 +544,7 @@ describe('SchemaDiff', () => {
       const newFormula = new ParsedFormula(
         tree,
         labelNode.id(),
-        '"Опыт!: " + tostring(exp)',
+        '"Exp!:" + tostring(exp)',
       );
       labelNode.setFormula(newFormula);
       tree.registerFormula(labelNode.id(), newFormula);
@@ -559,10 +559,10 @@ describe('SchemaDiff', () => {
       expect(replacePatch.fieldName).toBe('levels[*].label');
       expect(replacePatch.formulaChange).toBeDefined();
       expect(replacePatch.formulaChange?.fromFormula).toBe(
-        '"Опыт: " + tostring(exp)',
+        '"Exp:" + tostring(exp)',
       );
       expect(replacePatch.formulaChange?.toFormula).toBe(
-        '"Опыт!: " + tostring(exp)',
+        '"Exp!:" + tostring(exp)',
       );
       expect(replacePatch.defaultChange).toBeUndefined();
     });
