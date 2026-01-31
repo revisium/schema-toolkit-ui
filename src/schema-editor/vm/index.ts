@@ -1,5 +1,6 @@
 export {
   SchemaEditorVM,
+  type SchemaEditorMode,
   type SchemaEditorOptions,
   type ForeignKeySelectionCallback,
 } from './SchemaEditorVM';
