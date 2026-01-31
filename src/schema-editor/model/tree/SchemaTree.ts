@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import type { NodeTree } from './NodeTree';
 import type { SchemaNode } from '../node/SchemaNode';
-import type { Path } from '../path';
+import type { Path, PathSegment } from '../path';
 import { NULL_NODE } from '../node/NullNode';
 import {
   FormulaDependencyIndex,
@@ -133,23 +133,28 @@ export class SchemaTree implements NodeTree {
 
     for (let i = 0; i < fromSegments.length; i++) {
       const fromSeg = fromSegments[i];
-      if (fromSeg && fromSeg.isItems()) {
-        const toSeg = toSegments[i];
-        if (!toSeg || !toSeg.isItems()) {
+      if (fromSeg?.isItems()) {
+        if (!toSegments[i]?.isItems()) {
           return true;
         }
-        const fromPrefix = fromSegments.slice(0, i);
-        const toPrefix = toSegments.slice(0, i);
-        if (fromPrefix.length !== toPrefix.length) {
+        if (this.hasPathPrefixMismatch(fromSegments, toSegments, i)) {
           return true;
         }
-        for (let j = 0; j < fromPrefix.length; j++) {
-          const fp = fromPrefix[j];
-          const tp = toPrefix[j];
-          if (!fp || !tp || !fp.equals(tp)) {
-            return true;
-          }
-        }
+      }
+    }
+    return false;
+  }
+
+  private hasPathPrefixMismatch(
+    fromSegments: readonly PathSegment[],
+    toSegments: readonly PathSegment[],
+    endIndex: number,
+  ): boolean {
+    for (let j = 0; j < endIndex; j++) {
+      const fromSeg = fromSegments[j];
+      const toSeg = toSegments[j];
+      if (!fromSeg || !toSeg || !fromSeg.equals(toSeg)) {
+        return true;
       }
     }
     return false;
