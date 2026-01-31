@@ -121,7 +121,38 @@ export class SchemaTree implements NodeTree {
     if (fromPath.parent().equals(toPath)) {
       return false;
     }
+    if (this.isMovingOutOfArray(fromPath, toPath)) {
+      return false;
+    }
     return true;
+  }
+
+  private isMovingOutOfArray(fromPath: Path, toPath: Path): boolean {
+    const fromSegments = fromPath.segments();
+    const toSegments = toPath.segments();
+
+    for (let i = 0; i < fromSegments.length; i++) {
+      const fromSeg = fromSegments[i];
+      if (fromSeg && fromSeg.isItems()) {
+        const toSeg = toSegments[i];
+        if (!toSeg || !toSeg.isItems()) {
+          return true;
+        }
+        const fromPrefix = fromSegments.slice(0, i);
+        const toPrefix = toSegments.slice(0, i);
+        if (fromPrefix.length !== toPrefix.length) {
+          return true;
+        }
+        for (let j = 0; j < fromPrefix.length; j++) {
+          const fp = fromPrefix[j];
+          const tp = toPrefix[j];
+          if (!fp || !tp || !fp.equals(tp)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   public hasValidDropTarget(nodeId: string): boolean {

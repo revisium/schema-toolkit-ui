@@ -1,6 +1,7 @@
-import { Portal } from '@chakra-ui/react';
+import { Box, Portal } from '@chakra-ui/react';
 import { Menu } from '@chakra-ui/react/menu';
 import { FC, Fragment, ReactElement } from 'react';
+import { LuChevronRight } from 'react-icons/lu';
 import { typeMenuGroups, type MenuOptionItem } from '../../config/index';
 
 interface SubMenuProps {
@@ -17,8 +18,11 @@ const SubMenu: FC<SubMenuProps> = ({
   dataTestIdPrefix,
 }) => {
   return (
-    <Menu.Root positioning={{ placement: 'right-start' }}>
-      <Menu.TriggerItem>{label}</Menu.TriggerItem>
+    <Menu.Root positioning={{ placement: 'right-start', gutter: 2 }}>
+      <Menu.TriggerItem>
+        <Box flex="1">{label}</Box>
+        <LuChevronRight />
+      </Menu.TriggerItem>
       <Portal>
         <Menu.Positioner>
           <Menu.Content>

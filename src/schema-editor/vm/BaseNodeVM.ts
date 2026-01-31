@@ -12,6 +12,7 @@ export abstract class BaseNodeVM {
     protected readonly _node: SchemaNode,
     protected readonly _editor: SchemaEditorVM,
     protected readonly _isRoot: boolean = false,
+    protected readonly _isReadonly: boolean = false,
   ) {
     makeObservable(this, {
       isFocusedState: observable,
@@ -50,6 +51,7 @@ export abstract class BaseNodeVM {
       errorMessage: computed,
       canDrag: computed,
       isValidDropTarget: computed,
+      isReadonly: computed,
       setFocused: action.bound,
       setMenuOpen: action.bound,
       setSettingsOpen: action.bound,
@@ -60,6 +62,10 @@ export abstract class BaseNodeVM {
       setDefault: action.bound,
       handleFieldBlur: action.bound,
     });
+  }
+
+  public get isReadonly(): boolean {
+    return this._isReadonly;
   }
 
   public get node(): SchemaNode {
@@ -165,11 +171,11 @@ export abstract class BaseNodeVM {
   }
 
   public get showTypeSelector(): boolean {
-    return true;
+    return !this._isReadonly;
   }
 
   public get showMenu(): boolean {
-    return true;
+    return !this._isReadonly;
   }
 
   public get hasDescription(): boolean {
@@ -230,7 +236,7 @@ export abstract class BaseNodeVM {
   }
 
   public get canDrag(): boolean {
-    if (this._isRoot || !this._node.name()) {
+    if (this._isReadonly || this._isRoot || !this._node.name()) {
       return false;
     }
     return this._editor.engine.hasValidDropTarget(this.nodeId);

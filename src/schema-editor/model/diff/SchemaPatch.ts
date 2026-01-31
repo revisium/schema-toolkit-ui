@@ -14,7 +14,8 @@ export type MetadataChangeType =
   | 'foreignKey'
   | 'enum'
   | 'format'
-  | 'default';
+  | 'default'
+  | 'contentMediaType';
 
 export type DefaultValueType = string | number | boolean | undefined;
 
@@ -42,6 +43,14 @@ export interface SchemaPatch {
     fromDeprecated: boolean | undefined;
     toDeprecated: boolean | undefined;
   };
+  foreignKeyChange?: {
+    fromForeignKey: string | undefined;
+    toForeignKey: string | undefined;
+  };
+  contentMediaTypeChange?: {
+    fromContentMediaType: string | undefined;
+    toContentMediaType: string | undefined;
+  };
   isRename?: boolean;
   movesIntoArray?: boolean;
 }
@@ -52,4 +61,6 @@ export interface MetadataChangesResult {
   defaultChange?: SchemaPatch['defaultChange'];
   descriptionChange?: SchemaPatch['descriptionChange'];
   deprecatedChange?: SchemaPatch['deprecatedChange'];
+  foreignKeyChange?: SchemaPatch['foreignKeyChange'];
+  contentMediaTypeChange?: SchemaPatch['contentMediaTypeChange'];
 }

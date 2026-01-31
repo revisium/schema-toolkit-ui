@@ -155,24 +155,28 @@ export const foreignKeysSchema: JsonObjectSchema = {
   type: 'object',
   properties: {
     title: { type: 'string', default: '' },
-    categoryId: { type: 'string', default: '', 'x-fk': 'categories' },
-    authorId: { type: 'string', default: '', 'x-fk': 'authors' },
+    categoryId: { type: 'string', default: '', foreignKey: 'categories' },
+    authorId: { type: 'string', default: '', foreignKey: 'authors' },
   },
   additionalProperties: false,
   required: ['title', 'categoryId', 'authorId'],
-} as JsonObjectSchema;
+};
 
 export const systemRefsSchema: JsonObjectSchema = {
   type: 'object',
   properties: {
     title: { type: 'string', default: '' },
-    image: { $ref: 'File' },
-    createdAt: { $ref: 'RowCreatedAt' },
-    updatedAt: { $ref: 'RowUpdatedAt' },
+    image: { $ref: 'urn:jsonschema:io:revisium:file-schema:1.0.0' },
+    createdAt: {
+      $ref: 'urn:jsonschema:io:revisium:row-created-at-schema:1.0.0',
+    },
+    updatedAt: {
+      $ref: 'urn:jsonschema:io:revisium:row-updated-at-schema:1.0.0',
+    },
   },
   additionalProperties: false,
   required: ['title', 'image', 'createdAt', 'updatedAt'],
-} as JsonObjectSchema;
+};
 
 // ============ FORMULAS ============
 
@@ -348,7 +352,7 @@ export const mixedComplexSchema: JsonObjectSchema = {
   type: 'object',
   properties: {
     name: { type: 'string', default: '' },
-    categoryId: { type: 'string', default: '', 'x-fk': 'categories' },
+    categoryId: { type: 'string', default: '', foreignKey: 'categories' },
     metadata: {
       type: 'object',
       properties: {
@@ -367,7 +371,7 @@ export const mixedComplexSchema: JsonObjectSchema = {
       items: {
         type: 'object',
         properties: {
-          productId: { type: 'string', default: '', 'x-fk': 'products' },
+          productId: { type: 'string', default: '', foreignKey: 'products' },
           price: { type: 'number', default: 0 },
           quantity: { type: 'number', default: 1 },
           total: {
@@ -382,8 +386,10 @@ export const mixedComplexSchema: JsonObjectSchema = {
       },
       default: [],
     },
-    attachment: { $ref: 'File' },
-    createdAt: { $ref: 'RowCreatedAt' },
+    attachment: { $ref: 'urn:jsonschema:io:revisium:file-schema:1.0.0' },
+    createdAt: {
+      $ref: 'urn:jsonschema:io:revisium:row-created-at-schema:1.0.0',
+    },
   },
   additionalProperties: false,
   required: [
@@ -394,7 +400,7 @@ export const mixedComplexSchema: JsonObjectSchema = {
     'attachment',
     'createdAt',
   ],
-} as JsonObjectSchema;
+};
 
 // ============ EDGE CASES ============
 

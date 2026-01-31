@@ -1,10 +1,12 @@
-import { JsonSchemaTypeName } from '../../types';
+import { JsonSchemaTypeName, SystemSchemaIds } from '../../types';
 import type { JsonObjectSchema } from '../../model';
 import { resetIdCounter } from '../../model/schema/SchemaParser';
 import { SchemaEditorVM } from '../SchemaEditorVM';
 import { ObjectNodeVM } from '../ObjectNodeVM';
 import { PrimitiveNodeVM } from '../PrimitiveNodeVM';
 import { ArrayNodeVM } from '../ArrayNodeVM';
+import { ForeignKeyNodeVM } from '../ForeignKeyNodeVM';
+import { RefNodeVM } from '../RefNodeVM';
 
 beforeEach(() => {
   resetIdCounter();
@@ -582,6 +584,381 @@ describe('SchemaEditorVM', () => {
       dispose();
 
       expect(dirtyValues).toEqual([false, true, false]);
+    });
+  });
+
+  describe('ForeignKeyNodeVM', () => {
+    it('should create ForeignKeyNodeVM for field with foreignKey', () => {
+      const schema = createSchema({
+        categoryId: { type: 'string', default: '', foreignKey: 'categories' },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const categoryIdVM = getObjectRoot(editor).children[0];
+
+      expect(categoryIdVM).toBeInstanceOf(ForeignKeyNodeVM);
+    });
+
+    it('should have label "foreign key"', () => {
+      const schema = createSchema({
+        categoryId: { type: 'string', default: '', foreignKey: 'categories' },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const categoryIdVM = getObjectRoot(editor)
+        .children[0] as ForeignKeyNodeVM;
+
+      expect(categoryIdVM.label).toBe('foreign key');
+    });
+
+    it('should return foreignKey value', () => {
+      const schema = createSchema({
+        categoryId: { type: 'string', default: '', foreignKey: 'categories' },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const categoryIdVM = getObjectRoot(editor)
+        .children[0] as ForeignKeyNodeVM;
+
+      expect(categoryIdVM.foreignKeyValue).toBe('categories');
+    });
+
+    it('should create PrimitiveNodeVM for string without foreignKey', () => {
+      const schema = createSchema({
+        name: { type: 'string', default: '' },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const nameVM = getObjectRoot(editor).children[0];
+
+      expect(nameVM).toBeInstanceOf(PrimitiveNodeVM);
+      expect(nameVM).not.toBeInstanceOf(ForeignKeyNodeVM);
+    });
+
+    it('should have label "string" for regular string field', () => {
+      const schema = createSchema({
+        name: { type: 'string', default: '' },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const nameVM = getObjectRoot(editor).children[0] as PrimitiveNodeVM;
+
+      expect(nameVM.label).toBe('string');
+    });
+  });
+
+  describe('RefNodeVM with resolved refs', () => {
+    it('should create RefNodeVM for File $ref', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0];
+
+      expect(imageVM).toBeInstanceOf(RefNodeVM);
+    });
+
+    it('should have label "File" for File ref', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      expect(imageVM.label).toBe('File');
+    });
+
+    it('should have children for resolved File ref', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      expect(imageVM.children.length).toBeGreaterThan(0);
+    });
+
+    it('should have File schema fields as children', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+      const childNames = imageVM.children.map((c) => c.name);
+
+      expect(childNames).toContain('status');
+      expect(childNames).toContain('fileId');
+      expect(childNames).toContain('url');
+      expect(childNames).toContain('fileName');
+    });
+
+    it('should mark all children as readonly', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      for (const child of imageVM.children) {
+        expect(child.isReadonly).toBe(true);
+      }
+    });
+
+    it('should be collapsed by default', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      expect(imageVM.isCollapsed).toBe(true);
+    });
+
+    it('should be collapsible', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      expect(imageVM.isCollapsible).toBe(true);
+    });
+
+    it('should toggle collapsed state', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      expect(imageVM.isCollapsed).toBe(true);
+      imageVM.toggleCollapsed();
+      expect(imageVM.isCollapsed).toBe(false);
+      imageVM.toggleCollapsed();
+      expect(imageVM.isCollapsed).toBe(true);
+    });
+
+    it('should not have children for non-resolvable refs', () => {
+      const schema = createSchema({
+        timestamp: { $ref: SystemSchemaIds.RowCreatedAt },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const timestampVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      expect(timestampVM.children.length).toBe(0);
+      expect(timestampVM.isCollapsible).toBe(false);
+    });
+
+    it('should hide settings menu for readonly children', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      for (const child of imageVM.children) {
+        expect(child.showMenu).toBe(false);
+      }
+    });
+
+    it('should hide type selector for readonly children', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      for (const child of imageVM.children) {
+        expect(child.showTypeSelector).toBe(false);
+      }
+    });
+
+    it('should not allow drag for readonly children', () => {
+      const schema = createSchema({
+        image: { $ref: SystemSchemaIds.File },
+      });
+
+      const editor = new SchemaEditorVM(schema);
+      const imageVM = getObjectRoot(editor).children[0] as RefNodeVM;
+
+      for (const child of imageVM.children) {
+        expect(child.canDrag).toBe(false);
+      }
+    });
+  });
+
+  describe('auto-collapse', () => {
+    const createLargeSchema = (fieldCount: number): JsonObjectSchema =>
+      createSchema(
+        Object.fromEntries(
+          Array.from({ length: fieldCount }, (_, i) => [
+            `field${i}`,
+            { type: 'string', default: '' },
+          ]),
+        ),
+      );
+
+    const createSchemaWithRef = (): JsonObjectSchema =>
+      createSchema({
+        name: { type: 'string', default: '' },
+        image: { $ref: 'urn:jsonschema:io:revisium:file-schema:1.0.0' },
+      });
+
+    it('should not collapse when collapseComplexSchemas is false', () => {
+      const schema = createLargeSchema(20);
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: false,
+      });
+
+      expect(getObjectRoot(editor).isCollapsed).toBe(false);
+    });
+
+    it('should not collapse small schemas even with collapseComplexSchemas true', () => {
+      const schema = createSchema({
+        name: { type: 'string', default: '' },
+        age: { type: 'number', default: 0 },
+      });
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: true,
+      });
+
+      expect(getObjectRoot(editor).isCollapsed).toBe(false);
+    });
+
+    it('should collapse large schemas when collapseComplexSchemas is true', () => {
+      const schema = createLargeSchema(20);
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: true,
+      });
+
+      const root = getObjectRoot(editor);
+      expect(root.isCollapsed).toBe(false);
+    });
+
+    it('should collapse nested objects in large schemas', () => {
+      const schema = createSchema({
+        ...Object.fromEntries(
+          Array.from({ length: 15 }, (_, i) => [
+            `field${i}`,
+            { type: 'string', default: '' },
+          ]),
+        ),
+        nested: {
+          type: 'object',
+          properties: {
+            value: { type: 'string', default: '' },
+          },
+          additionalProperties: false,
+          required: ['value'],
+        },
+      });
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: true,
+      });
+
+      const nested = getObjectRoot(editor).children.find(
+        (c) => c.name === 'nested',
+      ) as ObjectNodeVM;
+
+      expect(nested.isCollapsed).toBe(true);
+    });
+
+    it('should use custom collapseComplexity threshold', () => {
+      const schema = createSchema({
+        field1: { type: 'string', default: '' },
+        field2: { type: 'string', default: '' },
+        nested: {
+          type: 'object',
+          properties: {
+            value: { type: 'string', default: '' },
+          },
+          additionalProperties: false,
+          required: ['value'],
+        },
+      });
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: true,
+        collapseComplexity: 3,
+      });
+
+      const nested = getObjectRoot(editor).children.find(
+        (c) => c.name === 'nested',
+      ) as ObjectNodeVM;
+
+      expect(nested.isCollapsed).toBe(true);
+    });
+
+    it('should always collapse $ref nodes regardless of schema complexity', () => {
+      const schema = createSchemaWithRef();
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: true,
+      });
+
+      const imageNode = getObjectRoot(editor).children.find(
+        (c) => c.name === 'image',
+      );
+
+      expect(imageNode).toBeDefined();
+    });
+
+    it('should collapse arrays in large schemas', () => {
+      const schema = createSchema({
+        ...Object.fromEntries(
+          Array.from({ length: 15 }, (_, i) => [
+            `field${i}`,
+            { type: 'string', default: '' },
+          ]),
+        ),
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', default: '' },
+            },
+            additionalProperties: false,
+            required: ['name'],
+          },
+          default: [],
+        },
+      });
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: true,
+      });
+
+      const items = getObjectRoot(editor).children.find(
+        (c) => c.name === 'items',
+      ) as ArrayNodeVM;
+
+      expect(items.isCollapsed).toBe(true);
+    });
+
+    it('should not collapse root node even in large schemas', () => {
+      const schema = createLargeSchema(20);
+
+      const editor = new SchemaEditorVM(schema, {
+        collapseComplexSchemas: true,
+      });
+
+      expect(getObjectRoot(editor).isCollapsed).toBe(false);
     });
   });
 });

@@ -39,6 +39,8 @@ export class PatchEnricher {
       defaultChange,
       descriptionChange,
       deprecatedChange,
+      foreignKeyChange,
+      contentMediaTypeChange,
     } = this.metadataExtractor.computeMetadataChanges(
       this.baseTree,
       null,
@@ -54,6 +56,8 @@ export class PatchEnricher {
       defaultChange,
       descriptionChange,
       deprecatedChange,
+      foreignKeyChange,
+      contentMediaTypeChange,
     };
   }
 
@@ -99,6 +103,8 @@ export class PatchEnricher {
       defaultChange,
       descriptionChange,
       deprecatedChange,
+      foreignKeyChange,
+      contentMediaTypeChange,
     } = this.metadataExtractor.computeMetadataChanges(
       this.baseTree,
       baseNode,
@@ -125,6 +131,8 @@ export class PatchEnricher {
       defaultChange,
       descriptionChange,
       deprecatedChange,
+      foreignKeyChange,
+      contentMediaTypeChange,
     };
   }
 

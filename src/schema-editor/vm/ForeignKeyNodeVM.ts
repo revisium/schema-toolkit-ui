@@ -1,4 +1,4 @@
-import { makeObservable, computed, action } from 'mobx';
+import { makeObservable, computed, action, override } from 'mobx';
 import { type SchemaNode } from '../model';
 import { BaseNodeVM } from './BaseNodeVM';
 import { registerVMClass } from './createNodeVM';
@@ -11,16 +11,22 @@ export class ForeignKeyNodeVM extends BaseNodeVM {
     editor: SchemaEditorVM,
     private readonly _parent: ObjectNodeVM | null,
     isRoot: boolean = false,
+    isReadonly: boolean = false,
   ) {
-    super(node, editor, isRoot);
+    super(node, editor, isRoot, isReadonly);
 
     makeObservable(this, {
+      label: override,
       foreignKeyValue: computed,
       setForeignKey: action.bound,
       selectForeignKey: action.bound,
       removeSelf: action.bound,
       changeType: action.bound,
     });
+  }
+
+  public override get label(): string {
+    return 'foreign key';
   }
 
   public get foreignKeyValue(): string {

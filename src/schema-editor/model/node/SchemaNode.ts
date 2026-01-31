@@ -24,6 +24,7 @@ export interface SchemaNode {
   hasFormula(): boolean;
   defaultValue(): unknown;
   foreignKey(): string | undefined;
+  contentMediaType?(): string | undefined;
 
   setName(name: string): void;
   setMetadata(meta: NodeMetadata): void;

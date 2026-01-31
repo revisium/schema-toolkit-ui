@@ -12,10 +12,12 @@ import {
   stringField,
   formulaField,
   stringFormulaField,
+  stringWithForeignKey,
+  stringWithContentMediaType,
   withDescription,
 } from '../../__tests__/test-helpers';
 import type { JsonObjectSchema, JsonSchemaType } from '../../schema/JsonSchema';
-import type { StringNode } from '../../node/StringNode';
+import { StringNode } from '../../node/StringNode';
 import type { NumberNode } from '../../node/NumberNode';
 
 beforeEach(() => {
@@ -527,6 +529,114 @@ describe('SchemaDiff', () => {
       expect(replacePatch?.deprecatedChange?.toDeprecated).toBe(true);
     });
 
+    it('detects foreignKey addition', () => {
+      const { tree, diff } = createTreeAndDiff({
+        field: stringField(),
+      });
+
+      const fieldNode = tree.root().property('field') as StringNode;
+      fieldNode.setForeignKey('users');
+
+      const patches = diff.getPatches();
+
+      const replacePatch = patches.find((p) => p.patch.op === 'replace');
+      expect(replacePatch?.foreignKeyChange).toBeDefined();
+      expect(replacePatch?.foreignKeyChange?.fromForeignKey).toBeUndefined();
+      expect(replacePatch?.foreignKeyChange?.toForeignKey).toBe('users');
+    });
+
+    it('detects foreignKey change', () => {
+      const { tree, diff } = createTreeAndDiff({
+        field: stringWithForeignKey('users'),
+      });
+
+      const fieldNode = tree.root().property('field') as StringNode;
+      fieldNode.setForeignKey('categories');
+
+      const patches = diff.getPatches();
+
+      const replacePatch = patches.find((p) => p.patch.op === 'replace');
+      expect(replacePatch?.foreignKeyChange).toBeDefined();
+      expect(replacePatch?.foreignKeyChange?.fromForeignKey).toBe('users');
+      expect(replacePatch?.foreignKeyChange?.toForeignKey).toBe('categories');
+    });
+
+    it('detects foreignKey removal', () => {
+      const { tree, diff } = createTreeAndDiff({
+        field: stringWithForeignKey('users'),
+      });
+
+      const fieldNode = tree.root().property('field') as StringNode;
+      fieldNode.setForeignKey(undefined);
+
+      const patches = diff.getPatches();
+
+      const replacePatch = patches.find((p) => p.patch.op === 'replace');
+      expect(replacePatch?.foreignKeyChange).toBeDefined();
+      expect(replacePatch?.foreignKeyChange?.fromForeignKey).toBe('users');
+      expect(replacePatch?.foreignKeyChange?.toForeignKey).toBeUndefined();
+    });
+
+    it('detects contentMediaType addition', () => {
+      const { tree, diff } = createTreeAndDiff({
+        field: stringField(),
+      });
+
+      const fieldNode = tree.root().property('field') as StringNode;
+      fieldNode.setContentMediaType('text/markdown');
+
+      const patches = diff.getPatches();
+
+      const replacePatch = patches.find((p) => p.patch.op === 'replace');
+      expect(replacePatch?.contentMediaTypeChange).toBeDefined();
+      expect(
+        replacePatch?.contentMediaTypeChange?.fromContentMediaType,
+      ).toBeUndefined();
+      expect(replacePatch?.contentMediaTypeChange?.toContentMediaType).toBe(
+        'text/markdown',
+      );
+    });
+
+    it('detects contentMediaType change', () => {
+      const { tree, diff } = createTreeAndDiff({
+        field: stringWithContentMediaType('text/plain'),
+      });
+
+      const fieldNode = tree.root().property('field') as StringNode;
+      fieldNode.setContentMediaType('text/markdown');
+
+      const patches = diff.getPatches();
+
+      const replacePatch = patches.find((p) => p.patch.op === 'replace');
+      expect(replacePatch?.contentMediaTypeChange).toBeDefined();
+      expect(replacePatch?.contentMediaTypeChange?.fromContentMediaType).toBe(
+        'text/plain',
+      );
+      expect(replacePatch?.contentMediaTypeChange?.toContentMediaType).toBe(
+        'text/markdown',
+      );
+    });
+
+    it('detects contentMediaType removal', () => {
+      const { tree, diff } = createTreeAndDiff({
+        field: stringWithContentMediaType('text/markdown'),
+      });
+
+      const fieldNode = tree.root().property('field') as StringNode;
+      fieldNode.setContentMediaType(undefined);
+
+      const patches = diff.getPatches();
+
+      const replacePatch = patches.find((p) => p.patch.op === 'replace');
+      expect(replacePatch?.contentMediaTypeChange).toBeDefined();
+      expect(replacePatch?.contentMediaTypeChange?.fromContentMediaType).toBe(
+        'text/markdown',
+      );
+      expect(
+        replacePatch?.contentMediaTypeChange?.toContentMediaType,
+      ).toBeUndefined();
+    });
+
     it('marks move as rename when parent is same', () => {
       const { tree, diff } = createTreeAndDiff({
         oldName: stringField(),
@@ -656,6 +766,40 @@ describe('SchemaDiff', () => {
         expect(addPatch?.defaultChange).toBeDefined();
         expect(addPatch?.defaultChange?.fromDefault).toBeUndefined();
         expect(addPatch?.defaultChange?.toDefault).toBe('my default');
+      });
+
+      it('includes foreignKey in add patch when field has foreignKey', () => {
+        const { tree, diff } = createTreeAndDiff({});
+
+        const newNode = NodeFactory.string('categoryId');
+        newNode.setForeignKey('categories');
+        tree.addChildTo(tree.root().id(), newNode);
+
+        const patches = diff.getPatches();
+        const addPatch = patches.find((p) => p.patch.op === 'add');
+
+        expect(addPatch?.foreignKeyChange).toBeDefined();
+        expect(addPatch?.foreignKeyChange?.fromForeignKey).toBeUndefined();
+        expect(addPatch?.foreignKeyChange?.toForeignKey).toBe('categories');
+      });
+
+      it('includes contentMediaType in add patch when field has contentMediaType', () => {
+        const { tree, diff } = createTreeAndDiff({});
+
+        const newNode = NodeFactory.string('content');
+        newNode.setContentMediaType('text/markdown');
+        tree.addChildTo(tree.root().id(), newNode);
+
+        const patches = diff.getPatches();
+        const addPatch = patches.find((p) => p.patch.op === 'add');
+
+        expect(addPatch?.contentMediaTypeChange).toBeDefined();
+        expect(
+          addPatch?.contentMediaTypeChange?.fromContentMediaType,
+        ).toBeUndefined();
+        expect(addPatch?.contentMediaTypeChange?.toContentMediaType).toBe(
+          'text/markdown',
+        );
       });
     });
   });

@@ -76,19 +76,25 @@ export const FieldEditor: FC<FieldEditorProps> = observer(
               </Flex>
             </Tooltip>
           )}
-          <ContentEditable
-            dataTestId={dataTestId}
-            autoFocus={!viewModel.name}
-            initValue={viewModel.name}
-            placeholder={
-              viewModel.isRoot
-                ? 'Enter the name of the table'
-                : 'Enter the name of the field'
-            }
-            onBlur={viewModel.handleFieldBlur}
-            onFocus={() => viewModel.setFocused(true)}
-            onChange={viewModel.rename}
-          />
+          {viewModel.isReadonly ? (
+            <Text color="gray.400" data-testid={dataTestId}>
+              {viewModel.name}
+            </Text>
+          ) : (
+            <ContentEditable
+              dataTestId={dataTestId}
+              autoFocus={!viewModel.name}
+              initValue={viewModel.name}
+              placeholder={
+                viewModel.isRoot
+                  ? 'Enter the name of the table'
+                  : 'Enter the name of the field'
+              }
+              onBlur={viewModel.handleFieldBlur}
+              onFocus={() => viewModel.setFocused(true)}
+              onChange={viewModel.rename}
+            />
+          )}
           {hasName && viewModel.hasError && (
             <Tooltip
               content={viewModel.errorMessage ?? ''}
@@ -138,7 +144,7 @@ export const FieldEditor: FC<FieldEditorProps> = observer(
             )}
             <Box className={hoverClass} opacity={applyHoverStyles ? 0 : 1}>
               <Flex gap="0.5rem" alignItems="center">
-                {viewModel.showTypeSelector && (
+                {viewModel.showTypeSelector ? (
                   <TypeMenu
                     dataTestId={dataTestId}
                     onSelect={onChangeType}
@@ -155,6 +161,13 @@ export const FieldEditor: FC<FieldEditorProps> = observer(
                       </Text>
                     }
                   />
+                ) : (
+                  <Text
+                    data-testid={`${dataTestId}-type-label`}
+                    color="gray.400"
+                  >
+                    {viewModel.label}
+                  </Text>
                 )}
                 {rightContent}
               </Flex>

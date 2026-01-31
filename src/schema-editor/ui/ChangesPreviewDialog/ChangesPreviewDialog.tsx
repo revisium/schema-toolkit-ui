@@ -163,14 +163,7 @@ const DefaultValueRow: FC<{ example: DefaultValueExample }> = ({ example }) => {
   const { value, type, foreignKeyTableId } = example;
 
   if (foreignKeyTableId) {
-    return (
-      <Flex align="center" gap={2} fontSize="xs" color="gray.500" pl={2}>
-        <Text color="gray.400">foreignKey:</Text>
-        <Badge size="sm" colorPalette="blue" variant="subtle">
-          {foreignKeyTableId}
-        </Badge>
-      </Flex>
-    );
+    return null;
   }
 
   const formattedValue = formatDefaultValue(value);
@@ -209,7 +202,9 @@ const MetadataChangesRow: FC<{ changes: MetadataChangeType[] }> = ({
       change !== 'formula' &&
       change !== 'default' &&
       change !== 'description' &&
-      change !== 'deprecated',
+      change !== 'deprecated' &&
+      change !== 'foreignKey' &&
+      change !== 'contentMediaType',
   );
 
   if (filteredChanges.length === 0) {
@@ -400,6 +395,8 @@ const PatchRow: FC<PatchRowProps> = observer(({ schemaPatch }) => {
     defaultChange,
     descriptionChange,
     deprecatedChange,
+    foreignKeyChange,
+    contentMediaTypeChange,
   } = schemaPatch;
 
   const transformationInfo = useMemo(
@@ -482,6 +479,30 @@ const PatchRow: FC<PatchRowProps> = observer(({ schemaPatch }) => {
             label="deprecated"
             fromValue={formatChangeValue(deprecatedChange.fromDeprecated)}
             toValue={formatChangeValue(deprecatedChange.toDeprecated)}
+          />
+        </Box>
+      )}
+
+      {foreignKeyChange && (
+        <Box mt={2} ml={8}>
+          <ValueChangeRow
+            label="foreignKey"
+            fromValue={formatChangeValue(foreignKeyChange.fromForeignKey)}
+            toValue={formatChangeValue(foreignKeyChange.toForeignKey)}
+          />
+        </Box>
+      )}
+
+      {contentMediaTypeChange && (
+        <Box mt={2} ml={8}>
+          <ValueChangeRow
+            label="contentMediaType"
+            fromValue={formatChangeValue(
+              contentMediaTypeChange.fromContentMediaType,
+            )}
+            toValue={formatChangeValue(
+              contentMediaTypeChange.toContentMediaType,
+            )}
           />
         </Box>
       )}

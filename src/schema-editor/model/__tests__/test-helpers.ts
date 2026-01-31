@@ -83,3 +83,12 @@ export const withDeprecated = <T extends object>(
   ...field,
   deprecated: true as const,
 });
+
+export const stringWithContentMediaType = (
+  contentMediaType: string,
+  defaultValue = '',
+) => ({
+  type: 'string' as const,
+  default: defaultValue,
+  contentMediaType,
+});
