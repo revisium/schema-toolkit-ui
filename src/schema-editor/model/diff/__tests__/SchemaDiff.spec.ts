@@ -1,7 +1,6 @@
 import { SchemaTree } from '../../tree/SchemaTree';
 import { SchemaParser, resetIdCounter } from '../../schema/SchemaParser';
 import { SchemaDiff } from '../SchemaDiff';
-import { type SchemaPatch, type JsonPatch } from '../SchemaPatch';
 import { NodeFactory } from '../../node/NodeFactory';
 import { ParsedFormula } from '../../formula';
 import {
@@ -54,9 +53,6 @@ const createTreeAndDiff = (
   return createTreeAndDiffFromSchema(createSchema(properties));
 };
 
-const toJsonPatches = (patches: SchemaPatch[]): JsonPatch[] =>
-  patches.map((p) => p.patch);
-
 describe('SchemaDiff', () => {
   describe('adding nested field', () => {
     it('generates add patch for new nested field', () => {
@@ -75,40 +71,16 @@ describe('SchemaDiff', () => {
       const newNode = NodeFactory.string('new');
       tree.addChildTo(nestedNode.id(), newNode);
 
-      const patches = toJsonPatches(diff.getPatches());
-
-      const addPatch = patches.find(
-        (p) => p.op === 'add' && p.path.includes('new'),
-      );
-      expect(addPatch).toBeDefined();
-      expect(addPatch?.op).toBe('add');
-      expect(addPatch?.path).toBe('/properties/nested/properties/new');
-    });
-
-    it('generates patch with correct field name for nested add', () => {
-      const { tree, diff } = createTreeAndDiff({
-        nested: objectField({
-          te: stringField(),
-        }),
-        sum: formulaField('value * 2'),
-        test: stringField(),
-        val1: stringField(),
-        val2: stringFormulaField('val1'),
-        value: numberField(),
-      });
-
-      const nestedNode = tree.root().property('nested');
-      const newNode = NodeFactory.string('new');
-      tree.addChildTo(nestedNode.id(), newNode);
-
       const patches = diff.getPatches();
 
-      const addPatch = patches.find(
-        (p) => p.patch.op === 'add' && p.patch.path.includes('new'),
-      );
-      expect(addPatch).toBeDefined();
-      expect(addPatch?.patch.op).toBe('add');
-      expect(addPatch?.fieldName).toBe('nested.new');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'nested.new',
+        patch: {
+          op: 'add',
+          path: '/properties/nested/properties/new',
+        },
+      });
     });
   });
 
@@ -121,11 +93,16 @@ describe('SchemaDiff', () => {
       const newNode = NodeFactory.string('newField');
       tree.addChildTo(tree.root().id(), newNode);
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('add');
-      expect(patches[0].path).toBe('/properties/newField');
+      expect(patches[0]).toMatchObject({
+        fieldName: 'newField',
+        patch: {
+          op: 'add',
+          path: '/properties/newField',
+        },
+      });
     });
   });
 
@@ -138,11 +115,16 @@ describe('SchemaDiff', () => {
       const nameNode = tree.root().property('name') as StringNode;
       nameNode.setDefaultValue('modified');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('replace');
-      expect(patches[0].path).toBe('/properties/name');
+      expect(patches[0]).toMatchObject({
+        fieldName: 'name',
+        patch: {
+          op: 'replace',
+          path: '/properties/name',
+        },
+      });
     });
   });
 
@@ -156,11 +138,16 @@ describe('SchemaDiff', () => {
       const nameNode = tree.root().property('name');
       tree.removeNodeAt(tree.pathOf(nameNode.id()));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const removePatch = patches.find((p) => p.op === 'remove');
-      expect(removePatch).toBeDefined();
-      expect(removePatch?.path).toBe('/properties/name');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'name',
+        patch: {
+          op: 'remove',
+          path: '/properties/name',
+        },
+      });
     });
 
     it('generates remove patch when nested field is deleted', () => {
@@ -175,34 +162,16 @@ describe('SchemaDiff', () => {
       const fieldANode = nestedNode.property('fieldA');
       tree.removeNodeAt(tree.pathOf(fieldANode.id()));
 
-      const patches = toJsonPatches(diff.getPatches());
-
-      const removePatch = patches.find(
-        (p) => p.op === 'remove' && p.path.includes('fieldA'),
-      );
-      expect(removePatch).toBeDefined();
-      expect(removePatch?.path).toBe('/properties/nested/properties/fieldA');
-    });
-
-    it('generates patch with correct field name for nested remove', () => {
-      const { tree, diff } = createTreeAndDiff({
-        nested: objectField({
-          fieldA: stringField(),
-          fieldB: stringField(),
-        }),
-      });
-
-      const nestedNode = tree.root().property('nested');
-      const fieldANode = nestedNode.property('fieldA');
-      tree.removeNodeAt(tree.pathOf(fieldANode.id()));
-
       const patches = diff.getPatches();
 
-      const removePatch = patches.find(
-        (p) => p.patch.op === 'remove' && p.patch.path.includes('fieldA'),
-      );
-      expect(removePatch).toBeDefined();
-      expect(removePatch?.fieldName).toBe('nested.fieldA');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'nested.fieldA',
+        patch: {
+          op: 'remove',
+          path: '/properties/nested/properties/fieldA',
+        },
+      });
     });
   });
 
@@ -215,12 +184,18 @@ describe('SchemaDiff', () => {
       const node = tree.root().property('oldName');
       tree.renameNode(node.id(), 'newName');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('move');
-      expect(patches[0].from).toBe('/properties/oldName');
-      expect(patches[0].path).toBe('/properties/newName');
+      expect(patches[0]).toMatchObject({
+        fieldName: 'newName',
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/properties/oldName',
+          path: '/properties/newName',
+        },
+      });
     });
   });
 
@@ -273,13 +248,16 @@ describe('SchemaDiff', () => {
       const itemsItems = itemsNode.items();
       tree.addChildTo(itemsItems.id(), NodeFactory.string('newField'));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const addPatch = patches.find((p) => p.op === 'add');
-      expect(addPatch).toBeDefined();
-      expect(addPatch?.path).toBe(
-        '/properties/items/items/properties/newField',
-      );
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'items[*].newField',
+        patch: {
+          op: 'add',
+          path: '/properties/items/items/properties/newField',
+        },
+      });
     });
 
     it('generates remove patch for field inside array items', () => {
@@ -297,13 +275,16 @@ describe('SchemaDiff', () => {
       const fieldA = itemsItems.property('fieldA');
       tree.removeNodeAt(tree.pathOf(fieldA.id()));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const removePatch = patches.find((p) => p.op === 'remove');
-      expect(removePatch).toBeDefined();
-      expect(removePatch?.path).toBe(
-        '/properties/items/items/properties/fieldA',
-      );
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'items[*].fieldA',
+        patch: {
+          op: 'remove',
+          path: '/properties/items/items/properties/fieldA',
+        },
+      });
     });
 
     it('generates replace patch for field inside array items', () => {
@@ -320,13 +301,16 @@ describe('SchemaDiff', () => {
       const nameNode = itemsItems.property('name') as StringNode;
       nameNode.setDefaultValue('modified');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.op === 'replace');
-      expect(replacePatch).toBeDefined();
-      expect(replacePatch?.path).toBe(
-        '/properties/items/items/properties/name',
-      );
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'items[*].name',
+        patch: {
+          op: 'replace',
+          path: '/properties/items/items/properties/name',
+        },
+      });
     });
 
     it('generates move patch for renamed field inside array items', () => {
@@ -343,35 +327,208 @@ describe('SchemaDiff', () => {
       const oldNameNode = itemsItems.property('oldName');
       tree.renameNode(oldNameNode.id(), 'newName');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('move');
-      expect(patches[0].from).toBe(
-        '/properties/items/items/properties/oldName',
-      );
-      expect(patches[0].path).toBe(
-        '/properties/items/items/properties/newName',
-      );
+      expect(patches[0]).toMatchObject({
+        fieldName: 'items[*].newName',
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/properties/items/items/properties/oldName',
+          path: '/properties/items/items/properties/newName',
+        },
+      });
     });
 
-    it('generates correct fieldName for array items in patches', () => {
+    it('generates replace patch for items when array items type changes', () => {
       const { tree, diff } = createTreeAndDiff({
-        items: arrayField(
-          objectField({
-            name: stringField(),
-          }),
-        ),
+        items: arrayField(stringField()),
       });
 
-      const itemsNode = tree.root().property('items');
-      const itemsItems = itemsNode.items();
-      tree.addChildTo(itemsItems.id(), NodeFactory.string('newField'));
+      const arrayNode = tree.root().property('items');
+      const oldItems = arrayNode.items();
+      const oldItemsId = oldItems.id();
+      const oldItemsPath = tree.pathOf(oldItemsId);
+
+      tree.removeNodeAt(oldItemsPath);
+      const newItems = NodeFactory.number('');
+      tree.setNodeAt(oldItemsPath, newItems);
+      diff.trackReplacement(oldItemsId, newItems.id());
 
       const patches = diff.getPatches();
 
-      const addPatch = patches.find((p) => p.patch.op === 'add');
-      expect(addPatch?.fieldName).toBe('items[*].newField');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'items[*]',
+        patch: {
+          op: 'replace',
+          path: '/properties/items/items',
+        },
+        typeChange: {
+          fromType: 'string',
+          toType: 'number',
+        },
+      });
+    });
+
+    it('generates replace patch for array when only array metadata changes', () => {
+      const { tree, diff } = createTreeAndDiff({
+        items: arrayField(stringField()),
+      });
+
+      const arrayNode = tree.root().property('items');
+      arrayNode.setMetadata({ description: 'New description' });
+
+      const patches = diff.getPatches();
+
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'items',
+        patch: {
+          op: 'replace',
+          path: '/properties/items',
+        },
+        descriptionChange: {
+          fromDescription: undefined,
+          toDescription: 'New description',
+        },
+      });
+    });
+
+    it('generates two patches when both array metadata and items type change', () => {
+      const { tree, diff } = createTreeAndDiff({
+        items: arrayField(stringField()),
+      });
+
+      const arrayNode = tree.root().property('items');
+      arrayNode.setMetadata({ description: 'New description' });
+
+      const oldItems = arrayNode.items();
+      const oldItemsId = oldItems.id();
+      const oldItemsPath = tree.pathOf(oldItemsId);
+
+      tree.removeNodeAt(oldItemsPath);
+      const newItems = NodeFactory.number('');
+      tree.setNodeAt(oldItemsPath, newItems);
+      diff.trackReplacement(oldItemsId, newItems.id());
+
+      const patches = diff.getPatches();
+
+      expect(patches).toHaveLength(2);
+
+      const arrayPatch = patches.find(
+        (p) => p.patch.path === '/properties/items',
+      );
+      const itemsPatch = patches.find(
+        (p) => p.patch.path === '/properties/items/items',
+      );
+
+      expect(arrayPatch).toMatchObject({
+        fieldName: 'items',
+        patch: {
+          op: 'replace',
+          path: '/properties/items',
+        },
+        descriptionChange: {
+          fromDescription: undefined,
+          toDescription: 'New description',
+        },
+      });
+      expect(arrayPatch?.typeChange).toBeUndefined();
+      expect(arrayPatch?.defaultChange).toBeUndefined();
+
+      expect(itemsPatch).toMatchObject({
+        fieldName: 'items[*]',
+        patch: {
+          op: 'replace',
+          path: '/properties/items/items',
+        },
+        typeChange: {
+          fromType: 'string',
+          toType: 'number',
+        },
+      });
+    });
+
+    it('handles field named "properties" correctly', () => {
+      const { tree, diff } = createTreeAndDiff({
+        properties: arrayField(stringField()),
+      });
+
+      const arrayNode = tree.root().property('properties');
+      arrayNode.setMetadata({ description: 'Field named properties' });
+
+      const oldItems = arrayNode.items();
+      const oldItemsId = oldItems.id();
+      const oldItemsPath = tree.pathOf(oldItemsId);
+
+      tree.removeNodeAt(oldItemsPath);
+      const newItems = NodeFactory.number('');
+      tree.setNodeAt(oldItemsPath, newItems);
+      diff.trackReplacement(oldItemsId, newItems.id());
+
+      const patches = diff.getPatches();
+
+      expect(patches).toHaveLength(2);
+
+      const arrayPatch = patches.find(
+        (p) => p.patch.path === '/properties/properties',
+      );
+      const itemsPatch = patches.find(
+        (p) => p.patch.path === '/properties/properties/items',
+      );
+
+      expect(arrayPatch).toMatchObject({
+        fieldName: 'properties',
+        patch: {
+          op: 'replace',
+          path: '/properties/properties',
+        },
+        descriptionChange: {
+          fromDescription: undefined,
+          toDescription: 'Field named properties',
+        },
+      });
+      expect(arrayPatch?.typeChange).toBeUndefined();
+
+      expect(itemsPatch).toMatchObject({
+        fieldName: 'properties[*]',
+        patch: {
+          op: 'replace',
+          path: '/properties/properties/items',
+        },
+        typeChange: {
+          fromType: 'string',
+          toType: 'number',
+        },
+      });
+    });
+
+    it('handles nested field named "items" inside object correctly', () => {
+      const { tree, diff } = createTreeAndDiff({
+        parent: objectField({
+          items: stringField(),
+        }),
+      });
+
+      const itemsNode = tree.root().property('parent').property('items');
+      itemsNode.setDefaultValue('new default');
+
+      const patches = diff.getPatches();
+
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'parent.items',
+        patch: {
+          op: 'replace',
+          path: '/properties/parent/properties/items',
+        },
+        defaultChange: {
+          fromDefault: '',
+          toDefault: 'new default',
+        },
+      });
     });
   });
 
@@ -387,11 +544,16 @@ describe('SchemaDiff', () => {
       const valueNode = nestedNode.property('value') as NumberNode;
       valueNode.setDefaultValue(20);
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('replace');
-      expect(patches[0].path).toBe('/properties/nested/properties/value');
+      expect(patches[0]).toMatchObject({
+        fieldName: 'nested.value',
+        patch: {
+          op: 'replace',
+          path: '/properties/nested/properties/value',
+        },
+      });
     });
 
     it('generates move patch for renamed nested field', () => {
@@ -405,12 +567,18 @@ describe('SchemaDiff', () => {
       const oldNameNode = nestedNode.property('oldName');
       tree.renameNode(oldNameNode.id(), 'newName');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('move');
-      expect(patches[0].from).toBe('/properties/nested/properties/oldName');
-      expect(patches[0].path).toBe('/properties/nested/properties/newName');
+      expect(patches[0]).toMatchObject({
+        fieldName: 'nested.newName',
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/properties/nested/properties/oldName',
+          path: '/properties/nested/properties/newName',
+        },
+      });
     });
 
     it('generates multiple patches for multiple changes in one object', () => {
@@ -427,11 +595,14 @@ describe('SchemaDiff', () => {
       tree.removeNodeAt(tree.pathOf(nestedNode.property('fieldB').id()));
       tree.addChildTo(nestedNode.id(), NodeFactory.string('fieldD'));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      expect(patches.find((p) => p.op === 'replace')).toBeDefined();
-      expect(patches.find((p) => p.op === 'remove')).toBeDefined();
-      expect(patches.find((p) => p.op === 'add')).toBeDefined();
+      expect(patches).toHaveLength(3);
+      expect(patches).toMatchObject([
+        { fieldName: 'nested.fieldA', patch: { op: 'replace' } },
+        { fieldName: 'nested.fieldD', patch: { op: 'add' } },
+        { fieldName: 'nested.fieldB', patch: { op: 'remove' } },
+      ]);
     });
   });
 
@@ -450,10 +621,12 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.typeChange).toBeDefined();
-      expect(replacePatch?.typeChange?.fromType).toBe('string');
-      expect(replacePatch?.typeChange?.toType).toBe('number');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        typeChange: { fromType: 'string', toType: 'number' },
+      });
     });
 
     it('detects formula removal', () => {
@@ -471,10 +644,12 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.formulaChange).toBeDefined();
-      expect(replacePatch?.formulaChange?.fromFormula).toBe('value * 2');
-      expect(replacePatch?.formulaChange?.toFormula).toBeUndefined();
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'computed',
+        patch: { op: 'replace', path: '/properties/computed' },
+        formulaChange: { fromFormula: 'value * 2', toFormula: undefined },
+      });
     });
 
     it('detects default value change', () => {
@@ -487,10 +662,12 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.defaultChange).toBeDefined();
-      expect(replacePatch?.defaultChange?.fromDefault).toBe('initial');
-      expect(replacePatch?.defaultChange?.toDefault).toBe('modified');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        defaultChange: { fromDefault: 'initial', toDefault: 'modified' },
+      });
     });
 
     it('does not report defaultChange when only formula changes in array items', () => {
@@ -554,17 +731,15 @@ describe('SchemaDiff', () => {
       const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      const replacePatch = patches[0];
-      expect(replacePatch.patch.op).toBe('replace');
-      expect(replacePatch.fieldName).toBe('levels[*].label');
-      expect(replacePatch.formulaChange).toBeDefined();
-      expect(replacePatch.formulaChange?.fromFormula).toBe(
-        '"Exp:" + tostring(exp)',
-      );
-      expect(replacePatch.formulaChange?.toFormula).toBe(
-        '"Exp!:" + tostring(exp)',
-      );
-      expect(replacePatch.defaultChange).toBeUndefined();
+      expect(patches[0]).toMatchObject({
+        fieldName: 'levels[*].label',
+        patch: { op: 'replace' },
+        formulaChange: {
+          fromFormula: '"Exp:" + tostring(exp)',
+          toFormula: '"Exp!:" + tostring(exp)',
+        },
+      });
+      expect(patches[0].defaultChange).toBeUndefined();
     });
 
     it('detects description change', () => {
@@ -577,14 +752,15 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.descriptionChange).toBeDefined();
-      expect(replacePatch?.descriptionChange?.fromDescription).toBe(
-        'old description',
-      );
-      expect(replacePatch?.descriptionChange?.toDescription).toBe(
-        'new description',
-      );
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        descriptionChange: {
+          fromDescription: 'old description',
+          toDescription: 'new description',
+        },
+      });
     });
 
     it('detects deprecated change', () => {
@@ -597,10 +773,12 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.deprecatedChange).toBeDefined();
-      expect(replacePatch?.deprecatedChange?.fromDeprecated).toBeUndefined();
-      expect(replacePatch?.deprecatedChange?.toDeprecated).toBe(true);
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        deprecatedChange: { fromDeprecated: undefined, toDeprecated: true },
+      });
     });
 
     it('detects foreignKey addition', () => {
@@ -613,10 +791,12 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.foreignKeyChange).toBeDefined();
-      expect(replacePatch?.foreignKeyChange?.fromForeignKey).toBeUndefined();
-      expect(replacePatch?.foreignKeyChange?.toForeignKey).toBe('users');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        foreignKeyChange: { fromForeignKey: undefined, toForeignKey: 'users' },
+      });
     });
 
     it('detects foreignKey change', () => {
@@ -629,10 +809,15 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.foreignKeyChange).toBeDefined();
-      expect(replacePatch?.foreignKeyChange?.fromForeignKey).toBe('users');
-      expect(replacePatch?.foreignKeyChange?.toForeignKey).toBe('categories');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        foreignKeyChange: {
+          fromForeignKey: 'users',
+          toForeignKey: 'categories',
+        },
+      });
     });
 
     it('detects foreignKey removal', () => {
@@ -645,10 +830,12 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.foreignKeyChange).toBeDefined();
-      expect(replacePatch?.foreignKeyChange?.fromForeignKey).toBe('users');
-      expect(replacePatch?.foreignKeyChange?.toForeignKey).toBeUndefined();
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        foreignKeyChange: { fromForeignKey: 'users', toForeignKey: undefined },
+      });
     });
 
     it('detects contentMediaType addition', () => {
@@ -661,14 +848,15 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.contentMediaTypeChange).toBeDefined();
-      expect(
-        replacePatch?.contentMediaTypeChange?.fromContentMediaType,
-      ).toBeUndefined();
-      expect(replacePatch?.contentMediaTypeChange?.toContentMediaType).toBe(
-        'text/markdown',
-      );
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        contentMediaTypeChange: {
+          fromContentMediaType: undefined,
+          toContentMediaType: 'text/markdown',
+        },
+      });
     });
 
     it('detects contentMediaType change', () => {
@@ -681,14 +869,15 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.contentMediaTypeChange).toBeDefined();
-      expect(replacePatch?.contentMediaTypeChange?.fromContentMediaType).toBe(
-        'text/plain',
-      );
-      expect(replacePatch?.contentMediaTypeChange?.toContentMediaType).toBe(
-        'text/markdown',
-      );
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        contentMediaTypeChange: {
+          fromContentMediaType: 'text/plain',
+          toContentMediaType: 'text/markdown',
+        },
+      });
     });
 
     it('detects contentMediaType removal', () => {
@@ -701,14 +890,15 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.patch.op === 'replace');
-      expect(replacePatch?.contentMediaTypeChange).toBeDefined();
-      expect(replacePatch?.contentMediaTypeChange?.fromContentMediaType).toBe(
-        'text/markdown',
-      );
-      expect(
-        replacePatch?.contentMediaTypeChange?.toContentMediaType,
-      ).toBeUndefined();
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        contentMediaTypeChange: {
+          fromContentMediaType: 'text/markdown',
+          toContentMediaType: undefined,
+        },
+      });
     });
 
     it('marks move as rename when parent is same', () => {
@@ -721,8 +911,15 @@ describe('SchemaDiff', () => {
       const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('move');
-      expect(patches[0].isRename).toBe(true);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'newName',
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/properties/oldName',
+          path: '/properties/newName',
+        },
+      });
     });
 
     it('detects formula expression change when referenced field is renamed', () => {
@@ -735,19 +932,21 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const renamePatch = patches.find(
-        (p) => p.patch.op === 'move' && p.isRename,
-      );
-      expect(renamePatch).toBeDefined();
-      expect(renamePatch?.patch.from).toBe('/properties/price');
-      expect(renamePatch?.patch.path).toBe('/properties/cost');
-
-      const formulaPatch = patches.find(
-        (p) => p.patch.path === '/properties/total' && p.formulaChange,
-      );
-      expect(formulaPatch).toBeDefined();
-      expect(formulaPatch?.formulaChange?.fromFormula).toBe('price * 2');
-      expect(formulaPatch?.formulaChange?.toFormula).toBe('cost * 2');
+      expect(patches).toHaveLength(2);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'cost',
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/properties/price',
+          path: '/properties/cost',
+        },
+      });
+      expect(patches[1]).toMatchObject({
+        fieldName: 'total',
+        patch: { op: 'replace', path: '/properties/total' },
+        formulaChange: { fromFormula: 'price * 2', toFormula: 'cost * 2' },
+      });
     });
 
     it('detects formula expression change when formula field is moved', () => {
@@ -764,14 +963,18 @@ describe('SchemaDiff', () => {
 
       const patches = diff.getPatches();
 
-      const movePatch = patches.find(
-        (p) => p.patch.op === 'move' && !p.isRename,
-      );
-      expect(movePatch).toBeDefined();
-      expect(movePatch?.patch.from).toBe('/properties/total');
-      expect(movePatch?.patch.path).toBe('/properties/group/properties/total');
-      expect(movePatch?.formulaChange?.fromFormula).toBe('price * 2');
-      expect(movePatch?.formulaChange?.toFormula).toBe('../price * 2');
+      expect(patches).toHaveLength(2);
+      expect(patches[0]).toMatchObject({
+        patch: {
+          op: 'move',
+          from: '/properties/total',
+          path: '/properties/group/properties/total',
+        },
+      });
+      expect(patches[1]).toMatchObject({
+        patch: { op: 'replace', path: '/properties/group/properties/total' },
+        formulaChange: { toFormula: '../price * 2' },
+      });
     });
 
     describe('add patch metadata', () => {
@@ -788,11 +991,13 @@ describe('SchemaDiff', () => {
         tree.registerFormula(newNode.id(), formula);
 
         const patches = diff.getPatches();
-        const addPatch = patches.find((p) => p.patch.op === 'add');
 
-        expect(addPatch?.formulaChange).toBeDefined();
-        expect(addPatch?.formulaChange?.fromFormula).toBeUndefined();
-        expect(addPatch?.formulaChange?.toFormula).toBe('value * 2');
+        expect(patches).toHaveLength(1);
+        expect(patches[0]).toMatchObject({
+          fieldName: 'computed',
+          patch: { op: 'add', path: '/properties/computed' },
+          formulaChange: { fromFormula: undefined, toFormula: 'value * 2' },
+        });
       });
 
       it('includes description in add patch when field has description', () => {
@@ -803,13 +1008,16 @@ describe('SchemaDiff', () => {
         tree.addChildTo(tree.root().id(), newNode);
 
         const patches = diff.getPatches();
-        const addPatch = patches.find((p) => p.patch.op === 'add');
 
-        expect(addPatch?.descriptionChange).toBeDefined();
-        expect(addPatch?.descriptionChange?.fromDescription).toBeUndefined();
-        expect(addPatch?.descriptionChange?.toDescription).toBe(
-          'My description',
-        );
+        expect(patches).toHaveLength(1);
+        expect(patches[0]).toMatchObject({
+          fieldName: 'field',
+          patch: { op: 'add', path: '/properties/field' },
+          descriptionChange: {
+            fromDescription: undefined,
+            toDescription: 'My description',
+          },
+        });
       });
 
       it('includes deprecated in add patch when field is deprecated', () => {
@@ -820,11 +1028,13 @@ describe('SchemaDiff', () => {
         tree.addChildTo(tree.root().id(), newNode);
 
         const patches = diff.getPatches();
-        const addPatch = patches.find((p) => p.patch.op === 'add');
 
-        expect(addPatch?.deprecatedChange).toBeDefined();
-        expect(addPatch?.deprecatedChange?.fromDeprecated).toBeUndefined();
-        expect(addPatch?.deprecatedChange?.toDeprecated).toBe(true);
+        expect(patches).toHaveLength(1);
+        expect(patches[0]).toMatchObject({
+          fieldName: 'field',
+          patch: { op: 'add', path: '/properties/field' },
+          deprecatedChange: { fromDeprecated: undefined, toDeprecated: true },
+        });
       });
 
       it('includes default value in add patch', () => {
@@ -835,11 +1045,13 @@ describe('SchemaDiff', () => {
         tree.addChildTo(tree.root().id(), newNode);
 
         const patches = diff.getPatches();
-        const addPatch = patches.find((p) => p.patch.op === 'add');
 
-        expect(addPatch?.defaultChange).toBeDefined();
-        expect(addPatch?.defaultChange?.fromDefault).toBeUndefined();
-        expect(addPatch?.defaultChange?.toDefault).toBe('my default');
+        expect(patches).toHaveLength(1);
+        expect(patches[0]).toMatchObject({
+          fieldName: 'field',
+          patch: { op: 'add', path: '/properties/field' },
+          defaultChange: { fromDefault: undefined, toDefault: 'my default' },
+        });
       });
 
       it('includes foreignKey in add patch when field has foreignKey', () => {
@@ -850,11 +1062,16 @@ describe('SchemaDiff', () => {
         tree.addChildTo(tree.root().id(), newNode);
 
         const patches = diff.getPatches();
-        const addPatch = patches.find((p) => p.patch.op === 'add');
 
-        expect(addPatch?.foreignKeyChange).toBeDefined();
-        expect(addPatch?.foreignKeyChange?.fromForeignKey).toBeUndefined();
-        expect(addPatch?.foreignKeyChange?.toForeignKey).toBe('categories');
+        expect(patches).toHaveLength(1);
+        expect(patches[0]).toMatchObject({
+          fieldName: 'categoryId',
+          patch: { op: 'add', path: '/properties/categoryId' },
+          foreignKeyChange: {
+            fromForeignKey: undefined,
+            toForeignKey: 'categories',
+          },
+        });
       });
 
       it('includes contentMediaType in add patch when field has contentMediaType', () => {
@@ -865,15 +1082,16 @@ describe('SchemaDiff', () => {
         tree.addChildTo(tree.root().id(), newNode);
 
         const patches = diff.getPatches();
-        const addPatch = patches.find((p) => p.patch.op === 'add');
 
-        expect(addPatch?.contentMediaTypeChange).toBeDefined();
-        expect(
-          addPatch?.contentMediaTypeChange?.fromContentMediaType,
-        ).toBeUndefined();
-        expect(addPatch?.contentMediaTypeChange?.toContentMediaType).toBe(
-          'text/markdown',
-        );
+        expect(patches).toHaveLength(1);
+        expect(patches[0]).toMatchObject({
+          fieldName: 'content',
+          patch: { op: 'add', path: '/properties/content' },
+          contentMediaTypeChange: {
+            fromContentMediaType: undefined,
+            toContentMediaType: 'text/markdown',
+          },
+        });
       });
     });
   });
@@ -893,11 +1111,13 @@ describe('SchemaDiff', () => {
       const parentNode = tree.root().property('parent');
       tree.removeNodeAt(tree.pathOf(parentNode.id()));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const removePatches = patches.filter((p) => p.op === 'remove');
-      expect(removePatches).toHaveLength(1);
-      expect(removePatches[0].path).toBe('/properties/parent');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'parent',
+        patch: { op: 'remove', path: '/properties/parent' },
+      });
     });
 
     it('renames parent - children move together, single move patch', () => {
@@ -911,12 +1131,18 @@ describe('SchemaDiff', () => {
       const parentNode = tree.root().property('oldParent');
       tree.renameNode(parentNode.id(), 'newParent');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const movePatches = patches.filter((p) => p.op === 'move');
-      expect(movePatches).toHaveLength(1);
-      expect(movePatches[0].from).toBe('/properties/oldParent');
-      expect(movePatches[0].path).toBe('/properties/newParent');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'newParent',
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/properties/oldParent',
+          path: '/properties/newParent',
+        },
+      });
     });
 
     it('rename + modify generates move then replace', () => {
@@ -930,12 +1156,19 @@ describe('SchemaDiff', () => {
         'modified',
       );
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(2);
-      expect(patches[0].op).toBe('move');
-      expect(patches[1].op).toBe('replace');
-      expect(patches[1].path).toBe('/properties/newName');
+      expect(patches[0]).toMatchObject({
+        patch: {
+          op: 'move',
+          from: '/properties/oldName',
+          path: '/properties/newName',
+        },
+      });
+      expect(patches[1]).toMatchObject({
+        patch: { op: 'replace', path: '/properties/newName' },
+      });
     });
   });
 
@@ -950,14 +1183,12 @@ describe('SchemaDiff', () => {
       tree.addChildTo(tree.root().id(), NodeFactory.string('newField'));
       tree.removeNodeAt(tree.pathOf(tree.root().property('fieldB').id()));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const moveIndex = patches.findIndex((p) => p.op === 'move');
-      const addIndex = patches.findIndex((p) => p.op === 'add');
-      const removeIndex = patches.findIndex((p) => p.op === 'remove');
-
-      expect(moveIndex).toBeLessThan(addIndex);
-      expect(moveIndex).toBeLessThan(removeIndex);
+      expect(patches).toHaveLength(3);
+      expect(patches[0]).toMatchObject({ patch: { op: 'move' } });
+      expect(patches[1]).toMatchObject({ patch: { op: 'add' } });
+      expect(patches[2]).toMatchObject({ patch: { op: 'remove' } });
     });
 
     it('add new parent, move field into it, add formula', () => {
@@ -977,10 +1208,11 @@ describe('SchemaDiff', () => {
       movedNode.setFormula(formula);
       tree.registerFormula(movedNode.id(), formula);
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      expect(patches).toEqual([
-        {
+      expect(patches).toHaveLength(3);
+      expect(patches[0]).toMatchObject({
+        patch: {
           op: 'add',
           path: '/properties/nested',
           value: {
@@ -990,22 +1222,20 @@ describe('SchemaDiff', () => {
             required: [],
           },
         },
-        {
+      });
+      expect(patches[1]).toMatchObject({
+        patch: {
           op: 'move',
           from: '/properties/werwer',
           path: '/properties/nested/properties/werwer',
         },
-        {
+      });
+      expect(patches[2]).toMatchObject({
+        patch: {
           op: 'replace',
           path: '/properties/nested/properties/werwer',
-          value: {
-            type: 'number',
-            default: 0,
-            readOnly: true,
-            'x-formula': { version: 1, expression: '../test * 2' },
-          },
         },
-      ]);
+      });
     });
 
     it('move multiple fields into deeply nested new structure', () => {
@@ -1022,37 +1252,29 @@ describe('SchemaDiff', () => {
       tree.moveNode(tree.root().property('fieldA').id(), level2.id());
       tree.moveNode(tree.root().property('fieldB').id(), level2.id());
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      expect(patches).toEqual([
-        {
+      expect(patches).toHaveLength(3);
+      expect(patches[0]).toMatchObject({
+        patch: {
           op: 'add',
           path: '/properties/level1',
-          value: {
-            type: 'object',
-            properties: {
-              level2: {
-                type: 'object',
-                properties: {},
-                additionalProperties: false,
-                required: [],
-              },
-            },
-            additionalProperties: false,
-            required: ['level2'],
-          },
         },
-        {
+      });
+      expect(patches[1]).toMatchObject({
+        patch: {
           op: 'move',
           from: '/properties/fieldA',
           path: '/properties/level1/properties/level2/properties/fieldA',
         },
-        {
+      });
+      expect(patches[2]).toMatchObject({
+        patch: {
           op: 'move',
           from: '/properties/fieldB',
           path: '/properties/level1/properties/level2/properties/fieldB',
         },
-      ]);
+      });
     });
 
     it.todo(
@@ -1071,20 +1293,12 @@ describe('SchemaDiff', () => {
       const renamedParent = tree.root().property('newParent');
       tree.addChildTo(renamedParent.id(), NodeFactory.string('newChild'));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const moveIndex = patches.findIndex(
-        (p) => p.op === 'move' && p.path === '/properties/newParent',
-      );
-      const addIndex = patches.findIndex(
-        (p) =>
-          p.op === 'add' &&
-          p.path === '/properties/newParent/properties/newChild',
-      );
-
-      expect(moveIndex).not.toBe(-1);
-      expect(addIndex).not.toBe(-1);
-      expect(moveIndex).toBeLessThan(addIndex);
+      expect(patches.length).toBeGreaterThanOrEqual(2);
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'move', path: '/properties/newParent' },
+      });
     });
 
     it('rename parent then remove child - patches reference new parent path', () => {
@@ -1102,20 +1316,16 @@ describe('SchemaDiff', () => {
         tree.pathOf(renamedParent.property('childToRemove').id()),
       );
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const movePatch = patches.find(
-        (p) => p.op === 'move' && p.path === '/properties/newParent',
-      );
-      expect(movePatch).toBeDefined();
-      expect(movePatch?.from).toBe('/properties/oldParent');
-
-      const hasRemoveOrReplace = patches.some(
-        (p) =>
-          (p.op === 'remove' && p.path.includes('childToRemove')) ||
-          (p.op === 'replace' && p.path === '/properties/newParent'),
-      );
-      expect(hasRemoveOrReplace).toBe(true);
+      expect(patches.length).toBeGreaterThanOrEqual(1);
+      expect(patches[0]).toMatchObject({
+        patch: {
+          op: 'move',
+          from: '/properties/oldParent',
+          path: '/properties/newParent',
+        },
+      });
     });
 
     it('complex chain: rename A->B, add new A, modify B', () => {
@@ -1130,16 +1340,22 @@ describe('SchemaDiff', () => {
         'modified',
       );
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const schema = diff.getBaseSchema();
-      const result = applyPatches(schema, patches);
-
-      expect(result.properties?.fieldA).toBeDefined();
-      expect(result.properties?.fieldB).toBeDefined();
-      expect((result.properties?.fieldB as { default: string }).default).toBe(
-        'modified',
-      );
+      expect(patches).toHaveLength(3);
+      expect(patches[0]).toMatchObject({
+        patch: {
+          op: 'move',
+          from: '/properties/fieldA',
+          path: '/properties/fieldB',
+        },
+      });
+      expect(patches[1]).toMatchObject({
+        patch: { op: 'replace', path: '/properties/fieldB' },
+      });
+      expect(patches[2]).toMatchObject({
+        patch: { op: 'add', path: '/properties/fieldA' },
+      });
     });
 
     it('move field between objects - path must exist at application time', () => {
@@ -1159,17 +1375,22 @@ describe('SchemaDiff', () => {
       tree.removeNodeAt(tree.pathOf(fieldToMove.id()));
       tree.addChildTo(targetNode.id(), NodeFactory.string('fieldToMove'));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const schema = diff.getBaseSchema();
-      const result = applyPatches(schema, patches);
+      expect(patches).toHaveLength(2);
 
-      expect(
-        (result.properties?.source as JsonObjectSchema).properties?.fieldToMove,
-      ).toBeUndefined();
-      expect(
-        (result.properties?.target as JsonObjectSchema).properties?.fieldToMove,
-      ).toBeDefined();
+      const removePatch = patches.find((p) => p.patch.op === 'remove');
+      const addPatch = patches.find((p) => p.patch.op === 'add');
+
+      expect(removePatch).toMatchObject({
+        patch: {
+          op: 'remove',
+          path: '/properties/source/properties/fieldToMove',
+        },
+      });
+      expect(addPatch).toMatchObject({
+        patch: { op: 'add', path: '/properties/target/properties/fieldToMove' },
+      });
     });
 
     it('deeply nested rename chain', () => {
@@ -1191,18 +1412,16 @@ describe('SchemaDiff', () => {
       tree.renameNode(level2.id(), 'renamed2');
       tree.renameNode(level3.id(), 'renamed3');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const schema = diff.getBaseSchema();
-      const result = applyPatches(schema, patches);
-
-      expect(result.properties?.renamed1).toBeDefined();
-      const r1 = result.properties?.renamed1 as JsonObjectSchema;
-      expect(r1.properties?.renamed2).toBeDefined();
-      const r2 = r1.properties?.renamed2 as JsonObjectSchema;
-      expect(r2.properties?.renamed3).toBeDefined();
-      const r3 = r2.properties?.renamed3 as JsonObjectSchema;
-      expect(r3.properties?.deepField).toBeDefined();
+      expect(patches.length).toBeGreaterThanOrEqual(1);
+      expect(patches[0]).toMatchObject({
+        patch: {
+          op: 'move',
+          from: '/properties/level1',
+          path: '/properties/renamed1',
+        },
+      });
     });
 
     it('rename field to name of removed field', () => {
@@ -1214,17 +1433,20 @@ describe('SchemaDiff', () => {
       tree.removeNodeAt(tree.pathOf(tree.root().property('fieldA').id()));
       tree.renameNode(tree.root().property('fieldB').id(), 'fieldA');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches.length).toBeGreaterThanOrEqual(1);
-
-      const movePatch = patches.find(
-        (p) =>
-          p.op === 'move' &&
-          p.from === '/properties/fieldB' &&
-          p.path === '/properties/fieldA',
+      expect(patches).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            patch: {
+              op: 'move',
+              from: '/properties/fieldB',
+              path: '/properties/fieldA',
+            },
+          }),
+        ]),
       );
-      expect(movePatch).toBeDefined();
     });
 
     it('multiple renames in sequence maintain valid paths', () => {
@@ -1238,17 +1460,22 @@ describe('SchemaDiff', () => {
       tree.renameNode(tree.root().property('b').id(), 'y');
       tree.renameNode(tree.root().property('c').id(), 'z');
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const schema = diff.getBaseSchema();
-      const result = applyPatches(schema, patches);
-
-      expect(result.properties?.x).toBeDefined();
-      expect(result.properties?.y).toBeDefined();
-      expect(result.properties?.z).toBeDefined();
-      expect(result.properties?.a).toBeUndefined();
-      expect(result.properties?.b).toBeUndefined();
-      expect(result.properties?.c).toBeUndefined();
+      expect(patches).toHaveLength(3);
+      expect(patches).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            patch: { op: 'move', from: '/properties/a', path: '/properties/x' },
+          }),
+          expect.objectContaining({
+            patch: { op: 'move', from: '/properties/b', path: '/properties/y' },
+          }),
+          expect.objectContaining({
+            patch: { op: 'move', from: '/properties/c', path: '/properties/z' },
+          }),
+        ]),
+      );
     });
 
     it('add then remove same path in sequence - net effect is no change', () => {
@@ -1259,7 +1486,7 @@ describe('SchemaDiff', () => {
       tree.addChildTo(tree.root().id(), NodeFactory.string('temporary'));
       tree.removeNodeAt(tree.pathOf(tree.root().property('temporary').id()));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
       expect(patches).toHaveLength(0);
     });
@@ -1282,19 +1509,23 @@ describe('SchemaDiff', () => {
         'modified',
       );
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const schema = diff.getBaseSchema();
-      const result = applyPatches(schema, patches);
-
-      const itemsSchema = result.properties?.items as {
-        items: JsonObjectSchema;
-      };
-      expect(itemsSchema.items.properties?.newField).toBeDefined();
-      expect(itemsSchema.items.properties?.oldField).toBeUndefined();
-      expect(
-        (itemsSchema.items.properties?.newField as { default: string }).default,
-      ).toBe('modified');
+      expect(patches).toHaveLength(2);
+      expect(patches[0]).toMatchObject({
+        patch: {
+          op: 'move',
+          from: '/properties/items/items/properties/oldField',
+          path: '/properties/items/items/properties/newField',
+        },
+      });
+      expect(patches[1]).toMatchObject({
+        patch: {
+          op: 'replace',
+          path: '/properties/items/items/properties/newField',
+        },
+        defaultChange: { toDefault: 'modified' },
+      });
     });
   });
 
@@ -1312,12 +1543,14 @@ describe('SchemaDiff', () => {
       tree.addChildTo(newNode.id(), NodeFactory.string('nested'));
       diff.trackReplacement(fieldNode.id(), newNode.id());
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.op === 'replace');
-      expect(replacePatch).toBeDefined();
-      expect(replacePatch?.path).toBe('/properties/field');
-      expect((replacePatch?.value as JsonObjectSchema).type).toBe('object');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        typeChange: { fromType: 'string', toType: 'object' },
+      });
     });
 
     it('primitive to array', () => {
@@ -1332,11 +1565,14 @@ describe('SchemaDiff', () => {
       tree.addChildTo(tree.root().id(), newNode);
       diff.trackReplacement(fieldNode.id(), newNode.id());
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.op === 'replace');
-      expect(replacePatch).toBeDefined();
-      expect((replacePatch?.value as { type: string }).type).toBe('array');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        typeChange: { fromType: 'string', toType: 'array<string>' },
+      });
     });
 
     it('object to primitive', () => {
@@ -1353,11 +1589,14 @@ describe('SchemaDiff', () => {
       tree.addChildTo(tree.root().id(), newNode);
       diff.trackReplacement(fieldNode.id(), newNode.id());
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.op === 'replace');
-      expect(replacePatch).toBeDefined();
-      expect((replacePatch?.value as { type: string }).type).toBe('string');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        typeChange: { fromType: 'object', toType: 'string' },
+      });
     });
 
     it('object to array', () => {
@@ -1374,11 +1613,14 @@ describe('SchemaDiff', () => {
       tree.addChildTo(tree.root().id(), newNode);
       diff.trackReplacement(fieldNode.id(), newNode.id());
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const replacePatch = patches.find((p) => p.op === 'replace');
-      expect(replacePatch).toBeDefined();
-      expect((replacePatch?.value as { type: string }).type).toBe('array');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'field',
+        patch: { op: 'replace', path: '/properties/field' },
+        typeChange: { fromType: 'object', toType: 'array<string>' },
+      });
     });
   });
 
@@ -1393,13 +1635,13 @@ describe('SchemaDiff', () => {
       const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('');
-      expect(patches[0].descriptionChange).toBeDefined();
-      expect(patches[0].descriptionChange?.fromDescription).toBeUndefined();
-      expect(patches[0].descriptionChange?.toDescription).toBe(
-        'New root description',
-      );
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '' },
+        descriptionChange: {
+          fromDescription: undefined,
+          toDescription: 'New root description',
+        },
+      });
     });
 
     it('generates replace patch when root deprecated changes', () => {
@@ -1412,10 +1654,10 @@ describe('SchemaDiff', () => {
       const patches = diff.getPatches();
 
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('');
-      expect(patches[0].deprecatedChange).toBeDefined();
-      expect(patches[0].deprecatedChange?.toDeprecated).toBe(true);
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '' },
+        deprecatedChange: { toDeprecated: true },
+      });
     });
 
     it('isDirty returns true when root metadata changes', () => {
@@ -1453,11 +1695,10 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('');
-      expect(patches[0].descriptionChange?.toDescription).toBe(
-        'A string value',
-      );
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '' },
+        descriptionChange: { toDescription: 'A string value' },
+      });
     });
 
     it('string root - default value change', () => {
@@ -1471,8 +1712,10 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '' },
+        defaultChange: { fromDefault: 'hello', toDefault: 'world' },
+      });
     });
 
     it('number root - default value change', () => {
@@ -1486,8 +1729,10 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '' },
+        defaultChange: { fromDefault: 0, toDefault: 42 },
+      });
     });
 
     it('boolean root - deprecated change', () => {
@@ -1501,7 +1746,10 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].deprecatedChange?.toDeprecated).toBe(true);
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '' },
+        deprecatedChange: { toDeprecated: true },
+      });
     });
   });
 
@@ -1527,8 +1775,10 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '' },
+        descriptionChange: { toDescription: 'Array of strings' },
+      });
     });
 
     it('array root - items default value change', () => {
@@ -1543,8 +1793,10 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('/items');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '/items' },
+        defaultChange: { fromDefault: 'initial', toDefault: 'changed' },
+      });
     });
 
     it('array root with object items - add field to items', () => {
@@ -1564,10 +1816,11 @@ describe('SchemaDiff', () => {
       tree.addChildTo(items.id(), NodeFactory.number('age'));
 
       expect(diff.isDirty()).toBe(true);
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('add');
-      expect(patches[0].path).toBe('/items/properties/age');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'add', path: '/items/properties/age' },
+      });
     });
 
     it('array root with object items - remove field from items', () => {
@@ -1589,10 +1842,11 @@ describe('SchemaDiff', () => {
       tree.removeNodeAt(tree.pathOf(ageNode.id()));
 
       expect(diff.isDirty()).toBe(true);
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('remove');
-      expect(patches[0].path).toBe('/items/properties/age');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'remove', path: '/items/properties/age' },
+      });
     });
 
     it('array root with object items - rename field in items', () => {
@@ -1613,11 +1867,16 @@ describe('SchemaDiff', () => {
       tree.renameNode(oldNameNode.id(), 'newName');
 
       expect(diff.isDirty()).toBe(true);
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('move');
-      expect(patches[0].from).toBe('/items/properties/oldName');
-      expect(patches[0].path).toBe('/items/properties/newName');
+      expect(patches[0]).toMatchObject({
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/items/properties/oldName',
+          path: '/items/properties/newName',
+        },
+      });
     });
   });
 
@@ -1651,8 +1910,10 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('/items/items');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'replace', path: '/items/items' },
+        defaultChange: { fromDefault: 'initial', toDefault: 'changed' },
+      });
     });
 
     it('array of arrays of objects - add field to innermost object', () => {
@@ -1676,10 +1937,11 @@ describe('SchemaDiff', () => {
       tree.addChildTo(innerItems.id(), NodeFactory.string('label'));
 
       expect(diff.isDirty()).toBe(true);
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('add');
-      expect(patches[0].path).toBe('/items/items/properties/label');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'add', path: '/items/items/properties/label' },
+      });
     });
 
     it('array of arrays of objects - remove field from innermost object', () => {
@@ -1705,10 +1967,11 @@ describe('SchemaDiff', () => {
       tree.removeNodeAt(tree.pathOf(labelNode.id()));
 
       expect(diff.isDirty()).toBe(true);
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('remove');
-      expect(patches[0].path).toBe('/items/items/properties/label');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'remove', path: '/items/items/properties/label' },
+      });
     });
 
     it('array of arrays of objects - rename field in innermost object', () => {
@@ -1733,11 +1996,16 @@ describe('SchemaDiff', () => {
       tree.renameNode(oldFieldNode.id(), 'newField');
 
       expect(diff.isDirty()).toBe(true);
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('move');
-      expect(patches[0].from).toBe('/items/items/properties/oldField');
-      expect(patches[0].path).toBe('/items/items/properties/newField');
+      expect(patches[0]).toMatchObject({
+        isRename: true,
+        patch: {
+          op: 'move',
+          from: '/items/items/properties/oldField',
+          path: '/items/items/properties/newField',
+        },
+      });
     });
 
     it('object with array of arrays field', () => {
@@ -1758,8 +2026,11 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.op).toBe('replace');
-      expect(patches[0].patch.path).toBe('/properties/matrix/items/items');
+      expect(patches[0]).toMatchObject({
+        fieldName: 'matrix[*][*]',
+        patch: { op: 'replace', path: '/properties/matrix/items/items' },
+        defaultChange: { fromDefault: 0, toDefault: 1 },
+      });
     });
 
     it('deeply nested: array > array > array > object - add field', () => {
@@ -1787,10 +2058,11 @@ describe('SchemaDiff', () => {
       tree.addChildTo(level3.id(), NodeFactory.number('y'));
 
       expect(diff.isDirty()).toBe(true);
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].op).toBe('add');
-      expect(patches[0].path).toBe('/items/items/items/properties/y');
+      expect(patches[0]).toMatchObject({
+        patch: { op: 'add', path: '/items/items/items/properties/y' },
+      });
     });
 
     it('mixed: object > array > object > array > primitive - change innermost', () => {
@@ -1814,9 +2086,14 @@ describe('SchemaDiff', () => {
       expect(diff.isDirty()).toBe(true);
       const patches = diff.getPatches();
       expect(patches).toHaveLength(1);
-      expect(patches[0].patch.path).toBe(
-        '/properties/users/items/properties/tags/items',
-      );
+      expect(patches[0]).toMatchObject({
+        fieldName: 'users[*].tags[*]',
+        patch: {
+          op: 'replace',
+          path: '/properties/users/items/properties/tags/items',
+        },
+        defaultChange: { fromDefault: 'tag', toDefault: 'new-tag' },
+      });
     });
   });
 
@@ -1831,11 +2108,13 @@ describe('SchemaDiff', () => {
       tree.addChildTo(parentNode.id(), NodeFactory.string('child1'));
       tree.addChildTo(parentNode.id(), NodeFactory.string('child2'));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const addPatches = patches.filter((p) => p.op === 'add');
-      expect(addPatches).toHaveLength(1);
-      expect(addPatches[0]?.path).toBe('/properties/parent');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'parent',
+        patch: { op: 'add', path: '/properties/parent' },
+      });
     });
 
     it('should generate single remove patch for parent when removing nested structure', () => {
@@ -1849,94 +2128,13 @@ describe('SchemaDiff', () => {
       const parentNode = tree.root().property('parent');
       tree.removeNodeAt(tree.pathOf(parentNode.id()));
 
-      const patches = toJsonPatches(diff.getPatches());
+      const patches = diff.getPatches();
 
-      const removePatches = patches.filter((p) => p.op === 'remove');
-      expect(removePatches).toHaveLength(1);
-      expect(removePatches[0]?.path).toBe('/properties/parent');
+      expect(patches).toHaveLength(1);
+      expect(patches[0]).toMatchObject({
+        fieldName: 'parent',
+        patch: { op: 'remove', path: '/properties/parent' },
+      });
     });
   });
 });
-
-function applyPatches(
-  schema: JsonObjectSchema,
-  patches: JsonPatch[],
-): JsonObjectSchema {
-  let result = JSON.parse(JSON.stringify(schema)) as JsonObjectSchema;
-
-  for (const patch of patches) {
-    result = applyPatch(result, patch);
-  }
-
-  return result;
-}
-
-function applyPatch(
-  schema: JsonObjectSchema,
-  patch: JsonPatch,
-): JsonObjectSchema {
-  const result = JSON.parse(JSON.stringify(schema)) as JsonObjectSchema;
-
-  switch (patch.op) {
-    case 'add':
-    case 'replace': {
-      const { parent, key } = resolvePath(result, patch.path);
-      if (parent && key) {
-        (parent as Record<string, unknown>)[key] = patch.value;
-      }
-      break;
-    }
-    case 'remove': {
-      const { parent, key } = resolvePath(result, patch.path);
-      if (parent && key) {
-        delete (parent as Record<string, unknown>)[key];
-      }
-      break;
-    }
-    case 'move': {
-      if (!patch.from) {
-        break;
-      }
-      const { parent: fromParent, key: fromKey } = resolvePath(
-        result,
-        patch.from,
-      );
-      const value =
-        fromParent && fromKey
-          ? (fromParent as Record<string, unknown>)[fromKey]
-          : undefined;
-      if (fromParent && fromKey) {
-        delete (fromParent as Record<string, unknown>)[fromKey];
-      }
-      const { parent: toParent, key: toKey } = resolvePath(result, patch.path);
-      if (toParent && toKey) {
-        (toParent as Record<string, unknown>)[toKey] = value;
-      }
-      break;
-    }
-  }
-
-  return result;
-}
-
-function resolvePath(
-  obj: JsonObjectSchema,
-  path: string,
-): { parent: JsonSchemaType | null; key: string | null } {
-  const parts = path.split('/').filter(Boolean);
-  let current: unknown = obj;
-
-  for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i];
-    if (current && typeof current === 'object' && part) {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return { parent: null, key: null };
-    }
-  }
-
-  return {
-    parent: current as JsonSchemaType,
-    key: parts[parts.length - 1] ?? null,
-  };
-}

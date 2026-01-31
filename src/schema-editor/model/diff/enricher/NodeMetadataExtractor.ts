@@ -200,4 +200,29 @@ export class NodeMetadataExtractor {
     const currentType = this.getNodeType(currentNode);
     return baseType !== currentType;
   }
+
+  public hasTypeChangedIgnoringItems(
+    baseNode: SchemaNode | null,
+    currentNode: SchemaNode | null,
+  ): boolean {
+    const baseType = this.getBaseNodeType(baseNode);
+    const currentType = this.getBaseNodeType(currentNode);
+    return baseType !== currentType;
+  }
+
+  private getBaseNodeType(node: SchemaNode | null): string {
+    if (!node || node.isNull()) {
+      return 'unknown';
+    }
+
+    if (node.isRef()) {
+      return node.ref();
+    }
+
+    if (node.isArray()) {
+      return 'array';
+    }
+
+    return node.nodeType();
+  }
 }

@@ -210,6 +210,17 @@ export class PatchGenerator {
         continue;
       }
 
+      if (change.currentNode.isArray()) {
+        const arrayPatches = this.generateArrayReplacePatches(
+          change.currentNode,
+          change.baseNode,
+          currentPath,
+        );
+        patches.push(...arrayPatches);
+        replacedPaths.push(currentPath);
+        continue;
+      }
+
       const schema = this.serializer.serializeWithTree(
         change.currentNode,
         this.currentTree,
@@ -223,6 +234,86 @@ export class PatchGenerator {
     }
 
     return patches;
+  }
+
+  private generateArrayReplacePatches(
+    currentNode: SchemaNode,
+    baseNode: SchemaNode,
+    currentPath: Path,
+  ): JsonPatch[] {
+    if (!baseNode.isArray()) {
+      const schema = this.serializer.serializeWithTree(
+        currentNode,
+        this.currentTree,
+      );
+      return [
+        {
+          op: 'replace',
+          path: currentPath.asJsonPointer(),
+          value: schema,
+        },
+      ];
+    }
+
+    const patches: JsonPatch[] = [];
+    const metadataChanged = this.hasMetadataChanged(currentNode, baseNode);
+    const itemsChanged = this.hasItemsChanged(currentNode, baseNode);
+
+    if (metadataChanged) {
+      const schema = this.serializer.serializeWithTree(
+        currentNode,
+        this.currentTree,
+      );
+      patches.push({
+        op: 'replace',
+        path: currentPath.asJsonPointer(),
+        value: schema,
+      });
+    }
+
+    if (itemsChanged) {
+      const items = currentNode.items();
+      if (!items.isNull()) {
+        const itemsPath = currentPath.childItems();
+        const itemsSchema = this.serializer.serializeWithTree(
+          items,
+          this.currentTree,
+        );
+        patches.push({
+          op: 'replace',
+          path: itemsPath.asJsonPointer(),
+          value: itemsSchema,
+        });
+      }
+    }
+
+    return patches;
+  }
+
+  private hasItemsChanged(
+    currentNode: SchemaNode,
+    baseNode: SchemaNode,
+  ): boolean {
+    const items = currentNode.items();
+    const baseItems = baseNode.items();
+
+    if (items.isNull() && baseItems.isNull()) {
+      return false;
+    }
+    if (items.isNull() || baseItems.isNull()) {
+      return true;
+    }
+
+    const currentItemsSchema = this.serializer.serializeWithTree(
+      items,
+      this.currentTree,
+    );
+    const baseItemsSchema = this.serializer.serializeWithTree(
+      baseItems,
+      this.baseTree,
+    );
+
+    return !this.comparator.areEqual(currentItemsSchema, baseItemsSchema);
   }
 
   private isChildOfAny(path: Path, parents: Path[]): boolean {
