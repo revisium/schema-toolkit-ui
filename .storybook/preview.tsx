@@ -1,6 +1,14 @@
 import type { Preview } from '@storybook/react';
+import * as mobx from 'mobx';
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { ThemeProvider } from 'next-themes';
+import {
+  setReactivityProvider,
+  createMobxProvider,
+} from '@revisium/schema-toolkit/core';
+
+// Initialize MobX reactivity for schema-toolkit
+setReactivityProvider(createMobxProvider(mobx));
 
 const preview: Preview = {
   parameters: {
