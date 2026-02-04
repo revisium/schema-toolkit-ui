@@ -72,6 +72,8 @@ interface ChangesPreviewDialogProps {
   mode: 'creating' | 'updating';
   createDialogViewMode?: 'Example' | 'Schema';
   onCreateDialogViewModeChange?: (mode: 'Example' | 'Schema') => void;
+  updateDialogViewMode?: 'Changes' | 'Patches';
+  onUpdateDialogViewModeChange?: (mode: 'Changes' | 'Patches') => void;
   exampleData?: JsonValue;
   schemaData?: JsonValue;
 }
@@ -643,6 +645,8 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
     mode,
     createDialogViewMode = 'Example',
     onCreateDialogViewModeChange,
+    updateDialogViewMode = 'Changes',
+    onUpdateDialogViewModeChange,
     exampleData,
     schemaData,
   }) => {
@@ -692,6 +696,19 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
 
                   {!hasErrors && hasChanges && !isCreating && (
                     <>
+                      <SegmentGroup.Root
+                        size="sm"
+                        value={updateDialogViewMode}
+                        onValueChange={(details) =>
+                          onUpdateDialogViewModeChange?.(
+                            details.value as 'Changes' | 'Patches',
+                          )
+                        }
+                      >
+                        <SegmentGroup.Indicator />
+                        <SegmentGroup.Items items={['Changes', 'Patches']} />
+                      </SegmentGroup.Root>
+
                       <Box
                         border="1px solid"
                         borderColor="gray.200"
@@ -700,15 +717,24 @@ export const ChangesPreviewDialog: FC<ChangesPreviewDialogProps> = observer(
                         maxHeight="400px"
                         overflowY="auto"
                       >
-                        {tableIdChange && (
-                          <TableIdChangeRow change={tableIdChange} />
-                        )}
-                        {patches.map((schemaPatch) => (
-                          <PatchRow
-                            key={schemaPatch.patch.path}
-                            schemaPatch={schemaPatch}
+                        {updateDialogViewMode === 'Changes' ? (
+                          <>
+                            {tableIdChange && (
+                              <TableIdChangeRow change={tableIdChange} />
+                            )}
+                            {patches.map((schemaPatch) => (
+                              <PatchRow
+                                key={schemaPatch.patch.path}
+                                schemaPatch={schemaPatch}
+                              />
+                            ))}
+                          </>
+                        ) : (
+                          <JsonCard
+                            readonly
+                            data={patches.map((p) => p.patch)}
                           />
-                        ))}
+                        )}
                       </Box>
 
                       <Text fontSize="xs" color="gray.500">
