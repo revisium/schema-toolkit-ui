@@ -55,6 +55,7 @@ export class SchemaEditorVM {
   private _viewMode: ViewerSwitcherMode = ViewerSwitcherMode.Tree;
   private _isChangesDialogOpen = false;
   private _createDialogViewMode: 'Example' | 'Schema' = 'Example';
+  private _updateDialogViewMode: 'Changes' | 'Patches' = 'Changes';
 
   constructor(jsonSchema: JsonObjectSchema, options: SchemaEditorOptions = {}) {
     this._tableModel = createTableModel({
@@ -152,6 +153,14 @@ export class SchemaEditorVM {
 
   public setCreateDialogViewMode(mode: 'Example' | 'Schema'): void {
     this._createDialogViewMode = mode;
+  }
+
+  public get updateDialogViewMode(): 'Changes' | 'Patches' {
+    return this._updateDialogViewMode;
+  }
+
+  public setUpdateDialogViewMode(mode: 'Changes' | 'Patches'): void {
+    this._updateDialogViewMode = mode;
   }
 
   public get rootNodeVM(): NodeVM {

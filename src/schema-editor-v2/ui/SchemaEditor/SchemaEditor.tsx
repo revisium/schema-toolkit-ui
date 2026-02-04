@@ -124,6 +124,8 @@ export const SchemaEditor: FC<SchemaEditorProps> = observer(({ model }) => {
         mode={model.mode}
         createDialogViewMode={model.createDialogViewMode}
         onCreateDialogViewModeChange={model.setCreateDialogViewMode}
+        updateDialogViewMode={model.updateDialogViewMode}
+        onUpdateDialogViewModeChange={model.setUpdateDialogViewMode}
         exampleData={model.getExampleData() as JsonValue}
         schemaData={model.getPlainSchema() as unknown as JsonValue}
       />
