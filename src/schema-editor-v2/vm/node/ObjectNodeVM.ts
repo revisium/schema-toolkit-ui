@@ -198,6 +198,12 @@ export class ObjectNodeVM extends BaseNodeVM {
           return true;
         }
       }
+      if ('itemsVM' in child && child.itemsVM instanceof ObjectNodeVM) {
+        const found = child.itemsVM.removePropertyVMByNodeId(nodeId);
+        if (found) {
+          return true;
+        }
+      }
     }
     return false;
   }

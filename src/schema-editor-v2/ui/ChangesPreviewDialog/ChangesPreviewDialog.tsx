@@ -411,7 +411,7 @@ const PatchRow: FC<PatchRowProps> = observer(({ schemaPatch }) => {
     [typeChange],
   );
   const defaultExample = useMemo(() => {
-    if (patch.op === 'add' && patch.value) {
+    if (patch.op === 'add' && patch.value !== undefined) {
       return getDefaultValueExample({
         op: 'add',
         path: patch.path,
