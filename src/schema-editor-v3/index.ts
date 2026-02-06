@@ -1,4 +1,3 @@
-// Model - Core
 export {
   SchemaEditorCore,
   type SchemaEditorCoreOptions,
@@ -6,7 +5,6 @@ export {
   type ViewMode,
 } from './model/core';
 
-// Model - ViewModels
 export {
   SchemaTreeVM,
   CreatingEditorVM,
@@ -17,10 +15,8 @@ export {
   type UpdateDialogViewMode,
 } from './model/vm';
 
-// Model - State
 export { TreeState } from './model/state';
 
-// Model - Accessor
 export {
   NodeAccessor,
   NodeState,
@@ -32,7 +28,6 @@ export {
   type NodeActionsCallbacks,
 } from './model/accessor';
 
-// Model - Dialog ViewModels
 export {
   ReviewErrorsDialogVM,
   ReviewChangesDialogVM,
@@ -42,17 +37,14 @@ export {
   type TableIdChangeInfo,
 } from './model/dialog';
 
-// Config
 export {
   SchemaTypeIds,
-  SystemSchemaIds,
   getLabelByRef,
   typeMenuGroups,
   type MenuOptionItem,
   type MenuGroup,
 } from './config';
 
-// UI - Main editors
 export {
   CreatingSchemaEditor,
   UpdatingSchemaEditor,
@@ -60,7 +52,6 @@ export {
   type UpdatingSchemaEditorProps,
 } from './ui';
 
-// UI - Tree components
 export {
   TreeNodeView,
   TreeNodeWrapper,
@@ -75,14 +66,12 @@ export {
   RefNodeView,
 } from './ui/tree';
 
-// UI - Dialog components
 export {
   ReviewErrorsDialog,
   ReviewChangesDialog,
   CreateTableDialog,
 } from './ui/dialog';
 
-// Types
 export type {
   JsonValue,
   NodeType,
