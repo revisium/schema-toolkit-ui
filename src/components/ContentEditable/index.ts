@@ -1,1 +1,1 @@
-export { ContentEditable } from './ContentEditable';
+export { ContentEditable, type ContentEditableProps } from './ContentEditable';

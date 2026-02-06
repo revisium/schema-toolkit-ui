@@ -267,6 +267,7 @@ export class SchemaEditorCore {
       this._treeState.clearNode(oldNodeId);
     }
 
+    this._treeState.setMenuOpen(newNodeId, false);
     this.keyboard.handleNodeReplaced(oldNodeId, newNodeId);
     this.collapseIfRefNode(newNodeId);
   }

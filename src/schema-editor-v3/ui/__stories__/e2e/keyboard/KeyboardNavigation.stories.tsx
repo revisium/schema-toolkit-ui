@@ -460,6 +460,40 @@ export const KeyboardAfterChangeType: Story = {
   },
 };
 
+export const MenuClosesAfterTypeChangeToObject: Story = {
+  args: {
+    onCreateTable: fn(),
+    onCancel: fn(),
+  },
+  render: (args) => (
+    <CreatingStoryWrapper
+      {...args}
+      initialSchema={simpleSchema}
+      tableId="test"
+      hint="E2E Test: Menu must close after changing type to Object or Array"
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(() =>
+      expect(canvas.getByTestId('root-0')).toBeInTheDocument(),
+    );
+
+    // Change first field (root-0) type to Object
+    await changeType(canvas, 'root-0', 'Object');
+    await new Promise((r) => setTimeout(r, 300));
+
+    // Menu must be closed — no menu content in DOM
+    await waitFor(() => {
+      const menuContent = canvasElement
+        .closest('body')
+        ?.querySelectorAll('[role="menu"]');
+      expect(menuContent?.length ?? 0).toBe(0);
+    });
+  },
+};
+
 export const FullWorkflowWithKeyboard: Story = {
   args: {
     onCreateTable: fn(),

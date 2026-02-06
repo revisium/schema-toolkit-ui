@@ -1,5 +1,5 @@
 export { Tooltip, type TooltipProps } from './Tooltip';
-export { ContentEditable } from './ContentEditable';
+export { ContentEditable, type ContentEditableProps } from './ContentEditable';
 export { GrayButton } from './GrayButton';
 export { CreateButton } from './CreateButton';
 export { CloseButton } from './CloseButton';

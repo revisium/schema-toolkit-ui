@@ -1,50 +1,30 @@
 import { Box, BoxProps, Flex, Text } from '@chakra-ui/react';
-import React, {
-  DependencyList,
-  KeyboardEventHandler,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from 'react';
-import { useUpdateEffect } from 'react-use';
+import React, { useCallback, useRef } from 'react';
+import {
+  useContentEditable,
+  type UseContentEditableOptions,
+} from '../../hooks/useContentEditable';
 
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-
-interface ContentEditableBoxProps {
+export interface ContentEditableProps extends Pick<
+  UseContentEditableOptions,
+  | 'onChange'
+  | 'onBlur'
+  | 'onFocus'
+  | 'onEscape'
+  | 'onEnter'
+  | 'restrict'
+  | 'autoFocus'
+  | 'focusTrigger'
+> {
   initValue: string;
   placeholder?: string;
-  autoFocus?: boolean;
-  onBlur?: () => void;
-  onFocus?: () => void;
-  onChange?: (value: string) => void;
-  onEscape?: () => void;
-  onEnter?: () => void;
-  focusIfDependencyList?: DependencyList;
-  restrict?: RegExp;
   prefix?: string;
   postfix?: string;
   dataTestId?: string;
   textDecoration?: BoxProps['textDecoration'];
 }
 
-const allowed = new Set([
-  'Backspace',
-  'Escape',
-  'Enter',
-  'ArrowRight',
-  'ArrowLeft',
-  'Delete',
-]);
-
-export const ContentEditable: React.FC<ContentEditableBoxProps> = ({
+export const ContentEditable: React.FC<ContentEditableProps> = ({
   initValue,
   placeholder,
   autoFocus,
@@ -53,100 +33,38 @@ export const ContentEditable: React.FC<ContentEditableBoxProps> = ({
   onEscape,
   onEnter,
   onFocus,
-  focusIfDependencyList,
+  focusTrigger,
   restrict,
   prefix,
   postfix,
   dataTestId,
   textDecoration,
 }) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const cursorPosition = useRef<number | null>(null);
+  const elementRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (autoFocus) {
-      ref.current?.focus();
-    }
-  }, [autoFocus]);
-
-  useLayoutEffect(() => {
-    const selection = globalThis.getSelection();
-    if (selection && cursorPosition.current !== null && ref.current) {
-      const maxPosition = (ref.current.textContent || '').length;
-      const position = Math.min(maxPosition, cursorPosition.current);
-
-      const range = document.createRange();
-      const sel = globalThis.getSelection();
-      const firstChild = ref.current.childNodes[0];
-      const node: Node = firstChild ?? ref.current;
-      range.setStart(node, position);
-      range.collapse(true);
-
-      if (sel) {
-        sel.removeAllRanges();
-        sel.addRange(range);
-      }
-    }
+  const editableProps = useContentEditable({
+    value: initValue,
+    onChange,
+    onBlur,
+    onFocus,
+    onEscape,
+    onEnter,
+    restrict,
+    autoFocus,
+    focusTrigger,
   });
 
-  useUpdateEffect(() => {
-    if (focusIfDependencyList) {
-      ref.current?.focus();
-      const selection = globalThis.getSelection();
-
-      if (ref.current && selection) {
-        const range = document.createRange();
-        range.selectNodeContents(ref.current);
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-    }
-  }, [...(focusIfDependencyList ?? [])]);
-
-  const handleChange: React.FormEventHandler<HTMLDivElement> = useCallback(
-    (event) => {
-      const selection = globalThis.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        cursorPosition.current = selection.getRangeAt(0).startOffset;
-      }
-
-      const textValue = event.currentTarget.innerText;
-      onChange?.(textValue === '\n' ? '' : textValue);
+  const hookRef = editableProps.ref;
+  const combinedRef = useCallback(
+    (node: HTMLElement | null) => {
+      elementRef.current = node;
+      hookRef(node);
     },
-    [onChange],
-  );
-
-  const handleBlur: React.FormEventHandler<HTMLDivElement> = useCallback(() => {
-    onBlur?.();
-    cursorPosition.current = null;
-  }, [onBlur]);
-
-  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = useCallback(
-    (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-
-        if (initValue) {
-          ref.current?.blur();
-          onEnter?.();
-        }
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        ref.current?.blur();
-        onEscape?.();
-      }
-
-      if (restrict && !allowed.has(event.key) && !restrict.test(event.key)) {
-        event.preventDefault();
-      }
-    },
-    [initValue, onEnter, onEscape, restrict],
+    [hookRef],
   );
 
   const handleParentClick = useCallback(() => {
-    ref.current?.focus();
+    elementRef.current?.focus();
   }, []);
 
   const showPlaceholder = !initValue && placeholder;
@@ -164,16 +82,16 @@ export const ContentEditable: React.FC<ContentEditableBoxProps> = ({
         color="blackAlpha.800"
         textDecoration={textDecoration}
         data-testid={dataTestId}
-        ref={ref}
-        contentEditable
-        spellCheck={'false'}
-        dangerouslySetInnerHTML={{ __html: escapeHtml(initValue) }}
+        ref={combinedRef}
+        contentEditable={editableProps.contentEditable}
+        spellCheck={editableProps.spellCheck}
+        dangerouslySetInnerHTML={editableProps.dangerouslySetInnerHTML}
         outline={0}
         width="100%"
-        onBlur={handleBlur}
-        onFocus={onFocus}
-        onInput={handleChange}
-        onKeyDown={handleKeyDown}
+        onBlur={editableProps.onBlur}
+        onFocus={editableProps.onFocus}
+        onInput={editableProps.onInput}
+        onKeyDown={editableProps.onKeyDown}
       ></Box>
       {!showPlaceholder && postfix}
       {showPlaceholder && (

@@ -129,7 +129,7 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
               onFocus={() => accessor.state.setFocused(true)}
               onChange={accessor.actions.rename}
               onEnter={treeVM.keyboard.handleEditEnter}
-              focusIfDependencyList={[accessor.state.focusRequestCount]}
+              focusTrigger={accessor.state.focusRequestCount}
             />
           )}
           {hasName && accessor.validation.hasError && (
