@@ -8,3 +8,4 @@ export { AccessorCache } from './AccessorCache';
 export { ValidationTracker } from './ValidationTracker';
 export { ViewState, type ViewMode } from './ViewState';
 export { CollapseManager } from './CollapseManager';
+export { KeyboardNavigation, type KeyboardMode } from './KeyboardNavigation';

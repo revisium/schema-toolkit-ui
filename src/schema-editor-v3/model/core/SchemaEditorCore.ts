@@ -20,8 +20,10 @@ import { AccessorCache } from './AccessorCache';
 import { ValidationTracker } from './ValidationTracker';
 import { ViewState } from './ViewState';
 import { CollapseManager } from './CollapseManager';
+import { KeyboardNavigation } from './KeyboardNavigation';
 import { defaultRefSchemas } from '../../config/system-schemas';
 import { typeIdToFieldType } from '../utils/typeIdMapping';
+import { TreeNavigator } from '../utils/TreeNavigator';
 
 const DEFAULT_COLLAPSE_COMPLEXITY = 14;
 
@@ -46,6 +48,7 @@ export class SchemaEditorCore {
   public readonly validation: ValidationTracker;
   public readonly view: ViewState;
   public readonly collapse: CollapseManager;
+  public readonly keyboard: KeyboardNavigation;
 
   constructor(
     jsonSchema: JsonObjectSchema,
@@ -93,6 +96,11 @@ export class SchemaEditorCore {
       this._treeState,
       () => this._tableModel.schema,
     );
+    this.keyboard = new KeyboardNavigation(
+      this._treeState,
+      new TreeNavigator(() => this._tableModel.schema, this._treeState),
+      this.accessors,
+    );
 
     const shouldCollapse = options.collapseComplexSchemas ?? false;
     const complexity =
@@ -110,6 +118,7 @@ export class SchemaEditorCore {
         validation: false,
         view: false,
         collapse: false,
+        keyboard: false,
       },
       { autoBind: true },
     );
@@ -233,6 +242,7 @@ export class SchemaEditorCore {
   }
 
   public dispose(): void {
+    this.keyboard.dispose();
     this.accessors.clear();
     this._treeState.reset();
   }
@@ -240,16 +250,24 @@ export class SchemaEditorCore {
   private handleNodeRemoved(nodeId: string): void {
     this.accessors.delete(nodeId);
     this._treeState.clearNode(nodeId);
+    if (this._treeState.activeNodeId === nodeId) {
+      this._treeState.setActiveNodeId(null);
+    }
   }
 
   private handleNodeAdded(nodeId: string): void {
     this.collapseIfRefNode(nodeId);
+    this.keyboard.handleNodeAdded(nodeId);
   }
 
   private handleNodeReplaced(oldNodeId: string, newNodeId: string): void {
+    const wasActive = this._treeState.activeNodeId === oldNodeId;
     this.accessors.delete(oldNodeId);
     this._treeState.clearNode(oldNodeId);
     this.collapseIfRefNode(newNodeId);
+    if (wasActive) {
+      this._treeState.setActiveNodeId(newNodeId);
+    }
   }
 
   private collapseIfRefNode(nodeId: string): void {

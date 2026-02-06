@@ -8,9 +8,32 @@ export class TreeState {
   private readonly _dropNodes = observable.map<string, boolean>();
   private readonly _disabledDropNodes = observable.map<string, boolean>();
   private readonly _draggedOverNodes = observable.map<string, boolean>();
+  private readonly _focusRequestCounts = observable.map<string, number>();
+  private _activeNodeId: string | null = null;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  public get activeNodeId(): string | null {
+    return this._activeNodeId;
+  }
+
+  public setActiveNodeId(nodeId: string | null): void {
+    this._activeNodeId = nodeId;
+  }
+
+  public isActive(nodeId: string): boolean {
+    return this._activeNodeId === nodeId;
+  }
+
+  public getFocusRequestCount(nodeId: string): number {
+    return this._focusRequestCounts.get(nodeId) ?? 0;
+  }
+
+  public requestFocus(nodeId: string): void {
+    const current = this._focusRequestCounts.get(nodeId) ?? 0;
+    this._focusRequestCounts.set(nodeId, current + 1);
   }
 
   public isExpanded(nodeId: string): boolean {
@@ -81,6 +104,7 @@ export class TreeState {
     this._dropNodes.delete(nodeId);
     this._disabledDropNodes.delete(nodeId);
     this._draggedOverNodes.delete(nodeId);
+    this._focusRequestCounts.delete(nodeId);
   }
 
   public collapseAll(nodeIds: string[], keepRootExpanded: boolean): void {
@@ -109,5 +133,7 @@ export class TreeState {
     this._dropNodes.clear();
     this._disabledDropNodes.clear();
     this._draggedOverNodes.clear();
+    this._focusRequestCounts.clear();
+    this._activeNodeId = null;
   }
 }

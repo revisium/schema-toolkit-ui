@@ -22,6 +22,9 @@ export class NodeState {
   }
 
   public setFocused(value: boolean): void {
+    if (value) {
+      this._treeState.setActiveNodeId(this._nodeId);
+    }
     this._treeState.setFocused(this._nodeId, value);
   }
 
@@ -30,6 +33,9 @@ export class NodeState {
   }
 
   public setMenuOpen(value: boolean): void {
+    if (value) {
+      this._treeState.setActiveNodeId(this._nodeId);
+    }
     this._treeState.setMenuOpen(this._nodeId, value);
   }
 
@@ -38,6 +44,9 @@ export class NodeState {
   }
 
   public setSettingsOpen(value: boolean): void {
+    if (value) {
+      this._treeState.setActiveNodeId(this._nodeId);
+    }
     this._treeState.setSettingsOpen(this._nodeId, value);
   }
 
@@ -63,5 +72,21 @@ export class NodeState {
 
   public setDraggedOver(value: boolean): void {
     this._treeState.setDraggedOver(this._nodeId, value);
+  }
+
+  public get isActive(): boolean {
+    return this._treeState.isActive(this._nodeId);
+  }
+
+  public activate(): void {
+    this._treeState.setActiveNodeId(this._nodeId);
+  }
+
+  public get focusRequestCount(): number {
+    return this._treeState.getFocusRequestCount(this._nodeId);
+  }
+
+  public requestFocus(): void {
+    this._treeState.requestFocus(this._nodeId);
   }
 }

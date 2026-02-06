@@ -131,6 +131,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@revisium/schema-toolkit": "^0.17.0"
+    "@revisium/schema-toolkit": "^0.18.0"
   }
 }

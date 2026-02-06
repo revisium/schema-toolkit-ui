@@ -30,6 +30,9 @@ export const TreeNodeWrapper: FC<TreeNodeWrapperProps> = observer(
     const dotOutlineClass = `dot-outline-${accessor.nodeId}`;
     const collapseButtonClass = `collapse-button-${accessor.nodeId}`;
 
+    const isActiveWithName =
+      accessor.state.isActive && Boolean(accessor.label.name);
+
     const collapseHoverStyles =
       isCollapsible && !isCollapsed
         ? {
@@ -38,9 +41,20 @@ export const TreeNodeWrapper: FC<TreeNodeWrapperProps> = observer(
           }
         : {};
 
+    const activeCollapseStyles =
+      isActiveWithName && isCollapsible && !isCollapsed
+        ? {
+            [`& .${dotOutlineClass}`]: { visibility: 'hidden' as const },
+            [`& .${collapseButtonClass}`]: { visibility: 'visible' as const },
+          }
+        : {};
+
     const fieldHoverStyles = hoverTargetClass
       ? {
           [`&:hover .${hoverTargetClass}`]: { opacity: 1 },
+          ...(isActiveWithName
+            ? { [`& .${hoverTargetClass}`]: { opacity: 1 } }
+            : {}),
         }
       : {};
 
@@ -59,6 +73,9 @@ export const TreeNodeWrapper: FC<TreeNodeWrapperProps> = observer(
         alignSelf="flex-start"
         width="100%"
         _hover={collapseHoverStyles}
+        css={activeCollapseStyles}
+        data-node-id={accessor.nodeId}
+        data-active={accessor.state.isActive || undefined}
       >
         <Flex
           gap="4px"
@@ -68,6 +85,9 @@ export const TreeNodeWrapper: FC<TreeNodeWrapperProps> = observer(
           mb="2px"
           position="relative"
           css={fieldHoverStyles}
+          backgroundColor={accessor.state.isActive ? 'gray.100' : undefined}
+          borderRadius="4px"
+          cursor="default"
         >
           <Box position="absolute" ml="-60px" height="100%" width="60px" />
           <Box
