@@ -39,8 +39,9 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest && vitest --project=storybook --run",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:unit:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage --silent",
     "lint:ci": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
@@ -128,6 +129,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@revisium/schema-toolkit": "^0.16.2"
+    "@revisium/schema-toolkit": "^0.17.0"
   }
 }

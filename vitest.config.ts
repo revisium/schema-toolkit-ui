@@ -21,10 +21,16 @@ export default defineConfig({
           storybookTest({
             configDir: path.join(dirname, '.storybook'),
             storybookScript: 'npm run storybook -- --no-open',
+            tags: {
+              include: ['test'],
+              exclude: [],
+              skip: ['skip-test'],
+            },
           }),
         ],
         test: {
           name: 'storybook',
+          testTimeout: 60000,
           browser: {
             enabled: true,
             headless: true,
