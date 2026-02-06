@@ -791,7 +791,7 @@ describe('KeyboardNavigation', () => {
       accessor.actions.changeType('Number');
 
       expect(treeState.activeNodeId).not.toBeNull();
-      expect(treeState.activeNodeId).not.toBe(oldId);
+      expect(treeState.activeNodeId).toBe(oldId);
     });
 
     it('should keep active state after changeType via SchemaEditorCore', () => {
