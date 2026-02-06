@@ -40,7 +40,7 @@ export class KeyboardNavigation {
           if (!isFocused && wasFocused) {
             this._mode = 'TREE_NAV';
             this._skipNextEscape = true;
-            this.returnFocus();
+            this.deferReturnFocus();
           }
         },
       ),
@@ -129,7 +129,12 @@ export class KeyboardNavigation {
   }
 
   public returnFocus(): void {
-    this._containerRef?.focus();
+    if (
+      this._containerRef &&
+      !this._containerRef.contains(document.activeElement)
+    ) {
+      this._containerRef.focus();
+    }
   }
 
   public deactivate(): void {
@@ -167,7 +172,15 @@ export class KeyboardNavigation {
   public handleNodeReplaced(oldId: string, newId: string): void {
     if (this._treeState.activeNodeId === oldId) {
       this._treeState.setActiveNodeId(newId);
+      if (this._mode === 'EDIT_NAME') {
+        this._mode = 'TREE_NAV';
+      }
+      this.deferReturnFocus();
     }
+  }
+
+  private deferReturnFocus(): void {
+    setTimeout(() => this.returnFocus(), 0);
   }
 
   public dispose(): void {

@@ -791,7 +791,7 @@ describe('KeyboardNavigation', () => {
       accessor.actions.changeType('Number');
 
       expect(treeState.activeNodeId).not.toBeNull();
-      expect(treeState.activeNodeId).not.toBe(oldId);
+      expect(treeState.activeNodeId).toBe(oldId);
     });
 
     it('should keep active state after changeType via SchemaEditorCore', () => {
@@ -809,7 +809,60 @@ describe('KeyboardNavigation', () => {
       accessor.actions.changeType('Number');
 
       expect(core.treeState.activeNodeId).not.toBeNull();
-      expect(core.treeState.activeNodeId).not.toBe(oldId);
+      expect(core.treeState.activeNodeId).toBe(oldId);
+    });
+
+    it('Enter should trigger requestFocus after changeType', () => {
+      const core = new SchemaEditorCore(createSchema({ name: stringField }), {
+        tableId: 'test',
+      });
+
+      // Navigate to 'name' field
+      core.keyboard.handleKeyDown(mockEvent('ArrowDown'));
+      core.keyboard.handleKeyDown(mockEvent('ArrowDown'));
+
+      const oldId = core.treeState.activeNodeId;
+      expect(oldId).not.toBeNull();
+
+      // Change type
+      const accessor = core.accessors.get(oldId!);
+      accessor.actions.changeType('Number');
+
+      expect(core.treeState.activeNodeId).toBe(oldId);
+
+      // Verify mode is TREE_NAV
+      expect(core.keyboard.mode).toBe('TREE_NAV');
+
+      // Press Enter — should call requestFocus
+      core.keyboard.handleKeyDown(mockEvent('Enter'));
+
+      // focusRequestCount should be incremented for the same node
+      expect(core.treeState.getFocusRequestCount(oldId!)).toBe(1);
+    });
+
+    it('Escape should deactivate after changeType', () => {
+      const core = new SchemaEditorCore(createSchema({ name: stringField }), {
+        tableId: 'test',
+      });
+
+      // Navigate to 'name' field
+      core.keyboard.handleKeyDown(mockEvent('ArrowDown'));
+      core.keyboard.handleKeyDown(mockEvent('ArrowDown'));
+
+      const oldId = core.treeState.activeNodeId;
+      expect(oldId).not.toBeNull();
+
+      // Change type
+      const accessor = core.accessors.get(oldId!);
+      accessor.actions.changeType('Number');
+
+      expect(core.treeState.activeNodeId).not.toBeNull();
+      expect(core.keyboard.mode).toBe('TREE_NAV');
+
+      // Press Escape — should deactivate
+      core.keyboard.handleKeyDown(mockEvent('Escape'));
+
+      expect(core.treeState.activeNodeId).toBeNull();
     });
 
     it('activeNodeId after changeType should match a node id in the tree', () => {

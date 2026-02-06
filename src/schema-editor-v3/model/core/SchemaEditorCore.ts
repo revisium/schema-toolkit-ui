@@ -261,13 +261,14 @@ export class SchemaEditorCore {
   }
 
   private handleNodeReplaced(oldNodeId: string, newNodeId: string): void {
-    const wasActive = this._treeState.activeNodeId === oldNodeId;
     this.accessors.delete(oldNodeId);
-    this._treeState.clearNode(oldNodeId);
-    this.collapseIfRefNode(newNodeId);
-    if (wasActive) {
-      this._treeState.setActiveNodeId(newNodeId);
+
+    if (oldNodeId !== newNodeId) {
+      this._treeState.clearNode(oldNodeId);
     }
+
+    this.keyboard.handleNodeReplaced(oldNodeId, newNodeId);
+    this.collapseIfRefNode(newNodeId);
   }
 
   private collapseIfRefNode(nodeId: string): void {
