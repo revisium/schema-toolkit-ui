@@ -40,4 +40,28 @@ export class NodeState {
   public setSettingsOpen(value: boolean): void {
     this._treeState.setSettingsOpen(this._nodeId, value);
   }
+
+  public get isDrop(): boolean {
+    return this._treeState.isDrop(this._nodeId);
+  }
+
+  public setDrop(value: boolean): void {
+    this._treeState.setDrop(this._nodeId, value);
+  }
+
+  public get isDisabledDrop(): boolean {
+    return this._treeState.isDisabledDrop(this._nodeId);
+  }
+
+  public setDisabledDrop(value: boolean): void {
+    this._treeState.setDisabledDrop(this._nodeId, value);
+  }
+
+  public get isDraggedOver(): boolean {
+    return this._treeState.isDraggedOver(this._nodeId);
+  }
+
+  public setDraggedOver(value: boolean): void {
+    this._treeState.setDraggedOver(this._nodeId, value);
+  }
 }

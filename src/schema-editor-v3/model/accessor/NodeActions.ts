@@ -3,8 +3,8 @@ import {
   SystemSchemaIds,
   type SchemaNode,
   type SchemaModel,
-  type FieldType,
 } from '@revisium/schema-toolkit';
+import { typeIdToFieldType } from '../utils/typeIdMapping';
 
 export interface NodeActionsCallbacks {
   renameTable: (name: string) => void;
@@ -76,7 +76,7 @@ export class NodeActions {
       return;
     }
 
-    const fieldType = this.typeIdToFieldType(typeId);
+    const fieldType = typeIdToFieldType(typeId);
     if (!fieldType) {
       return;
     }
@@ -226,7 +226,7 @@ export class NodeActions {
       return;
     }
 
-    const fieldType = this.typeIdToFieldType(typeId);
+    const fieldType = typeIdToFieldType(typeId);
     if (!fieldType) {
       return;
     }
@@ -267,17 +267,6 @@ export class NodeActions {
     if (tableId !== null) {
       this.setForeignKey(tableId);
     }
-  }
-
-  private typeIdToFieldType(typeId: string): FieldType | null {
-    const mapping: Record<string, FieldType> = {
-      String: 'string',
-      Number: 'number',
-      Boolean: 'boolean',
-      Object: 'object',
-      Array: 'array',
-    };
-    return mapping[typeId] ?? null;
   }
 
   private typeIdToRefUri(typeId: string): string | null {

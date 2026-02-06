@@ -1,4 +1,4 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, runInAction } from 'mobx';
 import type {
   TableModel,
   SchemaPatch,
@@ -84,7 +84,9 @@ export class ReviewChangesDialogVM {
     try {
       await this._onApprove();
     } finally {
-      this._loading = false;
+      runInAction(() => {
+        this._loading = false;
+      });
     }
   }
 

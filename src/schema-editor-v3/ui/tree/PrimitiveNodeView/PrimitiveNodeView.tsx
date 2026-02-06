@@ -1,4 +1,3 @@
-import { Flex } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import type { NodeAccessor } from '../../../model/accessor';
@@ -17,14 +16,6 @@ export const PrimitiveNodeView: FC<PrimitiveNodeViewProps> = observer(
   ({ accessor, treeVM, dataTestId }) => {
     const hoverTargetClass = accessor.hoverTargetClass;
 
-    const handleChangeType = (typeId: string) => {
-      if (accessor.isRoot) {
-        treeVM.changeRootType(typeId);
-      } else {
-        accessor.actions.changeType(typeId);
-      }
-    };
-
     return (
       <TreeNodeWrapper
         accessor={accessor}
@@ -37,7 +28,7 @@ export const PrimitiveNodeView: FC<PrimitiveNodeViewProps> = observer(
             treeVM={treeVM}
             dataTestId={dataTestId}
             hoverTargetClass={hoverTargetClass}
-            onChangeType={handleChangeType}
+            onChangeType={(typeId) => treeVM.changeNodeType(accessor, typeId)}
             rightContent={
               <TreeNodeRightContent
                 accessor={accessor}
@@ -50,9 +41,7 @@ export const PrimitiveNodeView: FC<PrimitiveNodeViewProps> = observer(
             }
           />
         }
-      >
-        <Flex />
-      </TreeNodeWrapper>
+      />
     );
   },
 );

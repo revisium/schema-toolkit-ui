@@ -18,10 +18,6 @@ export const ForeignKeyNodeView: FC<ForeignKeyNodeViewProps> = observer(
   ({ accessor, treeVM, dataTestId }) => {
     const hoverTargetClass = accessor.hoverTargetClass;
 
-    const handleChangeType = (typeId: string) => {
-      accessor.actions.changeType(typeId);
-    };
-
     const handleSelectForeignKey = useCallback(async () => {
       const tableId = await treeVM.selectForeignKey();
       if (tableId !== null) {
@@ -43,7 +39,7 @@ export const ForeignKeyNodeView: FC<ForeignKeyNodeViewProps> = observer(
             treeVM={treeVM}
             dataTestId={dataTestId}
             hoverTargetClass={hoverTargetClass}
-            onChangeType={handleChangeType}
+            onChangeType={(typeId) => treeVM.changeNodeType(accessor, typeId)}
             rightContent={
               <TreeNodeRightContent
                 accessor={accessor}

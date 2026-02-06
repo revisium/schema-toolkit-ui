@@ -5,6 +5,9 @@ export class TreeState {
   private readonly _focusedNodes = observable.map<string, boolean>();
   private readonly _menuOpenNodes = observable.map<string, boolean>();
   private readonly _settingsOpenNodes = observable.map<string, boolean>();
+  private readonly _dropNodes = observable.map<string, boolean>();
+  private readonly _disabledDropNodes = observable.map<string, boolean>();
+  private readonly _draggedOverNodes = observable.map<string, boolean>();
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -46,11 +49,38 @@ export class TreeState {
     this._settingsOpenNodes.set(nodeId, value);
   }
 
+  public isDrop(nodeId: string): boolean {
+    return this._dropNodes.get(nodeId) ?? false;
+  }
+
+  public setDrop(nodeId: string, value: boolean): void {
+    this._dropNodes.set(nodeId, value);
+  }
+
+  public isDisabledDrop(nodeId: string): boolean {
+    return this._disabledDropNodes.get(nodeId) ?? false;
+  }
+
+  public setDisabledDrop(nodeId: string, value: boolean): void {
+    this._disabledDropNodes.set(nodeId, value);
+  }
+
+  public isDraggedOver(nodeId: string): boolean {
+    return this._draggedOverNodes.get(nodeId) ?? false;
+  }
+
+  public setDraggedOver(nodeId: string, value: boolean): void {
+    this._draggedOverNodes.set(nodeId, value);
+  }
+
   public clearNode(nodeId: string): void {
     this._expandedNodes.delete(nodeId);
     this._focusedNodes.delete(nodeId);
     this._menuOpenNodes.delete(nodeId);
     this._settingsOpenNodes.delete(nodeId);
+    this._dropNodes.delete(nodeId);
+    this._disabledDropNodes.delete(nodeId);
+    this._draggedOverNodes.delete(nodeId);
   }
 
   public collapseAll(nodeIds: string[], keepRootExpanded: boolean): void {
@@ -76,5 +106,8 @@ export class TreeState {
     this._focusedNodes.clear();
     this._menuOpenNodes.clear();
     this._settingsOpenNodes.clear();
+    this._dropNodes.clear();
+    this._disabledDropNodes.clear();
+    this._draggedOverNodes.clear();
   }
 }

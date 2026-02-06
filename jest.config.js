@@ -27,6 +27,6 @@ export default {
     '!src/schema-editor/vm/**',
     '!src/schema-editor/ui/**',
   ],
-  coverageDirectory: 'coverage',
+  coverageDirectory: 'coverage/jest',
   coverageReporters: ['text', 'lcov', 'html'],
 };

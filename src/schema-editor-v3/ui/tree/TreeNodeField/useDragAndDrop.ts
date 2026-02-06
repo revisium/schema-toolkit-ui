@@ -6,7 +6,7 @@ import {
   type ElementDropTargetEventPayloadMap,
 } from '@atlaskit/drag-and-drop/adapter/element';
 import type { CleanupFn } from '@atlaskit/drag-and-drop/types';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { NodeAccessor } from '../../../model/accessor';
 
 type DragAndDropData = Record<string, unknown> & {
@@ -37,9 +37,6 @@ export const useDragAndDrop = ({
   canAcceptDrop,
 }: UseDragAndDropOptions) => {
   const dragAndDropRef = useRef<HTMLDivElement | null>(null);
-  const [isDrop, setIsDrop] = useState(false);
-  const [isDisabledDrop, setIsDisabledDrop] = useState(false);
-  const [isDraggedOver, setIsDraggedOver] = useState(false);
 
   useEffect(() => {
     if (!canDrag || !dragAndDropRef.current) {
@@ -70,16 +67,16 @@ export const useDragAndDrop = ({
           }
         }
 
-        setIsDraggedOver(false);
-        setIsDrop(false);
+        accessor.state.setDraggedOver(false);
+        accessor.state.setDrop(false);
       },
       onDragEnter: (e: ElementDropTargetEventPayloadMap['onDragEnter']) => {
         const draggingAccessor = getDragData(e.source.data);
         if (draggingAccessor) {
-          setIsDraggedOver(canAcceptDrop(draggingAccessor.nodeId));
+          accessor.state.setDraggedOver(canAcceptDrop(draggingAccessor.nodeId));
         }
       },
-      onDragLeave: () => setIsDraggedOver(false),
+      onDragLeave: () => accessor.state.setDraggedOver(false),
     });
 
     return () => cleanup();
@@ -98,17 +95,17 @@ export const useDragAndDrop = ({
           const canAccept = canAcceptDrop(draggingAccessor.nodeId);
 
           if (canAccept) {
-            setIsDrop(true);
+            accessor.state.setDrop(true);
           } else {
-            setIsDisabledDrop(true);
+            accessor.state.setDisabledDrop(true);
           }
         } else {
-          setIsDisabledDrop(true);
+          accessor.state.setDisabledDrop(true);
         }
       },
       onDrop: () => {
-        setIsDrop(false);
-        setIsDisabledDrop(false);
+        accessor.state.setDrop(false);
+        accessor.state.setDisabledDrop(false);
       },
     });
   }, [accessor, isDropTarget, canAcceptDrop]);
@@ -116,8 +113,8 @@ export const useDragAndDrop = ({
   return {
     dragAndDropRef,
     isDraggable: canDrag,
-    isDrop,
-    isDisabledDrop,
-    isDraggedOver,
+    isDrop: accessor.state.isDrop,
+    isDisabledDrop: accessor.state.isDisabledDrop,
+    isDraggedOver: accessor.state.isDraggedOver,
   };
 };

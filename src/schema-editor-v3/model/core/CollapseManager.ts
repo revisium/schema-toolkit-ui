@@ -1,6 +1,7 @@
 import { makeAutoObservable } from 'mobx';
-import type { SchemaModel, SchemaNode } from '@revisium/schema-toolkit';
+import type { SchemaModel } from '@revisium/schema-toolkit';
 import type { TreeState } from '../state/TreeState';
+import { traverseTree } from '../utils';
 
 export class CollapseManager {
   constructor(
@@ -36,47 +37,19 @@ export class CollapseManager {
 
   private collectRefNodeIds(): string[] {
     const ids: string[] = [];
-    const collectIds = (node: SchemaNode) => {
-      if (node.isNull()) {
-        return;
-      }
+    traverseTree(this._getSchemaModel().root, (node) => {
       if (node.isRef() && (node.isObject() || node.isArray())) {
         ids.push(node.id());
       }
-      if (node.isObject()) {
-        for (const child of node.properties()) {
-          collectIds(child);
-        }
-      } else if (node.isArray()) {
-        const items = node.items();
-        if (!items.isNull()) {
-          collectIds(items);
-        }
-      }
-    };
-    collectIds(this._getSchemaModel().root);
+    });
     return ids;
   }
 
   private collectAllNodeIds(): string[] {
     const ids: string[] = [];
-    const collectIds = (node: SchemaNode) => {
-      if (node.isNull()) {
-        return;
-      }
+    traverseTree(this._getSchemaModel().root, (node) => {
       ids.push(node.id());
-      if (node.isObject()) {
-        for (const child of node.properties()) {
-          collectIds(child);
-        }
-      } else if (node.isArray()) {
-        const items = node.items();
-        if (!items.isNull()) {
-          collectIds(items);
-        }
-      }
-    };
-    collectIds(this._getSchemaModel().root);
+    });
     return ids;
   }
 }

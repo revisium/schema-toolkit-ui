@@ -27,6 +27,14 @@ export class SchemaTreeVM {
     this._core.changeRootType(typeId);
   }
 
+  public changeNodeType(accessor: NodeAccessor, typeId: string): void {
+    if (accessor.isRoot) {
+      this._core.changeRootType(typeId);
+    } else {
+      accessor.actions.changeType(typeId);
+    }
+  }
+
   public moveNode(fromNodeId: string, toParentId: string): void {
     this._core.moveNode(fromNodeId, toParentId);
   }
