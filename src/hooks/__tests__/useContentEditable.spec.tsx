@@ -206,6 +206,21 @@ describe('useContentEditable', () => {
     }
   });
 
+  it('restrict allows Ctrl/Meta modifier shortcuts', () => {
+    const { getByTestId } = render(
+      <TestComponent value="" restrict={/^\d$/} />,
+    );
+    const el = getByTestId('editable');
+
+    const ctrlC = createKeyboardEvent('c', { ctrlKey: true });
+    el.dispatchEvent(ctrlC);
+    expect(ctrlC.defaultPrevented).toBe(false);
+
+    const metaA = createKeyboardEvent('a', { metaKey: true });
+    el.dispatchEvent(metaA);
+    expect(metaA.defaultPrevented).toBe(false);
+  });
+
   it('autoFocus focuses element on mount', () => {
     const { getByTestId } = render(<TestComponent value="" autoFocus />);
     const el = getByTestId('editable');
@@ -287,10 +302,14 @@ describe('useContentEditable', () => {
   });
 });
 
-function createKeyboardEvent(key: string): KeyboardEvent {
+function createKeyboardEvent(
+  key: string,
+  modifiers: { ctrlKey?: boolean; metaKey?: boolean } = {},
+): KeyboardEvent {
   return new KeyboardEvent('keydown', {
     key,
     bubbles: true,
     cancelable: true,
+    ...modifiers,
   });
 }

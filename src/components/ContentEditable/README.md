@@ -75,7 +75,7 @@ const [focusCount, setFocusCount] = useState(0);
 // Later, when you want to focus:
 setFocusCount(c => c + 1);
 
-<ContentEditable value={text} focusTrigger={focusCount} />
+<ContentEditable initValue={text} focusTrigger={focusCount} />
 ```
 
 The element will be focused and cursor placed at the end. The initial value is ignored (no focus on mount from `focusTrigger`).

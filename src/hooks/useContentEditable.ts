@@ -150,6 +150,8 @@ export function useContentEditable(
 
       if (
         opts.restrict &&
+        !event.metaKey &&
+        !event.ctrlKey &&
         !allowed.has(event.key) &&
         !opts.restrict.test(event.key)
       ) {
