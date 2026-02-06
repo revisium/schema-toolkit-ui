@@ -10,3 +10,5 @@ export { getDefaultValueExample } from './DefaultValues';
 export { typeIdToFieldType } from './typeIdMapping';
 
 export { traverseTree } from './traverseTree';
+
+export { TreeNavigator } from './TreeNavigator';

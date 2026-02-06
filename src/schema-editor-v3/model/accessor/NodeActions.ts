@@ -143,6 +143,26 @@ export class NodeActions {
     return null;
   }
 
+  public insertFieldAt(index: number, name: string): SchemaNode | null {
+    if (this._isReadonly || !this._node.isObject()) {
+      return null;
+    }
+
+    const newNode = this._schemaModel.insertFieldAt(
+      this._node.id(),
+      index,
+      name,
+      'string',
+    );
+
+    if (!newNode.isNull()) {
+      this._callbacks.onNodeAdded(newNode.id());
+      return newNode;
+    }
+
+    return null;
+  }
+
   public setDescription(description: string | undefined): void {
     if (this._isReadonly) {
       return;

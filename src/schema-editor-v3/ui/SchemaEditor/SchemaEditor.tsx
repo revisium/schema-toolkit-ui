@@ -74,7 +74,15 @@ export const SchemaEditor: FC<SchemaEditorProps> = observer(
         </Flex>
 
         {vm.viewMode === ViewerSwitcherMode.Tree && (
-          <Box paddingBottom="4rem">
+          <Box
+            ref={(el: HTMLDivElement | null) =>
+              vm.tree.keyboard.setContainerRef(el)
+            }
+            tabIndex={0}
+            onKeyDown={vm.tree.keyboard.handleKeyDown}
+            outline={0}
+            paddingBottom="4rem"
+          >
             <TreeNodeView
               accessor={vm.tree.rootAccessor}
               treeVM={vm.tree}

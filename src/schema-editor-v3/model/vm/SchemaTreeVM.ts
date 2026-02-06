@@ -1,6 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import type { SchemaModel } from '@revisium/schema-toolkit';
 import type { SchemaEditorCore } from '../core';
+import type { KeyboardNavigation } from '../core/KeyboardNavigation';
 import type { NodeAccessor } from '../accessor';
 
 export class SchemaTreeVM {
@@ -41,5 +42,9 @@ export class SchemaTreeVM {
 
   public selectForeignKey(): Promise<string | null> {
     return this._core.selectForeignKey();
+  }
+
+  public get keyboard(): KeyboardNavigation {
+    return this._core.keyboard;
   }
 }

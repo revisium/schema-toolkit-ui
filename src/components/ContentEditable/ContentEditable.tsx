@@ -134,9 +134,7 @@ export const ContentEditable: React.FC<ContentEditableBoxProps> = ({
       }
       if (event.key === 'Escape') {
         event.preventDefault();
-        if (initValue) {
-          ref.current?.blur();
-        }
+        ref.current?.blur();
         onEscape?.();
       }
 
@@ -158,6 +156,7 @@ export const ContentEditable: React.FC<ContentEditableBoxProps> = ({
       minWidth={0}
       width={showPlaceholder ? '100%' : undefined}
       position="relative"
+      cursor="text"
       onClick={handleParentClick}
     >
       {!showPlaceholder && prefix}

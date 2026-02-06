@@ -27,7 +27,9 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
     onChangeType,
     rightContent,
   }) => {
-    const applyHoverStyles = !accessor.state.isFocused;
+    const isActiveWithName =
+      accessor.state.isActive && Boolean(accessor.label.name);
+    const applyHoverStyles = !accessor.state.isFocused && !isActiveWithName;
     const hoverClass =
       applyHoverStyles && hoverTargetClass ? hoverTargetClass : undefined;
     const hasName = Boolean(accessor.label.name);
@@ -126,6 +128,8 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
               onBlur={accessor.handleFieldBlur}
               onFocus={() => accessor.state.setFocused(true)}
               onChange={accessor.actions.rename}
+              onEnter={treeVM.keyboard.handleEditEnter}
+              focusIfDependencyList={[accessor.state.focusRequestCount]}
             />
           )}
           {hasName && accessor.validation.hasError && (
