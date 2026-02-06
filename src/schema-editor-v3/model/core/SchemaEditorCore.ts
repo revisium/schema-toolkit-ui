@@ -149,7 +149,8 @@ export class SchemaEditorCore {
   }
 
   public get tableIdError(): string | null {
-    if (!isValidFieldName(this._tableModel.tableId)) {
+    const id = this._tableModel.tableId;
+    if (id && !isValidFieldName(id)) {
       return FIELD_NAME_ERROR_MESSAGE;
     }
     return null;
@@ -168,7 +169,11 @@ export class SchemaEditorCore {
   }
 
   public get isValid(): boolean {
-    return this._tableModel.schema.isValid && this.tableIdError === null;
+    return (
+      this._tableModel.schema.isValid &&
+      this.tableIdError === null &&
+      this._tableModel.tableId.length > 0
+    );
   }
 
   public get patchesCount(): number {
