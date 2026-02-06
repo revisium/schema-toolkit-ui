@@ -105,7 +105,7 @@ export class CreatingEditorVM {
   // ============ Create Dialog ============
 
   public get showCreateTableButton(): boolean {
-    return !this._core.validation.hasErrors;
+    return this._core.isValid && !this._core.validation.hasErrors;
   }
 
   public get isCreateDialogOpen(): boolean {

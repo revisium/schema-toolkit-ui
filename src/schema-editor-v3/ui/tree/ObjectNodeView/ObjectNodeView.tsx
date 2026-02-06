@@ -20,11 +20,12 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
     const hoverTargetClass = accessor.hoverTargetClass;
     const isCollapsible = !accessor.isRoot;
     const isCollapsed = !accessor.state.isExpanded;
+    const hideContent = accessor.isRoot && !accessor.label.name;
     const children = treeVM.getChildAccessors(
       accessor.nodeId,
       accessor.isReadonly,
     );
-    const showAddButton = !accessor.isReadonly;
+    const showAddButton = !accessor.isReadonly && !hideContent;
 
     return (
       <TreeNodeWrapper
@@ -52,25 +53,27 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
           />
         }
       >
-        <Flex flexDirection="column" width="100%">
-          {children.map((childAccessor, index) => (
-            <TreeNodeView
-              key={childAccessor.nodeId}
-              accessor={childAccessor}
-              treeVM={treeVM}
-              dataTestId={`${dataTestId}-${index}`}
-            />
-          ))}
-          {showAddButton && (
-            <Box ml="-14px">
-              <CreateButton
-                dataTestId={`${dataTestId}-create-field-button`}
-                title="Field"
-                onClick={() => accessor.actions.addProperty('')}
+        {!hideContent && (
+          <Flex flexDirection="column" width="100%">
+            {children.map((childAccessor, index) => (
+              <TreeNodeView
+                key={childAccessor.nodeId}
+                accessor={childAccessor}
+                treeVM={treeVM}
+                dataTestId={`${dataTestId}-${index}`}
               />
-            </Box>
-          )}
-        </Flex>
+            ))}
+            {showAddButton && (
+              <Box ml="-14px">
+                <CreateButton
+                  dataTestId={`${dataTestId}-create-field-button`}
+                  title="Field"
+                  onClick={() => accessor.actions.addProperty('')}
+                />
+              </Box>
+            )}
+          </Flex>
+        )}
       </TreeNodeWrapper>
     );
   },

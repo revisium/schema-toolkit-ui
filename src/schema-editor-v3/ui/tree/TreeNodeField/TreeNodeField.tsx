@@ -33,7 +33,7 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
     const hoverClass =
       applyHoverStyles && hoverTargetClass ? hoverTargetClass : undefined;
     const hasName = Boolean(accessor.label.name);
-    const showTypeAndMenu = hasName || accessor.isRoot;
+    const showTypeAndMenu = hasName;
 
     const hasDropTarget = treeVM.schemaModel.hasValidDropTarget(
       accessor.nodeId,

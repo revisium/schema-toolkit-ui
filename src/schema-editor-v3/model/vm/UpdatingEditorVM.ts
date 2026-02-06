@@ -106,6 +106,7 @@ export class UpdatingEditorVM {
 
   public get showApplyChangesButton(): boolean {
     return (
+      this._core.isValid &&
       !this._core.validation.hasErrors &&
       (this._core.isDirty || this._core.isTableIdChanged)
     );
