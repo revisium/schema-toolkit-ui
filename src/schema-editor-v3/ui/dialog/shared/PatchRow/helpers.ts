@@ -6,7 +6,8 @@ import {
 } from 'react-icons/pi';
 import { IconType } from 'react-icons';
 import { jsonPointerToSimplePath } from '@revisium/schema-toolkit';
-import type { SchemaPatch } from '@revisium/schema-toolkit';
+import type { SchemaPatch, PropertyChange } from '@revisium/schema-toolkit';
+import type { DefaultValueExample } from '../../../../model/utils';
 
 export type PatchOp = 'add' | 'remove' | 'move' | 'replace';
 
@@ -29,7 +30,7 @@ export const formatChangeValue = (value: unknown): string => {
     return '(none)';
   }
   if (typeof value === 'string') {
-    return value || '(none)';
+    return value || '""';
   }
   return JSON.stringify(value);
 };
@@ -39,4 +40,18 @@ export const getFromFieldName = (patch: SchemaPatch['patch']): string => {
     return jsonPointerToSimplePath(patch.from);
   }
   return '';
+};
+
+export const getFilteredPropertyChanges = (
+  op: string,
+  propertyChanges: PropertyChange[],
+  defaultExample: DefaultValueExample | null,
+): PropertyChange[] => {
+  if (op === 'remove') {
+    return [];
+  }
+  if (op === 'add' && defaultExample) {
+    return propertyChanges.filter((c) => c.property !== 'default');
+  }
+  return propertyChanges;
 };
