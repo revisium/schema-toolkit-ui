@@ -6,18 +6,22 @@ import {
   type JsonObjectSchema,
   type SchemaPatch,
   type JsonPatch,
-  type FieldType,
   type RefSchemas,
   isValidFieldName,
   FIELD_NAME_ERROR_MESSAGE,
 } from '@revisium/schema-toolkit';
 import { TreeState } from '../state/TreeState';
-import { NodeAccessorFactory, type NodeActionsCallbacks } from '../accessor';
+import {
+  NodeAccessor,
+  NodeAccessorFactory,
+  type NodeActionsCallbacks,
+} from '../accessor';
 import { AccessorCache } from './AccessorCache';
 import { ValidationTracker } from './ValidationTracker';
 import { ViewState } from './ViewState';
 import { CollapseManager } from './CollapseManager';
 import { defaultRefSchemas } from '../../config/system-schemas';
+import { typeIdToFieldType } from '../utils/typeIdMapping';
 
 const DEFAULT_COLLAPSE_COMPLEXITY = 14;
 
@@ -59,11 +63,11 @@ export class SchemaEditorCore {
     this._onSelectForeignKey = options.onSelectForeignKey ?? null;
 
     const callbacks: NodeActionsCallbacks = {
-      renameTable: this.setTableId.bind(this),
-      onNodeRemoved: this.handleNodeRemoved.bind(this),
-      onNodeAdded: this.handleNodeAdded.bind(this),
-      onNodeReplaced: this.handleNodeReplaced.bind(this),
-      selectForeignKey: this.selectForeignKey.bind(this),
+      renameTable: (name) => this.setTableId(name),
+      onNodeRemoved: (nodeId) => this.handleNodeRemoved(nodeId),
+      onNodeAdded: (nodeId) => this.handleNodeAdded(nodeId),
+      onNodeReplaced: (oldId, newId) => this.handleNodeReplaced(oldId, newId),
+      selectForeignKey: () => this.selectForeignKey(),
     };
 
     this.accessors = new AccessorCache(
@@ -146,7 +150,7 @@ export class SchemaEditorCore {
     this._tableModel.rename(value);
   }
 
-  public get rootAccessor() {
+  public get rootAccessor(): NodeAccessor {
     return this.accessors.get(this._tableModel.schema.root.id(), true);
   }
 
@@ -185,7 +189,7 @@ export class SchemaEditorCore {
       return;
     }
 
-    const fieldType = this.typeIdToFieldType(typeId);
+    const fieldType = typeIdToFieldType(typeId);
     if (fieldType) {
       const result = this._tableModel.schema.replaceRoot(fieldType);
       if (result) {
@@ -215,17 +219,6 @@ export class SchemaEditorCore {
 
   public getPlainSchema(): JsonObjectSchema {
     return this._tableModel.schema.plainSchema;
-  }
-
-  public typeIdToFieldType(typeId: string): FieldType | null {
-    const mapping: Record<string, FieldType> = {
-      String: 'string',
-      Number: 'number',
-      Boolean: 'boolean',
-      Object: 'object',
-      Array: 'array',
-    };
-    return mapping[typeId] ?? null;
   }
 
   public moveNode(fromNodeId: string, toParentId: string): void {

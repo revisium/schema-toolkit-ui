@@ -1,4 +1,3 @@
-import { makeAutoObservable, observable, ObservableMap } from 'mobx';
 import type { SchemaModel } from '@revisium/schema-toolkit';
 import {
   NodeAccessor,
@@ -7,37 +6,32 @@ import {
 } from '../accessor';
 
 export class AccessorCache {
-  private readonly _cache: ObservableMap<string, NodeAccessor>;
+  private readonly _cache = new Map<string, NodeAccessor>();
 
   constructor(
     private readonly _getSchemaModel: () => SchemaModel,
     private readonly _getContext: () => NodeAccessorContext,
     private readonly _accessorFactory: NodeAccessorFactory,
-  ) {
-    this._cache = observable.map<string, NodeAccessor>();
-    makeAutoObservable<AccessorCache, '_cache'>(
-      this,
-      { _cache: false },
-      { autoBind: true },
-    );
-  }
+  ) {}
 
   public get(
     nodeId: string,
     isRoot: boolean = false,
     isReadonly: boolean = false,
   ): NodeAccessor {
-    let accessor = this._cache.get(nodeId);
-    if (!accessor) {
-      const node = this._getSchemaModel().nodeById(nodeId);
-      accessor = this._accessorFactory.create(
-        node,
-        this._getContext(),
-        isRoot,
-        isReadonly,
-      );
-      this._cache.set(nodeId, accessor);
+    const cached = this._cache.get(nodeId);
+    if (cached) {
+      return cached;
     }
+
+    const node = this._getSchemaModel().nodeById(nodeId);
+    const accessor = this._accessorFactory.create(
+      node,
+      this._getContext(),
+      isRoot,
+      isReadonly,
+    );
+    this._cache.set(nodeId, accessor);
     return accessor;
   }
 

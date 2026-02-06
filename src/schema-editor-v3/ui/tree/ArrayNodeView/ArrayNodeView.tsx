@@ -24,14 +24,6 @@ export const ArrayNodeView: FC<ArrayNodeViewProps> = observer(
       accessor.isReadonly,
     );
 
-    const handleChangeType = (typeId: string) => {
-      if (accessor.isRoot) {
-        treeVM.changeRootType(typeId);
-      } else {
-        accessor.actions.changeType(typeId);
-      }
-    };
-
     return (
       <TreeNodeWrapper
         accessor={accessor}
@@ -46,7 +38,7 @@ export const ArrayNodeView: FC<ArrayNodeViewProps> = observer(
             treeVM={treeVM}
             dataTestId={dataTestId}
             hoverTargetClass={hoverTargetClass}
-            onChangeType={handleChangeType}
+            onChangeType={(typeId) => treeVM.changeNodeType(accessor, typeId)}
             rightContent={
               <TreeNodeRightContent
                 accessor={accessor}
