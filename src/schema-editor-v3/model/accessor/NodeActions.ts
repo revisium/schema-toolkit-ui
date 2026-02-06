@@ -234,6 +234,7 @@ export class NodeActions {
     const newNode = this._schemaModel.changeFieldType(oldNodeId, fieldType);
 
     if (!newNode.isNull()) {
+      this._schemaModel.updateForeignKey(newNode.id(), undefined);
       this._callbacks.onNodeReplaced(oldNodeId, newNode.id());
     }
   }
