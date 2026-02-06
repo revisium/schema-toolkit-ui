@@ -375,6 +375,91 @@ export const KeyboardWithComplexSchema: Story = {
   },
 };
 
+export const KeyboardAfterChangeType: Story = {
+  args: {
+    onCreateTable: fn(),
+    onCancel: fn(),
+  },
+  render: (args) => (
+    <CreatingStoryWrapper
+      {...args}
+      initialSchema={simpleSchema}
+      tableId="test"
+      hint="E2E Test: Enter/Escape work after changing field type"
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const container = getKeyboardContainer(canvasElement);
+
+    await waitFor(() =>
+      expect(canvas.getByTestId('root-0')).toBeInTheDocument(),
+    );
+
+    // Step 1: Navigate to first field (root-0 = title)
+    container.focus();
+    await pressKey(container, 'ArrowDown');
+    await pressKey(container, 'ArrowDown');
+
+    // Verify node is active
+    await waitFor(() => {
+      const activeNode = canvasElement.querySelector('[data-active="true"]');
+      expect(activeNode).toBeTruthy();
+    });
+
+    // Step 2: Change type from String to Number via mouse
+    await changeType(canvas, 'root-0', 'Number');
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Step 3: Verify a node is still active after type change
+    await waitFor(() => {
+      const activeNode = canvasElement.querySelector('[data-active="true"]');
+      expect(activeNode).toBeTruthy();
+    });
+
+    // Step 4: Do NOT focus container — just press key on whatever has focus.
+    // After menu closes, focus should return to container or tree area.
+    // If it doesn't, the keyboard won't work (this is the real user scenario).
+    await new Promise((r) => setTimeout(r, 100));
+
+    // Check where focus is after menu close
+    const focusedAfterMenu = document.activeElement;
+    const containerHasFocus =
+      container === focusedAfterMenu ||
+      container.contains(focusedAfterMenu as Node);
+
+    // If container doesn't have focus, this is the bug — keyboard won't work.
+    // For now, explicitly assert container should have focus after changeType.
+    expect(containerHasFocus).toBe(true);
+
+    // Step 5: Press Enter — should enter edit mode (ContentEditable focused)
+    await pressKey(container, 'Enter');
+    await new Promise((r) => setTimeout(r, 200));
+
+    await waitFor(() => {
+      const activeElement = document.activeElement;
+      expect(activeElement?.getAttribute('contenteditable')).toBe('true');
+    });
+
+    // Step 6: Press Escape in ContentEditable — should exit edit mode
+    if (document.activeElement instanceof HTMLElement) {
+      fireEvent.keyDown(document.activeElement, { key: 'Escape' });
+    }
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Step 7: Press Escape — should deactivate node
+    await pressKey(container, 'Escape');
+    await new Promise((r) => setTimeout(r, 100));
+
+    await waitFor(() => {
+      const deactivatedNode = canvasElement.querySelector(
+        '[data-active="true"]',
+      );
+      expect(deactivatedNode).toBeFalsy();
+    });
+  },
+};
+
 export const FullWorkflowWithKeyboard: Story = {
   args: {
     onCreateTable: fn(),
