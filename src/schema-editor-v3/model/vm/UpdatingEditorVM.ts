@@ -46,6 +46,42 @@ export class UpdatingEditorVM {
     return 'updating';
   }
 
+  // ============ Table ID ============
+
+  public get tableId(): string {
+    return this._core.tableId;
+  }
+
+  public get initialTableId(): string {
+    return this._core.initialTableId;
+  }
+
+  public get isTableIdChanged(): boolean {
+    return this._core.isTableIdChanged;
+  }
+
+  public get tableIdError(): string | null {
+    return this._core.tableIdError;
+  }
+
+  public setTableId(value: string): void {
+    this._core.setTableId(value);
+  }
+
+  // ============ State ============
+
+  public get isDirty(): boolean {
+    return this._core.isDirty;
+  }
+
+  public get isValid(): boolean {
+    return this._core.isValid;
+  }
+
+  public markAsSaved(): void {
+    this._core.markAsSaved();
+  }
+
   // ============ Toolbar ============
 
   public get loading(): boolean {

@@ -24,6 +24,7 @@ import { KeyboardNavigation } from './KeyboardNavigation';
 import { defaultRefSchemas } from '../../config/system-schemas';
 import { typeIdToFieldType } from '../utils/typeIdMapping';
 import { TreeNavigator } from '../utils/TreeNavigator';
+import { ensureReactivityProvider } from '../../../lib/initReactivity';
 
 const DEFAULT_COLLAPSE_COMPLEXITY = 14;
 
@@ -55,6 +56,8 @@ export class SchemaEditorCore {
     options: SchemaEditorCoreOptions = {},
     accessorFactory: NodeAccessorFactory = new NodeAccessorFactory(),
   ) {
+    ensureReactivityProvider();
+
     this._tableModel = createTableModel({
       tableId: options.tableId ?? '',
       schema: jsonSchema,

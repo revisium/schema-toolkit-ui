@@ -2,7 +2,6 @@ export type {
   SchemaNode,
   SchemaModel,
   FieldType,
-  JsonPatch,
 } from '@revisium/schema-toolkit';
 
 export type JsonValue =

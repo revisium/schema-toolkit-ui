@@ -8,7 +8,7 @@
 [![GitHub License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/revisium/schema-toolkit-ui/blob/master/LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/revisium/schema-toolkit-ui)](https://github.com/revisium/schema-toolkit-ui/releases)
 
-React UI components for JSON Schema manipulation and data editing. Built on top of [@revisium/schema-toolkit](https://github.com/revisium/schema-toolkit).
+React UI components for JSON Schema editing with visual diff/patch generation. Built on top of [@revisium/schema-toolkit](https://github.com/revisium/schema-toolkit).
 
 </div>
 
@@ -20,26 +20,75 @@ npm install @revisium/schema-toolkit-ui
 
 **Peer dependencies:**
 ```bash
-npm install react react-dom @chakra-ui/react @emotion/react next-themes
+npm install react react-dom @chakra-ui/react @emotion/react next-themes mobx mobx-react-lite
 ```
 
-## Features
+## Setup
 
-- React components for schema-based data editing
-- TypeScript support with full type definitions
-- Tree-shakeable ESM and CommonJS builds
-- Chakra UI integration
-- Storybook documentation
+Wrap your app with Chakra UI Provider. The MobX reactivity provider is initialized automatically.
 
 ## Usage
 
-```tsx
-import { Button } from '@revisium/schema-toolkit-ui';
+### Creating a new table schema
 
-function App() {
-  return <Button variant="primary">Click me</Button>;
-}
+```tsx
+import { CreatingEditorVM, CreatingSchemaEditor } from '@revisium/schema-toolkit-ui';
+import type { JsonObjectSchema } from '@revisium/schema-toolkit-ui';
+
+const emptySchema: JsonObjectSchema = {
+  type: 'object',
+  properties: {},
+  required: [],
+  additionalProperties: false,
+};
+
+const vm = new CreatingEditorVM(emptySchema, {
+  tableId: 'my-table',
+  onApprove: async () => {
+    // save logic
+    return true;
+  },
+  onCancel: () => {
+    // cancel logic
+  },
+});
+
+// In React component:
+<CreatingSchemaEditor vm={vm} />
+
+// Read results:
+vm.tableId          // current table name
+vm.getPlainSchema() // JSON Schema output
 ```
+
+### Updating an existing table schema
+
+```tsx
+import { UpdatingEditorVM, UpdatingSchemaEditor } from '@revisium/schema-toolkit-ui';
+
+const vm = new UpdatingEditorVM(existingSchema, {
+  tableId: 'my-table',
+  onApprove: async () => {
+    // save logic
+    return true;
+  },
+  onCancel: () => {
+    // cancel logic
+  },
+});
+
+// In React component:
+<UpdatingSchemaEditor vm={vm} />
+
+// Read results:
+vm.getJsonPatches()   // JSON Patch operations
+vm.isTableIdChanged   // was table renamed?
+vm.initialTableId     // original name (for rename API)
+```
+
+### Cleanup
+
+Call `vm.dispose()` when the editor is unmounted.
 
 ## License
 
