@@ -14,6 +14,7 @@ interface KeyboardEvent {
 export class KeyboardNavigation {
   private _mode: KeyboardMode = 'TREE_NAV';
   private _skipNextEscape = false;
+  private _suppressNextReturnFocus = false;
   private _containerRef: HTMLElement | null = null;
   private readonly _disposers: IReactionDisposer[] = [];
 
@@ -40,7 +41,11 @@ export class KeyboardNavigation {
           if (!isFocused && wasFocused) {
             this._mode = 'TREE_NAV';
             this._skipNextEscape = true;
-            this.deferReturnFocus();
+            if (this._suppressNextReturnFocus) {
+              this._suppressNextReturnFocus = false;
+            } else {
+              this.deferReturnFocus();
+            }
           }
         },
       ),
@@ -148,6 +153,7 @@ export class KeyboardNavigation {
       return;
     }
     if (this._containerRef?.contains(target)) {
+      this._suppressNextReturnFocus = true;
       if (!target.closest('[data-node-id]')) {
         this._treeState.setActiveNodeId(null);
       }
@@ -156,7 +162,9 @@ export class KeyboardNavigation {
     const isInsideOverlay = target.closest(
       '[role="menu"], [role="listbox"], [role="dialog"]',
     );
-    if (!isInsideOverlay) {
+    if (isInsideOverlay) {
+      this._suppressNextReturnFocus = true;
+    } else {
       this._treeState.setActiveNodeId(null);
     }
   };
