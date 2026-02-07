@@ -16,11 +16,20 @@ export class NodeFormula {
     return this._node.hasFormula();
   }
 
+  public get rawExpression(): string {
+    const formula = this._node.formula();
+    return formula?.expression() ?? '';
+  }
+
   public get formula(): string {
     if (!this.hasFormula) {
       return '';
     }
-    return this._schemaModel.serializeFormula(this._node.id());
+    const serialized = this._schemaModel.serializeFormula(this._node.id());
+    if (serialized) {
+      return serialized;
+    }
+    return this.rawExpression;
   }
 
   public get inputValue(): string | null {
