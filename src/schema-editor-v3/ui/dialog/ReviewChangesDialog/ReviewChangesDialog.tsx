@@ -83,7 +83,7 @@ export const ReviewChangesDialog: FC<ReviewChangesDialogProps> = observer(
                     )}
                     {vm.patches.map((schemaPatch) => (
                       <PatchRow
-                        key={schemaPatch.patch.path}
+                        key={`${schemaPatch.patch.op}:${schemaPatch.patch.path}`}
                         schemaPatch={schemaPatch}
                       />
                     ))}
