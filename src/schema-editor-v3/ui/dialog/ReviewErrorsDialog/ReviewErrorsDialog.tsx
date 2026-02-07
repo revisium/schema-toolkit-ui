@@ -2,7 +2,12 @@ import { Box, Text, VStack } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import type { ReviewErrorsDialogVM } from '../../../model/dialog';
-import { DialogLayout, DialogFooterActions, ErrorItem } from '../shared';
+import {
+  DialogLayout,
+  DialogFooterActions,
+  ErrorItem,
+  RevertButton,
+} from '../shared';
 
 interface ReviewErrorsDialogProps {
   isOpen: boolean;
@@ -17,7 +22,15 @@ export const ReviewErrorsDialog: FC<ReviewErrorsDialogProps> = observer(
         isOpen={isOpen}
         onClose={onClose}
         title={`Review Errors for "${vm.tableId}"`}
-        footer={<DialogFooterActions onCancel={onClose} showConfirm={false} />}
+        footer={
+          <DialogFooterActions
+            leftContent={
+              vm.canRevert ? <RevertButton onRevert={vm.revert} /> : undefined
+            }
+            onCancel={onClose}
+            showConfirm={false}
+          />
+        }
       >
         <VStack align="stretch" gap={4}>
           <Box

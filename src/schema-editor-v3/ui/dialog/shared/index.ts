@@ -5,3 +5,4 @@ export { DialogFooterActions } from './DialogFooterActions';
 export { PatchRow } from './PatchRow';
 export { TableIdChangeRow } from './TableIdChangeRow';
 export { ErrorItem, type ErrorType } from './ErrorItem';
+export { RevertButton } from './RevertButton';

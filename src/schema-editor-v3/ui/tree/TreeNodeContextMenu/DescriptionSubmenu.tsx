@@ -56,6 +56,10 @@ export const DescriptionSubmenu: FC<DescriptionSubmenuProps> = observer(
                 onKeyUp={stopPropagation}
                 rows={3}
                 autoFocus
+                onFocus={(e) => {
+                  const len = e.currentTarget.value.length;
+                  e.currentTarget.setSelectionRange(len, len);
+                }}
                 data-testid={`${dataTestId}-description-input`}
               />
             </Menu.Content>
