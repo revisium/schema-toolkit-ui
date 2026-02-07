@@ -2,9 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import type { NodeAccessor } from '../../../model/accessor';
 import type { SchemaTreeVM } from '../../../model/vm';
-import { TreeNodeWrapper } from '../TreeNodeWrapper';
-import { TreeNodeField } from '../TreeNodeField';
-import { TreeNodeRightContent } from '../TreeNodeRightContent';
+import { NodeViewLayout } from '../NodeViewLayout';
 
 interface RefNodeViewProps {
   accessor: NodeAccessor;
@@ -14,31 +12,11 @@ interface RefNodeViewProps {
 
 export const RefNodeView: FC<RefNodeViewProps> = observer(
   ({ accessor, treeVM, dataTestId }) => {
-    const hoverTargetClass = accessor.hoverTargetClass;
-
     return (
-      <TreeNodeWrapper
+      <NodeViewLayout
         accessor={accessor}
-        isCollapsible={false}
-        isCollapsed={false}
-        hoverTargetClass={hoverTargetClass}
-        field={
-          <TreeNodeField
-            accessor={accessor}
-            treeVM={treeVM}
-            dataTestId={dataTestId}
-            hoverTargetClass={hoverTargetClass}
-            onChangeType={(typeId) => treeVM.changeNodeType(accessor, typeId)}
-            rightContent={
-              <TreeNodeRightContent
-                accessor={accessor}
-                dataTestId={dataTestId}
-                showDelete={!accessor.isRoot}
-                onDelete={accessor.actions.remove}
-              />
-            }
-          />
-        }
+        treeVM={treeVM}
+        dataTestId={dataTestId}
       />
     );
   },

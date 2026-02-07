@@ -3,9 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import type { NodeAccessor } from '../../../model/accessor';
 import type { SchemaTreeVM } from '../../../model/vm';
-import { TreeNodeWrapper } from '../TreeNodeWrapper';
-import { TreeNodeField } from '../TreeNodeField';
-import { TreeNodeRightContent } from '../TreeNodeRightContent';
+import { NodeViewLayout } from '../NodeViewLayout';
 import { ArrayItemsView } from './ArrayItemsView';
 
 interface ArrayNodeViewProps {
@@ -16,39 +14,17 @@ interface ArrayNodeViewProps {
 
 export const ArrayNodeView: FC<ArrayNodeViewProps> = observer(
   ({ accessor, treeVM, dataTestId }) => {
-    const hoverTargetClass = accessor.hoverTargetClass;
-    const isCollapsible = !accessor.isRoot;
-    const isCollapsed = !accessor.state.isExpanded;
     const children = treeVM.getChildAccessors(
       accessor.nodeId,
       accessor.isReadonly,
     );
 
     return (
-      <TreeNodeWrapper
+      <NodeViewLayout
         accessor={accessor}
-        isCollapsible={isCollapsible}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={accessor.state.toggleExpanded}
-        hoverTargetClass={hoverTargetClass}
+        treeVM={treeVM}
         dataTestId={dataTestId}
-        field={
-          <TreeNodeField
-            accessor={accessor}
-            treeVM={treeVM}
-            dataTestId={dataTestId}
-            hoverTargetClass={hoverTargetClass}
-            onChangeType={(typeId) => treeVM.changeNodeType(accessor, typeId)}
-            rightContent={
-              <TreeNodeRightContent
-                accessor={accessor}
-                dataTestId={dataTestId}
-                showDelete={!accessor.isRoot}
-                onDelete={accessor.actions.remove}
-              />
-            }
-          />
-        }
+        collapsible
       >
         <Flex flexDirection="column" width="100%">
           {children.length > 0 && children[0] ? (
@@ -64,7 +40,7 @@ export const ArrayNodeView: FC<ArrayNodeViewProps> = observer(
             </Text>
           )}
         </Flex>
-      </TreeNodeWrapper>
+      </NodeViewLayout>
     );
   },
 );

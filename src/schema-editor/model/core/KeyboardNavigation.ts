@@ -141,7 +141,7 @@ export class KeyboardNavigation {
     this._treeState.setActiveNodeId(null);
   }
 
-  private handleNativeMouseDown = (event: Event): void => {
+  private readonly handleNativeMouseDown = (event: Event): void => {
     this._skipNextEscape = false;
     const target = event.target;
     if (!(target instanceof HTMLElement)) {
@@ -227,7 +227,7 @@ export class KeyboardNavigation {
 
     const activeId = this._treeState.activeNodeId;
     if (!activeId) {
-      const lastId = ids[ids.length - 1];
+      const lastId = ids.at(-1);
       if (lastId !== undefined) {
         this._treeState.setActiveNodeId(lastId);
         this.scrollToNode(lastId);
