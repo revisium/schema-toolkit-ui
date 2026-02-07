@@ -19,6 +19,7 @@ export const addField = async (
   const addButton = await canvas.findByTestId(
     `${parentTestId}-create-field-button`,
   );
+  addButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(addButton);
 
   // Find the newest field (last child)
@@ -34,6 +35,7 @@ export const addField = async (
   const newField = fields[fields.length - 1];
   if (!newField) throw new Error('New field not found');
 
+  newField.scrollIntoView({ block: 'nearest' });
   await userEvent.type(newField, fieldName);
   return newField.getAttribute('data-testid')!;
 };
@@ -44,6 +46,7 @@ export const renameField = async (
   newName: string,
 ) => {
   const field = canvas.getByTestId(fieldTestId);
+  field.scrollIntoView({ block: 'nearest' });
   await userEvent.clear(field);
   await userEvent.type(field, newName);
 };
@@ -103,6 +106,7 @@ export const changeType = async (
   const typeButton = await canvas.findByTestId(
     `${fieldTestId}-select-type-button`,
   );
+  typeButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(typeButton);
 
   if (SCHEMAS_SUBMENU_TYPES.has(newType)) {
@@ -170,6 +174,7 @@ export const changeArrayItemsType = async (
   if (!itemsTypeButton) {
     throw new Error('Items type button not found');
   }
+  itemsTypeButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(itemsTypeButton);
 
   // TypeMenu in ArrayItemsView uses arrayFieldTestId for menu items
@@ -225,6 +230,7 @@ export const openSettingsMenu = async (canvas: Canvas, fieldTestId: string) => {
   const settingsButton = await canvas.findByTestId(
     `${fieldTestId}-setting-button`,
   );
+  settingsButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(settingsButton);
 };
 
@@ -235,6 +241,7 @@ export const openArrayItemsSettingsMenu = async (
   const settingsButton = await canvas.findByTestId(
     `${arrayFieldTestId}-items-setting-button`,
   );
+  settingsButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(settingsButton);
 };
 
@@ -265,6 +272,10 @@ export const setFormula = async (
 
   // Close menu
   await userEvent.click(document.body);
+
+  await waitFor(() => {
+    expect(screen.queryByTestId(formulaInputTestId)).not.toBeInTheDocument();
+  });
 };
 
 export const setArrayItemsFormula = async (
@@ -294,6 +305,10 @@ export const setArrayItemsFormula = async (
 
   // Close menu
   await userEvent.click(document.body);
+
+  await waitFor(() => {
+    expect(screen.queryByTestId(formulaInputTestId)).not.toBeInTheDocument();
+  });
 };
 
 export const setDescription = async (
@@ -322,6 +337,10 @@ export const setDescription = async (
   await userEvent.type(descInput, description);
 
   await userEvent.click(document.body);
+
+  await waitFor(() => {
+    expect(screen.queryByTestId(descInputTestId)).not.toBeInTheDocument();
+  });
 };
 
 export const setArrayItemsDescription = async (
@@ -350,6 +369,10 @@ export const setArrayItemsDescription = async (
   await userEvent.type(descInput, description);
 
   await userEvent.click(document.body);
+
+  await waitFor(() => {
+    expect(screen.queryByTestId(descInputTestId)).not.toBeInTheDocument();
+  });
 };
 
 export const setDeprecated = async (canvas: Canvas, fieldTestId: string) => {
@@ -389,6 +412,10 @@ export const setDefaultValue = async (
   await userEvent.type(defaultInput, value);
 
   await userEvent.click(document.body);
+
+  await waitFor(() => {
+    expect(screen.queryByTestId(defaultInputTestId)).not.toBeInTheDocument();
+  });
 };
 
 // ============ DIALOG OPERATIONS ============
@@ -527,6 +554,7 @@ export const selectForeignKey = async (
   const connectButton = await canvas.findByTestId(
     `${fieldTestId}-connect-foreign-key`,
   );
+  connectButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(connectButton);
 
   await waitFor(async () => {
@@ -543,6 +571,7 @@ export const expandField = async (canvas: Canvas, fieldTestId: string) => {
   const expandButton = await canvas.findByTestId(
     `${fieldTestId}-expand-button`,
   );
+  expandButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(expandButton);
 };
 
@@ -550,6 +579,7 @@ export const collapseField = async (canvas: Canvas, fieldTestId: string) => {
   const collapseButton = await canvas.findByTestId(
     `${fieldTestId}-collapse-button`,
   );
+  collapseButton.scrollIntoView({ block: 'nearest' });
   await userEvent.click(collapseButton);
 };
 
