@@ -14,7 +14,7 @@ export const CreatingSchemaEditor: FC<CreatingSchemaEditorProps> = observer(
     return (
       <SchemaEditor
         vm={vm}
-        dataTestId="schema-editor-v3-creating"
+        dataTestId="schema-editor-creating"
         backButton={
           <CloseButton
             dataTestId="close-create-table-button"

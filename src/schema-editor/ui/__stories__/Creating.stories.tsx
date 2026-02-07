@@ -4,7 +4,7 @@ import { emptyObjectSchema, simpleSchema } from './schemas';
 
 const meta: Meta<typeof CreatingStoryWrapper> = {
   ...creatingBaseMeta,
-  title: 'V3/SchemaEditor/Creating',
+  title: 'SchemaEditor/Creating',
 };
 export default meta;
 type Story = StoryObj<typeof CreatingStoryWrapper>;

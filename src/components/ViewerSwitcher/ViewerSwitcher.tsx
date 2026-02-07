@@ -7,7 +7,7 @@ import {
   PiTreeViewThin,
 } from 'react-icons/pi';
 import { Tooltip } from '../Tooltip/Tooltip';
-import { ViewerSwitcherMode } from '../../schema-editor-v3/types';
+import { ViewerSwitcherMode } from '../../schema-editor/types';
 
 const modes: {
   mode: ViewerSwitcherMode;

@@ -7,7 +7,7 @@ import { clickApplyChangesButton, confirmApplyChanges } from '../test-utils';
 
 const meta: Meta<typeof UpdatingStoryWrapper> = {
   ...updatingBaseMeta,
-  title: 'V3/SchemaEditor/E2E/Updating',
+  title: 'SchemaEditor/E2E/Updating',
   tags: ['test'],
 };
 export default meta;

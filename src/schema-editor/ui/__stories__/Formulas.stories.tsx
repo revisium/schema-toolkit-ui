@@ -10,7 +10,7 @@ import {
 
 const meta: Meta<typeof UpdatingStoryWrapper> = {
   ...updatingBaseMeta,
-  title: 'V3/SchemaEditor/Formulas',
+  title: 'SchemaEditor/Formulas',
 };
 export default meta;
 type Story = StoryObj<typeof UpdatingStoryWrapper>;

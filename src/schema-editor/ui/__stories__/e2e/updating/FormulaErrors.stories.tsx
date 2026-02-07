@@ -16,7 +16,7 @@ import {
 
 const meta: Meta<typeof UpdatingStoryWrapper> = {
   ...updatingBaseMeta,
-  title: 'V3/SchemaEditor/E2E/Updating/FormulaErrors',
+  title: 'SchemaEditor/E2E/Updating/FormulaErrors',
   tags: ['test'],
 };
 export default meta;

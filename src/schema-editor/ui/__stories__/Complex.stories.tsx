@@ -4,7 +4,7 @@ import { deepNestedSchema, largeSchema, mixedComplexSchema } from './schemas';
 
 const meta: Meta<typeof UpdatingStoryWrapper> = {
   ...updatingBaseMeta,
-  title: 'V3/SchemaEditor/Complex',
+  title: 'SchemaEditor/Complex',
 };
 export default meta;
 type Story = StoryObj<typeof UpdatingStoryWrapper>;
