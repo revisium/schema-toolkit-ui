@@ -12,25 +12,25 @@ import { ViewerSwitcherMode } from '../../schema-editor-v3/types';
 const modes: {
   mode: ViewerSwitcherMode;
   label: string;
-  icon: React.ReactNode;
+  icon: React.ElementType;
   dataTestId?: string;
 }[] = [
   {
     mode: ViewerSwitcherMode.Tree,
     label: 'Tree',
-    icon: <PiTreeViewThin />,
+    icon: PiTreeViewThin,
     dataTestId: 'row-editor-mode-tree',
   },
   {
     mode: ViewerSwitcherMode.Json,
     label: 'JSON',
-    icon: <PiBracketsCurlyThin />,
+    icon: PiBracketsCurlyThin,
     dataTestId: 'row-editor-mode-json',
   },
   {
     mode: ViewerSwitcherMode.RefBy,
     label: 'References',
-    icon: <PiLinkThin />,
+    icon: PiLinkThin,
     dataTestId: 'row-editor-mode-refs',
   },
 ];
@@ -93,16 +93,15 @@ export const ViewerSwitcher: React.FC<ViewerSwitcherProps> = ({
             closeDelay={0}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <Icon boxSize={4}>{currentMode.icon}</Icon>
+              <Icon as={currentMode.icon} boxSize={4} />
               <Icon
+                as={PiCaretDownLight}
                 boxSize={3}
                 color="gray.400"
                 className="caret"
                 opacity={0}
                 transition="opacity 0.15s"
-              >
-                <PiCaretDownLight />
-              </Icon>
+              />
             </span>
           </Tooltip>
         </Button>
@@ -119,9 +118,7 @@ export const ViewerSwitcher: React.FC<ViewerSwitcherProps> = ({
                   cursor="pointer"
                 >
                   <Menu.ItemIndicator />
-                  <Icon boxSize={4} mr="8px">
-                    {item.icon}
-                  </Icon>
+                  <Icon as={item.icon} boxSize={4} mr="8px" />
                   {item.label}
                 </Menu.RadioItem>
               ))}

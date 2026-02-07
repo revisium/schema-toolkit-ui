@@ -105,9 +105,7 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
                 borderRadius="4px"
                 marginLeft="-6px"
               >
-                <Icon size="md" color="gray.300">
-                  <PiDotsSixVerticalBold />
-                </Icon>
+                <Icon as={PiDotsSixVerticalBold} size="md" color="gray.300" />
               </Flex>
             </Tooltip>
           )}

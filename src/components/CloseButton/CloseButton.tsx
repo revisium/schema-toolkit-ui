@@ -27,9 +27,7 @@ export const CloseButton: React.FC<CloseButtonProps> = ({
       onClick={onClick}
       width="48px"
     >
-      <Icon size="md">
-        <PiX />
-      </Icon>
+      <Icon as={PiX} size="md" />
     </Button>
   );
 };
