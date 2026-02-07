@@ -198,9 +198,7 @@ export class NodeActions {
       return;
     }
 
-    if (this._node.foreignKey() !== undefined) {
-      this._schemaModel.updateForeignKey(this._node.id(), tableId);
-    } else {
+    if (this._node.foreignKey() === undefined) {
       const oldNodeId = this._node.id();
       if (this._node.nodeType() !== 'string') {
         const newNode = this._schemaModel.changeFieldType(oldNodeId, 'string');
@@ -209,6 +207,8 @@ export class NodeActions {
       } else {
         this._schemaModel.updateForeignKey(oldNodeId, tableId);
       }
+    } else {
+      this._schemaModel.updateForeignKey(this._node.id(), tableId);
     }
   }
 

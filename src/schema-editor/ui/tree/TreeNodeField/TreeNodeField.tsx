@@ -1,12 +1,12 @@
-import { Box, Flex, Icon, Text } from '@chakra-ui/react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { FC, ReactNode, useCallback } from 'react';
-import { PiDotsSixVerticalBold, PiWarningCircle } from 'react-icons/pi';
-import { Tooltip } from '../../../../components/Tooltip';
 import { ContentEditable } from '../../../../components/ContentEditable';
 import type { NodeAccessor } from '../../../model/accessor';
 import type { SchemaTreeVM } from '../../../model/vm';
 import { TypeMenu } from '../../TypeMenu/TypeMenu';
+import { DragHandle } from './DragHandle';
+import { ErrorIndicator } from './ErrorIndicator';
 import { useDragAndDrop } from './useDragAndDrop';
 
 interface TreeNodeFieldProps {
@@ -33,7 +33,6 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
     const hoverClass =
       applyHoverStyles && hoverTargetClass ? hoverTargetClass : undefined;
     const hasName = Boolean(accessor.label.name);
-    const showTypeAndMenu = hasName;
 
     const hasDropTarget = treeVM.schemaModel.hasValidDropTarget(
       accessor.nodeId,
@@ -87,27 +86,11 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
           color={isDisabledDrop ? 'gray.300' : undefined}
         >
           {isDraggable && (
-            <Tooltip
-              content="Drag to move field to another object"
-              positioning={{ placement: 'left' }}
-            >
-              <Flex
-                data-testid={`${dataTestId}-drag-button`}
-                className={hoverClass}
-                position="absolute"
-                left="-34px"
-                opacity={applyHoverStyles ? 0 : 1}
-                cursor="grab"
-                _hover={{ backgroundColor: 'gray.50' }}
-                height="100%"
-                alignItems="center"
-                justifyContent="center"
-                borderRadius="4px"
-                marginLeft="-6px"
-              >
-                <Icon as={PiDotsSixVerticalBold} size="md" color="gray.300" />
-              </Flex>
-            </Tooltip>
+            <DragHandle
+              dataTestId={dataTestId}
+              hoverClass={hoverClass}
+              applyHoverStyles={applyHoverStyles}
+            />
           )}
           {accessor.isReadonly ? (
             <Text color="gray.400" data-testid={dataTestId}>
@@ -131,25 +114,13 @@ export const TreeNodeField: FC<TreeNodeFieldProps> = observer(
             />
           )}
           {hasName && accessor.validation.hasError && (
-            <Tooltip
-              content={accessor.validation.errorMessage ?? ''}
-              positioning={{ placement: 'top' }}
-              contentProps={{ maxWidth: '400px' }}
-            >
-              <Box
-                data-testid={`${dataTestId}-error-indicator`}
-                color="red.500"
-                cursor="default"
-                display="flex"
-                alignItems="center"
-                ml="4px"
-              >
-                <PiWarningCircle />
-              </Box>
-            </Tooltip>
+            <ErrorIndicator
+              dataTestId={dataTestId}
+              errorMessage={accessor.validation.errorMessage ?? ''}
+            />
           )}
         </Flex>
-        {showTypeAndMenu && (
+        {hasName && (
           <Flex gap="0.5rem" alignItems="center">
             <Box className={hoverClass} opacity={applyHoverStyles ? 0 : 1}>
               <Flex gap="0.5rem" alignItems="center">

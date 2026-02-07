@@ -7,7 +7,7 @@ export function parseDefaultValue(
   const nodeType = accessor.label.nodeType;
   if (nodeType === 'number') {
     const num = Number(value);
-    return isNaN(num) ? 0 : num;
+    return Number.isNaN(num) ? 0 : num;
   }
   if (nodeType === 'boolean') {
     return value === 'true';

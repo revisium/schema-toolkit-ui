@@ -91,25 +91,40 @@ export class TreeNavigator {
     }
 
     if (node.isObject()) {
-      for (const child of node.properties()) {
-        if (child.id() === targetId) {
-          return node.id();
-        }
-        const found = this.findParentInTree(child, targetId);
-        if (found) {
-          return found;
-        }
-      }
-    } else if (node.isArray()) {
-      const items = node.items();
-      if (!items.isNull()) {
-        if (items.id() === targetId) {
-          return node.id();
-        }
-        return this.findParentInTree(items, targetId);
-      }
+      return this.findParentInObject(node, targetId);
+    }
+
+    if (node.isArray()) {
+      return this.findParentInArray(node, targetId);
     }
 
     return null;
+  }
+
+  private findParentInObject(
+    node: SchemaNode,
+    targetId: string,
+  ): string | null {
+    for (const child of node.properties()) {
+      if (child.id() === targetId) {
+        return node.id();
+      }
+      const found = this.findParentInTree(child, targetId);
+      if (found) {
+        return found;
+      }
+    }
+    return null;
+  }
+
+  private findParentInArray(node: SchemaNode, targetId: string): string | null {
+    const items = node.items();
+    if (items.isNull()) {
+      return null;
+    }
+    if (items.id() === targetId) {
+      return node.id();
+    }
+    return this.findParentInTree(items, targetId);
   }
 }

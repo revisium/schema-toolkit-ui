@@ -4,9 +4,7 @@ import { FC } from 'react';
 import { CreateButton } from '../../../../components';
 import type { NodeAccessor } from '../../../model/accessor';
 import type { SchemaTreeVM } from '../../../model/vm';
-import { TreeNodeWrapper } from '../TreeNodeWrapper';
-import { TreeNodeField } from '../TreeNodeField';
-import { TreeNodeRightContent } from '../TreeNodeRightContent';
+import { NodeViewLayout } from '../NodeViewLayout';
 import { TreeNodeView } from '../TreeNodeView';
 
 interface ObjectNodeViewProps {
@@ -17,9 +15,6 @@ interface ObjectNodeViewProps {
 
 export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
   ({ accessor, treeVM, dataTestId }) => {
-    const hoverTargetClass = accessor.hoverTargetClass;
-    const isCollapsible = !accessor.isRoot;
-    const isCollapsed = !accessor.state.isExpanded;
     const hideContent = accessor.isRoot && !accessor.label.name;
     const children = treeVM.getChildAccessors(
       accessor.nodeId,
@@ -28,30 +23,11 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
     const showAddButton = !accessor.isReadonly && !hideContent;
 
     return (
-      <TreeNodeWrapper
+      <NodeViewLayout
         accessor={accessor}
-        isCollapsible={isCollapsible}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={accessor.state.toggleExpanded}
-        hoverTargetClass={hoverTargetClass}
+        treeVM={treeVM}
         dataTestId={dataTestId}
-        field={
-          <TreeNodeField
-            accessor={accessor}
-            treeVM={treeVM}
-            dataTestId={dataTestId}
-            hoverTargetClass={hoverTargetClass}
-            onChangeType={(typeId) => treeVM.changeNodeType(accessor, typeId)}
-            rightContent={
-              <TreeNodeRightContent
-                accessor={accessor}
-                dataTestId={dataTestId}
-                showDelete={!accessor.isRoot}
-                onDelete={accessor.actions.remove}
-              />
-            }
-          />
-        }
+        collapsible
       >
         {!hideContent && (
           <Flex flexDirection="column" width="100%">
@@ -74,7 +50,7 @@ export const ObjectNodeView: FC<ObjectNodeViewProps> = observer(
             )}
           </Flex>
         )}
-      </TreeNodeWrapper>
+      </NodeViewLayout>
     );
   },
 );

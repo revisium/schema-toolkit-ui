@@ -4,9 +4,7 @@ import { FC, useCallback } from 'react';
 import { PiDotOutlineFill } from 'react-icons/pi';
 import type { NodeAccessor } from '../../../model/accessor';
 import type { SchemaTreeVM } from '../../../model/vm';
-import { TreeNodeWrapper } from '../TreeNodeWrapper';
-import { TreeNodeField } from '../TreeNodeField';
-import { TreeNodeRightContent } from '../TreeNodeRightContent';
+import { NodeViewLayout } from '../NodeViewLayout';
 
 interface ForeignKeyNodeViewProps {
   accessor: NodeAccessor;
@@ -16,8 +14,6 @@ interface ForeignKeyNodeViewProps {
 
 export const ForeignKeyNodeView: FC<ForeignKeyNodeViewProps> = observer(
   ({ accessor, treeVM, dataTestId }) => {
-    const hoverTargetClass = accessor.hoverTargetClass;
-
     const handleSelectForeignKey = useCallback(async () => {
       const tableId = await treeVM.selectForeignKey();
       if (tableId !== null) {
@@ -28,28 +24,10 @@ export const ForeignKeyNodeView: FC<ForeignKeyNodeViewProps> = observer(
     const foreignKeyValue = accessor.label.foreignKeyTable;
 
     return (
-      <TreeNodeWrapper
+      <NodeViewLayout
         accessor={accessor}
-        isCollapsible={false}
-        isCollapsed={false}
-        hoverTargetClass={hoverTargetClass}
-        field={
-          <TreeNodeField
-            accessor={accessor}
-            treeVM={treeVM}
-            dataTestId={dataTestId}
-            hoverTargetClass={hoverTargetClass}
-            onChangeType={(typeId) => treeVM.changeNodeType(accessor, typeId)}
-            rightContent={
-              <TreeNodeRightContent
-                accessor={accessor}
-                dataTestId={dataTestId}
-                showDelete={!accessor.isRoot}
-                onDelete={accessor.actions.remove}
-              />
-            }
-          />
-        }
+        treeVM={treeVM}
+        dataTestId={dataTestId}
       >
         <Flex gap="4px" alignItems="center" height="30px" mt="2px" mb="2px">
           <Box color="gray.300">
@@ -75,7 +53,7 @@ export const ForeignKeyNodeView: FC<ForeignKeyNodeViewProps> = observer(
             </Text>
           </Flex>
         </Flex>
-      </TreeNodeWrapper>
+      </NodeViewLayout>
     );
   },
 );

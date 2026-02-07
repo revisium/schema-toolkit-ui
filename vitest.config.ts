@@ -7,9 +7,9 @@ import { playwright } from '@vitest/browser-playwright';
 import react from '@vitejs/plugin-react';
 
 const dirname =
-  typeof __dirname !== 'undefined'
-    ? __dirname
-    : path.dirname(fileURLToPath(import.meta.url));
+  typeof __dirname === 'undefined'
+    ? path.dirname(fileURLToPath(import.meta.url))
+    : __dirname;
 
 export default defineConfig({
   plugins: [react()],
