@@ -18,6 +18,7 @@ export const FieldAdded: Story = {
       hint="A field has been added. Click 'Apply Changes' to see the diff."
       setupStore={(vm) => {
         vm.tree.rootAccessor.actions.addProperty('newField');
+        vm.tree.keyboard.deactivate();
       }}
     />
   ),
@@ -117,6 +118,8 @@ export const MultipleChanges: Story = {
             userChildren[0].actions.rename('renamedProfile');
           }
         }
+
+        vm.tree.keyboard.deactivate();
       }}
     />
   ),

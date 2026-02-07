@@ -31,6 +31,7 @@ export const WithFieldsAdded: Story = {
         vm.tree.rootAccessor.actions.addProperty('name');
         vm.tree.rootAccessor.actions.addProperty('email');
         vm.tree.rootAccessor.actions.addProperty('age');
+        vm.tree.keyboard.deactivate();
       }}
     />
   ),
@@ -46,6 +47,7 @@ export const WithValidationError: Story = {
       setupStore={(vm) => {
         vm.tree.rootAccessor.actions.addProperty('name');
         vm.tree.rootAccessor.actions.addProperty('name');
+        vm.tree.keyboard.deactivate();
       }}
     />
   ),
