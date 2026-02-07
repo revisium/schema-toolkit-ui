@@ -1,6 +1,6 @@
 import { Box, Input, Menu, Portal } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { PiEquals, PiCaretRight } from 'react-icons/pi';
 import type { NodeAccessor } from '../../../model/accessor';
 import { parseDefaultValue } from './parseDefaultValue';
@@ -74,7 +74,13 @@ export const DefaultValueSubmenu: FC<DefaultValueSubmenuProps> = observer(
                   onBlur={handleBlur}
                   onKeyDown={stopPropagation}
                   onKeyUp={stopPropagation}
-                  autoFocus
+                  ref={useCallback((el: HTMLInputElement | null) => {
+                    if (el) {
+                      requestAnimationFrame(() => {
+                        el.focus({ preventScroll: true });
+                      });
+                    }
+                  }, [])}
                   data-testid={`${dataTestId}-default-input`}
                 />
               )}

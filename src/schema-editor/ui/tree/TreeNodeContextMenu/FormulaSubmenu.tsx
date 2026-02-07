@@ -4,7 +4,7 @@ import {
   type JsonObjectSchema,
 } from '@revisium/schema-toolkit';
 import { observer } from 'mobx-react-lite';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { PiFunction, PiCaretRight } from 'react-icons/pi';
 import type { NodeAccessor } from '../../../model/accessor';
 
@@ -82,11 +82,15 @@ const FormulaInput: FC<{
         onChange={handleChange}
         onKeyDown={stopPropagation}
         onKeyUp={stopPropagation}
-        autoFocus
-        onFocus={(e) => {
-          const len = e.currentTarget.value.length;
-          e.currentTarget.setSelectionRange(len, len);
-        }}
+        ref={useCallback((el: HTMLTextAreaElement | null) => {
+          if (el) {
+            requestAnimationFrame(() => {
+              el.focus({ preventScroll: true });
+              const len = el.value.length;
+              el.setSelectionRange(len, len);
+            });
+          }
+        }, [])}
         rows={2}
         borderColor={hasError ? 'red.300' : undefined}
         data-testid={`${dataTestId}-formula-input`}
