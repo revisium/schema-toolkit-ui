@@ -3,4 +3,8 @@ export * from './components';
 export * from './hooks';
 export * from './value-model';
 
-export type { JsonObjectSchema, JsonPatch } from '@revisium/schema-toolkit';
+export {
+  JsonSchemaTypeName,
+  type JsonObjectSchema,
+  type JsonPatch,
+} from '@revisium/schema-toolkit';
