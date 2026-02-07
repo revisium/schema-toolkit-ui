@@ -25,9 +25,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
       variant="ghost"
       onClick={onClick}
     >
-      <Icon boxSize={4} color="gray.500">
-        <PiCaretLeft />
-      </Icon>
+      <Icon as={PiCaretLeft} boxSize={4} color="gray.500" />
     </Button>
   );
 };
