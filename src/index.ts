@@ -1,7 +1,6 @@
 export * from './schema-editor';
 export * from './components';
 export * from './hooks';
-export * from './value-model';
 
 export {
   JsonSchemaTypeName,
