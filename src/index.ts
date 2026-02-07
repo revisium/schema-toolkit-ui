@@ -1,4 +1,4 @@
-export * from './schema-editor-v3';
+export * from './schema-editor';
 export * from './components';
 export * from './hooks';
 export * from './value-model';

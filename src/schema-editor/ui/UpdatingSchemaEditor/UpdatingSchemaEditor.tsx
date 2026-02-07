@@ -14,7 +14,7 @@ export const UpdatingSchemaEditor: FC<UpdatingSchemaEditorProps> = observer(
     return (
       <SchemaEditor
         vm={vm}
-        dataTestId="schema-editor-v3-updating"
+        dataTestId="schema-editor-updating"
         backButton={
           <BackButton
             dataTestId="back-to-table-list-button"

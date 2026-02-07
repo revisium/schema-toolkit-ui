@@ -5,7 +5,7 @@ import { simpleSchema } from '../../schemas';
 
 const meta: Meta<typeof UpdatingStoryWrapper> = {
   ...updatingBaseMeta,
-  title: 'V3/SchemaEditor/E2E/Updating/BasicInteractions',
+  title: 'SchemaEditor/E2E/Updating/BasicInteractions',
   tags: ['test'],
 };
 export default meta;

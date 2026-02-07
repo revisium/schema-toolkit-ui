@@ -5,7 +5,7 @@ import { emptyObjectSchema, simpleSchema } from '../../schemas';
 
 const meta: Meta<typeof CreatingStoryWrapper> = {
   ...creatingBaseMeta,
-  title: 'V3/SchemaEditor/E2E/Creating/BasicInteractions',
+  title: 'SchemaEditor/E2E/Creating/BasicInteractions',
   tags: ['test'],
 };
 export default meta;
@@ -319,7 +319,7 @@ export const SwitchViewMode: Story = {
     });
 
     // Find the schema editor and hover to show view switcher
-    const schemaEditor = await canvas.findByTestId('schema-editor-v3-creating');
+    const schemaEditor = await canvas.findByTestId('schema-editor-creating');
     await userEvent.hover(schemaEditor);
 
     // Click on view mode switcher to open menu

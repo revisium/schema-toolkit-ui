@@ -23,7 +23,7 @@ import {
 
 const meta: Meta<typeof CreatingStoryWrapper> = {
   ...creatingBaseMeta,
-  title: 'V3/SchemaEditor/E2E/Keyboard',
+  title: 'SchemaEditor/E2E/Keyboard',
   tags: ['test'],
 };
 export default meta;

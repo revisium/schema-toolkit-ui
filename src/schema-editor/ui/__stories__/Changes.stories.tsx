@@ -4,7 +4,7 @@ import { simpleSchema, nestedObjectSchema } from './schemas';
 
 const meta: Meta<typeof UpdatingStoryWrapper> = {
   ...updatingBaseMeta,
-  title: 'V3/SchemaEditor/Changes',
+  title: 'SchemaEditor/Changes',
 };
 export default meta;
 type Story = StoryObj<typeof UpdatingStoryWrapper>;

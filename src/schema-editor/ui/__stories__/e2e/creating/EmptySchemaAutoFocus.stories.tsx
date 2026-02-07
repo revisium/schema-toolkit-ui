@@ -5,7 +5,7 @@ import { emptyObjectSchema } from '../../schemas';
 
 const meta: Meta<typeof CreatingStoryWrapper> = {
   ...creatingBaseMeta,
-  title: 'V3/SchemaEditor/E2E/Creating',
+  title: 'SchemaEditor/E2E/Creating',
   tags: ['test'],
 };
 export default meta;

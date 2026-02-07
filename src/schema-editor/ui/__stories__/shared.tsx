@@ -247,7 +247,7 @@ export const UpdatingStoryWrapper = ({
 
 export const creatingBaseMeta = {
   component: CreatingSchemaEditor,
-  title: 'V3/SchemaEditor/Creating',
+  title: 'SchemaEditor/Creating',
   parameters: {
     layout: 'fullscreen' as const,
   },
@@ -259,7 +259,7 @@ export const creatingBaseMeta = {
 
 export const updatingBaseMeta = {
   component: UpdatingSchemaEditor,
-  title: 'V3/SchemaEditor/Updating',
+  title: 'SchemaEditor/Updating',
   parameters: {
     layout: 'fullscreen' as const,
   },

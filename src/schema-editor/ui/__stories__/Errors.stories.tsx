@@ -13,12 +13,12 @@ import {
 
 const creatingMeta: Meta<typeof CreatingStoryWrapper> = {
   ...creatingBaseMeta,
-  title: 'V3/SchemaEditor/Errors/Creating',
+  title: 'SchemaEditor/Errors/Creating',
 };
 
 const updatingMeta: Meta<typeof UpdatingStoryWrapper> = {
   ...updatingBaseMeta,
-  title: 'V3/SchemaEditor/Errors/Updating',
+  title: 'SchemaEditor/Errors/Updating',
 };
 
 export default creatingMeta;
