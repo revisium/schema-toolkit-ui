@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { autorun } from 'mobx';
 import { ObservableFSM } from '../ObservableFSM';
 import type { ObservableFSMConfig } from '../types';
