@@ -1,14 +1,6 @@
-import {
-  Box,
-  Flex,
-  IconButton,
-  SegmentGroup,
-  Text,
-  VStack,
-} from '@chakra-ui/react';
+import { Box, Flex, SegmentGroup, Text, VStack } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
-import { PiArrowCounterClockwiseBold } from 'react-icons/pi';
 import { JsonCard } from '../../../../components/JsonCard';
 import type { ReviewChangesDialogVM } from '../../../model/dialog';
 import {
@@ -16,6 +8,7 @@ import {
   DialogFooterActions,
   PatchRow,
   TableIdChangeRow,
+  RevertButton,
 } from '../shared';
 
 interface ReviewChangesDialogProps {
@@ -36,15 +29,7 @@ export const ReviewChangesDialog: FC<ReviewChangesDialogProps> = observer(
         footer={
           <DialogFooterActions
             leftContent={
-              <IconButton
-                variant="ghost"
-                size="sm"
-                onClick={vm.revert}
-                disabled={!vm.hasChanges}
-                title="Revert all changes"
-              >
-                <PiArrowCounterClockwiseBold />
-              </IconButton>
+              <RevertButton onRevert={vm.revert} disabled={!vm.hasChanges} />
             }
             onCancel={onClose}
             onConfirm={vm.approve}

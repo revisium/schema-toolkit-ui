@@ -10,8 +10,19 @@ export class ReviewErrorsDialogVM {
     private readonly _tableModel: TableModel,
     private readonly _getTableIdError: () => string | null,
     private readonly _getFormulaInputErrors: () => TreeFormulaValidationError[],
+    private readonly _onRevert?: () => void,
+    private readonly _onClose?: () => void,
   ) {
     makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  public get canRevert(): boolean {
+    return this._onRevert !== undefined;
+  }
+
+  public revert(): void {
+    this._onRevert?.();
+    this._onClose?.();
   }
 
   public get tableId(): string {

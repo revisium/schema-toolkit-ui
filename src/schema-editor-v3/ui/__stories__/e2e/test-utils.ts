@@ -710,3 +710,93 @@ export const expectTypeLabel = async (
     await expect(element?.textContent).toBe(expectedLabel);
   });
 };
+
+// ============ FORMULA SUBMENU HELPERS ============
+
+export const openFormulaSubmenu = async (
+  canvas: Canvas,
+  fieldTestId: string,
+) => {
+  await openSettingsMenu(canvas, fieldTestId);
+
+  const formulaMenuTestId = `${fieldTestId}-setting-button-formula-menu`;
+  await waitFor(async () => {
+    const formulaOption = screen.getByTestId(formulaMenuTestId);
+    await expect(formulaOption).toBeInTheDocument();
+  });
+
+  await userEvent.click(screen.getByTestId(formulaMenuTestId));
+
+  const formulaInputTestId = `${fieldTestId}-setting-button-formula-input`;
+  await waitFor(async () => {
+    const formulaInput = screen.getByTestId(formulaInputTestId);
+    await expect(formulaInput).toBeInTheDocument();
+  });
+};
+
+export const expectFormulaInputValue = async (
+  fieldTestId: string,
+  expectedValue: string,
+) => {
+  const formulaInputTestId = `${fieldTestId}-setting-button-formula-input`;
+  await waitFor(async () => {
+    const formulaInput = screen.getByTestId(formulaInputTestId);
+    await expect(formulaInput).toHaveValue(expectedValue);
+  });
+};
+
+export const expectFormulaError = async (
+  fieldTestId: string,
+  expectedTextPattern?: string | RegExp,
+) => {
+  const errorTestId = `${fieldTestId}-setting-button-formula-error`;
+  await waitFor(async () => {
+    const errorText = screen.getByTestId(errorTestId);
+    await expect(errorText).toBeInTheDocument();
+    if (expectedTextPattern) {
+      if (typeof expectedTextPattern === 'string') {
+        await expect(errorText.textContent).toContain(expectedTextPattern);
+      } else {
+        await expect(errorText.textContent).toMatch(expectedTextPattern);
+      }
+    }
+  });
+};
+
+export const expectNoFormulaError = async (fieldTestId: string) => {
+  const errorTestId = `${fieldTestId}-setting-button-formula-error`;
+  await waitFor(async () => {
+    const errorText = screen.queryByTestId(errorTestId);
+    await expect(errorText).toBeFalsy();
+  });
+};
+
+export const typeFormulaAndClose = async (
+  canvas: Canvas,
+  fieldTestId: string,
+  formula: string,
+) => {
+  await openFormulaSubmenu(canvas, fieldTestId);
+
+  const formulaInputTestId = `${fieldTestId}-setting-button-formula-input`;
+  const formulaInput = screen.getByTestId(formulaInputTestId);
+  await userEvent.clear(formulaInput);
+  if (formula) {
+    await userEvent.type(formulaInput, formula);
+  }
+
+  await userEvent.click(document.body);
+};
+
+export const clearFormulaAndClose = async (
+  canvas: Canvas,
+  fieldTestId: string,
+) => {
+  await openFormulaSubmenu(canvas, fieldTestId);
+
+  const formulaInputTestId = `${fieldTestId}-setting-button-formula-input`;
+  const formulaInput = screen.getByTestId(formulaInputTestId);
+  await userEvent.clear(formulaInput);
+
+  await userEvent.click(document.body);
+};

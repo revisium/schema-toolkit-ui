@@ -1,5 +1,9 @@
 import { makeAutoObservable, runInAction } from 'mobx';
-import type { SchemaNode, SchemaModel } from '@revisium/schema-toolkit';
+import type {
+  SchemaNode,
+  SchemaModel,
+  JsonObjectSchema,
+} from '@revisium/schema-toolkit';
 
 export class NodeFormula {
   private _inputValue: string | null = null;
@@ -16,11 +20,27 @@ export class NodeFormula {
     return this._node.hasFormula();
   }
 
+  public get plainSchema(): JsonObjectSchema {
+    return this._schemaModel.plainSchema;
+  }
+
+  public get rawExpression(): string {
+    const formula = this._node.formula();
+    return formula?.expression() ?? '';
+  }
+
   public get formula(): string {
+    if (this._inputValue !== null) {
+      return this._inputValue;
+    }
     if (!this.hasFormula) {
       return '';
     }
-    return this._schemaModel.serializeFormula(this._node.id());
+    const serialized = this._schemaModel.serializeFormula(this._node.id());
+    if (serialized) {
+      return serialized;
+    }
+    return this.rawExpression;
   }
 
   public get inputValue(): string | null {
@@ -55,6 +75,11 @@ export class NodeFormula {
     this._inputError = null;
   }
 
+  private hasFormulaErrorForNode(): boolean {
+    const errors = this._schemaModel.formulaErrors;
+    return errors.some((e) => e.nodeId === this._node.id());
+  }
+
   public applyFormula(): boolean {
     if (this._inputValue === null) {
       return true;
@@ -64,6 +89,11 @@ export class NodeFormula {
 
     try {
       this._schemaModel.updateFormula(this._node.id(), trimmed || undefined);
+
+      if (this.hasFormulaErrorForNode()) {
+        return false;
+      }
+
       this.clearInput();
       return true;
     } catch (error) {

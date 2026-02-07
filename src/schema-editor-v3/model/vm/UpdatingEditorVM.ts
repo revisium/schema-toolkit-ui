@@ -135,6 +135,8 @@ export class UpdatingEditorVM {
       this._core.tableModel,
       () => this._core.tableIdError,
       () => this._core.validation.collectFormulaInputErrors(),
+      () => this.revert(),
+      () => this.closeErrorsDialog(),
     );
   }
 
