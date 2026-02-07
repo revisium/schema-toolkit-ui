@@ -1,6 +1,6 @@
 import { Box, Menu, Portal, Textarea } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { PiTextT, PiCaretRight } from 'react-icons/pi';
 import type { NodeAccessor } from '../../../model/accessor';
 
@@ -55,11 +55,15 @@ export const DescriptionSubmenu: FC<DescriptionSubmenuProps> = observer(
                 onKeyDown={stopPropagation}
                 onKeyUp={stopPropagation}
                 rows={3}
-                autoFocus
-                onFocus={(e) => {
-                  const len = e.currentTarget.value.length;
-                  e.currentTarget.setSelectionRange(len, len);
-                }}
+                ref={useCallback((el: HTMLTextAreaElement | null) => {
+                  if (el) {
+                    requestAnimationFrame(() => {
+                      el.focus({ preventScroll: true });
+                      const len = el.value.length;
+                      el.setSelectionRange(len, len);
+                    });
+                  }
+                }, [])}
                 data-testid={`${dataTestId}-description-input`}
               />
             </Menu.Content>
