@@ -1,1 +1,0 @@
-export { NodePathIndex } from './NodePathIndex';
