@@ -1,0 +1,26 @@
+import { FC, ReactNode } from 'react';
+import { Box } from '@chakra-ui/react';
+
+interface FocusPopoverItemProps {
+  children: ReactNode;
+  onClick?: () => void;
+}
+
+export const FocusPopoverItem: FC<FocusPopoverItemProps> = ({
+  children,
+  onClick,
+}) => {
+  return (
+    <Box
+      px={2}
+      py={1.5}
+      cursor="pointer"
+      borderRadius="md"
+      fontSize="sm"
+      _hover={{ bg: 'gray.100' }}
+      onClick={onClick}
+    >
+      {children}
+    </Box>
+  );
+};
