@@ -1,9 +1,9 @@
-import { createRowModel, resetNodeIdCounter } from '@revisium/schema-toolkit';
-import {
-  ArrayNodeVMImpl as ArrayNodeVM,
-  PrimitiveNodeVMImpl as PrimitiveNodeVM,
-} from '../index';
-import type { PrimitiveNodeVM as IPrimitiveNodeVM } from '../types';
+import { resetNodeIdCounter } from '@revisium/schema-toolkit';
+import { RowEditorVM } from '../RowEditorVM';
+import type {
+  ArrayNodeVM as IArrayNodeVM,
+  PrimitiveNodeVM as IPrimitiveNodeVM,
+} from '../types';
 
 beforeEach(() => {
   resetNodeIdCounter();
@@ -23,67 +23,56 @@ describe('ArrayNodeVM', () => {
     required: ['items'],
   };
 
-  function createArrayRow(values: string[] = []) {
-    return createRowModel({
-      rowId: 'test',
-      schema: stringArraySchema,
-      data: { items: values },
-    });
-  }
-
-  function getArrayNode(values: string[] = []) {
-    const row = createArrayRow(values);
-    const itemsNode = row.tree.get('items');
-    if (!itemsNode?.isArray()) {
-      throw new Error('Expected array node');
+  function createArrayAccessor(values: string[] = []): IArrayNodeVM {
+    const vm = new RowEditorVM(stringArraySchema, { items: values });
+    const root = vm.root;
+    if (root.isObject()) {
+      const itemsChild = root.child('items');
+      if (itemsChild?.isArray()) {
+        return itemsChild;
+      }
     }
-    return itemsNode;
+    throw new Error('Expected array child');
   }
 
   describe('items', () => {
     it('creates item VMs for each element', () => {
-      const node = getArrayNode(['a', 'b', 'c']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b', 'c']);
 
       expect(vm.items).toHaveLength(3);
     });
 
     it('item VMs have index as name', () => {
-      const node = getArrayNode(['a', 'b']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b']);
 
       expect(vm.items[0].name).toBe('0');
       expect(vm.items[1].name).toBe('1');
     });
 
     it('item VMs have this as parent', () => {
-      const node = getArrayNode(['a', 'b']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b']);
 
       for (const item of vm.items) {
         expect(item.parent).toBe(vm);
       }
     });
 
-    it('creates PrimitiveNodeVM for primitive items', () => {
-      const node = getArrayNode(['a']);
-      const vm = new ArrayNodeVM(node, null);
+    it('creates primitive accessors for primitive items', () => {
+      const vm = createArrayAccessor(['a']);
 
-      expect(vm.items[0]).toBeInstanceOf(PrimitiveNodeVM);
+      expect(vm.items[0].isPrimitive()).toBe(true);
     });
   });
 
   describe('length', () => {
     it('returns number of items', () => {
-      const node = getArrayNode(['a', 'b', 'c']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b', 'c']);
 
       expect(vm.length).toBe(3);
     });
 
     it('returns 0 for empty array', () => {
-      const node = getArrayNode([]);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor([]);
 
       expect(vm.length).toBe(0);
     });
@@ -91,8 +80,7 @@ describe('ArrayNodeVM', () => {
 
   describe('at()', () => {
     it('returns item at index', () => {
-      const node = getArrayNode(['a', 'b', 'c']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b', 'c']);
 
       const item = vm.at(1);
 
@@ -103,8 +91,7 @@ describe('ArrayNodeVM', () => {
     });
 
     it('returns undefined for out of bounds index', () => {
-      const node = getArrayNode(['a']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a']);
 
       expect(vm.at(5)).toBeUndefined();
       expect(vm.at(-1)).toBeUndefined();
@@ -113,8 +100,7 @@ describe('ArrayNodeVM', () => {
 
   describe('pushValue()', () => {
     it('adds item to end', () => {
-      const node = getArrayNode(['a', 'b']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b']);
 
       vm.pushValue('c');
 
@@ -126,8 +112,7 @@ describe('ArrayNodeVM', () => {
     });
 
     it('updates items array', () => {
-      const node = getArrayNode([]);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor([]);
 
       vm.pushValue('first');
 
@@ -137,8 +122,7 @@ describe('ArrayNodeVM', () => {
 
   describe('removeAt()', () => {
     it('removes item at index', () => {
-      const node = getArrayNode(['a', 'b', 'c']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b', 'c']);
 
       vm.removeAt(1);
 
@@ -152,12 +136,10 @@ describe('ArrayNodeVM', () => {
     });
 
     it('items have their original names after removal', () => {
-      const node = getArrayNode(['a', 'b', 'c']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b', 'c']);
 
       vm.removeAt(0);
 
-      // Items keep their original index-based names from creation
       expect(vm.items[0].name).toBe('1');
       expect(vm.items[1].name).toBe('2');
     });
@@ -165,8 +147,7 @@ describe('ArrayNodeVM', () => {
 
   describe('move()', () => {
     it('moves item from one index to another', () => {
-      const node = getArrayNode(['a', 'b', 'c']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b', 'c']);
 
       vm.move(0, 2);
 
@@ -177,12 +158,10 @@ describe('ArrayNodeVM', () => {
     });
 
     it('items keep original names after move', () => {
-      const node = getArrayNode(['a', 'b', 'c']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b', 'c']);
 
       vm.move(0, 2);
 
-      // Items keep their original index-based names from creation
       expect(vm.items[0].name).toBe('1');
       expect(vm.items[1].name).toBe('2');
       expect(vm.items[2].name).toBe('0');
@@ -191,15 +170,13 @@ describe('ArrayNodeVM', () => {
 
   describe('isDirty', () => {
     it('returns false when no changes', () => {
-      const node = getArrayNode(['a', 'b']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b']);
 
       expect(vm.isDirty).toBe(false);
     });
 
     it('returns true when item added', () => {
-      const node = getArrayNode(['a']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a']);
 
       vm.pushValue('b');
 
@@ -207,8 +184,7 @@ describe('ArrayNodeVM', () => {
     });
 
     it('returns true when item removed', () => {
-      const node = getArrayNode(['a', 'b']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a', 'b']);
 
       vm.removeAt(0);
 
@@ -216,8 +192,7 @@ describe('ArrayNodeVM', () => {
     });
 
     it('returns true when item value changed', () => {
-      const node = getArrayNode(['a']);
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor(['a']);
 
       const item = vm.at(0);
       if (item?.isPrimitive()) {
@@ -230,29 +205,26 @@ describe('ArrayNodeVM', () => {
 
   describe('type guards', () => {
     it('isPrimitive returns false', () => {
-      const node = getArrayNode();
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor();
 
       expect(vm.isPrimitive()).toBe(false);
     });
 
     it('isObject returns false', () => {
-      const node = getArrayNode();
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor();
 
       expect(vm.isObject()).toBe(false);
     });
 
     it('isArray returns true', () => {
-      const node = getArrayNode();
-      const vm = new ArrayNodeVM(node, null);
+      const vm = createArrayAccessor();
 
       expect(vm.isArray()).toBe(true);
     });
   });
 
   describe('array of objects', () => {
-    it('creates ObjectNodeVM for object items', () => {
+    it('creates object accessors for object items', () => {
       const objectArraySchema = {
         type: 'object' as const,
         properties: {
@@ -273,20 +245,20 @@ describe('ArrayNodeVM', () => {
         required: ['people'],
       };
 
-      const row = createRowModel({
-        rowId: 'test',
-        schema: objectArraySchema,
-        data: { people: [{ name: 'John' }, { name: 'Jane' }] },
+      const vm = new RowEditorVM(objectArraySchema, {
+        people: [{ name: 'John' }, { name: 'Jane' }],
       });
-      const peopleNode = row.tree.get('people');
-      if (!peopleNode?.isArray()) {
-        throw new Error('Expected array node');
+      const root = vm.root;
+      if (!root.isObject()) {
+        throw new Error('Expected object root');
+      }
+      const peopleVM = root.child('people');
+      if (!peopleVM?.isArray()) {
+        throw new Error('Expected array child');
       }
 
-      const vm = new ArrayNodeVM(peopleNode, null);
-
-      expect(vm.items[0].isObject()).toBe(true);
-      expect(vm.items[1].isObject()).toBe(true);
+      expect(peopleVM.items[0].isObject()).toBe(true);
+      expect(peopleVM.items[1].isObject()).toBe(true);
     });
   });
 });

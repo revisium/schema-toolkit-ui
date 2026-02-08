@@ -1,12 +1,14 @@
-import { makeObservable, computed, action } from 'mobx';
+import { makeAutoObservable } from 'mobx';
 import type {
   JsonSchema,
+  JsonValuePatch,
   Diagnostic,
   RowModel,
 } from '@revisium/schema-toolkit';
 import { createRowModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../lib/initReactivity';
-import { createNodeVM } from './createNodeVM';
+import type { FlatItem } from './flattenNodes';
+import { RowEditorCore } from './RowEditorCore';
 import type { NodeVM, EditorContext } from './types';
 
 export type RowEditorMode = 'creating' | 'editing' | 'reading';
@@ -17,8 +19,9 @@ export interface RowEditorVMOptions {
 
 export class RowEditorVM implements EditorContext {
   private readonly _rowModel: RowModel;
-  private readonly _root: NodeVM;
+  private readonly _core: RowEditorCore;
   private readonly _mode: RowEditorMode;
+  private _prevPatchCount = 0;
 
   constructor(
     schema: JsonSchema,
@@ -32,20 +35,17 @@ export class RowEditorVM implements EditorContext {
       schema,
       data: initialValue,
     });
-    this._root = createNodeVM(this._rowModel.tree.root, null, this);
+    this._core = new RowEditorCore(this._rowModel.tree, this);
 
-    makeObservable(this, {
-      isDirty: computed,
-      isValid: computed,
-      errors: computed,
-      isReadOnly: computed,
-      commit: action,
-      revert: action,
-    });
+    makeAutoObservable(this, {}, { autoBind: true });
   }
 
   get root(): NodeVM {
-    return this._root;
+    return this._core.root;
+  }
+
+  get flattenedNodes(): readonly FlatItem[] {
+    return this._core.flattenedNodes;
   }
 
   get rowModel(): RowModel {
@@ -72,19 +72,37 @@ export class RowEditorVM implements EditorContext {
     return this._mode === 'reading';
   }
 
+  get patches(): readonly JsonValuePatch[] {
+    return this._rowModel.patches;
+  }
+
+  get lastPatches(): readonly JsonValuePatch[] {
+    const all = this._rowModel.patches;
+    return all.slice(this._prevPatchCount);
+  }
+
+  consumePatches(): readonly JsonValuePatch[] {
+    const result = this.lastPatches;
+    this._prevPatchCount = this._rowModel.patches.length;
+    return result;
+  }
+
   getValue(): unknown {
     return this._rowModel.getPlainValue();
   }
 
   commit(): void {
     this._rowModel.commit();
+    this._prevPatchCount = 0;
   }
 
   revert(): void {
     this._rowModel.revert();
+    this._prevPatchCount = 0;
   }
 
   dispose(): void {
+    this._core.dispose();
     this._rowModel.dispose();
   }
 }

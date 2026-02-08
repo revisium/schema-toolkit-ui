@@ -4,11 +4,9 @@ export type {
   ObjectNodeVM,
   ArrayNodeVM,
 } from './types';
-export { BaseNodeVM } from './BaseNodeVM';
-export { createNodeVM } from './createNodeVM';
+export type { JsonValuePatch } from '@revisium/schema-toolkit';
 export { RowEditorVM } from './RowEditorVM';
 export type { RowEditorMode, RowEditorVMOptions } from './RowEditorVM';
-
-export { PrimitiveNodeVM as PrimitiveNodeVMImpl } from './PrimitiveNodeVM';
-export { ObjectNodeVM as ObjectNodeVMImpl } from './ObjectNodeVM';
-export { ArrayNodeVM as ArrayNodeVMImpl } from './ArrayNodeVM';
+export { RowNodeAccessor } from './accessor';
+export { RowEditorCore } from './RowEditorCore';
+export type { FlatItem } from './flattenNodes';

@@ -28,7 +28,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 const longText = 'A'.repeat(100);
 
 export const LongTextCollapse: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -59,7 +59,7 @@ export const LongTextCollapse: Story = {
 };
 
 export const LongTextExpand: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -82,7 +82,7 @@ export const LongTextExpand: Story = {
 };
 
 export const EmptyLongTextLabel: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -112,7 +112,7 @@ export const EmptyLongTextLabel: Story = {
 };
 
 export const ArrayMoveItem: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -146,7 +146,7 @@ export const ArrayMoveItem: Story = {
 };
 
 export const ArrayInsertAt: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -180,7 +180,7 @@ export const ArrayInsertAt: Story = {
 };
 
 export const ExpandAllCollapseAllViaMenu: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -240,7 +240,7 @@ export const ExpandAllCollapseAllViaMenu: Story = {
 };
 
 export const CollapsedObjectShowsLabel: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -264,7 +264,7 @@ export const CollapsedObjectShowsLabel: Story = {
 };
 
 export const CollapsedArrayShowsLabel: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -285,7 +285,7 @@ export const CollapsedArrayShowsLabel: Story = {
 };
 
 export const SingleItemArrayLabel: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -306,7 +306,7 @@ export const SingleItemArrayLabel: Story = {
 };
 
 export const GetValueAfterEdit: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -325,13 +325,24 @@ export const GetValueAfterEdit: Story = {
     await waitFor(() => {
       expect(args.onSave).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'Updated' }),
+        expect.arrayContaining([
+          expect.objectContaining({ op: 'replace', path: '/name' }),
+        ]),
+      );
+    });
+
+    await waitFor(() => {
+      expect(args.onChange).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ op: 'replace', path: '/name' }),
+        ]),
       );
     });
   },
 };
 
 export const ArrayAddItemToEnd: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}
@@ -355,7 +366,7 @@ export const ArrayAddItemToEnd: Story = {
 };
 
 export const NestedObjectChild: Story = {
-  args: { onSave: fn(), onCancel: fn() },
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => (
     <StoryWrapper
       {...args}

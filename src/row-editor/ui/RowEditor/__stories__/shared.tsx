@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Text, HStack, Button } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import type { JsonSchema } from '@revisium/schema-toolkit';
+import type { JsonSchema, JsonValuePatch } from '@revisium/schema-toolkit';
 import { RowEditor } from '../RowEditor';
 import { RowEditorVM, RowEditorMode } from '../../../vm/RowEditorVM';
 
@@ -10,7 +10,8 @@ export interface StoryWrapperProps {
   initialValue?: unknown;
   mode?: RowEditorMode;
   hint?: string;
-  onSave?: (value: unknown) => void;
+  onSave?: (value: unknown, patches: readonly JsonValuePatch[]) => void;
+  onChange?: (patches: readonly JsonValuePatch[]) => void;
   onCancel?: () => void;
 }
 
@@ -21,6 +22,7 @@ export const StoryWrapper = observer(
     mode = 'editing',
     hint,
     onSave,
+    onChange,
     onCancel,
   }: StoryWrapperProps) => {
     const [viewModel] = useState(
@@ -33,8 +35,9 @@ export const StoryWrapper = observer(
 
     const handleSave = () => {
       const value = viewModel.getValue();
+      const patches = viewModel.patches;
       viewModel.commit();
-      onSave?.(value);
+      onSave?.(value, patches);
     };
 
     const handleRevert = () => {
@@ -56,7 +59,7 @@ export const StoryWrapper = observer(
           </Box>
         )}
         <Box p={4} pl={8} bg="white" m={4} borderRadius="md" boxShadow="sm">
-          <RowEditor viewModel={viewModel} />
+          <RowEditor viewModel={viewModel} onChange={onChange} />
 
           {mode !== 'reading' && (
             <HStack mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
@@ -92,6 +95,7 @@ export const baseMeta = {
   },
   argTypes: {
     onSave: { action: 'onSave' },
+    onChange: { action: 'onChange' },
     onCancel: { action: 'onCancel' },
   },
 };

@@ -1,33 +1,48 @@
-import { FC } from 'react';
+import { FC, useCallback, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import { Box, VStack } from '@chakra-ui/react';
+import { reaction } from 'mobx';
+import { Virtuoso } from 'react-virtuoso';
+import type { JsonValuePatch } from '@revisium/schema-toolkit';
 import type { RowEditorVM } from '../../vm/RowEditorVM';
-import { NodeView } from '../NodeView/NodeView';
+import type { FlatItem } from '../../vm/flattenNodes';
+import { FlatItemView } from './FlatItemView';
 
 export interface RowEditorProps {
   viewModel: RowEditorVM;
+  onChange?: (patches: readonly JsonValuePatch[]) => void;
 }
 
-export const RowEditor: FC<RowEditorProps> = observer(({ viewModel }) => {
-  const root = viewModel.root;
-
-  if (root.isObject()) {
-    return (
-      <Box>
-        <VStack align="stretch" gap={0}>
-          {root.children.map((child) => (
-            <NodeView key={child.id} viewModel={child} />
-          ))}
-        </VStack>
-      </Box>
+export const RowEditor: FC<RowEditorProps> = observer(
+  ({ viewModel, onChange }) => {
+    const itemContent = useCallback(
+      (_index: number, item: FlatItem) => <FlatItemView item={item} />,
+      [],
     );
-  }
 
-  return (
-    <Box>
-      <VStack align="stretch" gap={0}>
-        <NodeView viewModel={root} />
-      </VStack>
-    </Box>
-  );
-});
+    useEffect(() => {
+      if (!onChange) {
+        return;
+      }
+      return reaction(
+        () => viewModel.patches,
+        () => {
+          if (viewModel.isDirty && viewModel.isValid) {
+            const newPatches = viewModel.consumePatches();
+            if (newPatches.length > 0) {
+              onChange(newPatches);
+            }
+          }
+        },
+      );
+    }, [viewModel, onChange]);
+
+    return (
+      <Virtuoso
+        data={viewModel.flattenedNodes as FlatItem[]}
+        itemContent={itemContent}
+        useWindowScroll
+        style={{ width: '100%', height: '100%' }}
+      />
+    );
+  },
+);

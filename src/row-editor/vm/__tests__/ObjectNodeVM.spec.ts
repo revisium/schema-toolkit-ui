@@ -1,8 +1,5 @@
-import { createRowModel, resetNodeIdCounter } from '@revisium/schema-toolkit';
-import {
-  ObjectNodeVMImpl as ObjectNodeVM,
-  PrimitiveNodeVMImpl as PrimitiveNodeVM,
-} from '../index';
+import { resetNodeIdCounter } from '@revisium/schema-toolkit';
+import { RowEditorVM } from '../RowEditorVM';
 
 beforeEach(() => {
   resetNodeIdCounter();
@@ -20,30 +17,29 @@ describe('ObjectNodeVM', () => {
     required: ['name', 'age', 'active'],
   };
 
-  function createObjectRow(value: Record<string, unknown> = {}) {
-    return createRowModel({
-      rowId: 'test',
-      schema: objectSchema,
-      data: {
-        name: '',
-        age: 0,
-        active: false,
-        ...value,
-      },
+  function createObjectRoot(value: Record<string, unknown> = {}) {
+    const vm = new RowEditorVM(objectSchema, {
+      name: '',
+      age: 0,
+      active: false,
+      ...value,
     });
+    const root = vm.root;
+    if (!root.isObject()) {
+      throw new Error('Expected object root');
+    }
+    return root;
   }
 
   describe('children', () => {
     it('creates child VMs for each property', () => {
-      const row = createObjectRow({ name: 'John', age: 25, active: true });
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot({ name: 'John', age: 25, active: true });
 
       expect(vm.children).toHaveLength(3);
     });
 
     it('child VMs have correct names', () => {
-      const row = createObjectRow();
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot();
 
       const names = vm.children.map((c) => c.name);
       expect(names).toContain('name');
@@ -52,28 +48,25 @@ describe('ObjectNodeVM', () => {
     });
 
     it('child VMs have this as parent', () => {
-      const row = createObjectRow();
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot();
 
       for (const child of vm.children) {
         expect(child.parent).toBe(vm);
       }
     });
 
-    it('creates PrimitiveNodeVM for primitive children', () => {
-      const row = createObjectRow();
-      const vm = new ObjectNodeVM(row.tree.root, null);
+    it('creates primitive accessors for primitive children', () => {
+      const vm = createObjectRoot();
 
       for (const child of vm.children) {
-        expect(child).toBeInstanceOf(PrimitiveNodeVM);
+        expect(child.isPrimitive()).toBe(true);
       }
     });
   });
 
   describe('child()', () => {
     it('returns child by name', () => {
-      const row = createObjectRow({ name: 'John' });
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot({ name: 'John' });
 
       const child = vm.child('name');
 
@@ -82,8 +75,7 @@ describe('ObjectNodeVM', () => {
     });
 
     it('returns undefined for non-existent child', () => {
-      const row = createObjectRow();
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot();
 
       const child = vm.child('nonexistent');
 
@@ -93,15 +85,13 @@ describe('ObjectNodeVM', () => {
 
   describe('isDirty', () => {
     it('returns false when no changes', () => {
-      const row = createObjectRow({ name: 'John' });
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot({ name: 'John' });
 
       expect(vm.isDirty).toBe(false);
     });
 
     it('returns true when child value changed', () => {
-      const row = createObjectRow({ name: 'John' });
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot({ name: 'John' });
 
       const nameChild = vm.child('name');
       if (nameChild?.isPrimitive()) {
@@ -114,29 +104,26 @@ describe('ObjectNodeVM', () => {
 
   describe('type guards', () => {
     it('isPrimitive returns false', () => {
-      const row = createObjectRow();
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot();
 
       expect(vm.isPrimitive()).toBe(false);
     });
 
     it('isObject returns true', () => {
-      const row = createObjectRow();
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot();
 
       expect(vm.isObject()).toBe(true);
     });
 
     it('isArray returns false', () => {
-      const row = createObjectRow();
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = createObjectRoot();
 
       expect(vm.isArray()).toBe(false);
     });
   });
 
   describe('nested objects', () => {
-    it('creates ObjectNodeVM for nested objects', () => {
+    it('creates object accessor for nested objects', () => {
       const nestedSchema = {
         type: 'object' as const,
         properties: {
@@ -153,15 +140,11 @@ describe('ObjectNodeVM', () => {
         required: ['address'],
       };
 
-      const row = createRowModel({
-        rowId: 'test',
-        schema: nestedSchema,
-        data: { address: { city: 'NYC' } },
-      });
-      const vm = new ObjectNodeVM(row.tree.root, null);
+      const vm = new RowEditorVM(nestedSchema, { address: { city: 'NYC' } });
 
-      const addressVM = vm.child('address');
-      expect(addressVM).toBeInstanceOf(ObjectNodeVM);
+      const addressVM = vm.root.isObject()
+        ? vm.root.child('address')
+        : undefined;
       expect(addressVM?.isObject()).toBe(true);
     });
   });
