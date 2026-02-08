@@ -1,9 +1,3 @@
-export type {
-  SchemaNode,
-  SchemaModel,
-  FieldType,
-} from '@revisium/schema-toolkit';
-
 export type JsonValue =
   | string
   | number
