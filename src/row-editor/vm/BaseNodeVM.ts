@@ -74,7 +74,7 @@ export abstract class BaseNodeVM implements NodeVM {
     while (current) {
       if (current.parent) {
         const siblings = this.getSiblings(current.parent);
-        const isLastSibling = siblings[siblings.length - 1]?.id === current.id;
+        const isLastSibling = siblings.at(-1)?.id === current.id;
         result.unshift(!isLastSibling);
       }
       current = current.parent;
@@ -189,7 +189,12 @@ export abstract class BaseNodeVM implements NodeVM {
       current = current.parent;
     }
 
-    return segments.join('.');
+    return segments.reduce((acc, seg) => {
+      if (!acc) {
+        return seg;
+      }
+      return seg.startsWith('[') ? `${acc}${seg}` : `${acc}.${seg}`;
+    }, '');
   }
 
   protected get bottomMenu(): MenuItem[] {

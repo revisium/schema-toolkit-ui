@@ -60,78 +60,90 @@ export class ArrayNodeVM extends BaseNodeVM implements IArrayNodeVM {
   }
 
   private updateItemMenu(item: BaseNodeVM, index: number): void {
-    const menu: MenuItem[] = [];
     const isFirst = index === 0;
     const isLast = index === this.length - 1;
     const hasMultipleItems = this.length > 1;
 
-    if (hasMultipleItems) {
-      const moveChildren: MenuItem[] = [];
+    const moveMenuItem = hasMultipleItems
+      ? this.buildMoveMenuItem(index, isFirst, isLast)
+      : null;
 
-      if (this.length > 2 && index > 1) {
-        moveChildren.push({
-          value: 'move-to-start',
-          label: 'to start',
-          handler: () => this.move(index, 0),
-        });
-      }
+    item.additionalMenu = [
+      ...(moveMenuItem ? [moveMenuItem] : []),
+      {
+        value: 'item',
+        label: 'Item',
+        children: [
+          {
+            value: 'add-before',
+            label: 'Add before',
+            handler: () => this.insertAt(index),
+          },
+          {
+            value: 'add-after',
+            label: 'Add after',
+            handler: () => this.insertAt(index + 1),
+          },
+        ],
+      },
+      {
+        value: 'delete',
+        label: 'Delete',
+        handler: () => this.removeAt(index),
+        afterSeparator: true,
+      },
+    ];
+  }
 
-      if (!isFirst) {
-        moveChildren.push({
-          value: 'move-up',
-          label: 'up',
-          handler: () => this.move(index, index - 1),
-        });
-      }
+  private buildMoveMenuItem(
+    index: number,
+    isFirst: boolean,
+    isLast: boolean,
+  ): MenuItem {
+    const moveChildren: MenuItem[] = [
+      ...(this.length > 2 && index > 1
+        ? [
+            {
+              value: 'move-to-start',
+              label: 'to start',
+              handler: () => this.move(index, 0),
+            },
+          ]
+        : []),
+      ...(!isFirst
+        ? [
+            {
+              value: 'move-up',
+              label: 'up',
+              handler: () => this.move(index, index - 1),
+            },
+          ]
+        : []),
+      ...(!isLast
+        ? [
+            {
+              value: 'move-down',
+              label: 'down',
+              handler: () => this.move(index, index + 1),
+            },
+          ]
+        : []),
+      ...(this.length > 2 && index < this.length - 2
+        ? [
+            {
+              value: 'move-to-end',
+              label: 'to end',
+              handler: () => this.move(index, this.length - 1),
+            },
+          ]
+        : []),
+    ];
 
-      if (!isLast) {
-        moveChildren.push({
-          value: 'move-down',
-          label: 'down',
-          handler: () => this.move(index, index + 1),
-        });
-      }
-
-      if (this.length > 2 && index < this.length - 2) {
-        moveChildren.push({
-          value: 'move-to-end',
-          label: 'to end',
-          handler: () => this.move(index, this.length - 1),
-        });
-      }
-
-      menu.push({
-        value: 'move',
-        label: 'Move',
-        children: moveChildren,
-      });
-    }
-
-    menu.push({
-      value: 'item',
-      label: 'Item',
-      children: [
-        {
-          value: 'add-before',
-          label: 'Add before',
-          handler: () => this.insertAt(index),
-        },
-        {
-          value: 'add-after',
-          label: 'Add after',
-          handler: () => this.insertAt(index + 1),
-        },
-      ],
-    });
-
-    menu.push({
-      value: 'delete',
-      label: 'Delete',
-      handler: () => this.removeAt(index),
-      afterSeparator: true,
-    });
-
-    item.additionalMenu = menu;
+    return {
+      value: 'move',
+      label: 'Move',
+      children: moveChildren,
+    };
   }
 
   insertAt(index: number): void {

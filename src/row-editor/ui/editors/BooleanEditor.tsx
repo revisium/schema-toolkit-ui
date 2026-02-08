@@ -28,8 +28,11 @@ export const BooleanEditor: FC<BooleanEditorProps> = ({
   }, []);
 
   const handleBlur = useCallback(() => {
+    const trimmed = state.trim();
     const boolValue =
-      state.toLowerCase() === 'false' || state === '0' ? false : Boolean(state);
+      trimmed.toLowerCase() === 'false' || trimmed === '0'
+        ? false
+        : Boolean(trimmed);
     setState(boolValue.toString());
     setValue(boolValue);
   }, [setValue, state]);
