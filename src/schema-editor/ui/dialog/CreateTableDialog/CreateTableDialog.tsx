@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { FC } from 'react';
 import { JsonCard } from '../../../../components/JsonCard';
 import type { CreateTableDialogVM } from '../../../model/dialog';
-import type { JsonValue } from '../../../types';
+import type { JsonValue } from '@revisium/schema-toolkit';
 import { DialogLayout, DialogFooterActions } from '../shared';
 
 interface CreateTableDialogProps {

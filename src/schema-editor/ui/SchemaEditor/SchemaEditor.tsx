@@ -7,7 +7,7 @@ import { JsonCard } from '../../../components/JsonCard';
 import type { BaseEditorVM } from '../../model/vm/types';
 import { TreeNodeView } from '../tree';
 import { ReviewErrorsDialog } from '../dialog';
-import type { JsonValue } from '../../types';
+import type { JsonValue } from '@revisium/schema-toolkit';
 
 export interface SchemaEditorProps {
   vm: BaseEditorVM;

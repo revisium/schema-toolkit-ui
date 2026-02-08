@@ -27,4 +27,4 @@ export {
   type MenuGroup,
 } from './config';
 
-export { ViewerSwitcherMode, type JsonValue, type NodeType } from './types';
+export { ViewerSwitcherMode } from './types';
