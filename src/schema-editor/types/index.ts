@@ -1,20 +1,3 @@
-export type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | JsonValue[]
-  | { [key: string]: JsonValue };
-
-export type NodeType =
-  | 'object'
-  | 'array'
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'ref'
-  | 'foreignKey';
-
 export interface NodeUIState {
   isExpanded: boolean;
   isFocused: boolean;
