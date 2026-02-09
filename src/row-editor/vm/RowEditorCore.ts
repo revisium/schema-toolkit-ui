@@ -54,10 +54,13 @@ export class RowEditorCore {
     }
   }
 
-  private _collectAllNodeIds(accessor: RowNodeAccessor): string[] {
-    const ids: string[] = [accessor.id];
+  private _collectAllNodeIds(
+    accessor: RowNodeAccessor,
+    ids: string[] = [],
+  ): string[] {
+    ids.push(accessor.id);
     for (const child of accessor.getChildAccessors()) {
-      ids.push(...this._collectAllNodeIds(child));
+      this._collectAllNodeIds(child, ids);
     }
     return ids;
   }
