@@ -47,7 +47,7 @@ export class RowEditorVM implements EditorContext {
   private readonly _disposeReaction: (() => void) | null;
   private _prevPatchCount = 0;
   private _rowId: string;
-  private readonly _initialRowId: string;
+  private _initialRowId: string;
 
   constructor(
     schema: JsonSchema,
@@ -164,6 +164,7 @@ export class RowEditorVM implements EditorContext {
   commit(): void {
     this._rowModel.commit();
     this._prevPatchCount = 0;
+    this._initialRowId = this._rowId;
   }
 
   revert(): void {

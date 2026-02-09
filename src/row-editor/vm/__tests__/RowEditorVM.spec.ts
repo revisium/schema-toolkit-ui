@@ -384,6 +384,23 @@ describe('RowEditorVM', () => {
 
       expect(vm.isDirty).toBe(false);
     });
+
+    it('resets isRowIdChanged after save', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1', onSave: jest.fn() },
+      );
+
+      vm.setRowId('row-renamed');
+      expect(vm.isRowIdChanged).toBe(true);
+
+      vm.save();
+
+      expect(vm.isRowIdChanged).toBe(false);
+      expect(vm.initialRowId).toBe('row-renamed');
+      expect(vm.hasChanges).toBe(false);
+    });
   });
 
   describe('markAsSaved', () => {
@@ -403,6 +420,24 @@ describe('RowEditorVM', () => {
 
       expect(vm.isDirty).toBe(false);
       expect(vm.patches).toEqual([]);
+    });
+
+    it('resets isRowIdChanged after rowId was renamed', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-2');
+      expect(vm.isRowIdChanged).toBe(true);
+
+      vm.markAsSaved();
+
+      expect(vm.isRowIdChanged).toBe(false);
+      expect(vm.rowId).toBe('row-2');
+      expect(vm.initialRowId).toBe('row-2');
+      expect(vm.hasChanges).toBe(false);
     });
 
     it('does not call onSave', () => {

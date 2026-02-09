@@ -98,7 +98,7 @@ const vm = new RowEditorVM(tableSchema, existingRowData, {
   callbacks: {
     onSearchForeignKey: async (tableId, search) => { ... },
     onUploadFile: async (fileId, file) => { ... },
-    onOpenFile: (url) => window.open(url),
+    onOpenFile: (url) => window.open(url, '_blank', 'noopener,noreferrer'),
     onNavigateToForeignKey: (tableId, rowId) => { ... },
   },
   onSave: (rowId, value, patches) => {
