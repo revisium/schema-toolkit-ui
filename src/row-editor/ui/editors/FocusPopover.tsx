@@ -29,7 +29,7 @@ export const FocusPopover: FC<FocusPopoverProps> = ({
     return lastRectRef.current;
   }, []);
 
-  const handleFocus = useCallback(() => {
+  const handlePointerDown = useCallback(() => {
     if (!disabled) {
       setIsOpen(true);
     }
@@ -37,7 +37,7 @@ export const FocusPopover: FC<FocusPopoverProps> = ({
 
   return (
     <>
-      <Box ref={triggerRef} onFocus={handleFocus}>
+      <Box ref={triggerRef} onPointerDown={handlePointerDown}>
         {trigger}
       </Box>
       {!disabled && (

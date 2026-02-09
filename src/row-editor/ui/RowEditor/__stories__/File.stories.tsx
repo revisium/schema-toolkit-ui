@@ -3,7 +3,6 @@ import { StoryWrapper, baseMeta } from './shared';
 import { fileFieldSchema } from './schemas';
 import { fileSchema, SystemSchemaIds } from '@revisium/schema-toolkit';
 import type { RowEditorCallbacks } from '../../../vm/types';
-import type { RowEditorVM } from '../../../vm/RowEditorVM';
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -11,33 +10,11 @@ const refSchemas = {
   [SystemSchemaIds.File]: fileSchema,
 };
 
-function getTestVM(): RowEditorVM {
-  return (window as unknown as Record<string, unknown>).__testVM as RowEditorVM;
-}
-
-function setFileObjectValue(
-  vm: RowEditorVM,
-  fileField: string,
-  data: Record<string, unknown>,
-): void {
-  const root = vm.root;
-  if (root.isObject()) {
-    const fileNode = root.child(fileField);
-    if (fileNode) {
-      const node = fileNode.node as {
-        setValue(v: unknown, o?: { internal?: boolean }): void;
-      };
-      node.setValue(data, { internal: true });
-    }
-  }
-}
-
 const mockCallbacks: RowEditorCallbacks = {
   onUploadFile: async (_fileId: string, file: File) => {
     await delay(500);
-    const vm = getTestVM();
     const isImage = file.type.startsWith('image/');
-    setFileObjectValue(vm, 'avatar', {
+    return {
       status: 'uploaded',
       fileId: _fileId,
       url: `https://picsum.photos/${isImage ? '400/300' : '200'}`,
@@ -48,7 +25,7 @@ const mockCallbacks: RowEditorCallbacks = {
       width: isImage ? 400 : 0,
       height: isImage ? 300 : 0,
       hash: 'mock-hash-' + Date.now(),
-    });
+    };
   },
   onOpenFile: (url: string) => {
     window.open(url, '_blank');
