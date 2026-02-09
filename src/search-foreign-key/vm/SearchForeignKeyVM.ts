@@ -13,6 +13,7 @@ export class SearchForeignKeyVM {
   private _state: SearchState = 'loading';
   private _ids: string[] = [];
   private _hasMore = false;
+  private _initialized = false;
   private _disposeReaction: (() => void) | null = null;
   private readonly _debounce = new Debounce(300);
 
@@ -43,7 +44,7 @@ export class SearchForeignKeyVM {
     return (
       this._state === 'list' ||
       this._state === 'notFound' ||
-      this._state === 'loading'
+      (this._state === 'loading' && this._initialized)
     );
   }
 
@@ -128,6 +129,7 @@ export class SearchForeignKeyVM {
         if (this._search !== searchTerm) {
           return;
         }
+        this._initialized = true;
         this._ids = result.ids;
         this._hasMore = result.hasMore;
         this._state = this._resolveState(result.ids, searchTerm);
