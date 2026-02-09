@@ -1,5 +1,5 @@
 import { FC, Fragment, useState } from 'react';
-import { Box, Flex, Icon, Menu, Portal } from '@chakra-ui/react';
+import { Box, Flex, Menu, Portal } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { LuChevronRight } from 'react-icons/lu';
 import { PiDotsThreeVerticalBold } from 'react-icons/pi';
@@ -53,9 +53,7 @@ export const NodeMenu: FC<NodeMenuProps> = observer(({ node }) => {
                 '0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.1)',
             }}
           >
-            <Icon size="md" color="gray.400">
-              <PiDotsThreeVerticalBold />
-            </Icon>
+            <PiDotsThreeVerticalBold color="var(--chakra-colors-gray-400)" />
           </Flex>
         </Flex>
       </Menu.Trigger>
