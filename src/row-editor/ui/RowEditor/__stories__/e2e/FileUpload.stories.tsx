@@ -14,23 +14,6 @@ function getTestVM(): RowEditorVM {
   return (window as unknown as Record<string, unknown>).__testVM as RowEditorVM;
 }
 
-function setFileObjectValue(
-  vm: RowEditorVM,
-  fileField: string,
-  data: Record<string, unknown>,
-): void {
-  const root = vm.root;
-  if (root.isObject()) {
-    const fileNode = root.child(fileField);
-    if (fileNode) {
-      const node = fileNode.node as {
-        setValue(v: unknown, o?: { internal?: boolean }): void;
-      };
-      node.setValue(data, { internal: true });
-    }
-  }
-}
-
 function getFileChildValue(
   vm: RowEditorVM,
   fileField: string,
@@ -61,9 +44,10 @@ export const UploadFileUpdatesTree: Story = {
   args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => {
     const callbacks: RowEditorCallbacks = {
-      onUploadFile: (_fileId: string, _file: File): Promise<void> => {
-        const vm = getTestVM();
-        setFileObjectValue(vm, 'avatar', {
+      onUploadFile: (
+        _fileId: string,
+      ): Promise<Record<string, unknown> | null> => {
+        return Promise.resolve({
           status: 'uploaded',
           fileId: _fileId,
           url: 'https://example.com/avatar.png',
@@ -75,7 +59,6 @@ export const UploadFileUpdatesTree: Story = {
           height: 300,
           hash: 'abc123',
         });
-        return Promise.resolve();
       },
       onOpenFile: () => {},
     };
@@ -173,7 +156,7 @@ export const FileFieldInitialState: Story = {
       }}
       refSchemas={refSchemas}
       callbacks={{
-        onUploadFile: (): Promise<void> => Promise.resolve(),
+        onUploadFile: () => Promise.resolve(null),
       }}
     />
   ),
