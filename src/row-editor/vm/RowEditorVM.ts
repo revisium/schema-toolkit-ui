@@ -1,4 +1,4 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, reaction } from 'mobx';
 import type {
   JsonSchema,
   JsonValuePatch,
@@ -15,12 +15,23 @@ export type RowEditorMode = 'creating' | 'editing' | 'reading';
 
 export interface RowEditorVMOptions {
   mode?: RowEditorMode;
+  onChange?: (patches: readonly JsonValuePatch[]) => void;
+  onSave?: (value: unknown, patches: readonly JsonValuePatch[]) => void;
+  onCancel?: () => void;
 }
 
 export class RowEditorVM implements EditorContext {
   private readonly _rowModel: RowModel;
   private readonly _core: RowEditorCore;
   private readonly _mode: RowEditorMode;
+  private readonly _onChange:
+    | ((patches: readonly JsonValuePatch[]) => void)
+    | null;
+  private readonly _onSave:
+    | ((value: unknown, patches: readonly JsonValuePatch[]) => void)
+    | null;
+  private readonly _onCancel: (() => void) | null;
+  private readonly _disposeReaction: (() => void) | null;
   private _prevPatchCount = 0;
 
   constructor(
@@ -30,6 +41,9 @@ export class RowEditorVM implements EditorContext {
   ) {
     ensureReactivityProvider();
     this._mode = options?.mode ?? 'editing';
+    this._onChange = options?.onChange ?? null;
+    this._onSave = options?.onSave ?? null;
+    this._onCancel = options?.onCancel ?? null;
     this._rowModel = createRowModel({
       rowId: 'editor',
       schema,
@@ -38,6 +52,13 @@ export class RowEditorVM implements EditorContext {
     this._core = new RowEditorCore(this._rowModel.tree, this);
 
     makeAutoObservable(this, {}, { autoBind: true });
+
+    this._disposeReaction = this._onChange
+      ? reaction(
+          () => this.patches,
+          () => this._emitChange(),
+        )
+      : null;
   }
 
   get root(): NodeVM {
@@ -76,19 +97,19 @@ export class RowEditorVM implements EditorContext {
     return this._rowModel.patches;
   }
 
-  get lastPatches(): readonly JsonValuePatch[] {
-    const all = this._rowModel.patches;
-    return all.slice(this._prevPatchCount);
-  }
-
-  consumePatches(): readonly JsonValuePatch[] {
-    const result = this.lastPatches;
-    this._prevPatchCount = this._rowModel.patches.length;
-    return result;
-  }
-
   getValue(): unknown {
     return this._rowModel.getPlainValue();
+  }
+
+  save(): void {
+    const value = this.getValue();
+    const patches = this.patches;
+    this.commit();
+    this._onSave?.(value, patches);
+  }
+
+  cancel(): void {
+    this._onCancel?.();
   }
 
   commit(): void {
@@ -102,7 +123,20 @@ export class RowEditorVM implements EditorContext {
   }
 
   dispose(): void {
+    this._disposeReaction?.();
     this._core.dispose();
     this._rowModel.dispose();
+  }
+
+  private _emitChange(): void {
+    if (!this._onChange || !this.isDirty || !this.isValid) {
+      return;
+    }
+    const all = this.patches;
+    const newPatches = all.slice(this._prevPatchCount);
+    this._prevPatchCount = all.length;
+    if (newPatches.length > 0) {
+      this._onChange(newPatches);
+    }
   }
 }

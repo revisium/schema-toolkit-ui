@@ -26,23 +26,18 @@ export const StoryWrapper = observer(
     onCancel,
   }: StoryWrapperProps) => {
     const [viewModel] = useState(
-      () => new RowEditorVM(schema, initialValue, { mode }),
+      () =>
+        new RowEditorVM(schema, initialValue, {
+          mode,
+          onChange,
+          onSave,
+          onCancel,
+        }),
     );
 
     useEffect(() => {
       (window as unknown as Record<string, unknown>).__testVM = viewModel;
     }, [viewModel]);
-
-    const handleSave = () => {
-      const value = viewModel.getValue();
-      const patches = viewModel.patches;
-      viewModel.commit();
-      onSave?.(value, patches);
-    };
-
-    const handleRevert = () => {
-      viewModel.revert();
-    };
 
     return (
       <Box h="100vh" bg="gray.50">
@@ -59,25 +54,25 @@ export const StoryWrapper = observer(
           </Box>
         )}
         <Box p={4} pl={8} bg="white" m={4} borderRadius="md" boxShadow="sm">
-          <RowEditor viewModel={viewModel} onChange={onChange} />
+          <RowEditor viewModel={viewModel} />
 
           {mode !== 'reading' && (
             <HStack mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
               <Button
                 colorPalette="blue"
-                onClick={handleSave}
+                onClick={viewModel.save}
                 disabled={!viewModel.isDirty}
               >
                 Save
               </Button>
               <Button
                 variant="outline"
-                onClick={handleRevert}
+                onClick={viewModel.revert}
                 disabled={!viewModel.isDirty}
               >
                 Revert
               </Button>
-              <Button variant="ghost" onClick={onCancel}>
+              <Button variant="ghost" onClick={viewModel.cancel}>
                 Cancel
               </Button>
             </HStack>
