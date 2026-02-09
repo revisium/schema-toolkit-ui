@@ -47,16 +47,18 @@ export class RowEditorCore {
   }
 
   private _collapseIfComplex(threshold: number): void {
-    const nodes = flattenNodes(this._root);
-    if (nodes.length >= threshold) {
-      const nodeIds: string[] = [];
-      for (const item of nodes) {
-        if (item.type === 'node') {
-          nodeIds.push(item.node.id);
-        }
-      }
+    const nodeIds = this._collectAllNodeIds(this._root);
+    if (nodeIds.length >= threshold) {
       this.treeState.collapseAll(nodeIds);
       this.treeState.setExpanded(this._root.id, true);
     }
+  }
+
+  private _collectAllNodeIds(accessor: RowNodeAccessor): string[] {
+    const ids: string[] = [accessor.id];
+    for (const child of accessor.getChildAccessors()) {
+      ids.push(...this._collectAllNodeIds(child));
+    }
+    return ids;
   }
 }

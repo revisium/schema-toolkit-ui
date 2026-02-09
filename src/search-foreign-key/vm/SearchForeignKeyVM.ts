@@ -43,7 +43,7 @@ export class SearchForeignKeyVM {
     return (
       this._state === 'list' ||
       this._state === 'notFound' ||
-      (this._state === 'loading' && this._search !== '')
+      this._state === 'loading'
     );
   }
 
