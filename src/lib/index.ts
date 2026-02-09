@@ -8,3 +8,4 @@ export type {
   TransitionResult,
   GuardedTransition,
 } from './fsm';
+export { Debounce } from './Debounce';

@@ -8,6 +8,11 @@ export type {
   PrimitiveNodeVM,
   ObjectNodeVM,
   ArrayNodeVM,
+  ForeignKeyNodeVM,
+  FileNodeVM,
+  RowEditorCallbacks,
+  ForeignKeySearchResult,
+  FileUploadResult,
   FlatItem,
 } from './vm';
 

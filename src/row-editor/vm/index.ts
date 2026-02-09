@@ -3,6 +3,11 @@ export type {
   PrimitiveNodeVM,
   ObjectNodeVM,
   ArrayNodeVM,
+  ForeignKeyNodeVM,
+  FileNodeVM,
+  RowEditorCallbacks,
+  ForeignKeySearchResult,
+  FileUploadResult,
 } from './types';
 export type { JsonValuePatch } from '@revisium/schema-toolkit';
 export { RowEditorVM } from './RowEditorVM';

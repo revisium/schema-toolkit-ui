@@ -8,15 +8,28 @@ import type { RowNodeAccessor } from './accessor/RowNodeAccessor';
 import { RowAccessorFactory } from './accessor/RowAccessorFactory';
 import { RowAccessorCache } from './accessor/RowAccessorCache';
 
+export interface RowEditorCoreOptions {
+  collapseComplexity?: number;
+}
+
 export class RowEditorCore {
   readonly treeState = new RowTreeState();
   private readonly _cache: RowAccessorCache;
   private readonly _root: RowNodeAccessor;
 
-  constructor(tree: ValueTreeLike, editorContext: EditorContext | null) {
+  constructor(
+    tree: ValueTreeLike,
+    editorContext: EditorContext | null,
+    options?: RowEditorCoreOptions,
+  ) {
     const factory = new RowAccessorFactory(tree, this.treeState, editorContext);
     this._cache = new RowAccessorCache(factory);
     this._root = this._cache.getOrCreate(tree.root, null);
+
+    if (options?.collapseComplexity) {
+      this._collapseIfComplex(options.collapseComplexity);
+    }
+
     makeAutoObservable(this, { treeState: false }, { autoBind: true });
   }
 
@@ -31,5 +44,22 @@ export class RowEditorCore {
   dispose(): void {
     this._cache.clear();
     this.treeState.reset();
+  }
+
+  private _collapseIfComplex(threshold: number): void {
+    const nodes = flattenNodes(this._root);
+    if (nodes.length >= threshold) {
+      const nodeIds = this._collectAllNodeIds(this._root);
+      this.treeState.collapseAll(nodeIds);
+      this.treeState.setExpanded(this._root.id, true);
+    }
+  }
+
+  private _collectAllNodeIds(accessor: RowNodeAccessor): string[] {
+    const ids: string[] = [accessor.id];
+    for (const child of accessor.getChildAccessors()) {
+      ids.push(...this._collectAllNodeIds(child));
+    }
+    return ids;
   }
 }

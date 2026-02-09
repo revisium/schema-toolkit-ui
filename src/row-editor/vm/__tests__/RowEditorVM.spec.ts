@@ -172,6 +172,40 @@ describe('RowEditorVM', () => {
     });
   });
 
+  describe('patches', () => {
+    it('generates patch when value changes', () => {
+      const vm = new RowEditorVM(simpleSchema, { name: 'John', age: 25 });
+
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      expect(vm.patches).toEqual([
+        { op: 'replace', path: '/name', value: 'Jane' },
+      ]);
+    });
+
+    it('generates single patch when setValue called with same then different value', () => {
+      const vm = new RowEditorVM(simpleSchema, { name: 'John', age: 25 });
+
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('John');
+          nameChild.setValue('Jane');
+        }
+      }
+
+      expect(vm.patches).toHaveLength(1);
+      expect(vm.patches).toEqual([
+        { op: 'replace', path: '/name', value: 'Jane' },
+      ]);
+    });
+  });
+
   describe('isReadOnly', () => {
     it('returns false in editing mode', () => {
       const vm = new RowEditorVM(simpleSchema, {}, { mode: 'editing' });

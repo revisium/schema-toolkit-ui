@@ -144,3 +144,33 @@ export const longTextSchema = {
   },
   additionalProperties: false,
 };
+
+export const foreignKeyFieldSchema = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', default: '' },
+    productId: { type: 'string', default: '', foreignKey: 'products' },
+  },
+  additionalProperties: false,
+};
+
+export const fileFieldSchema = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', default: '' },
+    avatar: { $ref: 'urn:jsonschema:io:revisium:file-schema:1.0.0' },
+  },
+  additionalProperties: false,
+};
+
+export const mixedFieldsSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', default: '' },
+    price: { type: 'number', default: 0 },
+    active: { type: 'boolean', default: false },
+    categoryId: { type: 'string', default: '', foreignKey: 'categories' },
+    image: { $ref: 'urn:jsonschema:io:revisium:file-schema:1.0.0' },
+  },
+  additionalProperties: false,
+};

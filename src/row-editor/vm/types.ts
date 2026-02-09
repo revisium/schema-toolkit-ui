@@ -9,15 +9,44 @@ export interface MenuItem {
   afterSeparator?: boolean;
 }
 
-export type NodeRendererType = 'string' | 'number' | 'boolean' | 'container';
+export type NodeRendererType =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'container'
+  | 'file'
+  | 'foreignKey';
+
+export interface ForeignKeySearchResult {
+  ids: string[];
+  hasMore: boolean;
+}
+
+export interface FileUploadResult {
+  fileId: string;
+}
+
+export interface RowEditorCallbacks {
+  onSearchForeignKey?: (
+    tableId: string,
+    search: string,
+  ) => Promise<ForeignKeySearchResult>;
+  onUploadFile?: (fileId: string, file: File) => Promise<void>;
+  onOpenFile?: (url: string) => void;
+  onNavigateToForeignKey?: (tableId: string, rowId: string) => void;
+  onOpenTableSearch?: (tableId: string) => Promise<string | null>;
+  onCreateAndConnect?: (tableId: string) => Promise<string | null>;
+}
 
 export interface EditorContext {
   readonly isReadOnly: boolean;
+  readonly callbacks: RowEditorCallbacks | null;
 }
 
 export interface NodeVM {
   readonly id: string;
   readonly name: string;
+  readonly displayName: string;
   readonly testId: string;
   readonly node: ValueNode;
   readonly parent: NodeVM | null;
@@ -56,6 +85,21 @@ export interface PrimitiveNodeVM extends NodeVM {
   readonly collapsedLabel: string;
 
   setValue(value: unknown): void;
+}
+
+export interface ForeignKeyNodeVM extends PrimitiveNodeVM {
+  readonly foreignKeyTableId: string;
+  readonly callbacks: RowEditorCallbacks | null;
+}
+
+export interface FileNodeVM extends ObjectNodeVM {
+  readonly fileStatus: string;
+  readonly fileId: string;
+  readonly fileUrl: string;
+  readonly fileMimeType: string;
+  readonly fileWidth: number;
+  readonly fileHeight: number;
+  readonly callbacks: RowEditorCallbacks | null;
 }
 
 export interface ObjectNodeVM extends NodeVM {

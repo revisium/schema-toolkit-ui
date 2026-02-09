@@ -35,6 +35,10 @@ export class RowAccessorFactory {
     accessor.setLayout(layout);
     accessor.setMenu(menu);
 
+    if (layout.isRefNode) {
+      this._treeState.setExpanded(node.id, false);
+    }
+
     return accessor;
   }
 }

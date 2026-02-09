@@ -1,10 +1,15 @@
 import { FC, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
-import type { ContainerRendererContext } from './types';
+import type { FileNodeVM } from '../../vm/types';
 import { Row } from '../components/Row';
+import { FileActions } from '../editors/FileActions';
 
-export const ContainerRendererComponent: FC<ContainerRendererContext> =
-  observer(({ node }) => {
+interface FileRendererContext {
+  node: FileNodeVM;
+}
+
+export const FileRendererComponent: FC<FileRendererContext> = observer(
+  ({ node }) => {
     const handleToggle = useCallback(() => {
       node.toggleExpanded();
     }, [node]);
@@ -20,6 +25,10 @@ export const ContainerRendererComponent: FC<ContainerRendererContext> =
         collapsedLabel={node.collapsedLabel}
         isReadOnly={node.isEditorReadOnly}
         testId={node.testId}
-      />
+        skipMore
+      >
+        <FileActions node={node} />
+      </Row>
     );
-  });
+  },
+);

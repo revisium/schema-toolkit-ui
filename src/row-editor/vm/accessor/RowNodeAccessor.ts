@@ -1,13 +1,20 @@
 import { makeAutoObservable } from 'mobx';
 import type { ValueNode, ValueTreeLike } from '@revisium/schema-toolkit';
+import {
+  isForeignKeyValueNode,
+  type ForeignKeyValueNode,
+} from '@revisium/schema-toolkit';
 import type {
   NodeVM,
   PrimitiveNodeVM,
   ObjectNodeVM,
   ArrayNodeVM,
+  ForeignKeyNodeVM,
+  FileNodeVM,
   MenuItem,
   NodeRendererType,
   EditorContext,
+  RowEditorCallbacks,
 } from '../types';
 import type { RowNodeState } from './RowNodeState';
 import type { RowNodeMenu } from './RowNodeMenu';
@@ -67,6 +74,13 @@ export class RowNodeAccessor implements NodeVM {
 
   get name(): string {
     return this.node.name;
+  }
+
+  get displayName(): string {
+    if (this.parent) {
+      return this.node.name;
+    }
+    return this._rootDisplayName();
   }
 
   get testId(): string {
@@ -286,9 +300,87 @@ export class RowNodeAccessor implements NodeVM {
     return this.isExpanded && !this.isEditorReadOnly;
   }
 
+  // --- ForeignKey ---
+
+  isForeignKey(): this is ForeignKeyNodeVM {
+    return isForeignKeyValueNode(this.node);
+  }
+
+  get foreignKeyTableId(): string {
+    return (this.node as unknown as ForeignKeyValueNode).foreignKey;
+  }
+
+  // --- File ---
+
+  isFile(): this is FileNodeVM {
+    return this.rendererType === 'file';
+  }
+
+  get fileStatus(): string {
+    return this._getFileChildValue('status', '');
+  }
+
+  get fileId(): string {
+    return this._getFileChildValue('fileId', '');
+  }
+
+  get fileUrl(): string {
+    return this._getFileChildValue('url', '');
+  }
+
+  get fileMimeType(): string {
+    return this._getFileChildValue('mimeType', '');
+  }
+
+  get fileWidth(): number {
+    return this._getFileChildNumericValue('width');
+  }
+
+  get fileHeight(): number {
+    return this._getFileChildNumericValue('height');
+  }
+
+  // --- Callbacks ---
+
+  get callbacks(): RowEditorCallbacks | null {
+    return this.editorContext?.callbacks ?? null;
+  }
+
   // --- Internal ---
 
   getChildAccessors(): readonly RowNodeAccessor[] {
     return this._childResolver.getChildren(this);
+  }
+
+  // --- Private helpers ---
+
+  private _getFileChildValue(name: string, fallback: string): string {
+    if (!this.node.isObject()) {
+      return fallback;
+    }
+    const child = this.node.child(name);
+    if (child && child.isPrimitive()) {
+      return String(child.value);
+    }
+    return fallback;
+  }
+
+  private _rootDisplayName(): string {
+    const schema = this.node.schema;
+    if (!('type' in schema)) {
+      return this.node.name;
+    }
+    return `<${schema.type}>`;
+  }
+
+  private _getFileChildNumericValue(name: string): number {
+    if (!this.node.isObject()) {
+      return 0;
+    }
+    const child = this.node.child(name);
+    if (child && child.isPrimitive()) {
+      return Number(child.value) || 0;
+    }
+    return 0;
   }
 }
