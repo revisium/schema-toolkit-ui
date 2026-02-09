@@ -1,9 +1,10 @@
 import { makeAutoObservable } from 'mobx';
-import type { ValueNode, ValueTreeLike } from '@revisium/schema-toolkit';
-import {
-  isForeignKeyValueNode,
-  type ForeignKeyValueNode,
+import type {
+  ValueNode,
+  ValueTreeLike,
+  ForeignKeyValueNode,
 } from '@revisium/schema-toolkit';
+import { isForeignKeyValueNode } from '@revisium/schema-toolkit';
 import type {
   NodeVM,
   PrimitiveNodeVM,
@@ -359,7 +360,7 @@ export class RowNodeAccessor implements NodeVM {
       return fallback;
     }
     const child = this.node.child(name);
-    if (child && child.isPrimitive()) {
+    if (child?.isPrimitive()) {
       return String(child.value);
     }
     return fallback;
@@ -378,7 +379,7 @@ export class RowNodeAccessor implements NodeVM {
       return 0;
     }
     const child = this.node.child(name);
-    if (child && child.isPrimitive()) {
+    if (child?.isPrimitive()) {
       return Number(child.value) || 0;
     }
     return 0;

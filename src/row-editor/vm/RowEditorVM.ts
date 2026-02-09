@@ -141,13 +141,13 @@ export class RowEditorVM implements EditorContext {
   }
 
   private _emitChange(): void {
-    if (!this._onChange) {
+    if (!this._onChange || !this.isValid) {
       return;
     }
     const all = this.patches;
     const newPatches = all.slice(this._prevPatchCount);
     this._prevPatchCount = all.length;
-    if (newPatches.length > 0 && this.isValid) {
+    if (newPatches.length > 0) {
       this._onChange(newPatches);
     }
   }

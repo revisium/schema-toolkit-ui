@@ -1,12 +1,10 @@
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import { Debounce } from '../../lib/Debounce';
 
-export interface SearchForeignKeySearchFn {
-  (
-    tableId: string,
-    search: string,
-  ): Promise<{ ids: string[]; hasMore: boolean }>;
-}
+export type SearchForeignKeySearchFn = (
+  tableId: string,
+  search: string,
+) => Promise<{ ids: string[]; hasMore: boolean }>;
 
 type SearchState = 'loading' | 'empty' | 'list' | 'notFound' | 'error';
 
@@ -42,7 +40,11 @@ export class SearchForeignKeyVM {
   }
 
   get showInput(): boolean {
-    return this._state === 'list' || this._state === 'notFound';
+    return (
+      this._state === 'list' ||
+      this._state === 'notFound' ||
+      (this._state === 'loading' && this._search !== '')
+    );
   }
 
   get showFooter(): boolean {
@@ -97,7 +99,6 @@ export class SearchForeignKeyVM {
   }
 
   private _debouncedSearch(): void {
-    this._state = 'loading';
     this._debounce.schedule(() => {
       void this._performSearch();
     });
@@ -119,16 +120,23 @@ export class SearchForeignKeyVM {
       return;
     }
 
+    const searchTerm = this._search;
     try {
       this._state = 'loading';
-      const result = await this._onSearch(this._tableId, this._search);
+      const result = await this._onSearch(this._tableId, searchTerm);
       runInAction(() => {
+        if (this._search !== searchTerm) {
+          return;
+        }
         this._ids = result.ids;
         this._hasMore = result.hasMore;
-        this._state = this._resolveState(result.ids, this._search);
+        this._state = this._resolveState(result.ids, searchTerm);
       });
     } catch {
       runInAction(() => {
+        if (this._search !== searchTerm) {
+          return;
+        }
         this._state = 'error';
       });
     }

@@ -3,7 +3,6 @@ import { HoverCard, Portal, Image, IconButton } from '@chakra-ui/react';
 import { PiFile } from 'react-icons/pi';
 
 interface FileIconProps {
-  url: string;
   onClick: () => void;
   dataTestId?: string;
 }
@@ -42,7 +41,7 @@ export const FileHoverCard: FC<FileHoverCardProps> = ({
   dataTestId,
 }) => {
   if (!availablePreview) {
-    return <FileIcon url={url} onClick={onClick} dataTestId={dataTestId} />;
+    return <FileIcon onClick={onClick} dataTestId={dataTestId} />;
   }
 
   return (
@@ -55,7 +54,7 @@ export const FileHoverCard: FC<FileHoverCardProps> = ({
     >
       <HoverCard.Trigger asChild>
         <span>
-          <FileIcon url={url} onClick={onClick} dataTestId={dataTestId} />
+          <FileIcon onClick={onClick} dataTestId={dataTestId} />
         </span>
       </HoverCard.Trigger>
       <Portal>

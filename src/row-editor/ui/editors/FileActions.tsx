@@ -34,8 +34,8 @@ export const FileActions: FC<FileActionsProps> = observer(({ node }) => {
       if (!file) {
         return;
       }
-      await node.callbacks?.onUploadFile?.(fileId, file);
       event.target.value = '';
+      await node.callbacks?.onUploadFile?.(fileId, file);
     },
     [node, fileId],
   );
@@ -44,7 +44,7 @@ export const FileActions: FC<FileActionsProps> = observer(({ node }) => {
     if (node.callbacks?.onOpenFile) {
       node.callbacks.onOpenFile(url);
     } else {
-      window.open(url, '_blank');
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }, [node, url]);
 
