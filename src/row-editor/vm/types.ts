@@ -31,7 +31,10 @@ export interface RowEditorCallbacks {
     tableId: string,
     search: string,
   ) => Promise<ForeignKeySearchResult>;
-  onUploadFile?: (fileId: string, file: File) => Promise<void>;
+  onUploadFile?: (
+    fileId: string,
+    file: File,
+  ) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
   onNavigateToForeignKey?: (tableId: string, rowId: string) => void;
   onOpenTableSearch?: (tableId: string) => Promise<string | null>;

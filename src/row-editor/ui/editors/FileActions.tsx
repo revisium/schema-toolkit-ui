@@ -35,7 +35,13 @@ export const FileActions: FC<FileActionsProps> = observer(({ node }) => {
         return;
       }
       event.target.value = '';
-      await node.callbacks?.onUploadFile?.(fileId, file);
+      const result = await node.callbacks?.onUploadFile?.(fileId, file);
+      if (result) {
+        const valueNode = node.node as unknown as {
+          setValue(v: unknown, o?: { internal?: boolean }): void;
+        };
+        valueNode.setValue(result, { internal: true });
+      }
     },
     [node, fileId],
   );

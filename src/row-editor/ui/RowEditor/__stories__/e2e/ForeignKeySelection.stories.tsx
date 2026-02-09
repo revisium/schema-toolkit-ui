@@ -205,3 +205,26 @@ export const PickerClosesAfterSelection: Story = {
     });
   },
 };
+
+export const FocusAloneDoesNotOpenPopover: Story = {
+  args: { onSave: fn(), onChange: fn(), onCancel: fn() },
+  render: (args) => (
+    <StoryWrapper
+      {...args}
+      schema={foreignKeyFieldSchema}
+      initialValue={{ name: 'Laptop', productId: 'row-1' }}
+      callbacks={mockCallbacks}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const editor = await canvas.findByTestId('productId-editor');
+
+    editor.focus();
+    await delay(300);
+
+    const picker = screen.queryByTestId('fk-picker');
+    expect(picker).not.toBeInTheDocument();
+  },
+};
