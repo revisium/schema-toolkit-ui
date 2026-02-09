@@ -14,7 +14,11 @@ export interface StoryWrapperProps {
   initialValue?: unknown;
   mode?: RowEditorMode;
   hint?: string;
-  onSave?: (value: unknown, patches: readonly JsonValuePatch[]) => void;
+  onSave?: (
+    rowId: string,
+    value: unknown,
+    patches: readonly JsonValuePatch[],
+  ) => void;
   onChange?: (patches: readonly JsonValuePatch[]) => void;
   onCancel?: () => void;
   callbacks?: RowEditorCallbacks;

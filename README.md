@@ -86,6 +86,61 @@ vm.isTableIdChanged   // was table renamed?
 vm.initialTableId     // original name (for rename API)
 ```
 
+### Editing row data
+
+```tsx
+import { RowEditorVM, RowEditor } from '@revisium/schema-toolkit-ui';
+
+const vm = new RowEditorVM(tableSchema, existingRowData, {
+  mode: 'editing',
+  rowId: 'my-row-id',
+  refSchemas: { ... },
+  callbacks: {
+    onSearchForeignKey: async (tableId, search) => { ... },
+    onUploadFile: async (fileId, file) => { ... },
+    onOpenFile: (url) => window.open(url, '_blank', 'noopener,noreferrer'),
+    onNavigateToForeignKey: (tableId, rowId) => { ... },
+  },
+  onSave: (rowId, value, patches) => {
+    // save logic
+  },
+});
+
+// In React component:
+<RowEditor vm={vm} />
+
+// Read results:
+vm.rowId             // current row name
+vm.isRowIdChanged    // was row renamed?
+vm.initialRowId      // original name (for rename API)
+vm.isDirty           // data changed?
+vm.hasChanges        // data or name changed?
+vm.getValue()        // plain JSON value
+vm.patches           // JSON Patch operations
+```
+
+### Creating a new row
+
+```tsx
+const vm = new RowEditorVM(tableSchema, undefined, {
+  mode: 'creating',
+  rowId: 'auto-generated-id',
+  callbacks: { ... },
+});
+
+<RowEditor vm={vm} />
+```
+
+### Read-only mode
+
+```tsx
+const vm = new RowEditorVM(tableSchema, rowData, {
+  mode: 'reading',
+});
+
+<RowEditor vm={vm} />
+```
+
 ### Cleanup
 
 Call `vm.dispose()` when the editor is unmounted.

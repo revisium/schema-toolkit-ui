@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { resetNodeIdCounter } from '@revisium/schema-toolkit';
 import { RowEditorVM } from '../RowEditorVM';
 
@@ -203,6 +204,260 @@ describe('RowEditorVM', () => {
       expect(vm.patches).toEqual([
         { op: 'replace', path: '/name', value: 'Jane' },
       ]);
+    });
+  });
+
+  describe('rowId', () => {
+    it('defaults to empty string', () => {
+      const vm = new RowEditorVM(simpleSchema, { name: 'John', age: 25 });
+
+      expect(vm.rowId).toBe('');
+      expect(vm.initialRowId).toBe('');
+    });
+
+    it('uses provided rowId', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      expect(vm.rowId).toBe('row-1');
+      expect(vm.initialRowId).toBe('row-1');
+    });
+
+    it('tracks changes via setRowId', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-2');
+
+      expect(vm.rowId).toBe('row-2');
+      expect(vm.initialRowId).toBe('row-1');
+      expect(vm.isRowIdChanged).toBe(true);
+    });
+
+    it('isRowIdChanged returns false when unchanged', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      expect(vm.isRowIdChanged).toBe(false);
+    });
+
+    it('isRowIdChanged returns false when set back to initial', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-2');
+      vm.setRowId('row-1');
+
+      expect(vm.isRowIdChanged).toBe(false);
+    });
+  });
+
+  describe('hasChanges', () => {
+    it('returns false initially', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      expect(vm.hasChanges).toBe(false);
+    });
+
+    it('returns true when only rowId changed', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-2');
+
+      expect(vm.isDirty).toBe(false);
+      expect(vm.hasChanges).toBe(true);
+    });
+
+    it('returns true when only data changed', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      expect(vm.isRowIdChanged).toBe(false);
+      expect(vm.hasChanges).toBe(true);
+    });
+
+    it('returns true when both rowId and data changed', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-2');
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      expect(vm.hasChanges).toBe(true);
+    });
+  });
+
+  describe('save', () => {
+    it('calls onSave with rowId, value and patches', () => {
+      const onSave = jest.fn();
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1', onSave },
+      );
+
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      vm.save();
+
+      expect(onSave).toHaveBeenCalledWith('row-1', { name: 'Jane', age: 25 }, [
+        { op: 'replace', path: '/name', value: 'Jane' },
+      ]);
+    });
+
+    it('passes current rowId after rename', () => {
+      const onSave = jest.fn();
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1', onSave },
+      );
+
+      vm.setRowId('row-renamed');
+      vm.save();
+
+      expect(onSave).toHaveBeenCalledWith(
+        'row-renamed',
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
+    it('commits data after save', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1', onSave: jest.fn() },
+      );
+
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      vm.save();
+
+      expect(vm.isDirty).toBe(false);
+    });
+
+    it('resets isRowIdChanged after save', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1', onSave: jest.fn() },
+      );
+
+      vm.setRowId('row-renamed');
+      expect(vm.isRowIdChanged).toBe(true);
+
+      vm.save();
+
+      expect(vm.isRowIdChanged).toBe(false);
+      expect(vm.initialRowId).toBe('row-renamed');
+      expect(vm.hasChanges).toBe(false);
+    });
+  });
+
+  describe('markAsSaved', () => {
+    it('commits data changes', () => {
+      const vm = new RowEditorVM(simpleSchema, { name: 'John', age: 25 });
+
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      expect(vm.isDirty).toBe(true);
+
+      vm.markAsSaved();
+
+      expect(vm.isDirty).toBe(false);
+      expect(vm.patches).toEqual([]);
+    });
+
+    it('resets isRowIdChanged after rowId was renamed', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-2');
+      expect(vm.isRowIdChanged).toBe(true);
+
+      vm.markAsSaved();
+
+      expect(vm.isRowIdChanged).toBe(false);
+      expect(vm.rowId).toBe('row-2');
+      expect(vm.initialRowId).toBe('row-2');
+      expect(vm.hasChanges).toBe(false);
+    });
+
+    it('does not call onSave', () => {
+      const onSave = jest.fn();
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { onSave },
+      );
+
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      vm.markAsSaved();
+
+      expect(onSave).not.toHaveBeenCalled();
     });
   });
 
