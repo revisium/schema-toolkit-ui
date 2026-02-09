@@ -29,7 +29,11 @@ export const FocusPopover: FC<FocusPopoverProps> = ({
       lazyMount
       unmountOnExit
       open={isOpen}
-      onOpenChange={({ open }) => setIsOpen(open)}
+      onOpenChange={({ open }) => {
+        if (!disabled) {
+          setIsOpen(open);
+        }
+      }}
       autoFocus={false}
       closeOnInteractOutside={!disabled}
       modal={false}
