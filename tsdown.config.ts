@@ -23,6 +23,7 @@ export default defineConfig({
     '@uiw/react-codemirror',
     'react-icons',
     'react-use',
+    'react-virtuoso',
     'nanoid',
     '@revisium/formula',
   ],

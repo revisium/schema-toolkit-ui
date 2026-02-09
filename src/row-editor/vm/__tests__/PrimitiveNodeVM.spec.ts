@@ -1,62 +1,75 @@
-import {
-  StringValueNode,
-  NumberValueNode,
-  BooleanValueNode,
-  resetNodeIdCounter,
-} from '@revisium/schema-toolkit';
-import { PrimitiveNodeVM } from '../PrimitiveNodeVM';
+import { resetNodeIdCounter } from '@revisium/schema-toolkit';
+import { RowEditorVM } from '../RowEditorVM';
+import type { PrimitiveNodeVM as IPrimitiveNodeVM } from '../types';
 
 beforeEach(() => {
   resetNodeIdCounter();
 });
 
 describe('PrimitiveNodeVM', () => {
-  describe('with StringValueNode', () => {
+  function createPrimitiveAccessor(
+    schema: Record<string, unknown>,
+    fieldName: string,
+    value?: Record<string, unknown>,
+  ): IPrimitiveNodeVM {
+    const objectSchema = {
+      type: 'object' as const,
+      properties: { [fieldName]: schema },
+      additionalProperties: false,
+      required: [fieldName],
+    };
+    const vm = new RowEditorVM(
+      objectSchema,
+      value ?? { [fieldName]: (schema as { default?: unknown }).default },
+    );
+    const root = vm.root;
+    if (root.isObject()) {
+      const child = root.child(fieldName);
+      if (child?.isPrimitive()) {
+        return child;
+      }
+    }
+    throw new Error('Expected primitive child');
+  }
+
+  describe('with string value', () => {
     it('exposes string value', () => {
-      const node = new StringValueNode(
-        undefined,
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '' },
         'name',
-        { type: 'string' },
-        'John',
+        { name: 'John' },
       );
-      const vm = new PrimitiveNodeVM(node, null);
 
       expect(vm.value).toBe('John');
     });
 
     it('exposes default value', () => {
-      const node = new StringValueNode(undefined, 'name', {
-        type: 'string',
-        default: 'default',
-      });
-      const vm = new PrimitiveNodeVM(node, null);
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: 'default' },
+        'name',
+      );
 
       expect(vm.defaultValue).toBe('default');
     });
 
     it('sets string value', () => {
-      const node = new StringValueNode(
-        undefined,
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '' },
         'name',
-        { type: 'string' },
-        'John',
+        { name: 'John' },
       );
-      const vm = new PrimitiveNodeVM(node, null);
 
       vm.setValue('Jane');
 
       expect(vm.value).toBe('Jane');
-      expect(node.value).toBe('Jane');
     });
 
     it('tracks dirty state', () => {
-      const node = new StringValueNode(
-        undefined,
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '' },
         'name',
-        { type: 'string' },
-        'John',
+        { name: 'John' },
       );
-      const vm = new PrimitiveNodeVM(node, null);
 
       expect(vm.isDirty).toBe(false);
 
@@ -66,27 +79,23 @@ describe('PrimitiveNodeVM', () => {
     });
   });
 
-  describe('with NumberValueNode', () => {
+  describe('with number value', () => {
     it('exposes number value', () => {
-      const node = new NumberValueNode(
-        undefined,
+      const vm = createPrimitiveAccessor(
+        { type: 'number', default: 0 },
         'age',
-        { type: 'number' },
-        25,
+        { age: 25 },
       );
-      const vm = new PrimitiveNodeVM(node, null);
 
       expect(vm.value).toBe(25);
     });
 
     it('sets number value', () => {
-      const node = new NumberValueNode(
-        undefined,
+      const vm = createPrimitiveAccessor(
+        { type: 'number', default: 0 },
         'age',
-        { type: 'number' },
-        25,
+        { age: 25 },
       );
-      const vm = new PrimitiveNodeVM(node, null);
 
       vm.setValue(30);
 
@@ -94,27 +103,23 @@ describe('PrimitiveNodeVM', () => {
     });
   });
 
-  describe('with BooleanValueNode', () => {
+  describe('with boolean value', () => {
     it('exposes boolean value', () => {
-      const node = new BooleanValueNode(
-        undefined,
+      const vm = createPrimitiveAccessor(
+        { type: 'boolean', default: false },
         'active',
-        { type: 'boolean' },
-        true,
+        { active: true },
       );
-      const vm = new PrimitiveNodeVM(node, null);
 
       expect(vm.value).toBe(true);
     });
 
     it('sets boolean value', () => {
-      const node = new BooleanValueNode(
-        undefined,
+      const vm = createPrimitiveAccessor(
+        { type: 'boolean', default: false },
         'active',
-        { type: 'boolean' },
-        false,
+        { active: false },
       );
-      const vm = new PrimitiveNodeVM(node, null);
 
       vm.setValue(true);
 
@@ -124,28 +129,32 @@ describe('PrimitiveNodeVM', () => {
 
   describe('readOnly', () => {
     it('returns false when not readOnly', () => {
-      const node = new StringValueNode(undefined, 'name', { type: 'string' });
-      const vm = new PrimitiveNodeVM(node, null);
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '' },
+        'name',
+      );
 
       expect(vm.isReadOnly).toBe(false);
     });
 
     it('returns true when schema is readOnly', () => {
-      const node = new StringValueNode(undefined, 'name', {
-        type: 'string',
-        readOnly: true,
-      });
-      const vm = new PrimitiveNodeVM(node, null);
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '', readOnly: true },
+        'name',
+      );
 
       expect(vm.isReadOnly).toBe(true);
     });
 
     it('returns true when has formula', () => {
-      const node = new NumberValueNode(undefined, 'total', {
-        type: 'number',
-        'x-formula': { version: 1, expression: 'a + b' },
-      });
-      const vm = new PrimitiveNodeVM(node, null);
+      const vm = createPrimitiveAccessor(
+        {
+          type: 'number',
+          default: 0,
+          'x-formula': { version: 1, expression: 'a + b' },
+        },
+        'total',
+      );
 
       expect(vm.isReadOnly).toBe(true);
     });
@@ -153,22 +162,28 @@ describe('PrimitiveNodeVM', () => {
 
   describe('type guards', () => {
     it('isPrimitive returns true', () => {
-      const node = new StringValueNode(undefined, 'name', { type: 'string' });
-      const vm = new PrimitiveNodeVM(node, null);
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '' },
+        'name',
+      );
 
       expect(vm.isPrimitive()).toBe(true);
     });
 
     it('isObject returns false', () => {
-      const node = new StringValueNode(undefined, 'name', { type: 'string' });
-      const vm = new PrimitiveNodeVM(node, null);
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '' },
+        'name',
+      );
 
       expect(vm.isObject()).toBe(false);
     });
 
     it('isArray returns false', () => {
-      const node = new StringValueNode(undefined, 'name', { type: 'string' });
-      const vm = new PrimitiveNodeVM(node, null);
+      const vm = createPrimitiveAccessor(
+        { type: 'string', default: '' },
+        'name',
+      );
 
       expect(vm.isArray()).toBe(false);
     });

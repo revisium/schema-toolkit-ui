@@ -1,24 +1,38 @@
-import { makeObservable, computed, action } from 'mobx';
+import { makeAutoObservable, reaction } from 'mobx';
 import type {
   JsonSchema,
+  JsonValuePatch,
   Diagnostic,
   RowModel,
 } from '@revisium/schema-toolkit';
 import { createRowModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../lib/initReactivity';
-import { createNodeVM } from './createNodeVM';
+import type { FlatItem } from './flattenNodes';
+import { RowEditorCore } from './RowEditorCore';
 import type { NodeVM, EditorContext } from './types';
 
 export type RowEditorMode = 'creating' | 'editing' | 'reading';
 
 export interface RowEditorVMOptions {
   mode?: RowEditorMode;
+  onChange?: (patches: readonly JsonValuePatch[]) => void;
+  onSave?: (value: unknown, patches: readonly JsonValuePatch[]) => void;
+  onCancel?: () => void;
 }
 
 export class RowEditorVM implements EditorContext {
   private readonly _rowModel: RowModel;
-  private readonly _root: NodeVM;
+  private readonly _core: RowEditorCore;
   private readonly _mode: RowEditorMode;
+  private readonly _onChange:
+    | ((patches: readonly JsonValuePatch[]) => void)
+    | null;
+  private readonly _onSave:
+    | ((value: unknown, patches: readonly JsonValuePatch[]) => void)
+    | null;
+  private readonly _onCancel: (() => void) | null;
+  private readonly _disposeReaction: (() => void) | null;
+  private _prevPatchCount = 0;
 
   constructor(
     schema: JsonSchema,
@@ -27,25 +41,32 @@ export class RowEditorVM implements EditorContext {
   ) {
     ensureReactivityProvider();
     this._mode = options?.mode ?? 'editing';
+    this._onChange = options?.onChange ?? null;
+    this._onSave = options?.onSave ?? null;
+    this._onCancel = options?.onCancel ?? null;
     this._rowModel = createRowModel({
       rowId: 'editor',
       schema,
       data: initialValue,
     });
-    this._root = createNodeVM(this._rowModel.tree.root, null, this);
+    this._core = new RowEditorCore(this._rowModel.tree, this);
 
-    makeObservable(this, {
-      isDirty: computed,
-      isValid: computed,
-      errors: computed,
-      isReadOnly: computed,
-      commit: action,
-      revert: action,
-    });
+    makeAutoObservable(this, {}, { autoBind: true });
+
+    this._disposeReaction = this._onChange
+      ? reaction(
+          () => this.patches,
+          () => this._emitChange(),
+        )
+      : null;
   }
 
   get root(): NodeVM {
-    return this._root;
+    return this._core.root;
+  }
+
+  get flattenedNodes(): readonly FlatItem[] {
+    return this._core.flattenedNodes;
   }
 
   get rowModel(): RowModel {
@@ -72,19 +93,50 @@ export class RowEditorVM implements EditorContext {
     return this._mode === 'reading';
   }
 
+  get patches(): readonly JsonValuePatch[] {
+    return this._rowModel.patches;
+  }
+
   getValue(): unknown {
     return this._rowModel.getPlainValue();
   }
 
+  save(): void {
+    const value = this.getValue();
+    const patches = this.patches;
+    this.commit();
+    this._onSave?.(value, patches);
+  }
+
+  cancel(): void {
+    this._onCancel?.();
+  }
+
   commit(): void {
     this._rowModel.commit();
+    this._prevPatchCount = 0;
   }
 
   revert(): void {
     this._rowModel.revert();
+    this._prevPatchCount = 0;
   }
 
   dispose(): void {
+    this._disposeReaction?.();
+    this._core.dispose();
     this._rowModel.dispose();
+  }
+
+  private _emitChange(): void {
+    if (!this._onChange || !this.isDirty || !this.isValid) {
+      return;
+    }
+    const all = this.patches;
+    const newPatches = all.slice(this._prevPatchCount);
+    this._prevPatchCount = all.length;
+    if (newPatches.length > 0) {
+      this._onChange(newPatches);
+    }
   }
 }

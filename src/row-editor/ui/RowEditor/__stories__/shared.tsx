@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Text, HStack, Button } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import type { JsonSchema } from '@revisium/schema-toolkit';
+import type { JsonSchema, JsonValuePatch } from '@revisium/schema-toolkit';
 import { RowEditor } from '../RowEditor';
 import { RowEditorVM, RowEditorMode } from '../../../vm/RowEditorVM';
 
@@ -10,7 +10,8 @@ export interface StoryWrapperProps {
   initialValue?: unknown;
   mode?: RowEditorMode;
   hint?: string;
-  onSave?: (value: unknown) => void;
+  onSave?: (value: unknown, patches: readonly JsonValuePatch[]) => void;
+  onChange?: (patches: readonly JsonValuePatch[]) => void;
   onCancel?: () => void;
 }
 
@@ -21,25 +22,22 @@ export const StoryWrapper = observer(
     mode = 'editing',
     hint,
     onSave,
+    onChange,
     onCancel,
   }: StoryWrapperProps) => {
     const [viewModel] = useState(
-      () => new RowEditorVM(schema, initialValue, { mode }),
+      () =>
+        new RowEditorVM(schema, initialValue, {
+          mode,
+          onChange,
+          onSave,
+          onCancel,
+        }),
     );
 
     useEffect(() => {
       (window as unknown as Record<string, unknown>).__testVM = viewModel;
     }, [viewModel]);
-
-    const handleSave = () => {
-      const value = viewModel.getValue();
-      viewModel.commit();
-      onSave?.(value);
-    };
-
-    const handleRevert = () => {
-      viewModel.revert();
-    };
 
     return (
       <Box h="100vh" bg="gray.50">
@@ -62,19 +60,19 @@ export const StoryWrapper = observer(
             <HStack mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
               <Button
                 colorPalette="blue"
-                onClick={handleSave}
+                onClick={viewModel.save}
                 disabled={!viewModel.isDirty}
               >
                 Save
               </Button>
               <Button
                 variant="outline"
-                onClick={handleRevert}
+                onClick={viewModel.revert}
                 disabled={!viewModel.isDirty}
               >
                 Revert
               </Button>
-              <Button variant="ghost" onClick={onCancel}>
+              <Button variant="ghost" onClick={viewModel.cancel}>
                 Cancel
               </Button>
             </HStack>
@@ -92,6 +90,7 @@ export const baseMeta = {
   },
   argTypes: {
     onSave: { action: 'onSave' },
+    onChange: { action: 'onChange' },
     onCancel: { action: 'onCancel' },
   },
 };
