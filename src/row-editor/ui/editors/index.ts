@@ -9,3 +9,7 @@ export type { PrimitiveBoxProps } from './PrimitiveBox';
 export { FocusPopover } from './FocusPopover';
 export { FocusPopoverItem } from './FocusPopoverItem';
 export { BooleanMenu } from './BooleanMenu';
+export { ForeignKeyActions } from './ForeignKeyActions';
+export { ForeignKeyMenu } from './ForeignKeyMenu';
+export { FileActions } from './FileActions';
+export { FileHoverCard } from './FileHoverCard';

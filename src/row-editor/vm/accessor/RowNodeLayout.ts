@@ -1,4 +1,8 @@
 import { makeAutoObservable } from 'mobx';
+import {
+  isForeignKeyValueNode,
+  SystemSchemaIds,
+} from '@revisium/schema-toolkit';
 import type { NodeRendererType } from '../types';
 import type { RowNodeAccessor } from './RowNodeAccessor';
 
@@ -27,6 +31,8 @@ export class RowNodeLayout {
         const siblings = current.parent.getChildAccessors();
         const isLastSibling = siblings.at(-1)?.id === current.id;
         result.unshift(!isLastSibling);
+      } else if (!current.isObject()) {
+        result.unshift(false);
       }
       current = current.parent;
     }
@@ -45,8 +51,18 @@ export class RowNodeLayout {
   }
 
   get rendererType(): NodeRendererType {
-    if (this._accessor.node.isObject() || this._accessor.node.isArray()) {
+    if (this._accessor.node.isObject()) {
+      const schema = this._accessor.node.schema;
+      if ('$ref' in schema && schema.$ref === SystemSchemaIds.File) {
+        return 'file';
+      }
       return 'container';
+    }
+    if (this._accessor.node.isArray()) {
+      return 'container';
+    }
+    if (isForeignKeyValueNode(this._accessor.node)) {
+      return 'foreignKey';
     }
     if (this._accessor.node.isPrimitive()) {
       const v = this._accessor.value;
@@ -62,6 +78,11 @@ export class RowNodeLayout {
 
   get isContainer(): boolean {
     return this._accessor.node.isObject() || this._accessor.node.isArray();
+  }
+
+  get isRefNode(): boolean {
+    const schema = this._accessor.node.schema;
+    return '$ref' in schema && this.isContainer;
   }
 
   get showChildren(): boolean {

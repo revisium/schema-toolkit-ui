@@ -16,7 +16,7 @@ export const BooleanRendererComponent: FC<PrimitiveRendererContext> = observer(
     return (
       <Row
         node={node}
-        name={node.name}
+        name={node.displayName}
         guides={node.guides}
         formula={node.formula}
         isReadOnly={node.isEditorReadOnly}

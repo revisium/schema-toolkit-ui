@@ -4,10 +4,14 @@ import { ContainerRendererComponent } from './ContainerRenderer';
 import { StringRendererComponent } from './StringRenderer';
 import { NumberRendererComponent } from './NumberRenderer';
 import { BooleanRendererComponent } from './BooleanRenderer';
+import { ForeignKeyRendererComponent } from './ForeignKeyRenderer';
+import { FileRendererComponent } from './FileRenderer';
 
 export const NODE_RENDERERS: Record<NodeRendererType, FC<{ node: NodeVM }>> = {
   container: ContainerRendererComponent as FC<{ node: NodeVM }>,
   string: StringRendererComponent as FC<{ node: NodeVM }>,
   number: NumberRendererComponent as FC<{ node: NodeVM }>,
   boolean: BooleanRendererComponent as FC<{ node: NodeVM }>,
+  foreignKey: ForeignKeyRendererComponent as FC<{ node: NodeVM }>,
+  file: FileRendererComponent as FC<{ node: NodeVM }>,
 };

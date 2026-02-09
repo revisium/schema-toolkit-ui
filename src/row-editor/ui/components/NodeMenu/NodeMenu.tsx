@@ -53,9 +53,11 @@ export const NodeMenu: FC<NodeMenuProps> = observer(({ node }) => {
                 '0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.1)',
             }}
           >
-            <Icon size="md" color="gray.400">
-              <PiDotsThreeVerticalBold />
-            </Icon>
+            <Icon
+              size="md"
+              color="gray.400"
+              as={PiDotsThreeVerticalBold}
+            ></Icon>
           </Flex>
         </Flex>
       </Menu.Trigger>

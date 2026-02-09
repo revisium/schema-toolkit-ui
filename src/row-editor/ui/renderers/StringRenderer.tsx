@@ -24,7 +24,7 @@ export const StringRendererComponent: FC<PrimitiveRendererContext> = observer(
         <>
           <Row
             node={node}
-            name={node.name}
+            name={node.displayName}
             guides={node.guides}
             formula={node.formula}
             isCollapsible
@@ -51,7 +51,7 @@ export const StringRendererComponent: FC<PrimitiveRendererContext> = observer(
     return (
       <Row
         node={node}
-        name={node.name}
+        name={node.displayName}
         guides={node.guides}
         formula={node.formula}
         isReadOnly={node.isEditorReadOnly}

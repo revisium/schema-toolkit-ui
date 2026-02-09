@@ -3,6 +3,8 @@ import type {
   PrimitiveNodeVM,
   ObjectNodeVM,
   ArrayNodeVM,
+  ForeignKeyNodeVM,
+  FileNodeVM,
 } from '../../vm/types';
 
 export interface NodeRendererContext {
@@ -15,4 +17,12 @@ export interface PrimitiveRendererContext {
 
 export interface ContainerRendererContext {
   node: ObjectNodeVM | ArrayNodeVM;
+}
+
+export interface ForeignKeyRendererContext {
+  node: ForeignKeyNodeVM;
+}
+
+export interface FileRendererContext {
+  node: FileNodeVM;
 }
