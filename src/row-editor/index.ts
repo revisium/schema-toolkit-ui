@@ -1,9 +1,7 @@
-// ViewModel exports
-export { RowEditorVM, RowNodeAccessor, RowEditorCore } from './vm';
+export { RowEditorVM } from './vm';
 export type {
   RowEditorMode,
   RowEditorVMOptions,
-  JsonValuePatch,
   NodeVM,
   PrimitiveNodeVM,
   ObjectNodeVM,
@@ -16,6 +14,5 @@ export type {
   FlatItem,
 } from './vm';
 
-// UI exports
-export { RowEditor, NodeView } from './ui';
-export type { RowEditorProps, NodeViewProps } from './ui';
+export { RowEditor } from './ui';
+export type { RowEditorProps } from './ui';

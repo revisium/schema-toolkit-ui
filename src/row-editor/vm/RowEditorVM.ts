@@ -15,8 +15,13 @@ export type RowEditorMode = 'creating' | 'editing' | 'reading';
 
 export interface RowEditorVMOptions {
   mode?: RowEditorMode;
+  rowId?: string;
   onChange?: (patches: readonly JsonValuePatch[]) => void;
-  onSave?: (value: unknown, patches: readonly JsonValuePatch[]) => void;
+  onSave?: (
+    rowId: string,
+    value: unknown,
+    patches: readonly JsonValuePatch[],
+  ) => void;
   onCancel?: () => void;
   callbacks?: RowEditorCallbacks;
   refSchemas?: Record<string, JsonSchema>;
@@ -32,11 +37,17 @@ export class RowEditorVM implements EditorContext {
     | ((patches: readonly JsonValuePatch[]) => void)
     | null;
   private readonly _onSave:
-    | ((value: unknown, patches: readonly JsonValuePatch[]) => void)
+    | ((
+        rowId: string,
+        value: unknown,
+        patches: readonly JsonValuePatch[],
+      ) => void)
     | null;
   private readonly _onCancel: (() => void) | null;
   private readonly _disposeReaction: (() => void) | null;
   private _prevPatchCount = 0;
+  private _rowId: string;
+  private readonly _initialRowId: string;
 
   constructor(
     schema: JsonSchema,
@@ -45,6 +56,8 @@ export class RowEditorVM implements EditorContext {
   ) {
     ensureReactivityProvider();
     this._mode = options?.mode ?? 'editing';
+    this._rowId = options?.rowId ?? '';
+    this._initialRowId = this._rowId;
     this._callbacks = options?.callbacks ?? null;
     this._onChange = options?.onChange ?? null;
     this._onSave = options?.onSave ?? null;
@@ -85,8 +98,28 @@ export class RowEditorVM implements EditorContext {
     return this._mode;
   }
 
+  get rowId(): string {
+    return this._rowId;
+  }
+
+  get initialRowId(): string {
+    return this._initialRowId;
+  }
+
+  get isRowIdChanged(): boolean {
+    return this._rowId !== this._initialRowId;
+  }
+
+  setRowId(value: string): void {
+    this._rowId = value;
+  }
+
   get isDirty(): boolean {
     return this._rowModel.isDirty;
+  }
+
+  get hasChanges(): boolean {
+    return this.isDirty || this.isRowIdChanged;
   }
 
   get isValid(): boolean {
@@ -117,7 +150,11 @@ export class RowEditorVM implements EditorContext {
     const value = this.getValue();
     const patches = this.patches;
     this.commit();
-    this._onSave?.(value, patches);
+    this._onSave?.(this._rowId, value, patches);
+  }
+
+  markAsSaved(): void {
+    this.commit();
   }
 
   cancel(): void {

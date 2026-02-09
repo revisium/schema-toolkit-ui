@@ -324,6 +324,7 @@ export const GetValueAfterEdit: Story = {
 
     await waitFor(() => {
       expect(args.onSave).toHaveBeenCalledWith(
+        expect.any(String),
         expect.objectContaining({ name: 'Updated' }),
         expect.arrayContaining([
           expect.objectContaining({ op: 'replace', path: '/name' }),
