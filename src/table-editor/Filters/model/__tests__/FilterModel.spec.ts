@@ -202,5 +202,10 @@ describe('FilterModel', () => {
       expect(model.hasActiveFilters).toBe(false);
       expect(model.isEmpty).toBe(true);
     });
+
+    it('hasActiveFilters is false when empty group is applied', () => {
+      model.apply();
+      expect(model.hasActiveFilters).toBe(false);
+    });
   });
 });

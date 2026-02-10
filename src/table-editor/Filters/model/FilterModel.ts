@@ -30,10 +30,11 @@ export class FilterModel {
   }
 
   get hasActiveFilters(): boolean {
-    return (
-      this._appliedSnapshot !== null &&
-      this._appliedSnapshot !== this._serialize(this._createEmptyGroup())
-    );
+    if (this._appliedSnapshot === null) {
+      return false;
+    }
+    const parsed = JSON.parse(this._appliedSnapshot) as FilterGroup;
+    return parsed.conditions.length > 0 || parsed.groups.length > 0;
   }
 
   get allFiltersValid(): boolean {
@@ -150,10 +151,10 @@ export class FilterModel {
   }
 
   reset(): void {
-    if (this._appliedSnapshot !== null) {
-      this._rootGroup = JSON.parse(this._appliedSnapshot) as FilterGroup;
-    } else {
+    if (this._appliedSnapshot === null) {
       this._rootGroup = this._createEmptyGroup();
+    } else {
+      this._rootGroup = JSON.parse(this._appliedSnapshot) as FilterGroup;
     }
     this._notifyChange();
   }
@@ -190,7 +191,7 @@ export class FilterModel {
     if (
       (condition.fieldType === FilterFieldType.Number ||
         condition.fieldType === FilterFieldType.DateTime) &&
-      isNaN(Number(condition.value))
+      Number.isNaN(Number(condition.value))
     ) {
       return 'Value must be a number';
     }
@@ -300,7 +301,7 @@ export class FilterModel {
     if (
       (condition.fieldType === FilterFieldType.Number ||
         condition.fieldType === FilterFieldType.DateTime) &&
-      isNaN(Number(condition.value))
+      Number.isNaN(Number(condition.value))
     ) {
       return false;
     }

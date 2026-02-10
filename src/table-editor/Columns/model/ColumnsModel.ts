@@ -129,7 +129,7 @@ export class ColumnsModel {
 
   private _toViewField(field: string): string {
     const col = this._columnLookup.get(field);
-    if (col && col.isSystem) {
+    if (col?.isSystem) {
       return field;
     }
     return `data.${field}`;

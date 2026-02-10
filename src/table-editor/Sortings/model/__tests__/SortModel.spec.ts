@@ -106,4 +106,11 @@ describe('SortModel', () => {
     model.addSort('name');
     expect(onChange).toHaveBeenCalled();
   });
+
+  it('applyViewSorts fires onChange', () => {
+    const onChange = jest.fn();
+    model.setOnChange(onChange);
+    model.applyViewSorts([{ field: 'data.name', direction: 'asc' }]);
+    expect(onChange).toHaveBeenCalled();
+  });
 });

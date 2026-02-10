@@ -80,7 +80,7 @@ export class SortModel {
     const lookup = this._fieldLookup;
     return this._sorts.map((sort) => {
       const col = lookup.get(sort.field);
-      const viewField = col && col.isSystem ? sort.field : `data.${sort.field}`;
+      const viewField = col?.isSystem ? sort.field : `data.${sort.field}`;
       return { field: viewField, direction: sort.direction };
     });
   }
@@ -98,6 +98,7 @@ export class SortModel {
     }
 
     this._sorts = sorts;
+    this._notifyChange();
   }
 
   setOnChange(cb: (() => void) | null): void {

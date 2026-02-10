@@ -12,7 +12,7 @@ function parseValue(
     fieldType === FilterFieldType.DateTime
   ) {
     const num = Number(value);
-    if (!isNaN(num)) {
+    if (!Number.isNaN(num)) {
       return num;
     }
   }
