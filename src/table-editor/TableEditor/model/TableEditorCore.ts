@@ -79,9 +79,12 @@ export class TableEditorCore {
   applyViewState(state: ViewState): void {
     this.columns.applyViewColumns(state.columns);
     this.sorts.applyViewSorts(state.sorts);
-    if (state.search) {
-      this.search.setQuery(state.search);
+    if (state.filters) {
+      this.filters.applySnapshot(state.filters);
+    } else {
+      this.filters.clearAll();
     }
+    this.search.setQuery(state.search);
     this._saveViewSnapshot();
   }
 

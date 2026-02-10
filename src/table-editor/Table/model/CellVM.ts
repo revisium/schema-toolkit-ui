@@ -116,7 +116,7 @@ export class CellVM {
 
   commitEdit(newValue: unknown): void {
     const node = this._getNode();
-    if (node && node.isPrimitive()) {
+    if (node?.isPrimitive()) {
       node.setValue(newValue);
     }
     this._inlineEdit.commitEdit();

@@ -159,6 +159,12 @@ export class FilterModel {
     this._notifyChange();
   }
 
+  applySnapshot(serialized: string): void {
+    this._rootGroup = JSON.parse(serialized) as FilterGroup;
+    this._appliedSnapshot = serialized;
+    this._notifyChange();
+  }
+
   clearAll(): void {
     this._rootGroup = this._createEmptyGroup();
     this._appliedSnapshot = null;
