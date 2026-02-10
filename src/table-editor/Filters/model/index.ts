@@ -7,3 +7,6 @@ export {
   getDefaultOperator,
   getOperatorsForType,
 } from './operators';
+export type { FilterCondition, FilterGroup } from './types';
+export { FilterModel } from './FilterModel';
+export { buildWhereClause } from './filterBuilder';
