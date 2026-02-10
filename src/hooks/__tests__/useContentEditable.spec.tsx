@@ -1,6 +1,6 @@
 import { jest, describe, it, expect } from '@jest/globals';
 import { render, fireEvent, act } from '@testing-library/react';
-import React, { useRef, useState } from 'react';
+import React, { StrictMode, useRef, useState } from 'react';
 import {
   useContentEditable,
   UseContentEditableOptions,
@@ -242,6 +242,30 @@ describe('useContentEditable', () => {
   it('focusTrigger initial value does not focus on mount', () => {
     const focusSpy = jest.spyOn(HTMLElement.prototype, 'focus');
     render(<TestComponent value="hello" focusTrigger={5} />);
+
+    expect(focusSpy).not.toHaveBeenCalled();
+    focusSpy.mockRestore();
+  });
+
+  it('does not focus on mount in StrictMode without focusTrigger', () => {
+    const focusSpy = jest.spyOn(HTMLElement.prototype, 'focus');
+    render(
+      <StrictMode>
+        <TestComponent value="hello" />
+      </StrictMode>,
+    );
+
+    expect(focusSpy).not.toHaveBeenCalled();
+    focusSpy.mockRestore();
+  });
+
+  it('does not focus on mount in StrictMode with focusTrigger', () => {
+    const focusSpy = jest.spyOn(HTMLElement.prototype, 'focus');
+    render(
+      <StrictMode>
+        <TestComponent value="hello" focusTrigger={0} />
+      </StrictMode>,
+    );
 
     expect(focusSpy).not.toHaveBeenCalled();
     focusSpy.mockRestore();
