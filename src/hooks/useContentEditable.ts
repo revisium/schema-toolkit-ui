@@ -57,7 +57,7 @@ export function useContentEditable(
 
   const elementRef = useRef<HTMLElement | null>(null);
   const cursorPosition = useRef<number | null>(null);
-  const isFirstRender = useRef(true);
+  const prevFocusTriggerRef = useRef(focusTrigger);
 
   const optionsRef = useRef(options);
   optionsRef.current = options;
@@ -93,10 +93,10 @@ export function useContentEditable(
   });
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (prevFocusTriggerRef.current === focusTrigger) {
       return;
     }
+    prevFocusTriggerRef.current = focusTrigger;
 
     elementRef.current?.focus();
     const selection = globalThis.getSelection();
