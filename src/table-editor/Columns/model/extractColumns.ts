@@ -4,6 +4,14 @@ import { FilterFieldType } from '../../shared/field-types.js';
 import { SYSTEM_FIELD_BY_REF } from '../../shared/system-fields.js';
 import type { ColumnSpec } from './types.js';
 
+const NODE_TYPE_TO_FIELD_TYPE: Readonly<
+  Record<string, FilterFieldType | undefined>
+> = {
+  string: FilterFieldType.String,
+  number: FilterFieldType.Number,
+  boolean: FilterFieldType.Boolean,
+};
+
 export function extractColumns(rootNode: SchemaNode): ColumnSpec[] {
   const columns: ColumnSpec[] = [];
   if (!rootNode.isObject()) {
@@ -19,84 +27,90 @@ function collectColumns(
   columns: ColumnSpec[],
 ): void {
   for (const child of node.properties()) {
-    const fieldName = child.name();
-    const fieldPath = parentPath ? `${parentPath}.${fieldName}` : fieldName;
+    const fieldPath = buildFieldPath(parentPath, child.name());
+    const column = resolveColumn(child, fieldPath);
 
-    if (child.isArray()) {
-      continue;
-    }
-
-    const refValue = child.ref();
-
-    if (refValue) {
-      const systemDef = SYSTEM_FIELD_BY_REF.get(refValue);
-      if (systemDef) {
-        columns.push({
-          field: systemDef.id,
-          label: systemDef.label,
-          fieldType: systemDef.fieldType,
-          isSystem: true,
-          systemFieldId: systemDef.id,
-          isDeprecated: child.metadata().deprecated ?? false,
-          hasFormula: child.hasFormula(),
-        });
-        continue;
-      }
-
-      if (refValue === SystemSchemaIds.File) {
-        columns.push({
-          field: fieldPath,
-          label: fieldName,
-          fieldType: FilterFieldType.File,
-          isSystem: false,
-          isDeprecated: child.metadata().deprecated ?? false,
-          hasFormula: child.hasFormula(),
-        });
-        continue;
-      }
-    }
-
-    if (child.isObject() && !child.isRef()) {
+    if (column === 'recurse') {
       collectColumns(child, fieldPath, columns);
-      continue;
-    }
-
-    if (child.foreignKey() !== undefined) {
-      columns.push({
-        field: fieldPath,
-        label: fieldName,
-        fieldType: FilterFieldType.ForeignKey,
-        isSystem: false,
-        isDeprecated: child.metadata().deprecated ?? false,
-        hasFormula: child.hasFormula(),
-      });
-      continue;
-    }
-
-    const nodeType = child.nodeType();
-    let fieldType: FilterFieldType | undefined;
-
-    switch (nodeType) {
-      case 'string':
-        fieldType = FilterFieldType.String;
-        break;
-      case 'number':
-        fieldType = FilterFieldType.Number;
-        break;
-      case 'boolean':
-        fieldType = FilterFieldType.Boolean;
-        break;
-    }
-
-    if (fieldType) {
-      columns.push({
-        field: fieldPath,
-        label: fieldName,
-        fieldType,
-        isSystem: false,
-        isDeprecated: child.metadata().deprecated ?? false,
-        hasFormula: child.hasFormula(),
-      });
+    } else if (column) {
+      columns.push(column);
     }
   }
+}
+
+function buildFieldPath(parentPath: string, fieldName: string): string {
+  return parentPath ? `${parentPath}.${fieldName}` : fieldName;
+}
+
+function resolveColumn(
+  child: SchemaNode,
+  fieldPath: string,
+): ColumnSpec | 'recurse' | null {
+  if (child.isArray()) {
+    return null;
+  }
+
+  const refColumn = resolveRefColumn(child, fieldPath);
+  if (refColumn) {
+    return refColumn;
+  }
+
+  if (child.isObject() && !child.isRef()) {
+    return 'recurse';
+  }
+
+  if (child.foreignKey() !== undefined) {
+    return createColumn(fieldPath, child, FilterFieldType.ForeignKey);
+  }
+
+  const fieldType = NODE_TYPE_TO_FIELD_TYPE[child.nodeType()];
+  if (fieldType) {
+    return createColumn(fieldPath, child, fieldType);
+  }
+
+  return null;
+}
+
+function resolveRefColumn(
+  child: SchemaNode,
+  fieldPath: string,
+): ColumnSpec | null {
+  const refValue = child.ref();
+  if (!refValue) {
+    return null;
+  }
+
+  const systemDef = SYSTEM_FIELD_BY_REF.get(refValue);
+  if (systemDef) {
+    return {
+      field: systemDef.id,
+      label: systemDef.label,
+      fieldType: systemDef.fieldType,
+      isSystem: true,
+      systemFieldId: systemDef.id,
+      isDeprecated: child.metadata().deprecated ?? false,
+      hasFormula: child.hasFormula(),
+    };
+  }
+
+  if (refValue === SystemSchemaIds.File) {
+    return createColumn(fieldPath, child, FilterFieldType.File);
+  }
+
+  return null;
+}
+
+function createColumn(
+  fieldPath: string,
+  child: SchemaNode,
+  fieldType: FilterFieldType,
+): ColumnSpec {
+  return {
+    field: fieldPath,
+    label: child.name(),
+    fieldType,
+    isSystem: false,
+    isDeprecated: child.metadata().deprecated ?? false,
+    hasFormula: child.hasFormula(),
+  };
 }
