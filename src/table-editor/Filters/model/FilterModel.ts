@@ -162,6 +162,7 @@ export class FilterModel {
   applySnapshot(serialized: string): void {
     this._rootGroup = JSON.parse(serialized) as FilterGroup;
     this._appliedSnapshot = serialized;
+    this._syncNextIds(this._rootGroup);
     this._notifyChange();
   }
 
@@ -220,6 +221,35 @@ export class FilterModel {
       conditions: [],
       groups: [],
     };
+  }
+
+  private _syncNextIds(group: FilterGroup): void {
+    const extractNum = (id: string, prefix: string): number => {
+      if (id.startsWith(prefix)) {
+        const num = Number(id.slice(prefix.length));
+        if (!Number.isNaN(num)) {
+          return num;
+        }
+      }
+      return 0;
+    };
+
+    let maxCondition = this._nextConditionId - 1;
+    let maxGroup = this._nextGroupId - 1;
+
+    const walk = (g: FilterGroup): void => {
+      maxGroup = Math.max(maxGroup, extractNum(g.id, 'g-'));
+      for (const c of g.conditions) {
+        maxCondition = Math.max(maxCondition, extractNum(c.id, 'c-'));
+      }
+      for (const sub of g.groups) {
+        walk(sub);
+      }
+    };
+
+    walk(group);
+    this._nextConditionId = maxCondition + 1;
+    this._nextGroupId = maxGroup + 1;
   }
 
   private _generateConditionId(): string {

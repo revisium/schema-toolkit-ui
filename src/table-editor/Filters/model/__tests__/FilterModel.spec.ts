@@ -207,5 +207,27 @@ describe('FilterModel', () => {
       model.apply();
       expect(model.hasActiveFilters).toBe(false);
     });
+
+    it('applySnapshot syncs next IDs to avoid collisions', () => {
+      model.addCondition();
+      model.addCondition();
+      model.addCondition();
+      model.apply();
+      const snapshot = JSON.stringify(model.rootGroup);
+
+      model.init([
+        col({ field: 'name' }),
+        col({ field: 'age', fieldType: FilterFieldType.Number }),
+        col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+      ]);
+      model.applySnapshot(snapshot);
+      expect(model.totalConditionCount).toBe(3);
+
+      model.addCondition();
+      expect(model.totalConditionCount).toBe(4);
+      const ids = model.rootGroup.conditions.map((c) => c.id);
+      const uniqueIds = new Set(ids);
+      expect(uniqueIds.size).toBe(ids.length);
+    });
   });
 });
