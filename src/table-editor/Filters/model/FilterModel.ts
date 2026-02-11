@@ -11,9 +11,18 @@ export class FilterModel {
   private _appliedSnapshot: string | null = null;
   private _availableFields: ColumnSpec[] = [];
   private _onChange: (() => void) | null = null;
+  private _isOpen = false;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
+  }
+
+  get isOpen(): boolean {
+    return this._isOpen;
+  }
+
+  setOpen(value: boolean): void {
+    this._isOpen = value;
   }
 
   get rootGroup(): FilterGroup {

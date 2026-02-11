@@ -76,6 +76,10 @@ export class CellVM {
     return true;
   }
 
+  get foreignKeyTableId(): string | undefined {
+    return this._column.foreignKeyTableId;
+  }
+
   get isEditable(): boolean {
     if (this.isReadOnly) {
       return false;
@@ -124,6 +128,10 @@ export class CellVM {
 
   cancelEdit(): void {
     this._inlineEdit.cancelEdit();
+  }
+
+  blur(): void {
+    this._inlineEdit.blur();
   }
 
   private _getNode() {
