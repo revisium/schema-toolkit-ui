@@ -60,7 +60,7 @@ export const CellTextareaEditor: FC<CellTextareaEditorProps> = ({
         textareaRef.current.style.height = `${Math.min(scrollHeight, MAX_HEIGHT)}px`;
       }
     }
-  }, [autoHeight]);
+  }, [autoHeight, localValue]);
 
   const handleCommit = useCallback(() => {
     if (savedRef.current) {

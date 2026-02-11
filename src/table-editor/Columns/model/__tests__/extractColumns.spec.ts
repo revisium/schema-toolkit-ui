@@ -124,6 +124,7 @@ describe('extractColumns', () => {
         field: 'authorId',
         label: 'authorId',
         fieldType: FilterFieldType.ForeignKey,
+        foreignKeyTableId: 'authors',
         isSystem: false,
         isDeprecated: false,
         hasFormula: false,
