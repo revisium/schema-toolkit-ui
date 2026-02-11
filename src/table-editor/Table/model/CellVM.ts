@@ -188,15 +188,23 @@ export class CellVM {
   }
 
   async copyToClipboard(): Promise<void> {
-    await navigator.clipboard.writeText(this.displayValue);
+    try {
+      await navigator.clipboard.writeText(this.displayValue);
+    } catch {
+      /* clipboard unavailable or permission denied */
+    }
   }
 
   async pasteFromClipboard(): Promise<void> {
     if (!this.isEditable) {
       return;
     }
-    const text = await navigator.clipboard.readText();
-    this.applyPastedText(text);
+    try {
+      const text = await navigator.clipboard.readText();
+      this.applyPastedText(text);
+    } catch {
+      /* clipboard unavailable or permission denied */
+    }
   }
 
   applyPastedText(text: string): void {

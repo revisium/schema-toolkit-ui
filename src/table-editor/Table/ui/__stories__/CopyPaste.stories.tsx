@@ -289,8 +289,12 @@ export const SingleCellMultiPaste: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     mockClipboard('X\t99\nY\t88\nZ\t77');
 
@@ -336,8 +340,12 @@ export const SingleCellSingleValuePaste: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     mockClipboard('NewName');
 
@@ -369,8 +377,12 @@ export const PasteQuotedTSVFromExcel: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     mockClipboard(
       '"Laptop4 wer we\nsdf sdf sdf sdf sd "\t991\t3\nMouse2\t25\t3',

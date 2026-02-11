@@ -106,8 +106,12 @@ export const RangeSelectionShiftClick: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     const cell11 = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(cell11);
@@ -141,8 +145,12 @@ export const RangeSelectionShiftArrow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     await userEvent.click(canvas.getByTestId('cell-row-2-age'));
     await waitFor(() => {
@@ -178,8 +186,12 @@ export const RangeMouseDrag: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     const cell11 = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(cell11);
@@ -212,8 +224,12 @@ export const RangeCopy: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     const clipboard = mockClipboard();
 
@@ -244,8 +260,12 @@ export const RangePaste: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     mockClipboard('X\t99\nY\t88');
 
@@ -288,8 +308,12 @@ export const RangeDelete: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Alice');
     expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Bob');
@@ -334,8 +358,12 @@ export const RangeClearOnEdit: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {

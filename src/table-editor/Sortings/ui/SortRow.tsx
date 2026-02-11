@@ -16,8 +16,7 @@ interface SortRowProps {
 export const SortRow = observer(
   ({ sort, index, model, availableFields }: SortRowProps) => {
     const handleFieldChange = (newField: string) => {
-      model.removeSort(sort.field);
-      model.addSort(newField, sort.direction);
+      model.replaceField(sort.field, newField);
     };
 
     return (

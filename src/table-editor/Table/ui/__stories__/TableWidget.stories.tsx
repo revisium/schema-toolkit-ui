@@ -126,8 +126,12 @@ export const SelectionWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const selection = state.selection as SelectionModel;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { selection } = (window as any).__testState as {
+      selection: SelectionModel;
+    };
 
     selection.toggle('row-1');
 

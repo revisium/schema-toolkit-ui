@@ -54,6 +54,17 @@ export class SortModel {
     this._notifyChange();
   }
 
+  replaceField(oldField: string, newField: string): void {
+    if (this._sorts.some((s) => s.field === newField)) {
+      return;
+    }
+    const entry = this._sorts.find((s) => s.field === oldField);
+    if (entry) {
+      entry.field = newField;
+      this._notifyChange();
+    }
+  }
+
   removeSort(field: string): void {
     this._sorts = this._sorts.filter((s) => s.field !== field);
     this._notifyChange();

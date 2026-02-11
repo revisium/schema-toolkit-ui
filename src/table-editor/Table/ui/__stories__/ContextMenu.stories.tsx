@@ -175,8 +175,12 @@ export const ContextMenuRange: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {
@@ -217,8 +221,12 @@ export const ContextMenuEdit: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     const nameCell = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(nameCell);
@@ -249,8 +257,12 @@ export const ContextMenuRangeFocusRestore: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const state = (window as any).__testState;
-    const cellFSM = state.cellFSM as CellFSM;
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
 
     const anchorCell = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(anchorCell);

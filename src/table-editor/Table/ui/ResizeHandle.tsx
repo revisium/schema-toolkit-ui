@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Box } from '@chakra-ui/react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 
 const MIN_COLUMN_WIDTH = 40;
@@ -16,6 +16,15 @@ export const ResizeHandle = observer(
     const startXRef = useRef(0);
     const startWidthRef = useRef(0);
     const rafRef = useRef(0);
+    const cleanupRef = useRef<(() => void) | null>(null);
+
+    useEffect(() => {
+      return () => {
+        if (cleanupRef.current) {
+          cleanupRef.current();
+        }
+      };
+    }, []);
 
     const handleMouseDown = useCallback(
       (e: React.MouseEvent) => {
@@ -42,15 +51,21 @@ export const ResizeHandle = observer(
           });
         };
 
-        const handleMouseUp = () => {
+        const cleanup = () => {
           cancelAnimationFrame(rafRef.current);
           setIsResizing(false);
           document.body.style.cursor = '';
           document.body.style.userSelect = '';
           document.removeEventListener('mousemove', handleMouseMove);
           document.removeEventListener('mouseup', handleMouseUp);
+          cleanupRef.current = null;
         };
 
+        const handleMouseUp = () => {
+          cleanup();
+        };
+
+        cleanupRef.current = cleanup;
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
       },

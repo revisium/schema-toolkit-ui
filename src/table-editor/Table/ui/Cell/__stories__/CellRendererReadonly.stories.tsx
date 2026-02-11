@@ -7,6 +7,7 @@ import type { JsonSchema } from '@revisium/schema-toolkit';
 import { createTableModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../../lib/initReactivity.js';
 import { FilterFieldType } from '../../../../shared/field-types.js';
+import { mockClipboard } from '../../../../__stories__/helpers.js';
 import type { SearchForeignKeySearchFn } from '../../../../../search-foreign-key/index.js';
 import type { ColumnSpec } from '../../../../Columns/model/types.js';
 import { CellFSM } from '../../../model/CellFSM.js';
@@ -275,19 +276,7 @@ export const CopyPasteInteractions: Story = {
     const canvas = within(canvasElement);
     const cell = canvas.getByTestId('cell-row-1-name');
 
-    let clipboardText = '';
-    const mockClipboard = {
-      writeText: (text: string) => {
-        clipboardText = text;
-        return Promise.resolve();
-      },
-      readText: () => Promise.resolve(clipboardText),
-    };
-    Object.defineProperty(navigator, 'clipboard', {
-      value: mockClipboard,
-      writable: true,
-      configurable: true,
-    });
+    const clipboard = mockClipboard();
 
     await userEvent.click(cell);
     await waitFor(() => {
@@ -295,15 +284,15 @@ export const CopyPasteInteractions: Story = {
     });
 
     await userEvent.keyboard('{Control>}c{/Control}');
-    expect(clipboardText).toBe('Hello');
+    expect(clipboard.getText()).toBe('Hello');
 
-    clipboardText = 'Pasted';
+    clipboard.setText('Pasted');
     await userEvent.keyboard('{Control>}v{/Control}');
     await waitFor(() => {
       expect(cell).toHaveTextContent('Pasted');
     });
 
-    expect(clipboardText).toBe('Pasted');
+    expect(clipboard.getText()).toBe('Pasted');
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
