@@ -60,7 +60,9 @@ function resolveColumn(
   }
 
   if (child.foreignKey() !== undefined) {
-    return createColumn(fieldPath, child, FilterFieldType.ForeignKey);
+    const col = createColumn(fieldPath, child, FilterFieldType.ForeignKey);
+    col.foreignKeyTableId = child.foreignKey();
+    return col;
   }
 
   const fieldType = NODE_TYPE_TO_FIELD_TYPE[child.nodeType()];
