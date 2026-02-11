@@ -5,6 +5,7 @@ import type { SortEntry, ViewSort } from './types.js';
 export class SortModel {
   private _sorts: SortEntry[] = [];
   private _availableFields: ColumnSpec[] = [];
+  private _isOpen = false;
   private _onChange: (() => void) | null = null;
 
   constructor() {
@@ -21,6 +22,14 @@ export class SortModel {
 
   get sortCount(): number {
     return this._sorts.length;
+  }
+
+  get isOpen(): boolean {
+    return this._isOpen;
+  }
+
+  setOpen(value: boolean): void {
+    this._isOpen = value;
   }
 
   get availableFields(): ColumnSpec[] {
@@ -43,6 +52,17 @@ export class SortModel {
     }
     this._sorts.push({ field, direction });
     this._notifyChange();
+  }
+
+  replaceField(oldField: string, newField: string): void {
+    if (this._sorts.some((s) => s.field === newField)) {
+      return;
+    }
+    const entry = this._sorts.find((s) => s.field === oldField);
+    if (entry) {
+      entry.field = newField;
+      this._notifyChange();
+    }
   }
 
   removeSort(field: string): void {

@@ -1,2 +1,2 @@
-export type { SortEntry, ViewSort } from './types';
-export { SortModel } from './SortModel';
+export type { SortEntry, ViewSort } from './types.js';
+export { SortModel } from './SortModel.js';

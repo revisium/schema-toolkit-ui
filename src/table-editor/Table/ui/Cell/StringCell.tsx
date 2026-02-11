@@ -14,7 +14,7 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
   const {
     cellRef,
     textRef,
-    editPosition,
+    getEditPosition,
     clickOffsetValue,
     appendCharValue,
     startEditing,
@@ -24,12 +24,17 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
     handleStartEditFromKeyboard,
   } = useTextareaCell(cell);
 
+  const trimValue = useCallback((localValue: string) => {
+    let trimmed = localValue;
+    while (trimmed.endsWith('\n')) {
+      trimmed = trimmed.slice(0, -1);
+    }
+    return trimmed;
+  }, []);
+
   const handleCommit = useCallback(
     (localValue: string) => {
-      let trimmed = localValue;
-      while (trimmed.endsWith('\n')) {
-        trimmed = trimmed.slice(0, -1);
-      }
+      const trimmed = trimValue(localValue);
       if (trimmed !== cell.displayValue) {
         cell.commitEdit(trimmed);
       } else {
@@ -37,8 +42,23 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
       }
       handleCommitted();
     },
-    [cell, handleCommitted],
+    [cell, handleCommitted, trimValue],
   );
+
+  const handleCommitEnter = useCallback(
+    (localValue: string) => {
+      const trimmed = trimValue(localValue);
+      if (trimmed === cell.displayValue) {
+        cell.commitEditAndMoveDown();
+      } else {
+        cell.commitEditAndMoveDown(trimmed);
+      }
+      handleCommitted();
+    },
+    [cell, handleCommitted, trimValue],
+  );
+
+  const editPosition = cell.isEditing ? getEditPosition() : null;
 
   return (
     <Box ref={cellRef}>
@@ -47,6 +67,7 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
         onDoubleClick={startEditing}
         onStartEdit={handleStartEditFromKeyboard}
         onTypeChar={handleTypeChar}
+        onDelete={() => cell.clearToDefault()}
       >
         <Text
           ref={textRef as React.RefObject<HTMLParagraphElement>}
@@ -60,7 +81,7 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
           {cell.displayValue}
         </Text>
       </CellWrapper>
-      {cell.isEditing && editPosition && (
+      {editPosition && (
         <CellTextareaEditor
           value={cell.displayValue}
           position={editPosition}
@@ -69,6 +90,7 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
           autoHeight
           allowShiftEnter
           onCommit={handleCommit}
+          onCommitEnter={handleCommitEnter}
           onCancel={handleCancel}
           testId="string-cell-input"
         />

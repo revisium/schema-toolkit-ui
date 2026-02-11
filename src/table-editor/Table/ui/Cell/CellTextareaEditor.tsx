@@ -16,8 +16,10 @@ interface CellTextareaEditorProps {
   autoHeight?: boolean;
   allowShiftEnter?: boolean;
   onCommit: (localValue: string) => void;
+  onCommitEnter?: (localValue: string) => void;
   onCancel: () => void;
   testId: string;
+  textAlign?: 'left' | 'right';
 }
 
 const MAX_VISIBLE_LINES = 3;
@@ -31,10 +33,12 @@ export const CellTextareaEditor: FC<CellTextareaEditorProps> = ({
   autoHeight = false,
   allowShiftEnter = false,
   onCommit,
+  onCommitEnter,
   onCancel,
   testId,
+  textAlign = 'left',
 }) => {
-  const initialValue = appendChar ? value + appendChar : value;
+  const initialValue = appendChar ?? value;
   const [localValue, setLocalValue] = useState(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const savedRef = useRef(false);
@@ -70,6 +74,18 @@ export const CellTextareaEditor: FC<CellTextareaEditorProps> = ({
     onCommit(localValue);
   }, [localValue, onCommit]);
 
+  const handleCommitEnter = useCallback(() => {
+    if (savedRef.current) {
+      return;
+    }
+    savedRef.current = true;
+    if (onCommitEnter) {
+      onCommitEnter(localValue);
+    } else {
+      onCommit(localValue);
+    }
+  }, [localValue, onCommit, onCommitEnter]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -83,10 +99,10 @@ export const CellTextareaEditor: FC<CellTextareaEditorProps> = ({
           return;
         }
         e.preventDefault();
-        handleCommit();
+        handleCommitEnter();
       }
     },
-    [handleCommit, onCancel, allowShiftEnter],
+    [handleCommitEnter, onCancel, allowShiftEnter],
   );
 
   const handleBlur = useCallback(() => {
@@ -121,6 +137,7 @@ export const CellTextareaEditor: FC<CellTextareaEditorProps> = ({
         fontFamily="inherit"
         fontSize="inherit"
         fontWeight="300"
+        textAlign={textAlign}
         lineHeight={`${LINE_HEIGHT}px`}
         resize="both"
         overflow="auto"

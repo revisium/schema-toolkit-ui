@@ -1,6 +1,6 @@
 import { FilterFieldType } from '../../../shared/field-types';
 import type { ColumnSpec } from '../../../Columns/model/types';
-import { InlineEditModel } from '../InlineEditModel';
+import { CellFSM } from '../CellFSM';
 import { CellVM } from '../CellVM';
 
 function col(overrides: Partial<ColumnSpec> & { field: string }): ColumnSpec {
@@ -34,15 +34,26 @@ interface MockNode {
   isObject(): boolean;
   isArray(): boolean;
   readonly isReadOnly: boolean;
+  readonly defaultValue: unknown;
   readonly value: unknown;
   setValue(v: unknown): void;
 }
 
 function createMockNode(
   value: unknown,
-  options: { isReadOnly?: boolean; isPrimitive?: boolean } = {},
+  options: {
+    isReadOnly?: boolean;
+    isPrimitive?: boolean;
+    defaultValue?: unknown;
+  } = {},
 ): MockNode {
   const { isReadOnly = false, isPrimitive: isPrim = true } = options;
+  let defaultVal: unknown;
+  if (options.defaultValue !== undefined) {
+    defaultVal = options.defaultValue;
+  } else if (isPrim) {
+    defaultVal = getDefaultForValue(value);
+  }
   let currentValue = value;
 
   return {
@@ -61,6 +72,9 @@ function createMockNode(
     get isReadOnly() {
       return isReadOnly;
     },
+    get defaultValue() {
+      return defaultVal;
+    },
     get value() {
       return currentValue;
     },
@@ -68,6 +82,19 @@ function createMockNode(
       currentValue = v;
     },
   };
+}
+
+function getDefaultForValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return '';
+  }
+  if (typeof value === 'number') {
+    return 0;
+  }
+  if (typeof value === 'boolean') {
+    return false;
+  }
+  return undefined;
 }
 
 function createMockRowModelFromNodes(entries: Array<[string, MockNode]>): {
@@ -82,10 +109,10 @@ function createMockRowModelFromNodes(entries: Array<[string, MockNode]>): {
 }
 
 describe('CellVM', () => {
-  let inlineEdit: InlineEditModel;
+  let cellFSM: CellFSM;
 
   beforeEach(() => {
-    inlineEdit = new InlineEditModel();
+    cellFSM = new CellFSM();
   });
 
   describe('value resolution', () => {
@@ -95,7 +122,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.value).toBe('Alice');
     });
@@ -106,7 +133,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'missing' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.value).toBeUndefined();
     });
@@ -119,7 +146,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.displayValue).toBe('Alice');
     });
@@ -130,7 +157,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'age', fieldType: FilterFieldType.Number }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.displayValue).toBe('42');
     });
@@ -141,7 +168,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'active', fieldType: FilterFieldType.Boolean }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.displayValue).toBe('true');
     });
@@ -152,7 +179,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.displayValue).toBe('');
     });
@@ -163,7 +190,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'missing' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.displayValue).toBe('');
     });
@@ -176,7 +203,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'meta' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.displayValue).toBe('{...}');
     });
@@ -189,7 +216,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'tags' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.displayValue).toBe('[3]');
     });
@@ -202,7 +229,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'missing' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.isReadOnly).toBe(true);
     });
@@ -213,7 +240,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.isReadOnly).toBe(false);
     });
@@ -226,7 +253,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'id', isSystem: true }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.isReadOnly).toBe(true);
     });
@@ -239,7 +266,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'meta' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.isReadOnly).toBe(true);
     });
@@ -252,7 +279,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.isEditable).toBe(true);
     });
@@ -265,20 +292,20 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'id', isSystem: true }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.isEditable).toBe(false);
     });
   });
 
   describe('focus and edit', () => {
-    it('isFocused delegates to inlineEdit', () => {
+    it('isFocused delegates to cellFSM', () => {
       const rowModel = createMockRowModel({ name: 'Alice' });
       const cell = new CellVM(
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       expect(cell.isFocused).toBe(false);
       cell.focus();
@@ -291,7 +318,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       cell.startEdit();
       expect(cell.isEditing).toBe(true);
@@ -305,7 +332,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'id', isSystem: true }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       cell.startEdit();
       expect(cell.isEditing).toBe(false);
@@ -318,7 +345,7 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       cell.startEdit();
       cell.commitEdit('Bob');
@@ -332,11 +359,94 @@ describe('CellVM', () => {
         rowModel as never,
         col({ field: 'name' }),
         'row-1',
-        inlineEdit,
+        cellFSM,
       );
       cell.startEdit();
       cell.cancelEdit();
       expect(cell.isEditing).toBe(false);
+    });
+
+    it('cancelEdit does not change node value', () => {
+      const node = createMockNode('Alice');
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+      );
+      cell.startEdit();
+      cell.cancelEdit();
+      expect(node.value).toBe('Alice');
+    });
+  });
+
+  describe('clearToDefault', () => {
+    it('resets value to schema default', () => {
+      const node = createMockNode('Hello', { defaultValue: '' });
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+      );
+      cell.clearToDefault();
+      expect(node.value).toBe('');
+    });
+
+    it('resets number value to schema default', () => {
+      const node = createMockNode(42, { defaultValue: 0 });
+      const rowModel = createMockRowModelFromNodes([['age', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'age', fieldType: FilterFieldType.Number }),
+        'row-1',
+        cellFSM,
+      );
+      cell.clearToDefault();
+      expect(node.value).toBe(0);
+    });
+
+    it('does nothing for readonly cell', () => {
+      const node = createMockNode('computed', {
+        isReadOnly: true,
+        defaultValue: '',
+      });
+      const rowModel = createMockRowModelFromNodes([['id', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'id', isSystem: true }),
+        'row-1',
+        cellFSM,
+      );
+      cell.clearToDefault();
+      expect(node.value).toBe('computed');
+    });
+
+    it('does nothing for non-primitive node', () => {
+      const node = createMockNode({ foo: 'bar' }, { isPrimitive: false });
+      const rowModel = createMockRowModelFromNodes([['meta', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'meta' }),
+        'row-1',
+        cellFSM,
+      );
+      cell.clearToDefault();
+      expect(node.value).toEqual({ foo: 'bar' });
+    });
+
+    it('does nothing for missing field', () => {
+      const rowModel = createMockRowModel({});
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'missing' }),
+        'row-1',
+        cellFSM,
+      );
+      cell.clearToDefault();
+      expect(cell.value).toBeUndefined();
     });
   });
 });

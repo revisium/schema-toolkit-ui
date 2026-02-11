@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Menu, Text } from '@chakra-ui/react';
+import { Button, Menu, Portal, Text } from '@chakra-ui/react';
 import { PiCaretDownBold } from 'react-icons/pi';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 
@@ -26,19 +26,21 @@ export const FieldSelect = observer(
             <PiCaretDownBold />
           </Button>
         </Menu.Trigger>
-        <Menu.Positioner>
-          <Menu.Content>
-            {fields.map((f) => (
-              <Menu.Item
-                key={f.field}
-                value={f.field}
-                onClick={() => onChange(f.field)}
-              >
-                {f.label}
-              </Menu.Item>
-            ))}
-          </Menu.Content>
-        </Menu.Positioner>
+        <Portal>
+          <Menu.Positioner zIndex="popover">
+            <Menu.Content>
+              {fields.map((f) => (
+                <Menu.Item
+                  key={f.field}
+                  value={f.field}
+                  onClick={() => onChange(f.field)}
+                >
+                  {f.label}
+                </Menu.Item>
+              ))}
+            </Menu.Content>
+          </Menu.Positioner>
+        </Portal>
       </Menu.Root>
     );
   },

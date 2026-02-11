@@ -14,7 +14,7 @@ export const NumberCell = observer(({ cell }: NumberCellProps) => {
   const {
     cellRef,
     textRef,
-    editPosition,
+    getEditPosition,
     clickOffsetValue,
     appendCharValue,
     startEditing,
@@ -39,6 +39,21 @@ export const NumberCell = observer(({ cell }: NumberCellProps) => {
     [cell, handleCommitted],
   );
 
+  const handleCommitEnter = useCallback(
+    (localValue: string) => {
+      const parsed = Number(localValue);
+      if (Number.isNaN(parsed) || String(parsed) === cell.displayValue) {
+        cell.commitEditAndMoveDown();
+      } else {
+        cell.commitEditAndMoveDown(parsed);
+      }
+      handleCommitted();
+    },
+    [cell, handleCommitted],
+  );
+
+  const editPosition = cell.isEditing ? getEditPosition() : null;
+
   return (
     <Box ref={cellRef}>
       <CellWrapper
@@ -46,6 +61,7 @@ export const NumberCell = observer(({ cell }: NumberCellProps) => {
         onDoubleClick={startEditing}
         onStartEdit={handleStartEditFromKeyboard}
         onTypeChar={handleTypeChar}
+        onDelete={() => cell.clearToDefault()}
       >
         <Text
           ref={textRef as React.RefObject<HTMLParagraphElement>}
@@ -60,15 +76,17 @@ export const NumberCell = observer(({ cell }: NumberCellProps) => {
           {cell.displayValue}
         </Text>
       </CellWrapper>
-      {cell.isEditing && editPosition && (
+      {editPosition && (
         <CellTextareaEditor
           value={cell.displayValue}
           position={editPosition}
           clickOffset={clickOffsetValue}
           appendChar={appendCharValue}
           onCommit={handleCommit}
+          onCommitEnter={handleCommitEnter}
           onCancel={handleCancel}
           testId="number-cell-input"
+          textAlign="right"
         />
       )}
     </Box>

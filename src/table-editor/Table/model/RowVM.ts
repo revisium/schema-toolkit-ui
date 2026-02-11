@@ -1,26 +1,26 @@
 import { makeAutoObservable } from 'mobx';
 import type { RowModel } from '@revisium/schema-toolkit';
 import type { ColumnSpec } from '../../Columns/model/types.js';
-import type { InlineEditModel } from './InlineEditModel.js';
+import type { CellFSM } from './CellFSM.js';
 import type { SelectionModel } from './SelectionModel.js';
 import { CellVM } from './CellVM.js';
 
 export class RowVM {
   private readonly _rowModel: RowModel;
   private readonly _rowId: string;
-  private readonly _inlineEdit: InlineEditModel;
+  private readonly _cellFSM: CellFSM;
   private readonly _selection: SelectionModel;
   private readonly _cellCache = new Map<string, CellVM>();
 
   constructor(
     rowModel: RowModel,
     rowId: string,
-    inlineEdit: InlineEditModel,
+    cellFSM: CellFSM,
     selection: SelectionModel,
   ) {
     this._rowModel = rowModel;
     this._rowId = rowId;
-    this._inlineEdit = inlineEdit;
+    this._cellFSM = cellFSM;
     this._selection = selection;
     makeAutoObservable(this, {}, { autoBind: true });
   }
@@ -46,12 +46,7 @@ export class RowVM {
     if (cached) {
       return cached;
     }
-    const cell = new CellVM(
-      this._rowModel,
-      column,
-      this._rowId,
-      this._inlineEdit,
-    );
+    const cell = new CellVM(this._rowModel, column, this._rowId, this._cellFSM);
     this._cellCache.set(column.field, cell);
     return cell;
   }
