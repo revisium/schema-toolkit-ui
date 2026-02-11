@@ -38,7 +38,7 @@ export const CellTextareaEditor: FC<CellTextareaEditorProps> = ({
   testId,
   textAlign = 'left',
 }) => {
-  const initialValue = appendChar !== undefined ? appendChar : value;
+  const initialValue = appendChar ?? value;
   const [localValue, setLocalValue] = useState(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const savedRef = useRef(false);

@@ -96,11 +96,7 @@ export const SortingsWidget = observer(
               </HStack>
 
               <Box p={3}>
-                {!model.hasSorts ? (
-                  <Text fontSize="sm" color="gray.500">
-                    No sorts. Add a sort to order rows.
-                  </Text>
-                ) : (
+                {model.hasSorts ? (
                   <Box display="flex" flexDirection="column" gap={2}>
                     {model.sorts.map((sort, index) => (
                       <SortRow
@@ -112,6 +108,10 @@ export const SortingsWidget = observer(
                       />
                     ))}
                   </Box>
+                ) : (
+                  <Text fontSize="sm" color="gray.500">
+                    No sorts. Add a sort to order rows.
+                  </Text>
                 )}
               </Box>
 

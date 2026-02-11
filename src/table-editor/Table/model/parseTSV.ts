@@ -1,65 +1,88 @@
+function hasNonEmptyField(row: string[]): boolean {
+  return row.some((f) => f.length > 0);
+}
+
+interface ParserState {
+  rows: string[][];
+  currentRow: string[];
+  currentField: string;
+  inQuotes: boolean;
+  i: number;
+}
+
+function processQuotedChar(state: ParserState, text: string): void {
+  const ch = text[state.i];
+  if (ch === '"' && state.i + 1 < text.length && text[state.i + 1] === '"') {
+    state.currentField += '"';
+    state.i += 2;
+  } else if (ch === '"') {
+    state.inQuotes = false;
+    state.i++;
+  } else {
+    state.currentField += ch;
+    state.i++;
+  }
+}
+
+function finishRow(state: ParserState): void {
+  state.currentRow.push(state.currentField);
+  state.currentField = '';
+  if (hasNonEmptyField(state.currentRow)) {
+    state.rows.push(state.currentRow);
+  }
+  state.currentRow = [];
+}
+
+function processUnquotedChar(state: ParserState, text: string): void {
+  const ch = text[state.i];
+  if (ch === '"' && state.currentField.length === 0) {
+    state.inQuotes = true;
+    state.i++;
+  } else if (ch === '\t') {
+    state.currentRow.push(state.currentField);
+    state.currentField = '';
+    state.i++;
+  } else if (ch === '\n') {
+    finishRow(state);
+    state.i++;
+  } else if (
+    ch === '\r' &&
+    state.i + 1 < text.length &&
+    text[state.i + 1] === '\n'
+  ) {
+    finishRow(state);
+    state.i += 2;
+  } else {
+    state.currentField += ch;
+    state.i++;
+  }
+}
+
 export function parseTSV(text: string): string[][] {
   if (text.length === 0) {
     return [];
   }
 
-  const rows: string[][] = [];
-  let currentRow: string[] = [];
-  let currentField = '';
-  let inQuotes = false;
-  let i = 0;
+  const state: ParserState = {
+    rows: [],
+    currentRow: [],
+    currentField: '',
+    inQuotes: false,
+    i: 0,
+  };
 
-  while (i < text.length) {
-    const ch = text[i];
-
-    if (inQuotes) {
-      if (ch === '"') {
-        if (i + 1 < text.length && text[i + 1] === '"') {
-          currentField += '"';
-          i += 2;
-        } else {
-          inQuotes = false;
-          i++;
-        }
-      } else {
-        currentField += ch;
-        i++;
-      }
+  while (state.i < text.length) {
+    if (state.inQuotes) {
+      processQuotedChar(state, text);
     } else {
-      if (ch === '"' && currentField.length === 0) {
-        inQuotes = true;
-        i++;
-      } else if (ch === '\t') {
-        currentRow.push(currentField);
-        currentField = '';
-        i++;
-      } else if (ch === '\n') {
-        currentRow.push(currentField);
-        currentField = '';
-        if (currentRow.length > 0 && currentRow.some((f) => f.length > 0)) {
-          rows.push(currentRow);
-        }
-        currentRow = [];
-        i++;
-      } else if (ch === '\r' && i + 1 < text.length && text[i + 1] === '\n') {
-        currentRow.push(currentField);
-        currentField = '';
-        if (currentRow.length > 0 && currentRow.some((f) => f.length > 0)) {
-          rows.push(currentRow);
-        }
-        currentRow = [];
-        i += 2;
-      } else {
-        currentField += ch;
-        i++;
-      }
+      processUnquotedChar(state, text);
     }
   }
 
-  currentRow.push(currentField);
-  if (currentRow.length > 0 && currentRow.some((f) => f.length > 0)) {
-    rows.push(currentRow);
+  state.currentRow.push(state.currentField);
+  if (hasNonEmptyField(state.currentRow)) {
+    state.rows.push(state.currentRow);
   }
 
-  return rows;
+  return state.rows;
 }

@@ -201,30 +201,51 @@ export class CellVM {
 
   applyPastedText(text: string): void {
     const node = this._getNode();
-    if (!node || !node.isPrimitive()) {
+    if (!node?.isPrimitive()) {
       return;
     }
     const nodeType = typeof node.getPlainValue();
     if (nodeType === 'string') {
-      let trimmed = text;
-      while (trimmed.endsWith('\n')) {
-        trimmed = trimmed.slice(0, -1);
-      }
-      if (trimmed !== this.displayValue) {
-        node.setValue(trimmed);
-      }
+      this._applyPastedString(node, text);
     } else if (nodeType === 'number') {
-      const parsed = Number(text);
-      if (!Number.isNaN(parsed) && String(parsed) !== this.displayValue) {
-        node.setValue(parsed);
-      }
+      this._applyPastedNumber(node, text);
     } else if (nodeType === 'boolean') {
-      const lower = text.trim().toLowerCase();
-      if (lower === 'true' || lower === 'false') {
-        const value = lower === 'true';
-        if (String(value) !== this.displayValue) {
-          node.setValue(value);
-        }
+      this._applyPastedBoolean(node, text);
+    }
+  }
+
+  private _applyPastedString(
+    node: ReturnType<RowModel['get']> & { setValue(v: unknown): void },
+    text: string,
+  ): void {
+    let trimmed = text;
+    while (trimmed.endsWith('\n')) {
+      trimmed = trimmed.slice(0, -1);
+    }
+    if (trimmed !== this.displayValue) {
+      node.setValue(trimmed);
+    }
+  }
+
+  private _applyPastedNumber(
+    node: ReturnType<RowModel['get']> & { setValue(v: unknown): void },
+    text: string,
+  ): void {
+    const parsed = Number(text);
+    if (!Number.isNaN(parsed) && String(parsed) !== this.displayValue) {
+      node.setValue(parsed);
+    }
+  }
+
+  private _applyPastedBoolean(
+    node: ReturnType<RowModel['get']> & { setValue(v: unknown): void },
+    text: string,
+  ): void {
+    const lower = text.trim().toLowerCase();
+    if (lower === 'true' || lower === 'false') {
+      const value = lower === 'true';
+      if (String(value) !== this.displayValue) {
+        node.setValue(value);
       }
     }
   }

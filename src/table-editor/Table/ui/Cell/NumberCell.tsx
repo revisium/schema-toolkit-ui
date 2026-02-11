@@ -42,12 +42,10 @@ export const NumberCell = observer(({ cell }: NumberCellProps) => {
   const handleCommitEnter = useCallback(
     (localValue: string) => {
       const parsed = Number(localValue);
-      if (Number.isNaN(parsed)) {
+      if (Number.isNaN(parsed) || String(parsed) === cell.displayValue) {
         cell.commitEditAndMoveDown();
-      } else if (String(parsed) !== cell.displayValue) {
-        cell.commitEditAndMoveDown(parsed);
       } else {
-        cell.commitEditAndMoveDown();
+        cell.commitEditAndMoveDown(parsed);
       }
       handleCommitted();
     },

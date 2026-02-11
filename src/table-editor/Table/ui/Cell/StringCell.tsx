@@ -48,10 +48,10 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
   const handleCommitEnter = useCallback(
     (localValue: string) => {
       const trimmed = trimValue(localValue);
-      if (trimmed !== cell.displayValue) {
-        cell.commitEditAndMoveDown(trimmed);
-      } else {
+      if (trimmed === cell.displayValue) {
         cell.commitEditAndMoveDown();
+      } else {
+        cell.commitEditAndMoveDown(trimmed);
       }
       handleCommitted();
     },

@@ -19,6 +19,54 @@ interface CellWrapperProps extends PropsWithChildren {
   onDelete?: () => void;
 }
 
+function handleArrowKey(
+  cell: CellVM,
+  e: React.KeyboardEvent,
+  shiftAction: () => void,
+  moveAction: () => void,
+): void {
+  e.preventDefault();
+  if (e.shiftKey) {
+    shiftAction();
+  } else if (cell.hasRangeSelection) {
+    cell.focus();
+  } else {
+    moveAction();
+  }
+}
+
+function handleEditableKeys(
+  cell: CellVM,
+  e: React.KeyboardEvent,
+  onStartEdit?: () => void,
+  onDoubleClick?: (clientX?: number) => void,
+  onTypeChar?: (char: string) => void,
+  onDelete?: () => void,
+): void {
+  if (cell.isReadOnly) {
+    return;
+  }
+  const hasRange = cell.hasRangeSelection;
+  if (!hasRange && e.key === 'Enter') {
+    e.preventDefault();
+    if (onStartEdit) {
+      onStartEdit();
+    } else if (onDoubleClick) {
+      onDoubleClick();
+    }
+  } else if (
+    !hasRange &&
+    (e.key === 'Delete' || e.key === 'Backspace') &&
+    onDelete
+  ) {
+    e.preventDefault();
+    onDelete();
+  } else if (isPrintableKey(e) && onTypeChar) {
+    e.preventDefault();
+    onTypeChar(e.key);
+  }
+}
+
 export const CellWrapper: FC<CellWrapperProps> = observer(
   ({ cell, children, onDoubleClick, onStartEdit, onTypeChar, onDelete }) => {
     const cellRef = useRef<HTMLDivElement>(null);
@@ -103,8 +151,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
         }
 
         const isMod = e.ctrlKey || e.metaKey;
-        const hasRange = cell.hasRangeSelection;
-        if (isMod && e.key === 'c' && !hasRange) {
+        if (isMod && e.key === 'c' && !cell.hasRangeSelection) {
           e.preventDefault();
           void cell.copyToClipboard();
           return;
@@ -114,69 +161,31 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
         }
         if (e.key === 'Escape') {
           e.preventDefault();
-          if (hasRange) {
+          if (cell.hasRangeSelection) {
             cell.focus();
           } else {
             cell.blur();
           }
         } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (e.shiftKey) {
-            cell.shiftMoveUp();
-          } else if (hasRange) {
-            cell.focus();
-          } else {
-            cell.moveUp();
-          }
+          handleArrowKey(cell, e, cell.shiftMoveUp, cell.moveUp);
         } else if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          if (e.shiftKey) {
-            cell.shiftMoveDown();
-          } else if (hasRange) {
-            cell.focus();
-          } else {
-            cell.moveDown();
-          }
+          handleArrowKey(cell, e, cell.shiftMoveDown, cell.moveDown);
         } else if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          if (e.shiftKey) {
-            cell.shiftMoveLeft();
-          } else if (hasRange) {
-            cell.focus();
-          } else {
-            cell.moveLeft();
-          }
+          handleArrowKey(cell, e, cell.shiftMoveLeft, cell.moveLeft);
         } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          if (e.shiftKey) {
-            cell.shiftMoveRight();
-          } else if (hasRange) {
-            cell.focus();
-          } else {
-            cell.moveRight();
-          }
+          handleArrowKey(cell, e, cell.shiftMoveRight, cell.moveRight);
         } else if (e.key === 'Tab') {
           e.preventDefault();
           cell.handleTab(e.shiftKey);
-        } else if (!cell.isReadOnly) {
-          if (!hasRange && e.key === 'Enter') {
-            e.preventDefault();
-            if (onStartEdit) {
-              onStartEdit();
-            } else if (onDoubleClick) {
-              onDoubleClick();
-            }
-          } else if (
-            !hasRange &&
-            (e.key === 'Delete' || e.key === 'Backspace') &&
-            onDelete
-          ) {
-            e.preventDefault();
-            onDelete();
-          } else if (isPrintableKey(e) && onTypeChar) {
-            e.preventDefault();
-            onTypeChar(e.key);
-          }
+        } else {
+          handleEditableKeys(
+            cell,
+            e,
+            onStartEdit,
+            onDoubleClick,
+            onTypeChar,
+            onDelete,
+          );
         }
       },
       [

@@ -42,9 +42,9 @@ export function useTextareaCell(cell: CellVM): TextareaCellState {
         return;
       }
       const offset =
-        clientX !== undefined
-          ? getClickOffset(textRef.current, cell.displayValue, clientX)
-          : undefined;
+        clientX === undefined
+          ? undefined
+          : getClickOffset(textRef.current, cell.displayValue, clientX);
       cell.startEditWithDoubleClick(offset);
     },
     [cell],
