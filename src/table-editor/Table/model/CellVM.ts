@@ -1,29 +1,33 @@
 import { makeAutoObservable } from 'mobx';
 import type { RowModel } from '@revisium/schema-toolkit';
 import type { ColumnSpec } from '../../Columns/model/types.js';
-import type { InlineEditModel } from './InlineEditModel.js';
+import type { CellFSM, EditTrigger, SelectionEdges } from './CellFSM.js';
 
 export class CellVM {
   private readonly _rowModel: RowModel;
   private readonly _column: ColumnSpec;
   private readonly _rowId: string;
-  private readonly _inlineEdit: InlineEditModel;
+  private readonly _cellFSM: CellFSM;
 
   constructor(
     rowModel: RowModel,
     column: ColumnSpec,
     rowId: string,
-    inlineEdit: InlineEditModel,
+    cellFSM: CellFSM,
   ) {
     this._rowModel = rowModel;
     this._column = column;
     this._rowId = rowId;
-    this._inlineEdit = inlineEdit;
+    this._cellFSM = cellFSM;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
   get field(): string {
     return this._column.field;
+  }
+
+  get jsonPath(): string {
+    return `${this._rowId}/${this._column.field}`;
   }
 
   get column(): ColumnSpec {
@@ -92,19 +96,38 @@ export class CellVM {
   }
 
   get isFocused(): boolean {
-    const cell = this._inlineEdit.focusedCell;
-    if (!cell) {
-      return false;
-    }
-    return cell.rowId === this._rowId && cell.field === this._column.field;
+    return this._cellFSM.isCellFocused(this._rowId, this._column.field);
   }
 
   get isEditing(): boolean {
-    return this.isFocused && this._inlineEdit.isEditing;
+    return this._cellFSM.isCellEditing(this._rowId, this._column.field);
+  }
+
+  get isAnchor(): boolean {
+    return this._cellFSM.isCellAnchor(this._rowId, this._column.field);
+  }
+
+  get isInSelection(): boolean {
+    return this._cellFSM.isCellInSelection(this._rowId, this._column.field);
+  }
+
+  get selectionEdges(): SelectionEdges | null {
+    return this._cellFSM.getCellSelectionEdges(this._rowId, this._column.field);
+  }
+
+  get hasRangeSelection(): boolean {
+    return this._cellFSM.hasSelection;
+  }
+
+  get editTrigger(): EditTrigger | null {
+    if (!this.isEditing) {
+      return null;
+    }
+    return this._cellFSM.editTrigger;
   }
 
   focus(): void {
-    this._inlineEdit.focusCell({
+    this._cellFSM.focusCell({
       rowId: this._rowId,
       field: this._column.field,
     });
@@ -115,7 +138,23 @@ export class CellVM {
       return;
     }
     this.focus();
-    this._inlineEdit.startEdit();
+    this._cellFSM.enterEdit();
+  }
+
+  startEditWithChar(char: string): void {
+    if (!this.isEditable) {
+      return;
+    }
+    this.focus();
+    this._cellFSM.typeChar(char);
+  }
+
+  startEditWithDoubleClick(clickOffset?: number): void {
+    if (!this.isEditable) {
+      return;
+    }
+    this.focus();
+    this._cellFSM.doubleClick(clickOffset);
   }
 
   commitEdit(newValue: unknown): void {
@@ -123,15 +162,123 @@ export class CellVM {
     if (node?.isPrimitive()) {
       node.setValue(newValue);
     }
-    this._inlineEdit.commitEdit();
+    this._cellFSM.commit();
+  }
+
+  commitEditAndMoveDown(newValue?: unknown): void {
+    if (newValue !== undefined) {
+      const node = this._getNode();
+      if (node?.isPrimitive()) {
+        node.setValue(newValue);
+      }
+    }
+    this._cellFSM.commitAndMoveDown();
   }
 
   cancelEdit(): void {
-    this._inlineEdit.cancelEdit();
+    this._cellFSM.cancel();
+  }
+
+  clearToDefault(): void {
+    const node = this._getNode();
+    if (!node || !node.isPrimitive() || node.isReadOnly) {
+      return;
+    }
+    node.setValue(node.defaultValue);
+  }
+
+  async copyToClipboard(): Promise<void> {
+    await navigator.clipboard.writeText(this.displayValue);
+  }
+
+  async pasteFromClipboard(): Promise<void> {
+    if (!this.isEditable) {
+      return;
+    }
+    const text = await navigator.clipboard.readText();
+    this.applyPastedText(text);
+  }
+
+  applyPastedText(text: string): void {
+    const node = this._getNode();
+    if (!node || !node.isPrimitive()) {
+      return;
+    }
+    const nodeType = typeof node.getPlainValue();
+    if (nodeType === 'string') {
+      let trimmed = text;
+      while (trimmed.endsWith('\n')) {
+        trimmed = trimmed.slice(0, -1);
+      }
+      if (trimmed !== this.displayValue) {
+        node.setValue(trimmed);
+      }
+    } else if (nodeType === 'number') {
+      const parsed = Number(text);
+      if (!Number.isNaN(parsed) && String(parsed) !== this.displayValue) {
+        node.setValue(parsed);
+      }
+    } else if (nodeType === 'boolean') {
+      const lower = text.trim().toLowerCase();
+      if (lower === 'true' || lower === 'false') {
+        const value = lower === 'true';
+        if (String(value) !== this.displayValue) {
+          node.setValue(value);
+        }
+      }
+    }
   }
 
   blur(): void {
-    this._inlineEdit.blur();
+    this._cellFSM.blur();
+  }
+
+  moveUp(): void {
+    this._cellFSM.moveUp();
+  }
+
+  moveDown(): void {
+    this._cellFSM.moveDown();
+  }
+
+  moveLeft(): void {
+    this._cellFSM.moveLeft();
+  }
+
+  moveRight(): void {
+    this._cellFSM.moveRight();
+  }
+
+  handleTab(shift: boolean): void {
+    this._cellFSM.handleTab(shift);
+  }
+
+  selectTo(): void {
+    this._cellFSM.selectTo({ rowId: this._rowId, field: this._column.field });
+  }
+
+  shiftMoveUp(): void {
+    this._cellFSM.shiftMoveUp();
+  }
+
+  shiftMoveDown(): void {
+    this._cellFSM.shiftMoveDown();
+  }
+
+  shiftMoveLeft(): void {
+    this._cellFSM.shiftMoveLeft();
+  }
+
+  shiftMoveRight(): void {
+    this._cellFSM.shiftMoveRight();
+  }
+
+  dragStart(): void {
+    this._cellFSM.dragStart({ rowId: this._rowId, field: this._column.field });
+  }
+
+  dragExtend(): void {
+    this._cellFSM.dragExtend({ rowId: this._rowId, field: this._column.field });
   }
 
   private _getNode() {

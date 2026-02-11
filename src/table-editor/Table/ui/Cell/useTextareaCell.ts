@@ -1,11 +1,11 @@
-import { type RefObject, useCallback, useRef, useState } from 'react';
+import { type RefObject, useCallback, useRef } from 'react';
 import type { CellVM } from '../../model/CellVM.js';
 import { type CellPosition, getClickOffset } from './cellEditorUtils.js';
 
 interface TextareaCellState {
   cellRef: RefObject<HTMLDivElement | null>;
   textRef: RefObject<HTMLParagraphElement | null>;
-  editPosition: CellPosition | null;
+  getEditPosition: () => CellPosition | null;
   clickOffsetValue: number | undefined;
   appendCharValue: string | undefined;
   startEditing: (clientX?: number) => void;
@@ -18,40 +18,36 @@ interface TextareaCellState {
 export function useTextareaCell(cell: CellVM): TextareaCellState {
   const cellRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLParagraphElement>(null);
-  const [editPosition, setEditPosition] = useState<CellPosition | null>(null);
-  const [clickOffsetValue, setClickOffsetValue] = useState<
-    number | undefined
-  >();
-  const [appendCharValue, setAppendCharValue] = useState<string | undefined>();
 
-  const computePosition = useCallback(() => {
-    if (cellRef.current) {
-      const rect = cellRef.current.getBoundingClientRect();
-      setEditPosition({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-      });
+  const getEditPosition = useCallback((): CellPosition | null => {
+    if (!cellRef.current) {
+      return null;
     }
+    const rect = cellRef.current.getBoundingClientRect();
+    return {
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+    };
   }, []);
+
+  const trigger = cell.editTrigger;
+  const clickOffsetValue =
+    trigger?.type === 'doubleClick' ? trigger.clickOffset : undefined;
+  const appendCharValue = trigger?.type === 'char' ? trigger.char : undefined;
 
   const startEditing = useCallback(
     (clientX?: number) => {
       if (!cell.isEditable) {
         return;
       }
-      computePosition();
-      if (clientX !== undefined) {
-        setClickOffsetValue(
-          getClickOffset(textRef.current, cell.displayValue, clientX),
-        );
-      } else {
-        setClickOffsetValue(undefined);
-      }
-      setAppendCharValue(undefined);
-      cell.startEdit();
+      const offset =
+        clientX !== undefined
+          ? getClickOffset(textRef.current, cell.displayValue, clientX)
+          : undefined;
+      cell.startEditWithDoubleClick(offset);
     },
-    [cell, computePosition],
+    [cell],
   );
 
   const handleTypeChar = useCallback(
@@ -59,31 +55,28 @@ export function useTextareaCell(cell: CellVM): TextareaCellState {
       if (!cell.isEditable) {
         return;
       }
-      computePosition();
-      setClickOffsetValue(undefined);
-      setAppendCharValue(char);
-      cell.startEdit();
+      cell.startEditWithChar(char);
     },
-    [cell, computePosition],
+    [cell],
   );
 
-  const handleCommitted = useCallback(() => {
-    setEditPosition(null);
-  }, []);
+  const handleCommitted = useCallback(() => {}, []);
 
   const handleCancel = useCallback(() => {
     cell.cancelEdit();
-    setEditPosition(null);
   }, [cell]);
 
   const handleStartEditFromKeyboard = useCallback(() => {
-    startEditing();
-  }, [startEditing]);
+    if (!cell.isEditable) {
+      return;
+    }
+    cell.startEdit();
+  }, [cell]);
 
   return {
     cellRef,
     textRef,
-    editPosition,
+    getEditPosition,
     clickOffsetValue,
     appendCharValue,
     startEditing,

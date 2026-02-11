@@ -140,49 +140,130 @@ const StoryWrapper = observer(
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/CellRenderer',
+  title: 'TableEditor/CellRenderer/Readonly',
   decorators: [(Story) => <Story />],
 };
 export default meta;
 type Story = StoryObj<typeof StoryWrapper>;
 
-export const StringCell: Story = {
+export const ReadonlyCellFocus: Story = {
+  tags: ['test'],
   args: {
-    field: 'name',
+    field: 'greeting',
     fieldType: FilterFieldType.String,
-    schema: createSchema({ name: 'string' }),
-    initialData: { name: 'Hello World' },
+    schema: createSchema({
+      greeting: { type: 'string', readOnly: true },
+    }),
+    initialData: { greeting: 'Hello, World' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cell = canvas.getByTestId('cell-row-1-greeting');
+
+    expect(cell).toHaveTextContent('Hello, World');
+    expect(cell).toHaveAttribute('tabindex', '-1');
+
+    await userEvent.click(cell);
+    await waitFor(() => {
+      expect(cell).toHaveAttribute('tabindex', '0');
+    });
+    expect(cell).toHaveTextContent('readonly');
+
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-testid="string-cell-input"]'),
+      ).toBeNull();
+    });
+    expect(cell).toHaveAttribute('tabindex', '0');
+
+    await userEvent.keyboard('X');
+    expect(
+      document.querySelector('[data-testid="string-cell-input"]'),
+    ).toBeNull();
+    expect(cell).toHaveAttribute('tabindex', '0');
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(cell).toHaveAttribute('tabindex', '-1');
+    });
   },
 };
 
-export const NumberCell: Story = {
+export const FormulaCell: Story = {
   args: {
-    field: 'age',
+    field: 'greeting',
+    fieldType: FilterFieldType.String,
+    schema: createSchema({
+      name: 'string',
+      greeting: { type: 'string', readOnly: true, formula: '"Hello, " + name' },
+    }),
+    initialData: { name: 'Alice' },
+  },
+};
+
+export const ReadonlyNumberCell: Story = {
+  args: {
+    field: 'total',
     fieldType: FilterFieldType.Number,
-    schema: createSchema({ age: 'number' }),
-    initialData: { age: 42 },
+    schema: createSchema({
+      total: { type: 'number', readOnly: true },
+    }),
+    initialData: { total: 1998 },
   },
 };
 
-export const BooleanTrue: Story = {
+export const ReadonlyBooleanCell: Story = {
   args: {
-    field: 'active',
+    field: 'expensive',
     fieldType: FilterFieldType.Boolean,
-    schema: createSchema({ active: 'boolean' }),
-    initialData: { active: true },
+    schema: createSchema({
+      expensive: { type: 'boolean', readOnly: true },
+    }),
+    initialData: { expensive: true },
   },
 };
 
-export const BooleanFalse: Story = {
+export const ReadonlyNumberCellFocus: Story = {
+  tags: ['test'],
   args: {
-    field: 'active',
-    fieldType: FilterFieldType.Boolean,
-    schema: createSchema({ active: 'boolean' }),
-    initialData: { active: false },
+    field: 'total',
+    fieldType: FilterFieldType.Number,
+    schema: createSchema({
+      total: { type: 'number', readOnly: true },
+    }),
+    initialData: { total: 1998 },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cell = canvas.getByTestId('cell-row-1-total');
+
+    expect(cell).toHaveTextContent('1998');
+
+    await userEvent.click(cell);
+    await waitFor(() => {
+      expect(cell).toHaveAttribute('tabindex', '0');
+    });
+    expect(cell).toHaveTextContent('readonly');
+
+    await userEvent.keyboard('{Enter}');
+    expect(
+      document.querySelector('[data-testid="number-cell-input"]'),
+    ).toBeNull();
+
+    await userEvent.keyboard('5');
+    expect(
+      document.querySelector('[data-testid="number-cell-input"]'),
+    ).toBeNull();
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(cell).toHaveAttribute('tabindex', '-1');
+    });
   },
 };
 
-export const CellInteractions: Story = {
+export const CopyPasteInteractions: Story = {
   tags: ['test'],
   args: {
     field: 'name',
@@ -194,32 +275,18 @@ export const CellInteractions: Story = {
     const canvas = within(canvasElement);
     const cell = canvas.getByTestId('cell-row-1-name');
 
-    await userEvent.click(cell);
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '-1');
-    });
-
-    await userEvent.dblClick(cell);
-    const input = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    await userEvent.clear(input);
-    await userEvent.type(input, 'New Value');
-    input.blur();
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
-        'New Value',
-      );
+    let clipboardText = '';
+    const mockClipboard = {
+      writeText: (text: string) => {
+        clipboardText = text;
+        return Promise.resolve();
+      },
+      readText: () => Promise.resolve(clipboardText),
+    };
+    Object.defineProperty(navigator, 'clipboard', {
+      value: mockClipboard,
+      writable: true,
+      configurable: true,
     });
 
     await userEvent.click(cell);
@@ -227,72 +294,16 @@ export const CellInteractions: Story = {
       expect(cell).toHaveAttribute('tabindex', '0');
     });
 
-    await userEvent.keyboard('{Enter}');
-    const input2 = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
+    await userEvent.keyboard('{Control>}c{/Control}');
+    expect(clipboardText).toBe('Hello');
 
-    await userEvent.type(input2, ' World');
-    await userEvent.keyboard('{Escape}');
+    clipboardText = 'Pasted';
+    await userEvent.keyboard('{Control>}v{/Control}');
     await waitFor(() => {
-      expect(
-        document.querySelector('[data-testid="string-cell-input"]'),
-      ).toBeNull();
-    });
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
-      'New Value',
-    );
-
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
+      expect(cell).toHaveTextContent('Pasted');
     });
 
-    await userEvent.keyboard('X');
-    const input3 = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    expect(input3.value).toBe('X');
-    input3.blur();
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('X');
-    });
-
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('1');
-    const input4 = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    expect(input4.value).toBe('1');
-    input4.blur();
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('1');
-    });
-
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('{Delete}');
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('');
-    });
+    expect(clipboardText).toBe('Pasted');
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
@@ -301,72 +312,38 @@ export const CellInteractions: Story = {
   },
 };
 
-export const BooleanCellToggle: Story = {
+export const ReadonlyBooleanCellFocus: Story = {
   tags: ['test'],
   args: {
-    field: 'active',
+    field: 'expensive',
     fieldType: FilterFieldType.Boolean,
-    schema: createSchema({ active: 'boolean' }),
-    initialData: { active: true },
+    schema: createSchema({
+      expensive: { type: 'boolean', readOnly: true },
+    }),
+    initialData: { expensive: true },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cell = canvas.getByTestId('cell-row-1-active');
+    const cell = canvas.getByTestId('cell-row-1-expensive');
 
     expect(cell).toHaveTextContent('true');
 
     await userEvent.click(cell);
+    await waitFor(() => {
+      expect(cell).toHaveAttribute('tabindex', '0');
+    });
+    expect(cell).toHaveTextContent('readonly');
 
     await userEvent.dblClick(cell);
-
-    const falseOption = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="boolean-option-false"]',
-      ) as HTMLElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    await userEvent.click(falseOption);
-
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-active')).toHaveTextContent(
-        'false',
-      );
-    });
-  },
-};
-
-export const NumberCellEdit: Story = {
-  tags: ['test'],
-  args: {
-    field: 'age',
-    fieldType: FilterFieldType.Number,
-    schema: createSchema({ age: 'number' }),
-    initialData: { age: 42 },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const cell = canvas.getByTestId('cell-row-1-age');
-
-    expect(cell).toHaveTextContent('42');
-
-    await userEvent.dblClick(cell);
-
-    const input = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="number-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
+      expect(
+        document.querySelector('[data-testid="boolean-option-true"]'),
+      ).toBeNull();
     });
 
-    await userEvent.clear(input);
-    await userEvent.type(input, '99');
-    await userEvent.keyboard('{Enter}');
-
+    await userEvent.keyboard('{Escape}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('99');
+      expect(cell).toHaveAttribute('tabindex', '-1');
     });
   },
 };

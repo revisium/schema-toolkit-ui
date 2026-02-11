@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Box, Popover, Portal, Text } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { SearchForeignKey } from '../../../../search-foreign-key/index.js';
 import type { SearchForeignKeySearchFn } from '../../../../search-foreign-key/index.js';
 import type { CellVM } from '../../model/CellVM.js';
@@ -15,26 +15,24 @@ interface ForeignKeyCellProps {
 export const ForeignKeyCell = observer(
   ({ cell, onSearchForeignKey }: ForeignKeyCellProps) => {
     const { triggerRef, getAnchorRect } = usePopoverAnchor();
-    const [isOpen, setIsOpen] = useState(false);
+
+    const isOpen = cell.isEditing;
 
     const handleDoubleClick = useCallback(() => {
       if (!cell.isEditable || !onSearchForeignKey) {
         return;
       }
-      cell.startEdit();
-      setIsOpen(true);
+      cell.startEditWithDoubleClick();
     }, [cell, onSearchForeignKey]);
 
     const handleSelect = useCallback(
       (id: string) => {
-        setIsOpen(false);
         cell.commitEdit(id);
       },
       [cell],
     );
 
     const handleClose = useCallback(() => {
-      setIsOpen(false);
       cell.cancelEdit();
     }, [cell]);
 

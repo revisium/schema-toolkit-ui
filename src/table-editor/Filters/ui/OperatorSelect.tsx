@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Button, Menu, Text } from '@chakra-ui/react';
+import { Button, Menu, Portal, Text } from '@chakra-ui/react';
 import { PiCaretDownBold } from 'react-icons/pi';
 import type { FilterOperator } from '../model/operators.js';
 import { getOperatorInfo, getOperatorsForType } from '../model/operators.js';
@@ -29,19 +29,21 @@ export const OperatorSelect = observer(
             <PiCaretDownBold />
           </Button>
         </Menu.Trigger>
-        <Menu.Positioner>
-          <Menu.Content>
-            {operators.map((op) => (
-              <Menu.Item
-                key={op.operator}
-                value={op.operator}
-                onClick={() => onChange(op.operator)}
-              >
-                {op.label}
-              </Menu.Item>
-            ))}
-          </Menu.Content>
-        </Menu.Positioner>
+        <Portal>
+          <Menu.Positioner zIndex="popover">
+            <Menu.Content>
+              {operators.map((op) => (
+                <Menu.Item
+                  key={op.operator}
+                  value={op.operator}
+                  onClick={() => onChange(op.operator)}
+                >
+                  {op.label}
+                </Menu.Item>
+              ))}
+            </Menu.Content>
+          </Menu.Positioner>
+        </Portal>
       </Menu.Root>
     );
   },

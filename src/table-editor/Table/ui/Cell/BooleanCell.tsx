@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Box, Popover, Portal, Text } from '@chakra-ui/react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import type { CellVM } from '../../model/CellVM.js';
 import { CellWrapper } from './CellWrapper.js';
 import { usePopoverAnchor } from './usePopoverAnchor.js';
@@ -11,26 +11,24 @@ interface BooleanCellProps {
 
 export const BooleanCell = observer(({ cell }: BooleanCellProps) => {
   const { triggerRef, getAnchorRect } = usePopoverAnchor();
-  const [isOpen, setIsOpen] = useState(false);
+
+  const isOpen = cell.isEditing;
 
   const handleDoubleClick = useCallback(() => {
     if (!cell.isEditable) {
       return;
     }
-    cell.startEdit();
-    setIsOpen(true);
+    cell.startEditWithDoubleClick();
   }, [cell]);
 
   const handleSelect = useCallback(
     (value: boolean) => {
-      setIsOpen(false);
       cell.commitEdit(value);
     },
     [cell],
   );
 
   const handleClose = useCallback(() => {
-    setIsOpen(false);
     cell.cancelEdit();
   }, [cell]);
 

@@ -6,7 +6,7 @@ import { buildWhereClause } from '../../Filters/model/filterBuilder.js';
 import { SearchModel } from '../../Search/model/SearchModel.js';
 import { SortModel } from '../../Sortings/model/SortModel.js';
 import { ViewSettingsBadgeModel } from '../../Status/model/ViewSettingsBadgeModel.js';
-import { InlineEditModel } from '../../Table/model/InlineEditModel.js';
+import { CellFSM } from '../../Table/model/CellFSM.js';
 import { SelectionModel } from '../../Table/model/SelectionModel.js';
 
 export interface TableEditorCallbacks {
@@ -29,7 +29,7 @@ export class TableEditorCore {
   public readonly sorts: SortModel;
   public readonly search: SearchModel;
   public readonly viewBadge: ViewSettingsBadgeModel;
-  public readonly inlineEdit: InlineEditModel;
+  public readonly cellFSM: CellFSM;
   public readonly selection: SelectionModel;
 
   private readonly _callbacks: TableEditorCallbacks;
@@ -41,7 +41,7 @@ export class TableEditorCore {
     this.sorts = new SortModel();
     this.search = new SearchModel((query) => this._handleSearch(query));
     this.viewBadge = new ViewSettingsBadgeModel();
-    this.inlineEdit = new InlineEditModel();
+    this.cellFSM = new CellFSM();
     this.selection = new SelectionModel();
 
     this.columns.setOnChange(() => this._handleColumnsChange());
@@ -95,7 +95,7 @@ export class TableEditorCore {
     this.search.dispose();
     this.viewBadge.dispose();
     this.selection.exitSelectionMode();
-    this.inlineEdit.blur();
+    this.cellFSM.blur();
   }
 
   private _handleColumnsChange(): void {

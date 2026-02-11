@@ -161,9 +161,9 @@ describe('TableEditorCore', () => {
     const core = new TableEditorCore();
     core.init(TEST_COLUMNS);
     core.selection.toggle('row-1');
-    core.inlineEdit.focusCell({ rowId: 'row-1', field: 'name' });
+    core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
     core.dispose();
     expect(core.selection.isSelectionMode).toBe(false);
-    expect(core.inlineEdit.focusedCell).toBeNull();
+    expect(core.cellFSM.focusedCell).toBeNull();
   });
 });
