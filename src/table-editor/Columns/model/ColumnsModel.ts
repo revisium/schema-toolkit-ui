@@ -1,11 +1,6 @@
 import { makeAutoObservable, observable } from 'mobx';
-import type { ColumnSpec } from './types.js';
+import type { ColumnSpec, ViewColumn } from './types.js';
 import { selectDefaultColumns } from './selectDefaultColumns.js';
-
-export interface ViewColumn {
-  field: string;
-  width?: number;
-}
 
 export class ColumnsModel {
   private _allColumns: ColumnSpec[] = [];
@@ -30,8 +25,30 @@ export class ColumnsModel {
   }
 
   get hiddenColumns(): ColumnSpec[] {
-    const visible = new Set(this._visibleFields);
+    const visible = this._visibleFieldSet;
     return this._allColumns.filter((col) => !visible.has(col.field));
+  }
+
+  get availableFieldsToAdd(): ColumnSpec[] {
+    const visible = this._visibleFieldSet;
+    return this._allColumns.filter(
+      (col) => !visible.has(col.field) && !col.isSystem,
+    );
+  }
+
+  get availableSystemFieldsToAdd(): ColumnSpec[] {
+    const visible = this._visibleFieldSet;
+    return this._allColumns.filter(
+      (col) => !visible.has(col.field) && col.isSystem,
+    );
+  }
+
+  get hasHiddenColumns(): boolean {
+    return this._visibleFields.length < this._allColumns.length;
+  }
+
+  get canRemoveColumn(): boolean {
+    return this._visibleFields.length > 0;
   }
 
   get sortableFields(): ColumnSpec[] {
@@ -40,6 +57,10 @@ export class ColumnsModel {
 
   get filterableFields(): ColumnSpec[] {
     return this._allColumns.filter((col) => !col.isDeprecated);
+  }
+
+  private get _visibleFieldSet(): Set<string> {
+    return new Set(this._visibleFields);
   }
 
   private get _columnLookup(): Map<string, ColumnSpec> {
@@ -66,6 +87,97 @@ export class ColumnsModel {
       this._visibleFields.splice(index, 1);
       this._notifyChange();
     }
+  }
+
+  hideAll(): void {
+    this._visibleFields = [];
+    this._notifyChange();
+  }
+
+  addAll(): void {
+    this._visibleFields = this._allColumns.map((col) => col.field);
+    this._notifyChange();
+  }
+
+  getColumnIndex(field: string): number {
+    return this._visibleFields.indexOf(field);
+  }
+
+  canMoveLeft(field: string): boolean {
+    return this.getColumnIndex(field) > 0;
+  }
+
+  canMoveRight(field: string): boolean {
+    const index = this.getColumnIndex(field);
+    return index >= 0 && index < this._visibleFields.length - 1;
+  }
+
+  canMoveToStart(field: string): boolean {
+    return this.canMoveLeft(field);
+  }
+
+  canMoveToEnd(field: string): boolean {
+    return this.canMoveRight(field);
+  }
+
+  moveColumnLeft(field: string): void {
+    const index = this.getColumnIndex(field);
+    if (index > 0) {
+      this._visibleFields.splice(index, 1);
+      this._visibleFields.splice(index - 1, 0, field);
+      this._notifyChange();
+    }
+  }
+
+  moveColumnRight(field: string): void {
+    const index = this.getColumnIndex(field);
+    if (index >= 0 && index < this._visibleFields.length - 1) {
+      this._visibleFields.splice(index, 1);
+      this._visibleFields.splice(index + 1, 0, field);
+      this._notifyChange();
+    }
+  }
+
+  moveColumnToStart(field: string): void {
+    const index = this.getColumnIndex(field);
+    if (index > 0) {
+      this._visibleFields.splice(index, 1);
+      this._visibleFields.unshift(field);
+      this._notifyChange();
+    }
+  }
+
+  moveColumnToEnd(field: string): void {
+    const index = this.getColumnIndex(field);
+    if (index >= 0 && index < this._visibleFields.length - 1) {
+      this._visibleFields.splice(index, 1);
+      this._visibleFields.push(field);
+      this._notifyChange();
+    }
+  }
+
+  insertColumnBefore(targetField: string, newField: string): void {
+    if (this._visibleFields.includes(newField)) {
+      return;
+    }
+    const targetIndex = this._visibleFields.indexOf(targetField);
+    if (targetIndex === -1) {
+      return;
+    }
+    this._visibleFields.splice(targetIndex, 0, newField);
+    this._notifyChange();
+  }
+
+  insertColumnAfter(targetField: string, newField: string): void {
+    if (this._visibleFields.includes(newField)) {
+      return;
+    }
+    const targetIndex = this._visibleFields.indexOf(targetField);
+    if (targetIndex === -1) {
+      return;
+    }
+    this._visibleFields.splice(targetIndex + 1, 0, newField);
+    this._notifyChange();
   }
 
   reorderColumns(fields: string[]): void {

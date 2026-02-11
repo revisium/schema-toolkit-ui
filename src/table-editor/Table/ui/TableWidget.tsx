@@ -6,6 +6,8 @@ import type { CellFSM, SelectedRange } from '../model/CellFSM.js';
 import type { SelectionModel } from '../model/SelectionModel.js';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
+import type { FilterModel } from '../../Filters/model/FilterModel.js';
+import type { SortModel } from '../../Sortings/model/SortModel.js';
 import type { SearchForeignKeySearchFn } from '../../../search-foreign-key/index.js';
 import { parseTSV } from '../model/parseTSV.js';
 import { HeaderRow } from './HeaderRow.js';
@@ -101,8 +103,11 @@ interface TableWidgetProps {
   columnsModel: ColumnsModel;
   cellFSM?: CellFSM;
   selection: SelectionModel;
+  sortModel?: SortModel;
+  filterModel?: FilterModel;
   onSearchForeignKey?: SearchForeignKeySearchFn;
   onDeleteSelected?: (ids: string[]) => void;
+  onCopyPath?: (path: string) => void;
 }
 
 export const TableWidget = observer(
@@ -111,8 +116,11 @@ export const TableWidget = observer(
     columnsModel,
     cellFSM,
     selection,
+    sortModel,
+    filterModel,
     onSearchForeignKey,
     onDeleteSelected,
+    onCopyPath,
   }: TableWidgetProps) => {
     const showSelection = selection.isSelectionMode;
     const allRowIds = rows.map((r) => r.rowId);
@@ -238,7 +246,12 @@ export const TableWidget = observer(
           onKeyDown={handleKeyDown}
         >
           <Box minWidth="fit-content">
-            <HeaderRow columnsModel={columnsModel} />
+            <HeaderRow
+              columnsModel={columnsModel}
+              sortModel={sortModel}
+              filterModel={filterModel}
+              onCopyPath={onCopyPath}
+            />
             {rows.length === 0 ? (
               <Box p={4}>
                 <Text fontSize="sm" color="gray.500">

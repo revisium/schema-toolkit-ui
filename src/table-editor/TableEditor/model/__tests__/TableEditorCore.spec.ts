@@ -1,20 +1,9 @@
 import { jest } from '@jest/globals';
 import { FilterFieldType } from '../../../shared/field-types';
-import type { ColumnSpec } from '../../../Columns/model/types';
+import { testCol as col } from '../../../__tests__/helpers';
 import { TableEditorCore } from '../TableEditorCore';
 
-function col(overrides: Partial<ColumnSpec> & { field: string }): ColumnSpec {
-  return {
-    label: overrides.field,
-    fieldType: FilterFieldType.String,
-    isSystem: false,
-    isDeprecated: false,
-    hasFormula: false,
-    ...overrides,
-  };
-}
-
-const TEST_COLUMNS: ColumnSpec[] = [
+const TEST_COLUMNS = [
   col({ field: 'name' }),
   col({ field: 'age', fieldType: FilterFieldType.Number }),
   col({ field: 'id', isSystem: true }),

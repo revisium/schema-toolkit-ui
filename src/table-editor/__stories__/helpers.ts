@@ -1,4 +1,12 @@
+import type { JsonSchema } from '@revisium/schema-toolkit';
+import { createTableModel } from '@revisium/schema-toolkit';
 import type { ColumnSpec } from '../Columns/model/types.js';
+import { ColumnsModel } from '../Columns/model/ColumnsModel.js';
+import { SortModel } from '../Sortings/model/SortModel.js';
+import { FilterModel } from '../Filters/model/FilterModel.js';
+import { CellFSM } from '../Table/model/CellFSM.js';
+import { RowVM } from '../Table/model/RowVM.js';
+import { SelectionModel } from '../Table/model/SelectionModel.js';
 import { FilterFieldType } from '../shared/field-types.js';
 
 export { FilterFieldType } from '../shared/field-types.js';
@@ -17,6 +25,74 @@ export function col(
     hasFormula: false,
     ...overrides,
   };
+}
+
+export interface TableStoryState {
+  columnsModel: ColumnsModel;
+  selection: SelectionModel;
+  cellFSM: CellFSM;
+  rows: RowVM[];
+  sortModel?: SortModel;
+  filterModel?: FilterModel;
+}
+
+interface CreateTableStoryStateParams {
+  schema: JsonSchema;
+  columns: ColumnSpec[];
+  rowsData: Record<string, unknown>[];
+  visibleFields?: string[];
+  withSort?: boolean;
+  withFilter?: boolean;
+}
+
+export function createTableStoryState(
+  params: CreateTableStoryStateParams,
+): TableStoryState {
+  const columnsModel = new ColumnsModel();
+  columnsModel.init(params.columns);
+  if (params.visibleFields) {
+    columnsModel.reorderColumns(params.visibleFields);
+  } else {
+    columnsModel.reorderColumns(params.columns.map((c) => c.field));
+  }
+
+  const selection = new SelectionModel();
+  const cellFSM = new CellFSM();
+
+  const tableModel = createTableModel({
+    tableId: 'test-table',
+    schema: params.schema as Parameters<typeof createTableModel>[0]['schema'],
+    rows: params.rowsData.map((data, i) => ({
+      rowId: `row-${i + 1}`,
+      data,
+    })),
+  });
+
+  const rows = tableModel.rows.map(
+    (rowModel) => new RowVM(rowModel, rowModel.rowId, cellFSM, selection),
+  );
+
+  const fields = params.visibleFields ?? params.columns.map((c) => c.field);
+  cellFSM.setNavigationContext(
+    fields,
+    rows.map((r) => r.rowId),
+  );
+
+  const result: TableStoryState = { columnsModel, selection, cellFSM, rows };
+
+  if (params.withSort) {
+    const sortModel = new SortModel();
+    sortModel.init(params.columns);
+    result.sortModel = sortModel;
+  }
+
+  if (params.withFilter) {
+    const filterModel = new FilterModel();
+    filterModel.init(params.columns);
+    result.filterModel = filterModel;
+  }
+
+  return result;
 }
 
 export function mockClipboard(initialText = ''): {
