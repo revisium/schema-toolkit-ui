@@ -65,6 +65,30 @@ export class SortModel {
     }
   }
 
+  getSortDirection(field: string): 'asc' | 'desc' | null {
+    const sort = this._sorts.find((s) => s.field === field);
+    return sort ? sort.direction : null;
+  }
+
+  getSortIndex(field: string): number | null {
+    const index = this._sorts.findIndex((s) => s.field === field);
+    return index >= 0 ? index + 1 : null;
+  }
+
+  isSorted(field: string): boolean {
+    return this._sorts.some((s) => s.field === field);
+  }
+
+  setSingleSort(field: string, direction: 'asc' | 'desc'): void {
+    const existing = this._sorts.find((s) => s.field === field);
+    if (existing) {
+      existing.direction = direction;
+    } else {
+      this._sorts.push({ field, direction });
+    }
+    this._notifyChange();
+  }
+
   removeSort(field: string): void {
     this._sorts = this._sorts.filter((s) => s.field !== field);
     this._notifyChange();

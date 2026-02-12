@@ -1,18 +1,7 @@
 import { jest } from '@jest/globals';
 import { FilterFieldType } from '../../../shared/field-types';
-import type { ColumnSpec } from '../../../Columns/model/types';
+import { testCol as col } from '../../../__tests__/helpers';
 import { SortModel } from '../SortModel';
-
-function col(overrides: Partial<ColumnSpec> & { field: string }): ColumnSpec {
-  return {
-    label: overrides.field,
-    fieldType: FilterFieldType.String,
-    isSystem: false,
-    isDeprecated: false,
-    hasFormula: false,
-    ...overrides,
-  };
-}
 
 describe('SortModel', () => {
   let model: SortModel;
@@ -112,5 +101,64 @@ describe('SortModel', () => {
     model.setOnChange(onChange);
     model.applyViewSorts([{ field: 'data.name', direction: 'asc' }]);
     expect(onChange).toHaveBeenCalled();
+  });
+
+  describe('header helpers', () => {
+    it('getSortDirection returns null when not sorted', () => {
+      expect(model.getSortDirection('name')).toBeNull();
+    });
+
+    it('getSortDirection returns direction when sorted', () => {
+      model.addSort('name', 'desc');
+      expect(model.getSortDirection('name')).toBe('desc');
+    });
+
+    it('getSortIndex returns null when not sorted', () => {
+      expect(model.getSortIndex('name')).toBeNull();
+    });
+
+    it('getSortIndex returns 1-based index', () => {
+      model.addSort('name');
+      model.addSort('age');
+      expect(model.getSortIndex('name')).toBe(1);
+      expect(model.getSortIndex('age')).toBe(2);
+    });
+
+    it('isSorted returns false when not sorted', () => {
+      expect(model.isSorted('name')).toBe(false);
+    });
+
+    it('isSorted returns true when sorted', () => {
+      model.addSort('name');
+      expect(model.isSorted('name')).toBe(true);
+    });
+
+    it('setSingleSort adds sort if not present', () => {
+      model.setSingleSort('name', 'asc');
+      expect(model.sorts).toHaveLength(1);
+      expect(model.sorts[0]).toEqual({ field: 'name', direction: 'asc' });
+    });
+
+    it('setSingleSort updates direction if already sorted', () => {
+      model.addSort('name', 'asc');
+      model.setSingleSort('name', 'desc');
+      expect(model.sorts).toHaveLength(1);
+      expect(model.sorts[0]?.direction).toBe('desc');
+    });
+
+    it('setSingleSort preserves other sorts', () => {
+      model.addSort('name', 'asc');
+      model.setSingleSort('age', 'desc');
+      expect(model.sorts).toHaveLength(2);
+      expect(model.sorts[0]).toEqual({ field: 'name', direction: 'asc' });
+      expect(model.sorts[1]).toEqual({ field: 'age', direction: 'desc' });
+    });
+
+    it('setSingleSort fires onChange', () => {
+      const onChange = jest.fn();
+      model.setOnChange(onChange);
+      model.setSingleSort('name', 'asc');
+      expect(onChange).toHaveBeenCalled();
+    });
   });
 });

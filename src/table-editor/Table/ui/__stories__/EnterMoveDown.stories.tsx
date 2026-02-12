@@ -3,20 +3,18 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
-import type { JsonSchema } from '@revisium/schema-toolkit';
-import { createTableModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
-import { col, FilterFieldType } from '../../../__stories__/helpers.js';
-import { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
-import { CellFSM } from '../../model/CellFSM.js';
-import { RowVM } from '../../model/RowVM.js';
-import { SelectionModel } from '../../model/SelectionModel.js';
+import {
+  col,
+  createTableStoryState,
+  FilterFieldType,
+} from '../../../__stories__/helpers.js';
 import { TableWidget } from '../TableWidget.js';
 
 ensureReactivityProvider();
 
-const TABLE_SCHEMA: JsonSchema = {
-  type: 'object',
+const TABLE_SCHEMA = {
+  type: 'object' as const,
   properties: {
     name: { type: 'string', default: '' },
     age: { type: 'number', default: 0 },
@@ -41,32 +39,13 @@ const MOCK_ROWS_DATA = [
 ];
 
 const StoryWrapper = observer(() => {
-  const [state] = useState(() => {
-    const columnsModel = new ColumnsModel();
-    columnsModel.init(TEST_COLUMNS);
-    const selection = new SelectionModel();
-    const cellFSM = new CellFSM();
-
-    const tableModel = createTableModel({
-      tableId: 'test-table',
-      schema: TABLE_SCHEMA as any,
-      rows: MOCK_ROWS_DATA.map((data, i) => ({
-        rowId: `row-${i + 1}`,
-        data,
-      })),
-    });
-
-    const rows = tableModel.rows.map(
-      (rowModel) => new RowVM(rowModel, rowModel.rowId, cellFSM, selection),
-    );
-
-    cellFSM.setNavigationContext(
-      TEST_COLUMNS.map((c) => c.field),
-      rows.map((r) => r.rowId),
-    );
-
-    return { columnsModel, selection, cellFSM, rows };
-  });
+  const [state] = useState(() =>
+    createTableStoryState({
+      schema: TABLE_SCHEMA,
+      columns: TEST_COLUMNS,
+      rowsData: MOCK_ROWS_DATA,
+    }),
+  );
 
   return (
     <Box width="600px" height="400px" borderWidth="1px" borderColor="gray.200">

@@ -88,6 +88,24 @@ export class FilterModel {
     }
   }
 
+  addConditionForField(field: string): void {
+    const col = this._availableFields.find((c) => c.field === field);
+    if (!col) {
+      return;
+    }
+
+    const condition: FilterCondition = {
+      id: this._generateConditionId(),
+      field: col.field,
+      fieldType: col.fieldType,
+      operator: getDefaultOperator(col.fieldType),
+      value: '',
+    };
+
+    this._rootGroup.conditions.push(condition);
+    this._notifyChange();
+  }
+
   updateCondition(
     id: string,
     updates: Partial<Pick<FilterCondition, 'field' | 'operator' | 'value'>>,

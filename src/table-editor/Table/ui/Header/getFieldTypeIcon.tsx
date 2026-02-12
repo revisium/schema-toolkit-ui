@@ -1,0 +1,24 @@
+import type { ReactNode } from 'react';
+import { PiCalendar, PiFile } from 'react-icons/pi';
+import { FilterFieldType } from '../../../shared/field-types.js';
+
+export const getFieldTypeIcon = (fieldType: FilterFieldType): ReactNode => {
+  switch (fieldType) {
+    case FilterFieldType.String:
+      return 'Aa';
+    case FilterFieldType.Number:
+      return '#';
+    case FilterFieldType.Boolean:
+      return '?';
+    case FilterFieldType.ForeignKey:
+      return '->';
+    case FilterFieldType.File:
+      return <PiFile size={14} />;
+    case FilterFieldType.DateTime:
+      return <PiCalendar size={14} />;
+    default: {
+      const _exhaustiveCheck: never = fieldType;
+      return _exhaustiveCheck;
+    }
+  }
+};

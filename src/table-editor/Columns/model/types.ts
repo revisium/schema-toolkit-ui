@@ -11,3 +11,8 @@ export interface ColumnSpec {
   hasFormula: boolean;
   foreignKeyTableId?: string;
 }
+
+export interface ViewColumn {
+  field: string;
+  width?: number;
+}

@@ -1,17 +1,6 @@
 import { FilterFieldType } from '../../../shared/field-types';
-import type { ColumnSpec } from '../types';
+import { testCol as col } from '../../../__tests__/helpers';
 import { selectDefaultColumns } from '../selectDefaultColumns';
-
-function col(overrides: Partial<ColumnSpec> & { field: string }): ColumnSpec {
-  return {
-    label: overrides.field,
-    fieldType: FilterFieldType.String,
-    isSystem: false,
-    isDeprecated: false,
-    hasFormula: false,
-    ...overrides,
-  };
-}
 
 describe('selectDefaultColumns', () => {
   it('empty columns returns empty array', () => {

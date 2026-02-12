@@ -1,0 +1,100 @@
+import { Box, Flex, IconButton, Menu, Portal, Text } from '@chakra-ui/react';
+import { observer } from 'mobx-react-lite';
+import { PiListBullets, PiPlus } from 'react-icons/pi';
+import type { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
+import { FieldMenuItem } from './FieldMenuItem.js';
+
+interface AddColumnButtonProps {
+  columnsModel: ColumnsModel;
+}
+
+export const AddColumnButton = observer(
+  ({ columnsModel }: AddColumnButtonProps) => {
+    const availableFields = columnsModel.availableFieldsToAdd;
+    const availableSystemFields = columnsModel.availableSystemFieldsToAdd;
+    const hasHidden = columnsModel.hasHiddenColumns;
+
+    if (!hasHidden) {
+      return <Box flex={1} />;
+    }
+
+    return (
+      <Flex flexShrink={0} alignItems="center" px="4px">
+        <Menu.Root
+          positioning={{ placement: 'bottom-start' }}
+          lazyMount
+          unmountOnExit
+        >
+          <Menu.Trigger asChild>
+            <IconButton
+              aria-label="Add column"
+              size="xs"
+              variant="ghost"
+              color="gray.400"
+              _hover={{ bg: 'gray.100', color: 'gray.600' }}
+              data-testid="add-column-button"
+            >
+              <PiPlus />
+            </IconButton>
+          </Menu.Trigger>
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content minW="200px" maxH="340px" overflowY="auto">
+                <Menu.Item value="add-all" onClick={columnsModel.addAll}>
+                  <PiListBullets />
+                  <Text>Add all columns</Text>
+                </Menu.Item>
+                {availableFields.length > 0 && (
+                  <>
+                    <Menu.Separator />
+                    <Menu.ItemGroup>
+                      <Menu.ItemGroupLabel
+                        fontWeight="medium"
+                        color="gray.500"
+                        fontSize="xs"
+                      >
+                        Data fields
+                      </Menu.ItemGroupLabel>
+                      {availableFields.map((col) => (
+                        <FieldMenuItem
+                          key={col.field}
+                          field={col.field}
+                          name={col.label}
+                          fieldType={col.fieldType}
+                          onClick={columnsModel.showColumn}
+                        />
+                      ))}
+                    </Menu.ItemGroup>
+                  </>
+                )}
+                {availableSystemFields.length > 0 && (
+                  <>
+                    <Menu.Separator />
+                    <Menu.ItemGroup>
+                      <Menu.ItemGroupLabel
+                        fontWeight="medium"
+                        color="gray.500"
+                        fontSize="xs"
+                      >
+                        System fields
+                      </Menu.ItemGroupLabel>
+                      {availableSystemFields.map((col) => (
+                        <FieldMenuItem
+                          key={col.field}
+                          field={col.field}
+                          name={col.label}
+                          fieldType={col.fieldType}
+                          onClick={columnsModel.showColumn}
+                        />
+                      ))}
+                    </Menu.ItemGroup>
+                  </>
+                )}
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
+      </Flex>
+    );
+  },
+);

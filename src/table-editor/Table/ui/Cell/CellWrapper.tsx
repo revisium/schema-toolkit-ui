@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { FC, PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 import type { CellVM } from '../../model/CellVM.js';
 import { CellContextMenu } from './CellContextMenu.js';
+import { useDeferredMenuEdit } from './useDeferredMenuEdit.js';
 import {
   FOCUS_RING_RESET,
   buildSelectionBorderStyle,
@@ -70,6 +71,7 @@ function handleEditableKeys(
 export const CellWrapper: FC<CellWrapperProps> = observer(
   ({ cell, children, onDoubleClick, onStartEdit, onTypeChar, onDelete }) => {
     const cellRef = useRef<HTMLDivElement>(null);
+    const deferredEdit = useDeferredMenuEdit(onStartEdit ?? onDoubleClick);
     const state = getCellState(cell);
     const selectionEdges = cell.selectionEdges;
     const isAnchorInRange = cell.isAnchor && cell.hasRangeSelection;
@@ -217,7 +219,13 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
 
     const handleMenuOpenChange = useCallback(
       (details: { open: boolean }) => {
-        if (details.open || cell.isEditing) {
+        if (details.open) {
+          return;
+        }
+        if (deferredEdit.triggerIfRequested()) {
+          return;
+        }
+        if (cell.isEditing) {
           return;
         }
         if (cell.isAnchor || (cell.isFocused && !cell.hasRangeSelection)) {
@@ -232,7 +240,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
           anchor?.focus();
         }
       },
-      [cell],
+      [cell, deferredEdit],
     );
 
     const extraStyles: Record<string, unknown> = {};
@@ -303,7 +311,10 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
             )}
           </Box>
         </Menu.ContextTrigger>
-        <CellContextMenu cell={cell} onEdit={onStartEdit ?? onDoubleClick} />
+        <CellContextMenu
+          cell={cell}
+          onEditPointerDown={deferredEdit.requestEdit}
+        />
       </Menu.Root>
     );
   },

@@ -1,18 +1,7 @@
 import { FilterFieldType } from '../../../shared/field-types';
-import type { ColumnSpec } from '../../../Columns/model/types';
+import { testCol as col } from '../../../__tests__/helpers';
 import { CellFSM } from '../CellFSM';
 import { CellVM } from '../CellVM';
-
-function col(overrides: Partial<ColumnSpec> & { field: string }): ColumnSpec {
-  return {
-    label: overrides.field,
-    fieldType: FilterFieldType.String,
-    isSystem: false,
-    isDeprecated: false,
-    hasFormula: false,
-    ...overrides,
-  };
-}
 
 function createMockRowModel(data: Record<string, unknown> = {}) {
   const nodes = new Map<string, ReturnType<typeof createMockNode>>();

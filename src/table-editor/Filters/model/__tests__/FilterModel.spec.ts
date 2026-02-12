@@ -1,18 +1,7 @@
 import { FilterFieldType } from '../../../shared/field-types';
-import type { ColumnSpec } from '../../../Columns/model/types';
+import { testCol as col } from '../../../__tests__/helpers';
 import { FilterOperator } from '../operators';
 import { FilterModel } from '../FilterModel';
-
-function col(overrides: Partial<ColumnSpec> & { field: string }): ColumnSpec {
-  return {
-    label: overrides.field,
-    fieldType: FilterFieldType.String,
-    isSystem: false,
-    isDeprecated: false,
-    hasFormula: false,
-    ...overrides,
-  };
-}
 
 describe('FilterModel', () => {
   let model: FilterModel;
