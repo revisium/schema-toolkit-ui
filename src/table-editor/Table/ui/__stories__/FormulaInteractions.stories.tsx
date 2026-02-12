@@ -4,13 +4,12 @@ import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import type { JsonSchema } from '@revisium/schema-toolkit';
-import { createTableModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
-import { col, FilterFieldType } from '../../../__stories__/helpers.js';
-import { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
-import { CellFSM } from '../../model/CellFSM.js';
-import { RowVM } from '../../model/RowVM.js';
-import { SelectionModel } from '../../model/SelectionModel.js';
+import {
+  col,
+  createTableStoryState,
+  FilterFieldType,
+} from '../../../__stories__/helpers.js';
 import { TableWidget } from '../TableWidget.js';
 
 ensureReactivityProvider();
@@ -70,33 +69,13 @@ const FORMULA_ROWS_DATA = [
 ];
 
 const FormulaStoryWrapper = observer(() => {
-  const [state] = useState(() => {
-    const columnsModel = new ColumnsModel();
-    columnsModel.init(FORMULA_TEST_COLUMNS);
-    columnsModel.reorderColumns(FORMULA_TEST_COLUMNS.map((c) => c.field));
-    const selection = new SelectionModel();
-    const cellFSM = new CellFSM();
-
-    const tableModel = createTableModel({
-      tableId: 'formula-table',
-      schema: FORMULA_TABLE_SCHEMA as any,
-      rows: FORMULA_ROWS_DATA.map((data, i) => ({
-        rowId: `row-${i + 1}`,
-        data,
-      })),
-    });
-
-    const rows = tableModel.rows.map(
-      (rowModel) => new RowVM(rowModel, rowModel.rowId, cellFSM, selection),
-    );
-
-    cellFSM.setNavigationContext(
-      FORMULA_TEST_COLUMNS.map((c) => c.field),
-      rows.map((r) => r.rowId),
-    );
-
-    return { columnsModel, selection, cellFSM, rows };
-  });
+  const [state] = useState(() =>
+    createTableStoryState({
+      schema: FORMULA_TABLE_SCHEMA,
+      columns: FORMULA_TEST_COLUMNS,
+      rowsData: FORMULA_ROWS_DATA,
+    }),
+  );
 
   return (
     <Box width="900px" height="400px" borderWidth="1px" borderColor="gray.200">
@@ -151,33 +130,13 @@ const MIXED_FORMULA_ROWS = [
 ];
 
 const MixedFormulaWrapper = observer(() => {
-  const [state] = useState(() => {
-    const columnsModel = new ColumnsModel();
-    columnsModel.init(MIXED_FORMULA_COLUMNS);
-    columnsModel.reorderColumns(MIXED_FORMULA_COLUMNS.map((c) => c.field));
-    const selection = new SelectionModel();
-    const cellFSM = new CellFSM();
-
-    const tableModel = createTableModel({
-      tableId: 'mixed-formula-table',
-      schema: MIXED_FORMULA_SCHEMA as any,
-      rows: MIXED_FORMULA_ROWS.map((data, i) => ({
-        rowId: `row-${i + 1}`,
-        data,
-      })),
-    });
-
-    const rows = tableModel.rows.map(
-      (rowModel) => new RowVM(rowModel, rowModel.rowId, cellFSM, selection),
-    );
-
-    cellFSM.setNavigationContext(
-      MIXED_FORMULA_COLUMNS.map((c) => c.field),
-      rows.map((r) => r.rowId),
-    );
-
-    return { columnsModel, selection, cellFSM, rows };
-  });
+  const [state] = useState(() =>
+    createTableStoryState({
+      schema: MIXED_FORMULA_SCHEMA,
+      columns: MIXED_FORMULA_COLUMNS,
+      rowsData: MIXED_FORMULA_ROWS,
+    }),
+  );
 
   return (
     <Box width="900px" height="400px" borderWidth="1px" borderColor="gray.200">

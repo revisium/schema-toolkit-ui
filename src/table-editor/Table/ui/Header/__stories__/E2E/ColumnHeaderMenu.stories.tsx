@@ -51,6 +51,9 @@ const StoryWrapper = observer(() => {
 
   useEffect(() => {
     (window as any).__testState = state;
+    return () => {
+      delete (window as any).__testState;
+    };
   }, [state]);
 
   return (

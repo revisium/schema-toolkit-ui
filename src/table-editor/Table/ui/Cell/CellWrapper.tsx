@@ -70,6 +70,7 @@ function handleEditableKeys(
 export const CellWrapper: FC<CellWrapperProps> = observer(
   ({ cell, children, onDoubleClick, onStartEdit, onTypeChar, onDelete }) => {
     const cellRef = useRef<HTMLDivElement>(null);
+    const editRequestedRef = useRef(false);
     const state = getCellState(cell);
     const selectionEdges = cell.selectionEdges;
     const isAnchorInRange = cell.isAnchor && cell.hasRangeSelection;
@@ -215,9 +216,24 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       }
     }, [cell]);
 
+    const handleMenuSelect = useCallback((details: { value: string }) => {
+      if (details.value === 'edit') {
+        editRequestedRef.current = true;
+      }
+    }, []);
+
     const handleMenuOpenChange = useCallback(
       (details: { open: boolean }) => {
-        if (details.open || cell.isEditing) {
+        if (details.open) {
+          return;
+        }
+        if (editRequestedRef.current) {
+          editRequestedRef.current = false;
+          const editFn = onStartEdit ?? onDoubleClick;
+          editFn?.();
+          return;
+        }
+        if (cell.isEditing) {
           return;
         }
         if (cell.isAnchor || (cell.isFocused && !cell.hasRangeSelection)) {
@@ -232,7 +248,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
           anchor?.focus();
         }
       },
-      [cell],
+      [cell, onStartEdit, onDoubleClick],
     );
 
     const extraStyles: Record<string, unknown> = {};
@@ -252,7 +268,10 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
     }
 
     return (
-      <Menu.Root onOpenChange={handleMenuOpenChange}>
+      <Menu.Root
+        onOpenChange={handleMenuOpenChange}
+        onSelect={handleMenuSelect}
+      >
         <Menu.ContextTrigger asChild>
           <Box
             ref={cellRef}
