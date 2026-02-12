@@ -6,11 +6,10 @@ import { CellContextActionsContext } from './CellContextActionsContext.js';
 
 interface CellContextMenuProps {
   cell: CellVM;
-  onEdit?: () => void;
 }
 
 export const CellContextMenu: FC<CellContextMenuProps> = observer(
-  ({ cell, onEdit }) => {
+  ({ cell }) => {
     const rangeActions = useContext(CellContextActionsContext);
     const hasRange = cell.hasRangeSelection;
 
@@ -72,11 +71,7 @@ export const CellContextMenu: FC<CellContextMenuProps> = observer(
                   Copy JSON path
                 </Menu.Item>
                 <Menu.Separator />
-                <Menu.Item
-                  value="edit"
-                  onClick={onEdit}
-                  disabled={!cell.isEditable}
-                >
+                <Menu.Item value="edit" disabled={!cell.isEditable}>
                   <Box flex="1">Edit</Box>
                   <Kbd size="sm">Enter</Kbd>
                 </Menu.Item>

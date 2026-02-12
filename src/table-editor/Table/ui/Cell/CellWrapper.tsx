@@ -322,7 +322,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
             )}
           </Box>
         </Menu.ContextTrigger>
-        <CellContextMenu cell={cell} onEdit={onStartEdit ?? onDoubleClick} />
+        <CellContextMenu cell={cell} />
       </Menu.Root>
     );
   },
