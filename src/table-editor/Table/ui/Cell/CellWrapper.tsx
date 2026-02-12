@@ -216,10 +216,8 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       }
     }, [cell]);
 
-    const handleMenuSelect = useCallback((details: { value: string }) => {
-      if (details.value === 'edit') {
-        editRequestedRef.current = true;
-      }
+    const handleEditPointerDown = useCallback(() => {
+      editRequestedRef.current = true;
     }, []);
 
     const handleMenuOpenChange = useCallback(
@@ -268,10 +266,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
     }
 
     return (
-      <Menu.Root
-        onOpenChange={handleMenuOpenChange}
-        onSelect={handleMenuSelect}
-      >
+      <Menu.Root onOpenChange={handleMenuOpenChange}>
         <Menu.ContextTrigger asChild>
           <Box
             ref={cellRef}
@@ -322,7 +317,10 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
             )}
           </Box>
         </Menu.ContextTrigger>
-        <CellContextMenu cell={cell} />
+        <CellContextMenu
+          cell={cell}
+          onEditPointerDown={handleEditPointerDown}
+        />
       </Menu.Root>
     );
   },
