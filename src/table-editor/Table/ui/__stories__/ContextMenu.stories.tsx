@@ -223,30 +223,10 @@ export const ContextMenuEdit: Story = {
     });
     expect(editItem).not.toHaveAttribute('data-disabled');
 
-    const events: string[] = [];
-    const track = (name: string) => () => events.push(name);
-    editItem.addEventListener('pointerdown', track('pointerdown'));
-    editItem.addEventListener('pointerup', track('pointerup'));
-    editItem.addEventListener('mousedown', track('mousedown'));
-    editItem.addEventListener('mouseup', track('mouseup'));
-    editItem.addEventListener('click', track('click'));
-
     await userEvent.click(editItem);
 
-    const eventsSnapshot = [...events];
-
-    await waitFor(
-      () => {
-        expect(cellFSM.isCellEditing('row-1', 'name')).toBe(true);
-      },
-      { timeout: 3000 },
-    ).catch((err) => {
-      throw new Error(
-        `Edit mode not entered. Events on editItem: [${eventsSnapshot.join(', ')}]. ` +
-          `Menu still visible: ${!!document.querySelector('[data-value="edit"]')}. ` +
-          `FSM state: ${JSON.stringify(cellFSM.getDebugState?.() ?? 'no debug')}. ` +
-          `Original: ${err.message}`,
-      );
+    await waitFor(() => {
+      expect(cellFSM.isCellEditing('row-1', 'name')).toBe(true);
     });
 
     await userEvent.keyboard('{Escape}');

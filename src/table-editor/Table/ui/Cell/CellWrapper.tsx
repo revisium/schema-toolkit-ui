@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { FC, PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 import type { CellVM } from '../../model/CellVM.js';
 import { CellContextMenu } from './CellContextMenu.js';
+import { useDeferredMenuEdit } from './useDeferredMenuEdit.js';
 import {
   FOCUS_RING_RESET,
   buildSelectionBorderStyle,
@@ -70,7 +71,7 @@ function handleEditableKeys(
 export const CellWrapper: FC<CellWrapperProps> = observer(
   ({ cell, children, onDoubleClick, onStartEdit, onTypeChar, onDelete }) => {
     const cellRef = useRef<HTMLDivElement>(null);
-    const editRequestedRef = useRef(false);
+    const deferredEdit = useDeferredMenuEdit(onStartEdit ?? onDoubleClick);
     const state = getCellState(cell);
     const selectionEdges = cell.selectionEdges;
     const isAnchorInRange = cell.isAnchor && cell.hasRangeSelection;
@@ -216,19 +217,12 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       }
     }, [cell]);
 
-    const handleEditPointerDown = useCallback(() => {
-      editRequestedRef.current = true;
-    }, []);
-
     const handleMenuOpenChange = useCallback(
       (details: { open: boolean }) => {
         if (details.open) {
           return;
         }
-        if (editRequestedRef.current) {
-          editRequestedRef.current = false;
-          const editFn = onStartEdit ?? onDoubleClick;
-          editFn?.();
+        if (deferredEdit.triggerIfRequested()) {
           return;
         }
         if (cell.isEditing) {
@@ -246,7 +240,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
           anchor?.focus();
         }
       },
-      [cell, onStartEdit, onDoubleClick],
+      [cell, deferredEdit],
     );
 
     const extraStyles: Record<string, unknown> = {};
@@ -319,7 +313,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
         </Menu.ContextTrigger>
         <CellContextMenu
           cell={cell}
-          onEditPointerDown={handleEditPointerDown}
+          onEditPointerDown={deferredEdit.requestEdit}
         />
       </Menu.Root>
     );
