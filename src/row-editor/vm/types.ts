@@ -15,7 +15,8 @@ export type NodeRendererType =
   | 'boolean'
   | 'container'
   | 'file'
-  | 'foreignKey';
+  | 'foreignKey'
+  | 'markdown';
 
 export interface ForeignKeySearchResult {
   ids: string[];

@@ -6,3 +6,4 @@ export { NumberRendererComponent } from './NumberRenderer';
 export { BooleanRendererComponent } from './BooleanRenderer';
 export { ForeignKeyRendererComponent } from './ForeignKeyRenderer';
 export { FileRendererComponent } from './FileRenderer';
+export { MarkdownRendererComponent } from './MarkdownRenderer';
