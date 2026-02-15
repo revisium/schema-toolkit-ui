@@ -73,6 +73,13 @@ export class RowNodeLayout {
         return 'number';
       }
     }
+    const schema = this._accessor.node.schema;
+    if (
+      'contentMediaType' in schema &&
+      schema.contentMediaType === 'text/markdown'
+    ) {
+      return 'markdown';
+    }
     return 'string';
   }
 

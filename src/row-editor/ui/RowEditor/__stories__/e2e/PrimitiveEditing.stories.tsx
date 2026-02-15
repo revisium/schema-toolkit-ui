@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within, waitFor, fn } from 'storybook/test';
+import { expect, within, waitFor, fn, userEvent } from 'storybook/test';
 import { StoryWrapper, baseMeta } from '../shared';
-import { simpleSchema } from '../schemas';
+import { simpleSchema, markdownSchema } from '../schemas';
 import {
   editStringField,
   editNumberField,
   selectBoolean,
   expectFieldValue,
+  expandField,
 } from './test-utils';
 
 const meta: Meta<typeof StoryWrapper> = {
@@ -67,5 +68,26 @@ export const EditMultipleFields: Story = {
     await expectFieldValue(canvas, 'name', 'Alice');
     await expectFieldValue(canvas, 'email', 'alice@test.com');
     await expectFieldValue(canvas, 'age', '30');
+  },
+};
+
+export const EditMarkdownField: Story = {
+  args: { onSave: fn(), onCancel: fn() },
+  render: (args) => <StoryWrapper {...args} schema={markdownSchema} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expandField(canvas, 'content');
+
+    const editor = await canvas.findByTestId('content-editor');
+    expect(editor).toBeInTheDocument();
+
+    await userEvent.click(editor);
+    await userEvent.type(editor, '# Hello World');
+    editor.blur();
+
+    await waitFor(() => {
+      expect(editor).toHaveValue('# Hello World');
+    });
   },
 };

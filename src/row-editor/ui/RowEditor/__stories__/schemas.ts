@@ -163,6 +163,16 @@ export const fileFieldSchema = {
   additionalProperties: false,
 };
 
+export const markdownSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string', default: '' },
+    content: { type: 'string', default: '', contentMediaType: 'text/markdown' },
+    summary: { type: 'string', default: '' },
+  },
+  additionalProperties: false,
+};
+
 export const mixedFieldsSchema = {
   type: 'object',
   properties: {

@@ -35,7 +35,7 @@ export class RowAccessorFactory {
     accessor.setLayout(layout);
     accessor.setMenu(menu);
 
-    if (layout.isRefNode) {
+    if (layout.isRefNode || layout.rendererType === 'markdown') {
       this._treeState.setExpanded(node.id, false);
     }
 

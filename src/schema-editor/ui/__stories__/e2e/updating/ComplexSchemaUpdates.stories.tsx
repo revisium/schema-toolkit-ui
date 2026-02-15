@@ -37,6 +37,7 @@ type Story = StoryObj<typeof UpdatingStoryWrapper>;
  * - metadata: object with createdAt and tags
  * - total: number with formula (price * quantity)
  * - totalWithTax: number with formula (total + tax)
+ * - summary: string (will test change to Markdown contentMediaType)
  * - avatar: File $ref (will test collapsed state and type label)
  * - createdAt: RowCreatedAt $ref (will test change type from ref to string)
  *
@@ -85,6 +86,7 @@ const complexInitialSchema = {
       readOnly: true,
       'x-formula': { version: 1, expression: 'total + tax' },
     },
+    summary: { type: 'string', default: '' },
     avatar: { $ref: 'urn:jsonschema:io:revisium:file-schema:1.0.0' },
     recordCreatedAt: {
       $ref: 'urn:jsonschema:io:revisium:row-created-at-schema:1.0.0',
@@ -102,6 +104,7 @@ const complexInitialSchema = {
     'metadata',
     'total',
     'totalWithTax',
+    'summary',
     'avatar',
     'recordCreatedAt',
   ],
@@ -144,11 +147,13 @@ const getTestId = (
  *    → Tests that formula path updates when formula field is moved
  * 9. Move 'tax' (formula DEPENDENCY) into 'metadata' (via VM)
  *    → Tests that dependent formula updates when dependency is moved
- * 10. Verify $ref fields (avatar, recordCreatedAt):
+ * 10. Change 'summary' from string to Markdown (via UI)
+ *     → Tests that contentMediaType: 'text/markdown' is set in patch
+ * 11. Verify $ref fields (avatar, recordCreatedAt):
  *     - Check type labels show "File" and "CreatedAt" (not "object"/"string")
  *     - Verify avatar (File) is collapsed by default
  *     - Change recordCreatedAt from $ref to regular string
- * 11. Apply changes and verify all patches are generated correctly
+ * 12. Apply changes and verify all patches are generated correctly
  */
 export const ComprehensiveSchemaUpdate: Story = {
   args: {
@@ -249,7 +254,14 @@ export const ComprehensiveSchemaUpdate: Story = {
     vm.tree.moveNode(taxAccessor!.nodeId, metadataAccessor!.nodeId);
     await new Promise((r) => setTimeout(r, 200));
 
-    // STEP 10: Verify $ref fields behavior
+    // STEP 10: Change 'summary' from string to Markdown
+    const summaryTestId = getTestId(vm, 'root', 'summary');
+    await expectTypeLabel(canvas, summaryTestId, 'string');
+    await changeType(canvas, summaryTestId, 'Markdown');
+    await new Promise((r) => setTimeout(r, 100));
+    await expectTypeLabel(canvas, summaryTestId, 'Markdown');
+
+    // STEP 11: Verify $ref fields behavior
     // Get test IDs for avatar and recordCreatedAt
     const avatarTestId = getTestId(vm, 'root', 'avatar');
     const recordCreatedAtTestId = getTestId(vm, 'root', 'recordCreatedAt');
@@ -274,7 +286,7 @@ export const ComprehensiveSchemaUpdate: Story = {
     // Verify type label changed to "string"
     await expectTypeLabel(canvas, recordCreatedAtTestId, 'string');
 
-    // STEP 11: Apply changes
+    // STEP 12: Apply changes
     await waitFor(
       () => {
         expect(
@@ -415,6 +427,13 @@ export const ComprehensiveSchemaUpdate: Story = {
     );
     expect(pricePatch).toBeDefined();
     expect((pricePatch?.value as { default?: number }).default).toBe(100);
+
+    // Verify summary changed to Markdown (contentMediaType: 'text/markdown')
+    const summaryPatch = patches.find((p) => p.path === '/properties/summary');
+    expect(summaryPatch).toBeDefined();
+    expect(
+      (summaryPatch?.value as { contentMediaType?: string }).contentMediaType,
+    ).toBe('text/markdown');
 
     // Verify isActive deprecated flag (may be in move or replace patch)
     const isActiveReplacePatch = replacePatches.find(
