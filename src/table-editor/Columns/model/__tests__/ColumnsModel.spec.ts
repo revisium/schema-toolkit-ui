@@ -57,6 +57,16 @@ describe('ColumnsModel', () => {
       expect(model.hiddenColumns.some((c) => c.field === 'a')).toBe(true);
     });
 
+    it('hideColumn does not hide the last visible column', () => {
+      const columns = [col({ field: 'a' }), col({ field: 'b' })];
+      model.init(columns);
+      model.hideColumn('a');
+      expect(model.visibleColumns).toHaveLength(1);
+      model.hideColumn('b');
+      expect(model.visibleColumns).toHaveLength(1);
+      expect(model.visibleColumns[0]?.field).toBe('b');
+    });
+
     it('visibleColumns and hiddenColumns are complementary', () => {
       const columns = [
         col({ field: 'a' }),
@@ -304,10 +314,11 @@ describe('ColumnsModel', () => {
       ]);
     });
 
-    it('hideAll removes all visible columns', () => {
+    it('hideAll keeps the first visible column', () => {
       model.hideAll();
-      expect(model.visibleColumns).toHaveLength(0);
-      expect(model.hiddenColumns).toHaveLength(3);
+      expect(model.visibleColumns).toHaveLength(1);
+      expect(model.visibleColumns[0]?.field).toBe('a');
+      expect(model.hiddenColumns).toHaveLength(2);
     });
 
     it('addAll shows all columns', () => {
@@ -317,12 +328,19 @@ describe('ColumnsModel', () => {
       expect(model.hiddenColumns).toHaveLength(0);
     });
 
-    it('canRemoveColumn is true when columns visible', () => {
+    it('canRemoveColumn is true when multiple columns visible', () => {
       expect(model.canRemoveColumn).toBe(true);
     });
 
+    it('canRemoveColumn is false when only one column visible', () => {
+      model.hideColumn('b');
+      model.hideColumn('c');
+      expect(model.visibleColumns).toHaveLength(1);
+      expect(model.canRemoveColumn).toBe(false);
+    });
+
     it('canRemoveColumn is false when no columns visible', () => {
-      model.hideAll();
+      model.reorderColumns([]);
       expect(model.canRemoveColumn).toBe(false);
     });
 
@@ -403,7 +421,7 @@ describe('ColumnsModel', () => {
 
     it('callback fires on hideAll', () => {
       const onChange = jest.fn();
-      model.init([col({ field: 'a' })]);
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
       model.setOnChange(onChange);
       model.hideAll();
       expect(onChange).toHaveBeenCalled();

@@ -140,7 +140,7 @@ const CopyFormulaWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/TableWidget/CopyPaste',
+  title: 'TableEditor/Table/E2E/CopyPaste',
   decorators: [
     (Story) => (
       <Box p={4}>

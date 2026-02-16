@@ -152,7 +152,7 @@ const MixedFormulaWrapper = observer(() => {
 
 const meta: Meta<typeof FormulaStoryWrapper> = {
   component: FormulaStoryWrapper as any,
-  title: 'TableEditor/TableWidget/FormulaInteractions',
+  title: 'TableEditor/Table/E2E/FormulaInteractions',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -163,10 +163,6 @@ const meta: Meta<typeof FormulaStoryWrapper> = {
 };
 export default meta;
 type Story = StoryObj<typeof FormulaStoryWrapper>;
-
-export const FormulaColumns: Story = {
-  render: () => <FormulaStoryWrapper />,
-};
 
 export const FormulaColumnsInteractions: Story = {
   tags: ['test'],
@@ -286,10 +282,6 @@ export const FormulaColumnsInteractions: Story = {
       expect(ageCell).toHaveAttribute('tabindex', '-1');
     });
   },
-};
-
-export const MixedFormulaColumns: Story = {
-  render: () => <MixedFormulaWrapper />,
 };
 
 export const MixedFormulaInteractions: Story = {

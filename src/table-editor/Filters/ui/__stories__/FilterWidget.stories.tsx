@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within, waitFor, screen, userEvent } from 'storybook/test';
 import { FilterModel } from '../../model/index.js';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
 import { FilterFieldType } from '../../../shared/field-types.js';
 import { FilterWidget } from '../FilterWidget.js';
 
-const TEST_COLUMNS: ColumnSpec[] = [
+export const TEST_COLUMNS: ColumnSpec[] = [
   {
     field: 'name',
     label: 'Name',
@@ -35,11 +34,11 @@ const TEST_COLUMNS: ColumnSpec[] = [
   },
 ];
 
-interface StoryWrapperProps {
+export interface FilterStoryWrapperProps {
   setup?: (model: FilterModel) => void;
 }
 
-const StoryWrapper = observer(({ setup }: StoryWrapperProps) => {
+export const StoryWrapper = observer(({ setup }: FilterStoryWrapperProps) => {
   const [model] = useState(() => {
     const m = new FilterModel();
     m.init(TEST_COLUMNS);
@@ -48,10 +47,6 @@ const StoryWrapper = observer(({ setup }: StoryWrapperProps) => {
     }
     return m;
   });
-
-  useEffect(() => {
-    (window as any).__testModel = model;
-  }, [model]);
 
   return (
     <FilterWidget
@@ -64,7 +59,7 @@ const StoryWrapper = observer(({ setup }: StoryWrapperProps) => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/FilterWidget',
+  title: 'TableEditor/Filter',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -106,140 +101,5 @@ export const WithNestedGroup: Story = {
         m.addCondition(nestedGroup.id);
       }
     },
-  },
-};
-
-export const AddAndRemoveCondition: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('footer-add-condition')).toBeVisible();
-    });
-
-    const addButton = screen.getByTestId('footer-add-condition');
-    await userEvent.click(addButton);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('filter-condition')).toBeVisible();
-    });
-
-    const removeButton = screen.getByTestId('remove-condition');
-    await userEvent.click(removeButton);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('filter-condition')).toBeNull();
-    });
-  },
-};
-
-export const ChangeFieldAndOperator: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: FilterModel) => {
-      m.addCondition();
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('field-select')).toBeVisible();
-    });
-
-    const fieldSelect = screen.getByTestId('field-select');
-    await userEvent.click(fieldSelect);
-
-    await waitFor(() => {
-      expect(screen.getByText('Age')).toBeVisible();
-    });
-
-    await userEvent.click(screen.getByText('Age'));
-
-    const model = (window as any).__testModel as FilterModel;
-    await waitFor(() => {
-      const condition = model.rootGroup.conditions[0];
-      expect(condition?.fieldType).toBe(FilterFieldType.Number);
-    });
-  },
-};
-
-export const ApplyFilters: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: FilterModel) => {
-      m.addCondition();
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('filter-value-input')).toBeVisible();
-    });
-
-    const input = screen.getByTestId('filter-value-input');
-    await userEvent.type(input, 'test value');
-
-    const applyButton = screen.getByTestId('apply-filters');
-    await waitFor(() => {
-      expect(applyButton).not.toBeDisabled();
-    });
-
-    await userEvent.click(applyButton);
-
-    const model = (window as any).__testModel as FilterModel;
-    expect(model.hasActiveFilters).toBe(true);
-  },
-};
-
-export const NestedGroupWorkflow: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('footer-add-condition')).toBeVisible();
-    });
-
-    const addConditionButton = screen.getByTestId('footer-add-condition');
-    await userEvent.click(addConditionButton);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('add-group')).toBeVisible();
-    });
-
-    const addGroupButton = screen.getByTestId('add-group');
-    await userEvent.click(addGroupButton);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('filter-group')).toBeVisible();
-    });
-
-    const model = (window as any).__testModel as FilterModel;
-    const nestedGroup = model.rootGroup.groups[0];
-    expect(nestedGroup).toBeDefined();
-
-    const orButton = within(screen.getByTestId('filter-group')).getByTestId(
-      'logic-or',
-    );
-    await userEvent.click(orButton);
-
-    await waitFor(() => {
-      expect(model.rootGroup.groups[0]?.logic).toBe('or');
-    });
   },
 };

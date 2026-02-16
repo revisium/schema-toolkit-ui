@@ -11,6 +11,8 @@ import { ColumnHeader } from '../ColumnHeader.js';
 
 ensureReactivityProvider();
 
+import type { ColumnSpec } from '../../../../Columns/model/types.js';
+
 const ALL_COLUMNS = [
   col('name', FilterFieldType.String),
   col('age', FilterFieldType.Number),
@@ -23,6 +25,8 @@ interface WrapperProps {
   withFilter?: boolean;
   sortField?: string;
   sortDirection?: 'asc' | 'desc';
+  columns?: ColumnSpec[];
+  columnIndex?: number;
 }
 
 const Wrapper = observer(
@@ -31,25 +35,29 @@ const Wrapper = observer(
     withFilter = false,
     sortField,
     sortDirection,
+    columns,
+    columnIndex = 0,
   }: WrapperProps) => {
+    const cols = columns ?? ALL_COLUMNS;
+
     const [state] = useState(() => {
       const columnsModel = new ColumnsModel();
-      columnsModel.init(ALL_COLUMNS);
-      columnsModel.reorderColumns(ALL_COLUMNS.map((c) => c.field));
+      columnsModel.init(cols);
+      columnsModel.reorderColumns(cols.map((c) => c.field));
 
       const sortModel = new SortModel();
-      sortModel.init(ALL_COLUMNS);
+      sortModel.init(cols);
       if (sortField && sortDirection) {
         sortModel.addSort(sortField, sortDirection);
       }
 
       const filterModel = new FilterModel();
-      filterModel.init(ALL_COLUMNS);
+      filterModel.init(cols);
 
       return { columnsModel, sortModel, filterModel };
     });
 
-    const column = ALL_COLUMNS[0];
+    const column = cols[columnIndex];
 
     return (
       <Flex
@@ -95,4 +103,26 @@ export const WithSortActive: Story = {
 
 export const WithSortAndFilter: Story = {
   args: { withSort: true, withFilter: true },
+};
+
+export const DeprecatedColumn: Story = {
+  args: {
+    columns: [
+      col('oldField', FilterFieldType.String, {
+        label: 'Old Field',
+        isDeprecated: true,
+      }),
+    ],
+  },
+};
+
+export const FormulaColumn: Story = {
+  args: {
+    columns: [
+      col('computed', FilterFieldType.String, {
+        label: 'Computed',
+        hasFormula: true,
+      }),
+    ],
+  },
 };

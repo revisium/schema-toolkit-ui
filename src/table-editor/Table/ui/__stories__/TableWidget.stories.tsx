@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within, waitFor, userEvent } from 'storybook/test';
+import type { JsonSchema } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
   col,
   createTableStoryState,
   FilterFieldType,
 } from '../../../__stories__/helpers.js';
-import { SelectionModel } from '../../model/SelectionModel.js';
 import { TableWidget } from '../TableWidget.js';
 
 ensureReactivityProvider();
@@ -39,34 +38,136 @@ const MOCK_ROWS_DATA = [
   { name: 'Eve', age: 22, active: false },
 ];
 
-interface StoryWrapperProps {
+const noop = () => {};
+
+const EXTENDED_COLUMNS = [
+  col('name', FilterFieldType.String),
+  col('age', FilterFieldType.Number),
+  col('active', FilterFieldType.Boolean),
+  col('email', FilterFieldType.String),
+  col('score', FilterFieldType.Number),
+];
+
+const EXTENDED_SCHEMA = {
+  type: 'object' as const,
+  properties: {
+    name: { type: 'string', default: '' },
+    age: { type: 'number', default: 0 },
+    active: { type: 'boolean', default: false },
+    email: { type: 'string', default: '' },
+    score: { type: 'number', default: 0 },
+  },
+  additionalProperties: false,
+  required: ['name', 'age', 'active', 'email', 'score'],
+};
+
+const FORMULA_TABLE_SCHEMA: JsonSchema = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', default: '' },
+    age: { type: 'number', default: 0 },
+    greeting: {
+      type: 'string',
+      default: '',
+      readOnly: true,
+      'x-formula': { version: 1, expression: '"Hello, " + name' },
+    },
+    ageGroup: {
+      type: 'string',
+      default: '',
+      readOnly: true,
+      'x-formula': {
+        version: 1,
+        expression: 'if(age >= 30, "Senior", "Junior")',
+      },
+    },
+    label: {
+      type: 'string',
+      default: '',
+      readOnly: true,
+      'x-formula': {
+        version: 1,
+        expression: 'greeting + " (" + ageGroup + ")"',
+      },
+    },
+  },
+  additionalProperties: false,
+  required: ['name', 'age', 'greeting', 'ageGroup', 'label'],
+} as JsonSchema;
+
+const FORMULA_COLUMNS = [
+  col('name', FilterFieldType.String),
+  col('age', FilterFieldType.Number),
+  col('greeting', FilterFieldType.String, {
+    label: 'Greeting',
+    hasFormula: true,
+  }),
+  col('ageGroup', FilterFieldType.String, {
+    label: 'Age Group',
+    hasFormula: true,
+  }),
+  col('label', FilterFieldType.String, { label: 'Label', hasFormula: true }),
+];
+
+const MIXED_FORMULA_SCHEMA: JsonSchema = {
+  type: 'object',
+  properties: {
+    item: { type: 'string', default: '' },
+    price: { type: 'number', default: 0 },
+    quantity: { type: 'number', default: 0 },
+    total: {
+      type: 'number',
+      default: 0,
+      readOnly: true,
+      'x-formula': { version: 1, expression: 'price * quantity' },
+    },
+    expensive: {
+      type: 'boolean',
+      default: false,
+      readOnly: true,
+      'x-formula': { version: 1, expression: 'total > 100' },
+    },
+  },
+  additionalProperties: false,
+  required: ['item', 'price', 'quantity', 'total', 'expensive'],
+} as JsonSchema;
+
+const MIXED_FORMULA_COLUMNS = [
+  col('item', FilterFieldType.String, { label: 'Item' }),
+  col('price', FilterFieldType.Number, { label: 'Price' }),
+  col('quantity', FilterFieldType.Number, { label: 'Qty' }),
+  col('total', FilterFieldType.Number, { label: 'Total', hasFormula: true }),
+  col('expensive', FilterFieldType.Boolean, {
+    label: 'Expensive?',
+    hasFormula: true,
+  }),
+];
+
+interface DefaultWrapperProps {
   rowCount?: number;
   showEmpty?: boolean;
   withRowActions?: boolean;
+  withSort?: boolean;
+  withFilter?: boolean;
 }
 
-const noop = () => {};
-
-const StoryWrapper = observer(
+const DefaultWrapper = observer(
   ({
     rowCount = 5,
     showEmpty = false,
     withRowActions = true,
-  }: StoryWrapperProps) => {
+    withSort = false,
+    withFilter = false,
+  }: DefaultWrapperProps) => {
     const [state] = useState(() =>
       createTableStoryState({
         schema: TABLE_SCHEMA,
         columns: TEST_COLUMNS,
         rowsData: showEmpty ? [] : MOCK_ROWS_DATA.slice(0, rowCount),
+        withSort,
+        withFilter,
       }),
     );
-
-    useEffect(() => {
-      (window as any).__testState = state;
-      return () => {
-        delete (window as any).__testState;
-      };
-    }, [state]);
 
     return (
       <Box
@@ -80,6 +181,8 @@ const StoryWrapper = observer(
           columnsModel={state.columnsModel}
           cellFSM={state.cellFSM}
           selection={state.selection}
+          sortModel={state.sortModel}
+          filterModel={state.filterModel}
           onDeleteRow={withRowActions ? noop : undefined}
           onDuplicateRow={withRowActions ? noop : undefined}
           onDeleteSelected={withRowActions ? noop : undefined}
@@ -89,9 +192,9 @@ const StoryWrapper = observer(
   },
 );
 
-const meta: Meta<typeof StoryWrapper> = {
-  component: StoryWrapper as any,
-  title: 'TableEditor/TableWidget',
+const meta: Meta<typeof DefaultWrapper> = {
+  component: DefaultWrapper as any,
+  title: 'TableEditor/Table',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -101,7 +204,7 @@ const meta: Meta<typeof StoryWrapper> = {
   ],
 };
 export default meta;
-type Story = StoryObj<typeof StoryWrapper>;
+type Story = StoryObj<typeof DefaultWrapper>;
 
 export const Default: Story = {};
 
@@ -113,68 +216,233 @@ export const EmptyTable: Story = {
   args: { showEmpty: true },
 };
 
-export const SelectionWorkflow: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
+export const SingleColumn: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableStoryState({
+          schema: TABLE_SCHEMA,
+          columns: TEST_COLUMNS,
+          rowsData: MOCK_ROWS_DATA,
+          visibleFields: ['name'],
+        }),
+      );
+
+      return (
+        <Box
+          width="600px"
+          height="400px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+          />
+        </Box>
+      );
     });
-    const { selection } = (window as any).__testState as {
-      selection: SelectionModel;
-    };
 
-    selection.toggle('row-1');
-
-    await waitFor(() => {
-      expect(canvas.getByTestId('selection-toolbar')).toBeVisible();
-    });
-
-    expect(selection.selectedCount).toBe(1);
-
-    await userEvent.click(canvas.getByTestId('select-all'));
-
-    await waitFor(() => {
-      expect(selection.selectedCount).toBe(5);
-    });
-
-    await userEvent.click(canvas.getByTestId('exit-selection'));
-
-    await waitFor(() => {
-      expect(canvas.queryByTestId('selection-toolbar')).toBeNull();
-    });
+    return <Wrapper />;
   },
 };
 
-export const HeadersRendered: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+export const WithHiddenColumns: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableStoryState({
+          schema: EXTENDED_SCHEMA,
+          columns: EXTENDED_COLUMNS,
+          rowsData: [
+            { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
+            { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
+          ],
+          visibleFields: ['name', 'age', 'active'],
+          withSort: true,
+          withFilter: true,
+        }),
+      );
 
-    await waitFor(() => {
-      expect(canvas.getByTestId('header-name')).toBeVisible();
-      expect(canvas.getByTestId('header-age')).toBeVisible();
-      expect(canvas.getByTestId('header-active')).toBeVisible();
+      return (
+        <Box
+          width="600px"
+          height="400px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            sortModel={state.sortModel}
+            filterModel={state.filterModel}
+            onDeleteRow={noop}
+            onDuplicateRow={noop}
+            onDeleteSelected={noop}
+          />
+        </Box>
+      );
     });
 
-    expect(canvas.getByTestId('header-name')).toHaveTextContent('Name');
-    expect(canvas.getByTestId('header-age')).toHaveTextContent('Age');
-    expect(canvas.getByTestId('header-active')).toHaveTextContent('Active');
+    return <Wrapper />;
   },
 };
 
-export const MultipleRowsRendered: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+export const ManyRows: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const rows = Array.from({ length: 3000 }, (_, i) => ({
+        name: `User ${i + 1}`,
+        age: 20 + (i % 50),
+        active: i % 3 !== 0,
+      }));
 
-    await waitFor(() => {
-      expect(canvas.getByTestId('row-row-1')).toBeVisible();
-      expect(canvas.getByTestId('row-row-5')).toBeVisible();
+      const [state] = useState(() =>
+        createTableStoryState({
+          schema: TABLE_SCHEMA,
+          columns: TEST_COLUMNS,
+          rowsData: rows,
+        }),
+      );
+
+      return (
+        <Box
+          width="600px"
+          height="400px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            onDeleteRow={noop}
+            onDuplicateRow={noop}
+            onDeleteSelected={noop}
+          />
+        </Box>
+      );
     });
 
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Alice');
-    expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Bob');
-    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
+    return <Wrapper />;
+  },
+};
+
+export const InSelectionMode: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() => {
+        const s = createTableStoryState({
+          schema: TABLE_SCHEMA,
+          columns: TEST_COLUMNS,
+          rowsData: MOCK_ROWS_DATA,
+        });
+        s.selection.toggle('row-1');
+        s.selection.toggle('row-3');
+        return s;
+      });
+
+      return (
+        <Box
+          width="600px"
+          height="400px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            onDeleteRow={noop}
+            onDuplicateRow={noop}
+            onDeleteSelected={noop}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const WithSortAndFilter: Story = {
+  args: { withSort: true, withFilter: true },
+};
+
+export const FormulaColumns: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableStoryState({
+          schema: FORMULA_TABLE_SCHEMA,
+          columns: FORMULA_COLUMNS,
+          rowsData: [
+            { name: 'Alice', age: 30 },
+            { name: 'Bob', age: 25 },
+            { name: 'Charlie', age: 35 },
+          ],
+        }),
+      );
+
+      return (
+        <Box
+          width="900px"
+          height="400px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const MixedFormulaColumns: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableStoryState({
+          schema: MIXED_FORMULA_SCHEMA,
+          columns: MIXED_FORMULA_COLUMNS,
+          rowsData: [
+            { item: 'Laptop', price: 999, quantity: 2 },
+            { item: 'Mouse', price: 25, quantity: 3 },
+            { item: 'Monitor', price: 450, quantity: 1 },
+          ],
+        }),
+      );
+
+      return (
+        <Box
+          width="900px"
+          height="400px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
   },
 };

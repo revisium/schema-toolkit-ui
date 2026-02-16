@@ -360,6 +360,79 @@ export const InsertColumnBefore: Story = {
   },
 };
 
+export const HideAllKeepsOneColumn: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { columnsModel } = (window as any).__testState as {
+      columnsModel: ColumnsModel;
+    };
+
+    expect(columnsModel.visibleColumns).toHaveLength(3);
+
+    const nameHeader = canvas.getByTestId('header-name');
+    await userEvent.click(nameHeader);
+
+    const hideAllItem = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-value="hide-all"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    await userEvent.click(hideAllItem);
+
+    await waitFor(() => {
+      expect(columnsModel.visibleColumns).toHaveLength(1);
+      expect(columnsModel.visibleColumns[0]?.field).toBe('name');
+      expect(columnsModel.hasHiddenColumns).toBe(true);
+    });
+  },
+};
+
+export const LastColumnHideDisabled: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { columnsModel } = (window as any).__testState as {
+      columnsModel: ColumnsModel;
+    };
+
+    columnsModel.hideColumn('age');
+    columnsModel.hideColumn('active');
+
+    await waitFor(() => {
+      expect(columnsModel.visibleColumns).toHaveLength(1);
+    });
+
+    const nameHeader = canvas.getByTestId('header-name');
+    await userEvent.click(nameHeader);
+
+    await waitFor(() => {
+      const hideItem = document.querySelector(
+        '[data-value="hide"]',
+      ) as HTMLElement;
+      expect(hideItem).toBeTruthy();
+      expect(hideItem.hasAttribute('data-disabled')).toBe(true);
+    });
+
+    await waitFor(() => {
+      const hideAllItem = document.querySelector(
+        '[data-value="hide-all"]',
+      ) as HTMLElement;
+      expect(hideAllItem).toBeTruthy();
+      expect(hideAllItem.hasAttribute('data-disabled')).toBe(true);
+    });
+  },
+};
+
 export const InsertColumnAfter: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {

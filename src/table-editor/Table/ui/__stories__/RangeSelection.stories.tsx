@@ -70,7 +70,7 @@ const StoryWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/TableWidget/RangeSelection',
+  title: 'TableEditor/Table/E2E/RangeSelection',
   decorators: [
     (Story) => (
       <Box p={4}>

@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within, waitFor, screen, userEvent } from 'storybook/test';
 import { RowCountModel } from '../../model/RowCountModel.js';
 import { ViewSettingsBadgeModel } from '../../model/ViewSettingsBadgeModel.js';
 import { RowCountWidget } from '../RowCountWidget.js';
@@ -25,17 +24,13 @@ const BadgeWrapper = observer(
       return m;
     });
 
-    useEffect(() => {
-      (window as any).__testModel = model;
-    }, [model]);
-
     return <ViewSettingsBadge model={model} />;
   },
 );
 
 const meta: Meta<typeof BadgeWrapper> = {
   component: BadgeWrapper as any,
-  title: 'TableEditor/ViewSettingsBadge',
+  title: 'TableEditor/Status/ViewSettingsBadge',
   decorators: [
     (Story) => (
       <Box p={4} maxW="500px">
@@ -57,54 +52,6 @@ export const Local: Story = {
 
 export const Hidden: Story = {
   render: () => <BadgeWrapper canSave={true} hasChanges={false} />,
-};
-
-export const Revert: Story = {
-  tags: ['test'],
-  render: () => <BadgeWrapper canSave={true} hasChanges={true} />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const badge = canvas.getByTestId('view-settings-badge');
-    await userEvent.click(badge);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('view-settings-revert')).toBeVisible();
-    });
-
-    const model = (window as any).__testModel as ViewSettingsBadgeModel;
-    expect(model.hasChanges).toBe(true);
-
-    await userEvent.click(screen.getByTestId('view-settings-revert'));
-
-    await waitFor(() => {
-      expect(model.hasChanges).toBe(false);
-    });
-  },
-};
-
-export const Save: Story = {
-  tags: ['test'],
-  render: () => <BadgeWrapper canSave={true} hasChanges={true} />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const badge = canvas.getByTestId('view-settings-badge');
-    await userEvent.click(badge);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('view-settings-save')).toBeVisible();
-    });
-
-    const model = (window as any).__testModel as ViewSettingsBadgeModel;
-    expect(model.hasChanges).toBe(true);
-
-    await userEvent.click(screen.getByTestId('view-settings-save'));
-
-    await waitFor(() => {
-      expect(model.hasChanges).toBe(false);
-    });
-  },
 };
 
 const FooterWrapper = observer(() => {

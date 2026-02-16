@@ -1,146 +1,10 @@
-import { useCallback, useState } from 'react';
-import { Box } from '@chakra-ui/react';
-import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within, waitFor, userEvent } from 'storybook/test';
-import type { JsonSchema } from '@revisium/schema-toolkit';
-import { createTableModel } from '@revisium/schema-toolkit';
-import { ensureReactivityProvider } from '../../../../../lib/initReactivity.js';
 import { FilterFieldType } from '../../../../shared/field-types.js';
-import type { SearchForeignKeySearchFn } from '../../../../../search-foreign-key/index.js';
-import type { ColumnSpec } from '../../../../Columns/model/types.js';
-import { CellFSM } from '../../../model/CellFSM.js';
-import { CellVM } from '../../../model/CellVM.js';
-import { CellRenderer } from '../CellRenderer';
-
-ensureReactivityProvider();
-
-type FieldDef =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | {
-      type: 'string' | 'number' | 'boolean';
-      readOnly?: boolean;
-      formula?: string;
-    };
-
-function createSchema(fields: Record<string, FieldDef>): JsonSchema {
-  const properties: Record<string, JsonSchema> = {};
-  for (const [name, def] of Object.entries(fields)) {
-    const type = typeof def === 'string' ? def : def.type;
-    const readOnly = typeof def === 'object' ? def.readOnly : undefined;
-    const formula = typeof def === 'object' ? def.formula : undefined;
-
-    const prop: Record<string, unknown> = { type };
-    if (type === 'string') {
-      prop.default = '';
-    } else if (type === 'number') {
-      prop.default = 0;
-    } else if (type === 'boolean') {
-      prop.default = false;
-    }
-    if (readOnly) {
-      prop.readOnly = true;
-    }
-    if (formula) {
-      prop['x-formula'] = { version: 1, expression: formula };
-    }
-    properties[name] = prop as JsonSchema;
-  }
-  return {
-    type: 'object',
-    properties,
-    additionalProperties: false,
-    required: Object.keys(fields),
-  };
-}
-
-function createColumn(
-  field: string,
-  fieldType: FilterFieldType,
-  options: Partial<ColumnSpec> = {},
-): ColumnSpec {
-  return {
-    field,
-    label: field,
-    fieldType,
-    isSystem: false,
-    isDeprecated: false,
-    hasFormula: false,
-    ...options,
-  };
-}
-
-const mockSearchForeignKey: SearchForeignKeySearchFn = (
-  _tableId: string,
-  search: string,
-) => {
-  const allIds = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5'];
-  const filtered = search ? allIds.filter((id) => id.includes(search)) : allIds;
-  return Promise.resolve({ ids: filtered, hasMore: false });
-};
-
-interface StoryWrapperProps {
-  field: string;
-  fieldType: FilterFieldType;
-  schema: JsonSchema;
-  initialData: Record<string, unknown>;
-  foreignKeyTableId?: string;
-}
-
-const StoryWrapper = observer(
-  ({
-    field,
-    fieldType,
-    schema,
-    initialData,
-    foreignKeyTableId,
-  }: StoryWrapperProps) => {
-    const [state] = useState(() => {
-      const cellFSM = new CellFSM();
-      const tableModel = createTableModel({
-        tableId: 'cell-test',
-        schema: schema as any,
-        rows: [{ rowId: 'row-1', data: initialData }],
-      });
-      const rowModel = tableModel.rows[0];
-      const column = createColumn(field, fieldType, { foreignKeyTableId });
-      const cell = new CellVM(rowModel, column, 'row-1', cellFSM);
-      cellFSM.setNavigationContext([field], ['row-1']);
-      return { cell };
-    });
-
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent) => {
-        const isMod = e.ctrlKey || e.metaKey;
-        if (isMod && e.key === 'v' && state.cell.isFocused) {
-          e.preventDefault();
-          void state.cell.pasteFromClipboard();
-        }
-      },
-      [state.cell],
-    );
-
-    return (
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        onKeyDown={handleKeyDown}
-      >
-        <CellRenderer
-          cell={state.cell}
-          onSearchForeignKey={mockSearchForeignKey}
-        />
-      </Box>
-    );
-  },
-);
+import { StoryWrapper, createSchema } from './helpers.js';
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/CellRenderer',
+  title: 'TableEditor/Cell',
   decorators: [(Story) => <Story />],
 };
 export default meta;
@@ -182,191 +46,40 @@ export const BooleanFalse: Story = {
   },
 };
 
-export const CellInteractions: Story = {
-  tags: ['test'],
+export const EmptyString: Story = {
   args: {
     field: 'name',
     fieldType: FilterFieldType.String,
     schema: createSchema({ name: 'string' }),
-    initialData: { name: 'Hello' },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const cell = canvas.getByTestId('cell-row-1-name');
-
-    await userEvent.click(cell);
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '-1');
-    });
-
-    await userEvent.dblClick(cell);
-    const input = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    await userEvent.clear(input);
-    await userEvent.type(input, 'New Value');
-    input.blur();
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
-        'New Value',
-      );
-    });
-
-    await userEvent.click(cell);
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('{Enter}');
-    const input2 = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    await userEvent.type(input2, ' World');
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(
-        document.querySelector('[data-testid="string-cell-input"]'),
-      ).toBeNull();
-    });
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
-      'New Value',
-    );
-
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('X');
-    const input3 = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    expect(input3.value).toBe('X');
-    input3.blur();
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('X');
-    });
-
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('1');
-    const input4 = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="string-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    expect(input4.value).toBe('1');
-    input4.blur();
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('1');
-    });
-
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
-    });
-
-    await userEvent.keyboard('{Delete}');
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('');
-    });
-
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '-1');
-    });
+    initialData: { name: '' },
   },
 };
 
-export const BooleanCellToggle: Story = {
-  tags: ['test'],
+export const LongText: Story = {
   args: {
-    field: 'active',
-    fieldType: FilterFieldType.Boolean,
-    schema: createSchema({ active: 'boolean' }),
-    initialData: { active: true },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const cell = canvas.getByTestId('cell-row-1-active');
-
-    expect(cell).toHaveTextContent('true');
-
-    await userEvent.click(cell);
-
-    await userEvent.dblClick(cell);
-
-    const falseOption = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="boolean-option-false"]',
-      ) as HTMLElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    await userEvent.click(falseOption);
-
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-active')).toHaveTextContent(
-        'false',
-      );
-    });
+    field: 'name',
+    fieldType: FilterFieldType.String,
+    schema: createSchema({ name: 'string' }),
+    initialData: {
+      name: 'This is a very long text value that should be truncated in the cell renderer to demonstrate overflow handling behavior',
+    },
   },
 };
 
-export const NumberCellEdit: Story = {
-  tags: ['test'],
+export const NegativeNumber: Story = {
   args: {
     field: 'age',
     fieldType: FilterFieldType.Number,
     schema: createSchema({ age: 'number' }),
-    initialData: { age: 42 },
+    initialData: { age: -42 },
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const cell = canvas.getByTestId('cell-row-1-age');
+};
 
-    expect(cell).toHaveTextContent('42');
-
-    await userEvent.dblClick(cell);
-
-    const input = await waitFor(() => {
-      const el = document.querySelector(
-        '[data-testid="number-cell-input"]',
-      ) as HTMLTextAreaElement;
-      expect(el).toBeTruthy();
-      return el;
-    });
-
-    await userEvent.clear(input);
-    await userEvent.type(input, '99');
-    await userEvent.keyboard('{Enter}');
-
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('99');
-    });
+export const DecimalNumber: Story = {
+  args: {
+    field: 'age',
+    fieldType: FilterFieldType.Number,
+    schema: createSchema({ age: 'number' }),
+    initialData: { age: 3.14159 },
   },
 };
