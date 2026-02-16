@@ -187,18 +187,20 @@ export const DeleteRowWithConfirm: Story = {
     });
     await userEvent.click(deleteItem);
 
-    const dialog = await waitFor(() => {
+    await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="delete-confirm-dialog"]',
+      );
+      expect(el).toBeTruthy();
+    });
+
+    const confirmBtn = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-testid="delete-confirm"]',
       ) as HTMLElement;
       expect(el).toBeTruthy();
       return el;
     });
-    expect(dialog).toBeVisible();
-
-    const confirmBtn = document.querySelector(
-      '[data-testid="delete-confirm"]',
-    ) as HTMLElement;
     await userEvent.click(confirmBtn);
 
     await waitFor(() => {
@@ -290,6 +292,60 @@ export const BatchDeleteWithConfirm: Story = {
 
     await waitFor(() => {
       expect(mockDeleteSelected).toHaveBeenCalledWith(['row-1', 'row-2']);
+    });
+  },
+};
+
+export const DeleteSelectedRowClearsSelection: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { selection } = (window as any).__testState as {
+      selection: SelectionModel;
+    };
+
+    selection.toggle('row-1');
+    expect(selection.isSelected('row-1')).toBe(true);
+
+    const row = canvas.getByTestId('row-row-1');
+    await userEvent.hover(row);
+
+    const trigger = await waitFor(() => {
+      const el = canvas.getByTestId('row-menu-trigger-row-1');
+      expect(el).toBeTruthy();
+      return el;
+    });
+    await userEvent.click(trigger);
+
+    const deleteItem = await waitFor(() => {
+      const el = document.querySelector('[data-value="delete"]') as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+    await userEvent.click(deleteItem);
+
+    await waitFor(() => {
+      const el = document.querySelector(
+        '[data-testid="delete-confirm-dialog"]',
+      );
+      expect(el).toBeTruthy();
+    });
+
+    const confirmBtn = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-testid="delete-confirm"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+    await userEvent.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(mockDeleteRow).toHaveBeenCalledWith('row-1');
+      expect(selection.isSelected('row-1')).toBe(false);
     });
   },
 };

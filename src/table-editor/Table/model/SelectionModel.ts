@@ -23,6 +23,10 @@ export class SelectionModel {
     return this._selected.get(rowId) === true;
   }
 
+  deselect(rowId: string): void {
+    this._selected.delete(rowId);
+  }
+
   toggle(rowId: string): void {
     if (this._selected.has(rowId)) {
       this._selected.delete(rowId);

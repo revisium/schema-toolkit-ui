@@ -154,6 +154,7 @@ export const TableWidget = observer(
 
     const handleDeleteConfirm = useCallback(() => {
       if (deleteConfirm?.rowId) {
+        selection.deselect(deleteConfirm.rowId);
         if (onDeleteRow) {
           onDeleteRow(deleteConfirm.rowId);
         } else if (onDeleteSelected) {
