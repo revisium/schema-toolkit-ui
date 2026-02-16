@@ -61,7 +61,7 @@ const StoryWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/TableWidget/CellInteractions',
+  title: 'TableEditor/Table/E2E/CellNavigation',
   decorators: [
     (Story) => (
       <Box p={4}>

@@ -70,7 +70,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.stories.tsx', '**/__stories__/**/test-utils.ts'],
+    files: ['**/*.stories.tsx', '**/__stories__/**/test-utils.ts', '**/__stories__/**/helpers.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

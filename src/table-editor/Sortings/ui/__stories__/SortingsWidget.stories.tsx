@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within, waitFor, screen, userEvent } from 'storybook/test';
 import { SortModel } from '../../model/SortModel.js';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
 import { FilterFieldType } from '../../../shared/field-types.js';
 import { SortingsWidget } from '../SortingsWidget.js';
 
-const TEST_COLUMNS: ColumnSpec[] = [
+export const TEST_COLUMNS: ColumnSpec[] = [
   {
     field: 'name',
     label: 'Name',
@@ -35,11 +34,11 @@ const TEST_COLUMNS: ColumnSpec[] = [
   },
 ];
 
-interface StoryWrapperProps {
+export interface SortStoryWrapperProps {
   setup?: (model: SortModel) => void;
 }
 
-const StoryWrapper = observer(({ setup }: StoryWrapperProps) => {
+export const StoryWrapper = observer(({ setup }: SortStoryWrapperProps) => {
   const [model] = useState(() => {
     const m = new SortModel();
     m.init(TEST_COLUMNS);
@@ -48,10 +47,6 @@ const StoryWrapper = observer(({ setup }: StoryWrapperProps) => {
     }
     return m;
   });
-
-  useEffect(() => {
-    (window as any).__testModel = model;
-  }, [model]);
 
   return (
     <SortingsWidget
@@ -64,7 +59,7 @@ const StoryWrapper = observer(({ setup }: StoryWrapperProps) => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/SortingsWidget',
+  title: 'TableEditor/Sort',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -92,86 +87,5 @@ export const WithMultipleSorts: Story = {
       m.addSort('name', 'asc');
       m.addSort('age', 'desc');
     },
-  },
-};
-
-export const AddAndRemoveSort: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('add-sort')).toBeVisible();
-    });
-
-    await userEvent.click(screen.getByTestId('add-sort'));
-
-    await waitFor(() => {
-      expect(screen.getByTestId('sort-row')).toBeVisible();
-    });
-
-    await userEvent.click(screen.getByTestId('remove-sort'));
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('sort-row')).toBeNull();
-    });
-  },
-};
-
-export const ToggleDirection: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('toggle-direction')).toBeVisible();
-    });
-
-    const model = (window as any).__testModel as SortModel;
-    expect(model.sorts[0]?.direction).toBe('asc');
-
-    await userEvent.click(screen.getByTestId('toggle-direction'));
-
-    await waitFor(() => {
-      expect(model.sorts[0]?.direction).toBe('desc');
-    });
-  },
-};
-
-export const ClearAllSorts: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-      m.addSort('age', 'desc');
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('clear-all-sorts')).toBeVisible();
-    });
-
-    await userEvent.click(screen.getByTestId('clear-all-sorts'));
-
-    const model = (window as any).__testModel as SortModel;
-    await waitFor(() => {
-      expect(model.sorts).toHaveLength(0);
-    });
   },
 };

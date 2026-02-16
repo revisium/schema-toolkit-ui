@@ -48,7 +48,7 @@ export class ColumnsModel {
   }
 
   get canRemoveColumn(): boolean {
-    return this._visibleFields.length > 0;
+    return this._visibleFields.length > 1;
   }
 
   get sortableFields(): ColumnSpec[] {
@@ -82,6 +82,9 @@ export class ColumnsModel {
   }
 
   hideColumn(field: string): void {
+    if (this._visibleFields.length <= 1) {
+      return;
+    }
     const index = this._visibleFields.indexOf(field);
     if (index !== -1) {
       this._visibleFields.splice(index, 1);
@@ -90,7 +93,10 @@ export class ColumnsModel {
   }
 
   hideAll(): void {
-    this._visibleFields = [];
+    if (this._visibleFields.length <= 1) {
+      return;
+    }
+    this._visibleFields = this._visibleFields.slice(0, 1);
     this._notifyChange();
   }
 
