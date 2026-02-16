@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Box, Text } from '@chakra-ui/react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { RowVM } from '../model/RowVM.js';
 import type { CellFSM, SelectedRange } from '../model/CellFSM.js';
 import type { SelectionModel } from '../model/SelectionModel.js';
@@ -13,6 +13,7 @@ import { parseTSV } from '../model/parseTSV.js';
 import { HeaderRow } from './HeaderRow.js';
 import { DataRow } from './DataRow.js';
 import { SelectionToolbar } from './SelectionToolbar.js';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog/DeleteConfirmDialog.js';
 import type { CellContextActions } from './Cell/CellContextActionsContext.js';
 import { CellContextActionsContext } from './Cell/CellContextActionsContext.js';
 
@@ -98,6 +99,11 @@ function clearRange(
   }
 }
 
+interface DeleteConfirmState {
+  rowId?: string;
+  batchIds?: string[];
+}
+
 interface TableWidgetProps {
   rows: RowVM[];
   columnsModel: ColumnsModel;
@@ -107,6 +113,8 @@ interface TableWidgetProps {
   filterModel?: FilterModel;
   onSearchForeignKey?: SearchForeignKeySearchFn;
   onDeleteSelected?: (ids: string[]) => void;
+  onDeleteRow?: (rowId: string) => void;
+  onDuplicateRow?: (rowId: string) => void;
   onCopyPath?: (path: string) => void;
 }
 
@@ -120,10 +128,49 @@ export const TableWidget = observer(
     filterModel,
     onSearchForeignKey,
     onDeleteSelected,
+    onDeleteRow,
+    onDuplicateRow,
     onCopyPath,
   }: TableWidgetProps) => {
     const showSelection = selection.isSelectionMode;
     const allRowIds = rows.map((r) => r.rowId);
+    const [deleteConfirm, setDeleteConfirm] =
+      useState<DeleteConfirmState | null>(null);
+
+    const handleSelectRow = useCallback(
+      (rowId: string) => {
+        selection.enterSelectionMode(rowId);
+      },
+      [selection],
+    );
+
+    const handleDeleteRowRequest = useCallback((rowId: string) => {
+      setDeleteConfirm({ rowId });
+    }, []);
+
+    const handleBatchDeleteRequest = useCallback((ids: string[]) => {
+      setDeleteConfirm({ batchIds: ids });
+    }, []);
+
+    const handleDeleteConfirm = useCallback(() => {
+      if (deleteConfirm?.rowId) {
+        if (onDeleteRow) {
+          onDeleteRow(deleteConfirm.rowId);
+        } else if (onDeleteSelected) {
+          onDeleteSelected([deleteConfirm.rowId]);
+        }
+      } else if (deleteConfirm?.batchIds) {
+        onDeleteSelected?.(deleteConfirm.batchIds);
+        selection.exitSelectionMode();
+      }
+      setDeleteConfirm(null);
+    }, [deleteConfirm, onDeleteRow, onDeleteSelected, selection]);
+
+    const handleDeleteCancel = useCallback(() => {
+      setDeleteConfirm(null);
+    }, []);
+
+    const deleteCount = deleteConfirm?.batchIds?.length;
 
     const contextActions = useMemo(
       (): CellContextActions => ({
@@ -224,6 +271,9 @@ export const TableWidget = observer(
       [cellFSM, rows, columnsModel],
     );
 
+    const canDeleteRow = Boolean(onDeleteRow || onDeleteSelected);
+    const canDuplicateRow = Boolean(onDuplicateRow);
+
     if (columnsModel.visibleColumns.length === 0) {
       return (
         <Box p={4}>
@@ -266,6 +316,15 @@ export const TableWidget = observer(
                   columnsModel={columnsModel}
                   showSelection={showSelection}
                   onSearchForeignKey={onSearchForeignKey}
+                  onSelectRow={
+                    canDeleteRow || canDuplicateRow
+                      ? handleSelectRow
+                      : undefined
+                  }
+                  onDuplicateRow={canDuplicateRow ? onDuplicateRow : undefined}
+                  onDeleteRow={
+                    canDeleteRow ? handleDeleteRowRequest : undefined
+                  }
                 />
               ))
             )}
@@ -273,9 +332,15 @@ export const TableWidget = observer(
           <SelectionToolbar
             selection={selection}
             allRowIds={allRowIds}
-            onDelete={onDeleteSelected}
+            onDelete={onDeleteSelected ? handleBatchDeleteRequest : undefined}
           />
         </Box>
+        <DeleteConfirmDialog
+          isOpen={deleteConfirm !== null}
+          onClose={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+          count={deleteCount}
+        />
       </CellContextActionsContext.Provider>
     );
   },

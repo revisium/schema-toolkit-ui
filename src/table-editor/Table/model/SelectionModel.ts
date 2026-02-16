@@ -41,6 +41,19 @@ export class SelectionModel {
     this._selected.clear();
   }
 
+  enterSelectionMode(rowId?: string): void {
+    if (rowId) {
+      this._selected.set(rowId, true);
+    }
+  }
+
+  isAllSelected(allRowIds: string[]): boolean {
+    if (allRowIds.length === 0) {
+      return false;
+    }
+    return allRowIds.every((id) => this._selected.has(id));
+  }
+
   exitSelectionMode(): void {
     this._selected.clear();
   }

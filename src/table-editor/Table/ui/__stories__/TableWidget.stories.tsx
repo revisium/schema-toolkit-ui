@@ -42,10 +42,17 @@ const MOCK_ROWS_DATA = [
 interface StoryWrapperProps {
   rowCount?: number;
   showEmpty?: boolean;
+  withRowActions?: boolean;
 }
 
+const noop = () => {};
+
 const StoryWrapper = observer(
-  ({ rowCount = 5, showEmpty = false }: StoryWrapperProps) => {
+  ({
+    rowCount = 5,
+    showEmpty = false,
+    withRowActions = true,
+  }: StoryWrapperProps) => {
     const [state] = useState(() =>
       createTableStoryState({
         schema: TABLE_SCHEMA,
@@ -73,6 +80,9 @@ const StoryWrapper = observer(
           columnsModel={state.columnsModel}
           cellFSM={state.cellFSM}
           selection={state.selection}
+          onDeleteRow={withRowActions ? noop : undefined}
+          onDuplicateRow={withRowActions ? noop : undefined}
+          onDeleteSelected={withRowActions ? noop : undefined}
         />
       </Box>
     );
