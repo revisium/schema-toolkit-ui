@@ -12,6 +12,7 @@ import {
 } from '../../../../../__stories__/helpers.js';
 import { ColumnsModel } from '../../../../../Columns/model/ColumnsModel.js';
 import { SortModel } from '../../../../../Sortings/model/SortModel.js';
+import { FilterModel } from '../../../../../Filters/model/FilterModel.js';
 import { TableWidget } from '../../../TableWidget.js';
 
 ensureReactivityProvider();
@@ -228,6 +229,184 @@ export const CopyPath: Story = {
 
     await waitFor(() => {
       expect(clipboard.getText()).toBe('age');
+    });
+  },
+};
+
+export const SortDescending: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { sortModel } = (window as any).__testState as {
+      sortModel: SortModel;
+    };
+
+    const ageHeader = canvas.getByTestId('header-age');
+    await userEvent.click(ageHeader);
+
+    const sortSubmenuTrigger = await waitFor(() => {
+      const items = document.querySelectorAll('[role="menuitem"]');
+      const trigger = Array.from(items).find((el) =>
+        el.textContent?.includes('Sort'),
+      );
+      expect(trigger).toBeTruthy();
+      return trigger as HTMLElement;
+    });
+
+    await userEvent.click(sortSubmenuTrigger);
+
+    const sortDescItem = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-value="sort-desc"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    await userEvent.click(sortDescItem);
+
+    await waitFor(() => {
+      expect(sortModel.isSorted('age')).toBe(true);
+      expect(sortModel.getSortDirection('age')).toBe('desc');
+    });
+  },
+};
+
+export const AddFilter: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { filterModel } = (window as any).__testState as {
+      filterModel: FilterModel;
+    };
+
+    expect(filterModel.isOpen).toBe(false);
+
+    const nameHeader = canvas.getByTestId('header-name');
+    await userEvent.click(nameHeader);
+
+    const addFilterItem = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-value="add-filter"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    await userEvent.click(addFilterItem);
+
+    await waitFor(() => {
+      expect(filterModel.isOpen).toBe(true);
+      expect(filterModel.rootGroup.conditions).toHaveLength(1);
+      expect(filterModel.rootGroup.conditions[0]?.field).toBe('name');
+    });
+  },
+};
+
+export const InsertColumnBefore: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { columnsModel } = (window as any).__testState as {
+      columnsModel: ColumnsModel;
+    };
+
+    columnsModel.hideColumn('active');
+
+    await waitFor(() => {
+      expect(columnsModel.visibleColumns).toHaveLength(2);
+    });
+
+    const ageHeader = canvas.getByTestId('header-age');
+    await userEvent.click(ageHeader);
+
+    const insertBeforeTrigger = await waitFor(() => {
+      const items = document.querySelectorAll('[role="menuitem"]');
+      const trigger = Array.from(items).find((el) =>
+        el.textContent?.includes('Insert before'),
+      );
+      expect(trigger).toBeTruthy();
+      return trigger as HTMLElement;
+    });
+
+    await userEvent.click(insertBeforeTrigger);
+
+    const activeItem = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-value="before-active"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    await userEvent.click(activeItem);
+
+    await waitFor(() => {
+      expect(columnsModel.visibleColumns).toHaveLength(3);
+      const fields = columnsModel.visibleColumns.map((c) => c.field);
+      const ageIndex = fields.indexOf('age');
+      const activeIndex = fields.indexOf('active');
+      expect(activeIndex).toBeLessThan(ageIndex);
+    });
+  },
+};
+
+export const InsertColumnAfter: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { columnsModel } = (window as any).__testState as {
+      columnsModel: ColumnsModel;
+    };
+
+    columnsModel.hideColumn('active');
+
+    await waitFor(() => {
+      expect(columnsModel.visibleColumns).toHaveLength(2);
+    });
+
+    const nameHeader = canvas.getByTestId('header-name');
+    await userEvent.click(nameHeader);
+
+    const insertAfterTrigger = await waitFor(() => {
+      const items = document.querySelectorAll('[role="menuitem"]');
+      const trigger = Array.from(items).find((el) =>
+        el.textContent?.includes('Insert after'),
+      );
+      expect(trigger).toBeTruthy();
+      return trigger as HTMLElement;
+    });
+
+    await userEvent.click(insertAfterTrigger);
+
+    const activeItem = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-value="after-active"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    await userEvent.click(activeItem);
+
+    await waitFor(() => {
+      expect(columnsModel.visibleColumns).toHaveLength(3);
+      const fields = columnsModel.visibleColumns.map((c) => c.field);
+      const nameIndex = fields.indexOf('name');
+      const activeIndex = fields.indexOf('active');
+      expect(activeIndex).toBe(nameIndex + 1);
     });
   },
 };

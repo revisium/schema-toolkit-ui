@@ -23,6 +23,10 @@ export class SelectionModel {
     return this._selected.get(rowId) === true;
   }
 
+  deselect(rowId: string): void {
+    this._selected.delete(rowId);
+  }
+
   toggle(rowId: string): void {
     if (this._selected.has(rowId)) {
       this._selected.delete(rowId);
@@ -39,6 +43,19 @@ export class SelectionModel {
 
   deselectAll(): void {
     this._selected.clear();
+  }
+
+  enterSelectionMode(rowId?: string): void {
+    if (rowId) {
+      this._selected.set(rowId, true);
+    }
+  }
+
+  isAllSelected(allRowIds: string[]): boolean {
+    if (allRowIds.length === 0) {
+      return false;
+    }
+    return allRowIds.every((id) => this._selected.has(id));
   }
 
   exitSelectionMode(): void {
