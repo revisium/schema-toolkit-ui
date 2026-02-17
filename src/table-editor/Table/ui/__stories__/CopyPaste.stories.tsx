@@ -10,6 +10,7 @@ import {
   createTableStoryState,
   FilterFieldType,
   mockClipboard,
+  type TableStoryState,
 } from '../../../__stories__/helpers.js';
 import { CellFSM } from '../../model/CellFSM.js';
 import { TableWidget } from '../TableWidget.js';
@@ -380,6 +381,85 @@ export const PasteQuotedTSVFromExcel: Story = {
     });
 
     expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
+
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const CopyRangeAfterColumnReorder: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const state = (window as any).__testState as TableStoryState;
+    const { cellFSM } = state;
+
+    const clipboard = mockClipboard();
+
+    state.columnsModel.moveColumnToStart('active');
+
+    await waitFor(() => {
+      expect(canvas.getByTestId('header-active')).toBeVisible();
+    });
+
+    const activeCell = canvas.getByTestId('cell-row-1-active');
+    await userEvent.click(activeCell);
+    await waitFor(() => {
+      expect(activeCell).toHaveAttribute('tabindex', '0');
+    });
+
+    cellFSM.selectTo({ rowId: 'row-2', field: 'name' });
+    await waitFor(() => {
+      expect(cellFSM.hasSelection).toBe(true);
+    });
+
+    await userEvent.keyboard('{Control>}c{/Control}');
+
+    await waitFor(() => {
+      const text = clipboard.getText();
+      expect(text).toBe('true\tAlice\nfalse\tBob');
+    });
+
+    await userEvent.click(activeCell);
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const PasteOverflowBeyondTableBounds: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+
+    mockClipboard('X\t99\nY\t88\nZ\t77\nW\t66\nV\t55\nU\t44\nT\t33');
+
+    const cell = canvas.getByTestId('cell-row-4-name');
+    await userEvent.click(cell);
+    await waitFor(() => {
+      expect(cell).toHaveAttribute('tabindex', '0');
+    });
+
+    await userEvent.keyboard('{Control>}v{/Control}');
+
+    await waitFor(() => {
+      expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent('X');
+    });
+    await waitFor(() => {
+      expect(canvas.getByTestId('cell-row-4-age')).toHaveTextContent('99');
+    });
+    await waitFor(() => {
+      expect(canvas.getByTestId('cell-row-5-name')).toHaveTextContent('Y');
+    });
+    await waitFor(() => {
+      expect(canvas.getByTestId('cell-row-5-age')).toHaveTextContent('88');
+    });
+
+    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
+    expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('35');
 
     await userEvent.keyboard('{Escape}');
   },

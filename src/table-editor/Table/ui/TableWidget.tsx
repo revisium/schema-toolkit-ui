@@ -3,14 +3,18 @@ import { Box, Spinner, Text } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
 import { TableVirtuoso } from 'react-virtuoso';
 import type { RowVM } from '../model/RowVM.js';
-import type { CellFSM, SelectedRange } from '../model/CellFSM.js';
+import type { CellFSM } from '../model/CellFSM.js';
 import type { SelectionModel } from '../model/SelectionModel.js';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
-import type { ColumnSpec } from '../../Columns/model/types.js';
 import type { FilterModel } from '../../Filters/model/FilterModel.js';
 import type { SortModel } from '../../Sortings/model/SortModel.js';
 import type { SearchForeignKeySearchFn } from '../../../search-foreign-key/index.js';
-import { parseTSV } from '../model/parseTSV.js';
+import {
+  copyRangeToClipboard,
+  pasteRangeFromClipboard,
+  getFocusedPosition,
+  clearRange,
+} from '../model/clipboardOperations.js';
 import { HeaderRow } from './HeaderRow.js';
 import { DataRow } from './DataRow.js';
 import { SelectionToolbar } from './SelectionToolbar.js';
@@ -19,88 +23,6 @@ import type { CellContextActions } from './Cell/CellContextActionsContext.js';
 import { CellContextActionsContext } from './Cell/CellContextActionsContext.js';
 import { TableComponent } from './TableComponent.js';
 import { TableRowComponent } from './TableRowComponent.js';
-
-function copyRangeToClipboard(
-  range: SelectedRange,
-  rows: RowVM[],
-  cols: ColumnSpec[],
-): Promise<void> {
-  const lines: string[] = [];
-  for (let r = range.startRow; r <= range.endRow; r++) {
-    const cells: string[] = [];
-    for (let c = range.startCol; c <= range.endCol; c++) {
-      const row = rows[r];
-      const col = cols[c];
-      if (row && col) {
-        cells.push(row.getCellVM(col).displayValue);
-      }
-    }
-    lines.push(cells.join('\t'));
-  }
-  return navigator.clipboard.writeText(lines.join('\n'));
-}
-
-function pasteRangeFromClipboard(
-  focusedRowIndex: number,
-  focusedColIndex: number,
-  rows: RowVM[],
-  cols: ColumnSpec[],
-): Promise<void> {
-  return navigator.clipboard.readText().then((text) => {
-    const grid = parseTSV(text);
-    for (const [r, gridRow] of grid.entries()) {
-      const rowIndex = focusedRowIndex + r;
-      const row = rows[rowIndex];
-      if (!row) {
-        break;
-      }
-      for (const [c, cellText] of gridRow.entries()) {
-        const colIndex = focusedColIndex + c;
-        const col = cols[colIndex];
-        if (!col) {
-          break;
-        }
-        const cellVM = row.getCellVM(col);
-        if (cellVM.isEditable) {
-          cellVM.applyPastedText(cellText);
-        }
-      }
-    }
-  });
-}
-
-function getFocusedPosition(
-  fsm: CellFSM,
-  cols: ColumnSpec[],
-  rows: RowVM[],
-): { colIndex: number; rowIndex: number } | null {
-  const focused = fsm.focusedCell;
-  if (!focused) {
-    return null;
-  }
-  const colIndex = cols.findIndex((c) => c.field === focused.field);
-  const rowIndex = rows.findIndex((r) => r.rowId === focused.rowId);
-  if (colIndex === -1 || rowIndex === -1) {
-    return null;
-  }
-  return { colIndex, rowIndex };
-}
-
-function clearRange(
-  range: SelectedRange,
-  rows: RowVM[],
-  cols: ColumnSpec[],
-): void {
-  for (let r = range.startRow; r <= range.endRow; r++) {
-    for (let c = range.startCol; c <= range.endCol; c++) {
-      const row = rows[r];
-      const col = cols[c];
-      if (row && col) {
-        row.getCellVM(col).clearToDefault();
-      }
-    }
-  }
-}
 
 interface DeleteConfirmState {
   rowId?: string;
@@ -337,13 +259,15 @@ export const TableWidget = observer(
       [rows],
     );
 
+    const totalColumns = columnsModel.visibleColumns.length + 4;
+
     const LoadingMoreFooter = useCallback(
       () =>
         isLoadingMore ? (
           <tfoot>
             <tr>
               <td
-                colSpan={9999}
+                colSpan={totalColumns}
                 style={{ textAlign: 'center', padding: '16px 0' }}
               >
                 <Spinner size="sm" color="gray.400" />
@@ -351,7 +275,7 @@ export const TableWidget = observer(
             </tr>
           </tfoot>
         ) : null,
-      [isLoadingMore],
+      [isLoadingMore, totalColumns],
     );
 
     const tableComponents = useMemo(

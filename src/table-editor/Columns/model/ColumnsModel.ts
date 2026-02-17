@@ -12,6 +12,8 @@ export class ColumnsModel {
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
+  // --- Computed Getters ---
+
   get visibleColumns(): ColumnSpec[] {
     const lookup = this._columnLookup;
     const result: ColumnSpec[] = [];
@@ -59,13 +61,7 @@ export class ColumnsModel {
     return this._allColumns.filter((col) => !col.isDeprecated);
   }
 
-  private get _visibleFieldSet(): Set<string> {
-    return new Set(this._visibleFields);
-  }
-
-  private get _columnLookup(): Map<string, ColumnSpec> {
-    return new Map(this._allColumns.map((col) => [col.field, col]));
-  }
+  // --- Lifecycle ---
 
   init(columns: ColumnSpec[]): void {
     this._allColumns = columns;
@@ -73,6 +69,8 @@ export class ColumnsModel {
     this._visibleFields = defaults.map((col) => col.field);
     this._columnWidths.clear();
   }
+
+  // --- Visibility ---
 
   showColumn(field: string): void {
     if (!this._visibleFields.includes(field)) {
@@ -105,6 +103,8 @@ export class ColumnsModel {
     this._notifyChange();
   }
 
+  // --- Query ---
+
   getColumnIndex(field: string): number {
     return this._visibleFields.indexOf(field);
   }
@@ -125,6 +125,8 @@ export class ColumnsModel {
   canMoveToEnd(field: string): boolean {
     return this.canMoveRight(field);
   }
+
+  // --- Movement ---
 
   moveColumnLeft(field: string): void {
     const index = this.getColumnIndex(field);
@@ -162,6 +164,8 @@ export class ColumnsModel {
     }
   }
 
+  // --- Insertion ---
+
   insertColumnBefore(targetField: string, newField: string): void {
     if (this._visibleFields.includes(newField)) {
       return;
@@ -191,6 +195,8 @@ export class ColumnsModel {
     this._notifyChange();
   }
 
+  // --- Width ---
+
   setColumnWidth(field: string, width: number): void {
     this._columnWidths.set(field, width);
     this._notifyChange();
@@ -200,12 +206,16 @@ export class ColumnsModel {
     return this._columnWidths.get(field);
   }
 
+  // --- Reset ---
+
   resetToDefaults(): void {
     const defaults = selectDefaultColumns(this._allColumns);
     this._visibleFields = defaults.map((col) => col.field);
     this._columnWidths.clear();
     this._notifyChange();
   }
+
+  // --- Serialization ---
 
   serializeToViewColumns(): ViewColumn[] {
     return this._visibleFields.map((field) => {
@@ -237,12 +247,24 @@ export class ColumnsModel {
     this._visibleFields = fields;
   }
 
+  // --- Events ---
+
   setOnChange(cb: (() => void) | null): void {
     this._onChange = cb;
   }
 
   dispose(): void {
     this._onChange = null;
+  }
+
+  // --- Private ---
+
+  private get _visibleFieldSet(): Set<string> {
+    return new Set(this._visibleFields);
+  }
+
+  private get _columnLookup(): Map<string, ColumnSpec> {
+    return new Map(this._allColumns.map((col) => [col.field, col]));
   }
 
   private _toViewField(field: string): string {

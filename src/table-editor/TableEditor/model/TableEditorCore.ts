@@ -58,6 +58,13 @@ export class TableEditorCore {
     this._saveViewSnapshot();
   }
 
+  initNavigationContext(rowIds: string[]): void {
+    this.cellFSM.setNavigationContext(
+      this.columns.visibleColumns.map((c) => c.field),
+      rowIds,
+    );
+  }
+
   applyFilter(): void {
     this.filters.apply();
     const where = buildWhereClause(this.filters.rootGroup);
@@ -99,6 +106,10 @@ export class TableEditorCore {
   }
 
   private _handleColumnsChange(): void {
+    this.cellFSM.updateNavigationContext(
+      this.columns.visibleColumns.map((c) => c.field),
+      this.cellFSM.rowIds,
+    );
     this._callbacks.onColumnsChange?.();
     this._checkViewChanges();
   }

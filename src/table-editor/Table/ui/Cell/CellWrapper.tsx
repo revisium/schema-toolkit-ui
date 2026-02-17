@@ -71,10 +71,12 @@ function handleEditableKeys(
 export const CellWrapper: FC<CellWrapperProps> = observer(
   ({ cell, children, onDoubleClick, onStartEdit, onTypeChar, onDelete }) => {
     const cellRef = useRef<HTMLDivElement>(null);
+    const menuOpenRef = useRef(false);
     const deferredEdit = useDeferredMenuEdit(onStartEdit ?? onDoubleClick);
     const state = getCellState(cell);
     const selectionEdges = cell.selectionEdges;
     const isAnchorInRange = cell.isAnchor && cell.hasRangeSelection;
+    const navVersion = cell.navigationVersion;
 
     useEffect(() => {
       if (!cellRef.current) {
@@ -93,7 +95,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       ) {
         cellRef.current.blur();
       }
-    }, [state, isAnchorInRange]);
+    }, [state, isAnchorInRange, navVersion]);
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
@@ -121,6 +123,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
         if (!e.shiftKey && e.button === 0 && state !== 'editing') {
           e.preventDefault();
           cell.dragStart();
+          cellRef.current?.focus();
         }
       },
       [state, cell],
@@ -211,6 +214,23 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       state === 'readonlyFocused' ||
       isAnchorInRange;
 
+    const handleBlur = useCallback(
+      (e: React.FocusEvent) => {
+        if (!cell.isFocused || cell.isEditing) {
+          return;
+        }
+        if (menuOpenRef.current) {
+          return;
+        }
+        const related = e.relatedTarget as HTMLElement | null;
+        if (related?.closest('[data-testid^="cell-"]')) {
+          return;
+        }
+        cell.blur();
+      },
+      [cell],
+    );
+
     const handleContextMenu = useCallback(() => {
       if (!cell.isFocused && !cell.isInSelection) {
         cell.focus();
@@ -219,6 +239,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
 
     const handleMenuOpenChange = useCallback(
       (details: { open: boolean }) => {
+        menuOpenRef.current = details.open;
         if (details.open) {
           return;
         }
@@ -273,6 +294,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
             onMouseEnter={handleMouseEnter}
             onDoubleClick={handleDoubleClick}
             onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
             onContextMenu={handleContextMenu}
             tabIndex={needsFocus ? 0 : -1}
             userSelect={state === 'selected' ? 'none' : undefined}
