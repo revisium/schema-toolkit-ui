@@ -53,19 +53,11 @@ export const CellContextMenu: FC<CellContextMenuProps> = observer(
                   <Kbd size="sm">⌘C</Kbd>
                 </Menu.Item>
                 <Menu.Separator />
-                <Menu.Item
-                  value="paste-range"
-                  onClick={handlePasteRange}
-                  disabled={cell.isReadOnly}
-                >
+                <Menu.Item value="paste-range" onClick={handlePasteRange}>
                   <Box flex="1">Paste</Box>
                   <Kbd size="sm">⌘V</Kbd>
                 </Menu.Item>
-                <Menu.Item
-                  value="clear-range"
-                  onClick={handleClearRange}
-                  disabled={cell.isReadOnly}
-                >
+                <Menu.Item value="clear-range" onClick={handleClearRange}>
                   <Box flex="1">Clear</Box>
                   <Kbd size="sm">Del</Kbd>
                 </Menu.Item>

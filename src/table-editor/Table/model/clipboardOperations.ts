@@ -5,7 +5,7 @@ import { parseTSV } from './parseTSV.js';
 
 function quoteTSVCell(value: string): string {
   if (value.includes('\t') || value.includes('\n') || value.includes('"')) {
-    return `"${value.replace(/"/g, '""')}"`;
+    return `"${value.replaceAll('"', '""')}"`;
   }
   return value;
 }

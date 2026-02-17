@@ -715,13 +715,13 @@ export const ReadonlyRangeContextMenu: Story = {
       '[data-value="paste-range"]',
     ) as HTMLElement;
     expect(pasteRangeItem).toBeTruthy();
-    expect(pasteRangeItem).toHaveAttribute('data-disabled');
+    expect(pasteRangeItem).not.toHaveAttribute('data-disabled');
 
     const clearRangeItem = document.querySelector(
       '[data-value="clear-range"]',
     ) as HTMLElement;
     expect(clearRangeItem).toBeTruthy();
-    expect(clearRangeItem).toHaveAttribute('data-disabled');
+    expect(clearRangeItem).not.toHaveAttribute('data-disabled');
 
     await userEvent.keyboard('{Escape}');
   },
