@@ -9,6 +9,15 @@ const TEST_COLUMNS = [
   col({ field: 'id', isSystem: true }),
 ];
 
+const MANY_COLUMNS = [
+  col({ field: 'name' }),
+  col({ field: 'age', fieldType: FilterFieldType.Number }),
+  col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+  col({ field: 'email' }),
+  col({ field: 'score', fieldType: FilterFieldType.Number }),
+  col({ field: 'city' }),
+];
+
 describe('TableEditorCore', () => {
   it('init initializes all sub-models', () => {
     const core = new TableEditorCore();
@@ -154,5 +163,170 @@ describe('TableEditorCore', () => {
     core.dispose();
     expect(core.selection.isSelectionMode).toBe(false);
     expect(core.cellFSM.focusedCell).toBeNull();
+  });
+
+  describe('initNavigationContext sets CellFSM columns to visible only', () => {
+    it('uses only visible columns when more columns exist', () => {
+      const core = new TableEditorCore();
+      core.init(MANY_COLUMNS);
+      core.initNavigationContext(['row-1', 'row-2']);
+
+      const visibleFields = core.columns.visibleColumns.map((c) => c.field);
+      expect(core.cellFSM.columns).toEqual(visibleFields);
+    });
+
+    it('navigation stays within visible columns', () => {
+      const core = new TableEditorCore();
+      core.init(MANY_COLUMNS);
+      core.initNavigationContext(['row-1', 'row-2']);
+
+      const visibleFields = core.columns.visibleColumns.map((c) => c.field);
+      const lastField = visibleFields[visibleFields.length - 1]!;
+
+      core.cellFSM.focusCell({ rowId: 'row-1', field: lastField });
+      expect(core.cellFSM.focusedCell).toEqual({
+        rowId: 'row-1',
+        field: lastField,
+      });
+
+      core.cellFSM.moveLeft();
+      const prevField = visibleFields[visibleFields.length - 2]!;
+      expect(core.cellFSM.focusedCell).toEqual({
+        rowId: 'row-1',
+        field: prevField,
+      });
+    });
+
+    it('sets rowIds correctly', () => {
+      const core = new TableEditorCore();
+      core.init(MANY_COLUMNS);
+      core.initNavigationContext(['row-1', 'row-2', 'row-3']);
+
+      expect(core.cellFSM.rowIds).toEqual(['row-1', 'row-2', 'row-3']);
+    });
+  });
+
+  describe('column changes update CellFSM navigation', () => {
+    function createCoreWithNavigation() {
+      const core = new TableEditorCore();
+      core.init(TEST_COLUMNS);
+      core.cellFSM.setNavigationContext(
+        core.columns.visibleColumns.map((c) => c.field),
+        ['row-1', 'row-2', 'row-3'],
+      );
+      return core;
+    }
+
+    it('clears range selection when column is hidden', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      core.cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+      expect(core.cellFSM.hasSelection).toBe(true);
+
+      core.columns.hideColumn('age');
+
+      expect(core.cellFSM.hasSelection).toBe(false);
+      expect(core.cellFSM.anchorCell).toBeNull();
+    });
+
+    it('keeps focus when focused column still visible after hide', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+
+      core.columns.hideColumn('age');
+
+      expect(core.cellFSM.state).toBe('focused');
+      expect(core.cellFSM.focusedCell).toEqual({
+        rowId: 'row-1',
+        field: 'name',
+      });
+    });
+
+    it('blurs when focused column is hidden', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'age' });
+
+      core.columns.hideColumn('age');
+
+      expect(core.cellFSM.state).toBe('idle');
+      expect(core.cellFSM.focusedCell).toBeNull();
+    });
+
+    it('updates navigation context after column reorder', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+
+      core.columns.moveColumnRight('name');
+
+      expect(core.cellFSM.state).toBe('focused');
+      expect(core.cellFSM.focusedCell).toEqual({
+        rowId: 'row-1',
+        field: 'name',
+      });
+      expect(core.cellFSM.columns[0]).not.toBe('name');
+    });
+
+    it('FSM stays focused and responsive after showing a column', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      expect(core.cellFSM.state).toBe('focused');
+
+      core.columns.showColumn('id');
+
+      expect(core.cellFSM.state).toBe('focused');
+      expect(core.cellFSM.focusedCell).toEqual({
+        rowId: 'row-1',
+        field: 'name',
+      });
+
+      core.cellFSM.moveRight();
+      const nextField = core.cellFSM.focusedCell?.field;
+      expect(nextField).toBeTruthy();
+      expect(nextField).not.toBe('name');
+    });
+
+    it('arrows work after adding column while focused', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+
+      core.columns.showColumn('id');
+
+      core.cellFSM.moveDown();
+      expect(core.cellFSM.focusedCell).toEqual({
+        rowId: 'row-2',
+        field: 'name',
+      });
+    });
+
+    it('enter edit works after adding column while focused', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+
+      core.columns.showColumn('id');
+
+      core.cellFSM.enterEdit();
+      expect(core.cellFSM.state).toBe('editing');
+    });
+
+    it('navigationVersion increments when column is shown', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      const before = core.cellFSM.navigationVersion;
+
+      core.columns.showColumn('id');
+
+      expect(core.cellFSM.navigationVersion).toBe(before + 1);
+    });
+
+    it('clears range selection after column reorder', () => {
+      const core = createCoreWithNavigation();
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      core.cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+      expect(core.cellFSM.hasSelection).toBe(true);
+
+      core.columns.moveColumnRight('name');
+
+      expect(core.cellFSM.hasSelection).toBe(false);
+    });
   });
 });

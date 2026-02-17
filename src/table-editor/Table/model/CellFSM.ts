@@ -42,6 +42,18 @@ export class CellFSM {
     return this._fsm.context.editTrigger;
   }
 
+  get columns(): string[] {
+    return this._fsm.context.columns;
+  }
+
+  get rowIds(): string[] {
+    return this._fsm.context.rowIds;
+  }
+
+  get navigationVersion(): number {
+    return this._fsm.context.navigationVersion;
+  }
+
   get hasSelection(): boolean {
     return this.getSelectedRange() !== null;
   }
@@ -71,17 +83,15 @@ export class CellFSM {
     if (!range) {
       return false;
     }
-    const ctx = this._fsm.context;
-    const colIndex = ctx.columns.indexOf(field);
-    const rowIndex = ctx.rowIds.indexOf(rowId);
-    if (colIndex === -1 || rowIndex === -1) {
+    const pos = this._getCellPosition(rowId, field);
+    if (!pos) {
       return false;
     }
     return (
-      colIndex >= range.startCol &&
-      colIndex <= range.endCol &&
-      rowIndex >= range.startRow &&
-      rowIndex <= range.endRow
+      pos.colIndex >= range.startCol &&
+      pos.colIndex <= range.endCol &&
+      pos.rowIndex >= range.startRow &&
+      pos.rowIndex <= range.endRow
     );
   }
 
@@ -90,26 +100,37 @@ export class CellFSM {
     if (!range) {
       return null;
     }
+    const pos = this._getCellPosition(rowId, field);
+    if (!pos) {
+      return null;
+    }
+    if (
+      pos.colIndex < range.startCol ||
+      pos.colIndex > range.endCol ||
+      pos.rowIndex < range.startRow ||
+      pos.rowIndex > range.endRow
+    ) {
+      return null;
+    }
+    return {
+      top: pos.rowIndex === range.startRow,
+      bottom: pos.rowIndex === range.endRow,
+      left: pos.colIndex === range.startCol,
+      right: pos.colIndex === range.endCol,
+    };
+  }
+
+  private _getCellPosition(
+    rowId: string,
+    field: string,
+  ): { colIndex: number; rowIndex: number } | null {
     const ctx = this._fsm.context;
     const colIndex = ctx.columns.indexOf(field);
     const rowIndex = ctx.rowIds.indexOf(rowId);
     if (colIndex === -1 || rowIndex === -1) {
       return null;
     }
-    if (
-      colIndex < range.startCol ||
-      colIndex > range.endCol ||
-      rowIndex < range.startRow ||
-      rowIndex > range.endRow
-    ) {
-      return null;
-    }
-    return {
-      top: rowIndex === range.startRow,
-      bottom: rowIndex === range.endRow,
-      left: colIndex === range.startCol,
-      right: colIndex === range.endCol,
-    };
+    return { colIndex, rowIndex };
   }
 
   getSelectedRange(): SelectedRange | null {
@@ -138,6 +159,28 @@ export class CellFSM {
 
   setNavigationContext(columns: string[], rowIds: string[]): void {
     Object.assign(this._fsm.context, { columns, rowIds });
+  }
+
+  updateNavigationContext(columns: string[], rowIds: string[]): void {
+    const ctx = this._fsm.context;
+    const focused = ctx.focusedCell;
+
+    ctx.columns = columns;
+    ctx.rowIds = rowIds;
+    ctx.navigationVersion++;
+
+    if (!focused) {
+      return;
+    }
+
+    const stillValid =
+      columns.includes(focused.field) && rowIds.includes(focused.rowId);
+
+    if (stillValid) {
+      ctx.anchorCell = null;
+    } else {
+      this.blur();
+    }
   }
 
   focusCell(cell: CellAddress): void {

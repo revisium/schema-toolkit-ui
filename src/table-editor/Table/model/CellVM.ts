@@ -22,6 +22,8 @@ export class CellVM {
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
+  // --- Data Getters ---
+
   get field(): string {
     return this._column.field;
   }
@@ -95,6 +97,8 @@ export class CellVM {
     return node.isPrimitive();
   }
 
+  // --- FSM State ---
+
   get isFocused(): boolean {
     return this._cellFSM.isCellFocused(this._rowId, this._column.field);
   }
@@ -119,12 +123,18 @@ export class CellVM {
     return this._cellFSM.hasSelection;
   }
 
+  get navigationVersion(): number {
+    return this._cellFSM.navigationVersion;
+  }
+
   get editTrigger(): EditTrigger | null {
     if (!this.isEditing) {
       return null;
     }
     return this._cellFSM.editTrigger;
   }
+
+  // --- Edit Lifecycle ---
 
   focus(): void {
     this._cellFSM.focusCell({
@@ -179,6 +189,8 @@ export class CellVM {
     this._cellFSM.cancel();
   }
 
+  // --- Cell Operations ---
+
   clearToDefault(): void {
     const node = this._getNode();
     if (!node || !node.isPrimitive() || node.isReadOnly) {
@@ -222,6 +234,70 @@ export class CellVM {
     }
   }
 
+  // --- Navigation ---
+
+  blur(): void {
+    this._cellFSM.blur();
+  }
+
+  moveUp(): void {
+    this._cellFSM.moveUp();
+  }
+
+  moveDown(): void {
+    this._cellFSM.moveDown();
+  }
+
+  moveLeft(): void {
+    this._cellFSM.moveLeft();
+  }
+
+  moveRight(): void {
+    this._cellFSM.moveRight();
+  }
+
+  handleTab(shift: boolean): void {
+    this._cellFSM.handleTab(shift);
+  }
+
+  // --- Selection ---
+
+  selectTo(): void {
+    this._cellFSM.selectTo({ rowId: this._rowId, field: this._column.field });
+  }
+
+  shiftMoveUp(): void {
+    this._cellFSM.shiftMoveUp();
+  }
+
+  shiftMoveDown(): void {
+    this._cellFSM.shiftMoveDown();
+  }
+
+  shiftMoveLeft(): void {
+    this._cellFSM.shiftMoveLeft();
+  }
+
+  shiftMoveRight(): void {
+    this._cellFSM.shiftMoveRight();
+  }
+
+  // --- Drag ---
+
+  dragStart(): void {
+    this._cellFSM.dragStart({ rowId: this._rowId, field: this._column.field });
+  }
+
+  dragExtend(): void {
+    this._cellFSM.dragExtend({ rowId: this._rowId, field: this._column.field });
+  }
+
+  // --- Private ---
+
+  private _getNode() {
+    return this._rowModel.get(this._column.field);
+  }
+
   private _applyPastedString(
     node: ReturnType<RowModel['get']> & { setValue(v: unknown): void },
     text: string,
@@ -256,61 +332,5 @@ export class CellVM {
         node.setValue(value);
       }
     }
-  }
-
-  blur(): void {
-    this._cellFSM.blur();
-  }
-
-  moveUp(): void {
-    this._cellFSM.moveUp();
-  }
-
-  moveDown(): void {
-    this._cellFSM.moveDown();
-  }
-
-  moveLeft(): void {
-    this._cellFSM.moveLeft();
-  }
-
-  moveRight(): void {
-    this._cellFSM.moveRight();
-  }
-
-  handleTab(shift: boolean): void {
-    this._cellFSM.handleTab(shift);
-  }
-
-  selectTo(): void {
-    this._cellFSM.selectTo({ rowId: this._rowId, field: this._column.field });
-  }
-
-  shiftMoveUp(): void {
-    this._cellFSM.shiftMoveUp();
-  }
-
-  shiftMoveDown(): void {
-    this._cellFSM.shiftMoveDown();
-  }
-
-  shiftMoveLeft(): void {
-    this._cellFSM.shiftMoveLeft();
-  }
-
-  shiftMoveRight(): void {
-    this._cellFSM.shiftMoveRight();
-  }
-
-  dragStart(): void {
-    this._cellFSM.dragStart({ rowId: this._rowId, field: this._column.field });
-  }
-
-  dragExtend(): void {
-    this._cellFSM.dragExtend({ rowId: this._rowId, field: this._column.field });
-  }
-
-  private _getNode() {
-    return this._rowModel.get(this._column.field);
   }
 }

@@ -9,6 +9,7 @@ import {
   createTableStoryState,
   FilterFieldType,
   mockClipboard,
+  type TableStoryState,
 } from '../../../__stories__/helpers.js';
 import { CellFSM } from '../../model/CellFSM.js';
 import { TableWidget } from '../TableWidget.js';
@@ -330,6 +331,45 @@ export const RangeDelete: Story = {
     expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('35');
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const RangeDragAfterColumnReorder: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const state = (window as any).__testState as TableStoryState;
+    const { cellFSM } = state;
+
+    state.columnsModel.moveColumnToStart('active');
+
+    await waitFor(() => {
+      expect(canvas.getByTestId('header-active')).toBeVisible();
+    });
+
+    cellFSM.dragStart({ rowId: 'row-1', field: 'active' });
+    cellFSM.dragExtend({ rowId: 'row-2', field: 'age' });
+
+    await waitFor(() => {
+      expect(cellFSM.hasSelection).toBe(true);
+    });
+
+    expect(cellFSM.isCellInSelection('row-1', 'active')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-1', 'name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-1', 'age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'active')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'age')).toBe(true);
+
+    await userEvent.click(canvas.getByTestId('cell-row-1-active'));
+    await waitFor(() => {
+      expect(cellFSM.hasSelection).toBe(false);
+    });
+
     await userEvent.keyboard('{Escape}');
   },
 };

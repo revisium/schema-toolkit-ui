@@ -57,6 +57,7 @@ export interface CellFSMContext {
   editTrigger: EditTrigger | null;
   columns: string[];
   rowIds: string[];
+  navigationVersion: number;
   _pendingCell: CellAddress | null;
   _pendingTrigger: EditTrigger | null;
   _pendingShift: boolean;
@@ -191,6 +192,7 @@ export function createConfig(): ObservableFSMConfig<
       editTrigger: null,
       columns: [],
       rowIds: [],
+      navigationVersion: 0,
       _pendingCell: null,
       _pendingTrigger: null,
       _pendingShift: false,
@@ -288,6 +290,14 @@ export function createConfig(): ObservableFSMConfig<
           context: {
             focusedCell: ctx._pendingCell,
             anchorCell: null,
+            editTrigger: null,
+          },
+        }),
+        DRAG_START: (ctx) => ({
+          target: 'focused',
+          context: {
+            anchorCell: ctx._pendingCell,
+            focusedCell: ctx._pendingCell,
             editTrigger: null,
           },
         }),
