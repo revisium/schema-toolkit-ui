@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Flex } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import type { FilterModel } from '../../Filters/model/FilterModel.js';
 import type { SortModel } from '../../Sortings/model/SortModel.js';
@@ -11,20 +11,33 @@ interface HeaderRowProps {
   sortModel?: SortModel;
   filterModel?: FilterModel;
   onCopyPath?: (path: string) => void;
+  showSelection?: boolean;
 }
 
-const ROW_HEIGHT = '40px';
-
 export const HeaderRow = observer(
-  ({ columnsModel, sortModel, filterModel, onCopyPath }: HeaderRowProps) => {
+  ({
+    columnsModel,
+    sortModel,
+    filterModel,
+    onCopyPath,
+    showSelection,
+  }: HeaderRowProps) => {
     return (
-      <Flex
-        height={ROW_HEIGHT}
-        borderBottom="1px solid"
-        borderColor="gray.200"
-        bg="gray.50"
-        flexShrink={0}
-      >
+      <Box as="tr" height="40px">
+        {showSelection && (
+          <Box
+            as="th"
+            width="40px"
+            minWidth="40px"
+            maxWidth="40px"
+            bg="gray.50"
+            borderRight="1px solid"
+            borderColor="gray.100"
+            borderBottom="1px solid"
+            borderBottomColor="gray.200"
+            p={0}
+          />
+        )}
         {columnsModel.visibleColumns.map((col) => (
           <ColumnHeader
             key={col.field}
@@ -35,8 +48,24 @@ export const HeaderRow = observer(
             onCopyPath={onCopyPath}
           />
         ))}
-        <AddColumnButton columnsModel={columnsModel} />
-      </Flex>
+        <Box
+          as="th"
+          width="100%"
+          bg="gray.50"
+          borderBottom="1px solid"
+          borderBottomColor="gray.200"
+          p={0}
+        />
+        <Box
+          as="th"
+          bg="gray.50"
+          borderBottom="1px solid"
+          borderBottomColor="gray.200"
+          p={0}
+        >
+          <AddColumnButton columnsModel={columnsModel} />
+        </Box>
+      </Box>
     );
   },
 );

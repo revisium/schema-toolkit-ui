@@ -28,14 +28,23 @@ export const ColumnHeader = observer(
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const width = columnsModel.getColumnWidth(column.field);
 
+    const w = width ? `${width}px` : '150px';
+
     return (
       <Box
+        as="th"
         position="relative"
-        flexShrink={0}
-        width={width ? `${width}px` : '150px'}
-        minWidth="40px"
+        width={w}
+        minWidth={w}
+        maxWidth={w}
         borderRight="1px solid"
         borderColor="gray.100"
+        borderBottom="1px solid"
+        borderBottomColor="gray.200"
+        bg="gray.50"
+        textAlign="left"
+        fontWeight="normal"
+        p={0}
       >
         <Menu.Root
           positioning={{ placement: 'bottom-end' }}
