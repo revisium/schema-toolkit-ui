@@ -340,15 +340,16 @@ export const TableWidget = observer(
     const LoadingMoreFooter = useCallback(
       () =>
         isLoadingMore ? (
-          <Box
-            as="tfoot"
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            py="16px"
-          >
-            <Spinner size="sm" color="gray.400" />
-          </Box>
+          <tfoot>
+            <tr>
+              <td
+                colSpan={9999}
+                style={{ textAlign: 'center', padding: '16px 0' }}
+              >
+                <Spinner size="sm" color="gray.400" />
+              </td>
+            </tr>
+          </tfoot>
         ) : null,
       [isLoadingMore],
     );

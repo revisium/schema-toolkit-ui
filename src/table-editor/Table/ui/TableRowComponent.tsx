@@ -11,6 +11,7 @@ interface TableRowProps {
 export const TableRowComponent: React.FC<TableRowProps> = ({
   'data-index': index,
   context,
+  style,
   children,
   ...props
 }) => {
@@ -21,6 +22,7 @@ export const TableRowComponent: React.FC<TableRowProps> = ({
       className="group"
       data-testid={row ? `row-${row.rowId}` : undefined}
       style={{
+        ...style,
         height: '40px',
         borderBottom: '1px solid var(--chakra-colors-gray-100)',
       }}
