@@ -1,4 +1,4 @@
-import { Box, Flex, IconButton, Menu, Portal, Text } from '@chakra-ui/react';
+import { Flex, IconButton, Menu, Portal, Text } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import { PiListBullets, PiPlus } from 'react-icons/pi';
 import type { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
@@ -15,11 +15,11 @@ export const AddColumnButton = observer(
     const hasHidden = columnsModel.hasHiddenColumns;
 
     if (!hasHidden) {
-      return <Box flex={1} />;
+      return null;
     }
 
     return (
-      <Flex flexShrink={0} alignItems="center" px="4px">
+      <Flex alignItems="center" px="4px" height="100%">
         <Menu.Root
           positioning={{ placement: 'bottom-start' }}
           lazyMount

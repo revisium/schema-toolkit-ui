@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 import type { JsonSchema } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
@@ -292,44 +293,70 @@ export const WithHiddenColumns: Story = {
   },
 };
 
-export const ManyRows: Story = {
-  render: () => {
-    const Wrapper = observer(() => {
-      const rows = Array.from({ length: 3000 }, (_, i) => ({
-        name: `User ${i + 1}`,
-        age: 20 + (i % 50),
-        active: i % 3 !== 0,
-      }));
+const MANY_ROWS_TOTAL = 3000;
+const MANY_ROWS_PAGE_SIZE = 100;
 
-      const [state] = useState(() =>
-        createTableStoryState({
-          schema: TABLE_SCHEMA,
-          columns: TEST_COLUMNS,
-          rowsData: rows,
-        }),
-      );
+const ManyRowsWrapper = observer(
+  ({ onEndReached: onEndReachedAction }: { onEndReached?: () => void }) => {
+    const allRowsData = Array.from({ length: MANY_ROWS_TOTAL }, (_, i) => ({
+      name: `User ${i + 1}`,
+      age: 20 + (i % 50),
+      active: i % 3 !== 0,
+    }));
 
-      return (
-        <Box
-          width="600px"
-          height="400px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
-          <TableWidget
-            rows={state.rows}
-            columnsModel={state.columnsModel}
-            cellFSM={state.cellFSM}
-            selection={state.selection}
-            onDeleteRow={noop}
-            onDuplicateRow={noop}
-            onDeleteSelected={noop}
-          />
-        </Box>
-      );
-    });
+    const [state] = useState(() =>
+      createTableStoryState({
+        schema: TABLE_SCHEMA,
+        columns: TEST_COLUMNS,
+        rowsData: allRowsData,
+      }),
+    );
 
-    return <Wrapper />;
+    const [visibleCount, setVisibleCount] = useState(MANY_ROWS_PAGE_SIZE);
+    const [loading, setLoading] = useState(false);
+    const visibleRows = state.rows.slice(0, visibleCount);
+
+    const handleEndReached = useCallback(() => {
+      if (loading || visibleCount >= MANY_ROWS_TOTAL) {
+        return;
+      }
+      onEndReachedAction?.();
+      setLoading(true);
+      setTimeout(() => {
+        setVisibleCount((prev) =>
+          Math.min(prev + MANY_ROWS_PAGE_SIZE, MANY_ROWS_TOTAL),
+        );
+        setLoading(false);
+      }, 200);
+    }, [loading, visibleCount, onEndReachedAction]);
+
+    return (
+      <Box
+        width="600px"
+        height="400px"
+        borderWidth="1px"
+        borderColor="gray.200"
+      >
+        <TableWidget
+          rows={visibleRows}
+          columnsModel={state.columnsModel}
+          cellFSM={state.cellFSM}
+          selection={state.selection}
+          onDeleteRow={noop}
+          onDuplicateRow={noop}
+          onDeleteSelected={noop}
+          onEndReached={handleEndReached}
+          isLoadingMore={loading}
+        />
+      </Box>
+    );
+  },
+);
+
+export const ManyRows: StoryObj<typeof ManyRowsWrapper> = {
+  render: (args) => <ManyRowsWrapper onEndReached={args.onEndReached} />,
+  args: {
+    onEndReached: fn().mockName('onEndReached'),
   },
 };
 
@@ -438,6 +465,64 @@ export const MixedFormulaColumns: Story = {
             columnsModel={state.columnsModel}
             cellFSM={state.cellFSM}
             selection={state.selection}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
+  },
+};
+
+const TOTAL_ROWS = 200;
+const PAGE_SIZE = 50;
+
+export const InfiniteScroll: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const allRowsData = Array.from({ length: TOTAL_ROWS }, (_, i) => ({
+        name: `User ${i + 1}`,
+        age: 20 + (i % 50),
+        active: i % 3 !== 0,
+      }));
+
+      const [state] = useState(() =>
+        createTableStoryState({
+          schema: TABLE_SCHEMA,
+          columns: TEST_COLUMNS,
+          rowsData: allRowsData,
+        }),
+      );
+
+      const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+      const [loading, setLoading] = useState(false);
+      const visibleRows = state.rows.slice(0, visibleCount);
+
+      const handleEndReached = useCallback(() => {
+        if (loading || visibleCount >= TOTAL_ROWS) {
+          return;
+        }
+        setLoading(true);
+        const nextCount = Math.min(visibleCount + PAGE_SIZE, TOTAL_ROWS);
+        setTimeout(() => {
+          setVisibleCount(nextCount);
+          setLoading(false);
+        }, 500);
+      }, [loading, visibleCount]);
+
+      return (
+        <Box width="600px" borderWidth="1px" borderColor="gray.200">
+          <TableWidget
+            rows={visibleRows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            onDeleteRow={noop}
+            onDuplicateRow={noop}
+            onDeleteSelected={noop}
+            onEndReached={handleEndReached}
+            isLoadingMore={loading}
+            useWindowScroll
           />
         </Box>
       );

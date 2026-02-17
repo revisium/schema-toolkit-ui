@@ -31,13 +31,9 @@ export const RowActionsMenu: FC<RowActionsMenuProps> = ({
     >
       <Menu.Trigger asChild>
         <Flex
-          position="absolute"
-          right="4px"
-          top="50%"
-          transform="translateY(-50%)"
-          zIndex={1}
           alignItems="center"
           justifyContent="center"
+          height="100%"
           cursor="pointer"
           data-testid={`row-menu-trigger-${rowId}`}
         >

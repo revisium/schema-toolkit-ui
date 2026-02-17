@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
-import { Box, Text } from '@chakra-ui/react';
+import { Box, Spinner, Text } from '@chakra-ui/react';
 import { useCallback, useMemo, useState } from 'react';
+import { TableVirtuoso } from 'react-virtuoso';
 import type { RowVM } from '../model/RowVM.js';
 import type { CellFSM, SelectedRange } from '../model/CellFSM.js';
 import type { SelectionModel } from '../model/SelectionModel.js';
@@ -16,6 +17,8 @@ import { SelectionToolbar } from './SelectionToolbar.js';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog/DeleteConfirmDialog.js';
 import type { CellContextActions } from './Cell/CellContextActionsContext.js';
 import { CellContextActionsContext } from './Cell/CellContextActionsContext.js';
+import { TableComponent } from './TableComponent.js';
+import { TableRowComponent } from './TableRowComponent.js';
 
 function copyRangeToClipboard(
   range: SelectedRange,
@@ -104,6 +107,10 @@ interface DeleteConfirmState {
   batchIds?: string[];
 }
 
+export interface TableWidgetContext {
+  rows: RowVM[];
+}
+
 interface TableWidgetProps {
   rows: RowVM[];
   columnsModel: ColumnsModel;
@@ -116,7 +123,15 @@ interface TableWidgetProps {
   onDeleteRow?: (rowId: string) => void;
   onDuplicateRow?: (rowId: string) => void;
   onCopyPath?: (path: string) => void;
+  onEndReached?: () => void;
+  isLoadingMore?: boolean;
+  useWindowScroll?: boolean;
 }
+
+const baseComponents = {
+  Table: TableComponent,
+  TableRow: TableRowComponent,
+};
 
 export const TableWidget = observer(
   ({
@@ -131,6 +146,9 @@ export const TableWidget = observer(
     onDeleteRow,
     onDuplicateRow,
     onCopyPath,
+    onEndReached,
+    isLoadingMore,
+    useWindowScroll: useWindowScrollProp,
   }: TableWidgetProps) => {
     const showSelection = selection.isSelectionMode;
     const allRowIds = rows.map((r) => r.rowId);
@@ -275,6 +293,75 @@ export const TableWidget = observer(
     const canDeleteRow = Boolean(onDeleteRow || onDeleteSelected);
     const canDuplicateRow = Boolean(onDuplicateRow);
 
+    const itemContent = useCallback(
+      (_index: number, row: RowVM) => (
+        <DataRow
+          row={row}
+          columnsModel={columnsModel}
+          showSelection={showSelection}
+          onSearchForeignKey={onSearchForeignKey}
+          onSelectRow={
+            canDeleteRow || canDuplicateRow ? handleSelectRow : undefined
+          }
+          onDuplicateRow={canDuplicateRow ? onDuplicateRow : undefined}
+          onDeleteRow={canDeleteRow ? handleDeleteRowRequest : undefined}
+        />
+      ),
+      [
+        columnsModel,
+        showSelection,
+        onSearchForeignKey,
+        canDeleteRow,
+        canDuplicateRow,
+        handleSelectRow,
+        onDuplicateRow,
+        handleDeleteRowRequest,
+      ],
+    );
+
+    const fixedHeaderContent = useCallback(
+      () => (
+        <HeaderRow
+          columnsModel={columnsModel}
+          sortModel={sortModel}
+          filterModel={filterModel}
+          onCopyPath={onCopyPath}
+          showSelection={showSelection}
+        />
+      ),
+      [columnsModel, sortModel, filterModel, onCopyPath, showSelection],
+    );
+
+    const virtuosoContext = useMemo(
+      (): TableWidgetContext => ({ rows }),
+      [rows],
+    );
+
+    const LoadingMoreFooter = useCallback(
+      () =>
+        isLoadingMore ? (
+          <tfoot>
+            <tr>
+              <td
+                colSpan={9999}
+                style={{ textAlign: 'center', padding: '16px 0' }}
+              >
+                <Spinner size="sm" color="gray.400" />
+              </td>
+            </tr>
+          </tfoot>
+        ) : null,
+      [isLoadingMore],
+    );
+
+    const tableComponents = useMemo(
+      () => ({
+        ...baseComponents,
+        Footer: LoadingMoreFooter,
+      }),
+      [LoadingMoreFooter],
+    );
+
     if (columnsModel.visibleColumns.length === 0) {
       return (
         <Box p={4}>
@@ -291,45 +378,50 @@ export const TableWidget = observer(
       >
         <Box
           position="relative"
-          overflow="auto"
-          height="100%"
+          height={useWindowScrollProp ? undefined : '100%'}
           data-testid="table-widget"
           onKeyDown={handleKeyDown}
         >
-          <Box minWidth="fit-content">
-            <HeaderRow
-              columnsModel={columnsModel}
-              sortModel={sortModel}
-              filterModel={filterModel}
-              onCopyPath={onCopyPath}
-            />
-            {rows.length === 0 ? (
+          {rows.length === 0 ? (
+            <Box>
+              <table
+                style={{
+                  width: 'max-content',
+                  minWidth: '100%',
+                  tableLayout: 'fixed',
+                }}
+              >
+                <thead>
+                  <HeaderRow
+                    columnsModel={columnsModel}
+                    sortModel={sortModel}
+                    filterModel={filterModel}
+                    onCopyPath={onCopyPath}
+                    showSelection={showSelection}
+                  />
+                </thead>
+              </table>
               <Box p={4}>
                 <Text fontSize="sm" color="gray.500">
                   No rows to display.
                 </Text>
               </Box>
-            ) : (
-              rows.map((row) => (
-                <DataRow
-                  key={row.rowId}
-                  row={row}
-                  columnsModel={columnsModel}
-                  showSelection={showSelection}
-                  onSearchForeignKey={onSearchForeignKey}
-                  onSelectRow={
-                    canDeleteRow || canDuplicateRow
-                      ? handleSelectRow
-                      : undefined
-                  }
-                  onDuplicateRow={canDuplicateRow ? onDuplicateRow : undefined}
-                  onDeleteRow={
-                    canDeleteRow ? handleDeleteRowRequest : undefined
-                  }
-                />
-              ))
-            )}
-          </Box>
+            </Box>
+          ) : (
+            <TableVirtuoso
+              useWindowScroll={useWindowScrollProp}
+              style={useWindowScrollProp ? undefined : { height: '100%' }}
+              data={rows}
+              context={virtuosoContext}
+              defaultItemHeight={40}
+              initialItemCount={Math.min(rows.length, 20)}
+              increaseViewportBy={40 * 50}
+              endReached={onEndReached}
+              fixedHeaderContent={fixedHeaderContent}
+              itemContent={itemContent}
+              components={tableComponents}
+            />
+          )}
           <SelectionToolbar
             selection={selection}
             allRowIds={allRowIds}
