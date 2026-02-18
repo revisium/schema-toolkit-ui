@@ -43,11 +43,13 @@ describe('TableEditorCore', () => {
     expect(arg).toHaveProperty('data');
   });
 
-  it('sort change calls onSort', () => {
+  it('sort change calls onSort after apply', () => {
     const onSort = jest.fn();
     const core = new TableEditorCore({ onSort });
     core.init(TEST_COLUMNS);
     core.sorts.addSort('name');
+    expect(onSort).not.toHaveBeenCalled();
+    core.sorts.apply();
     expect(onSort).toHaveBeenCalledWith([
       { field: 'data.name', direction: 'asc' },
     ]);
@@ -147,11 +149,12 @@ describe('TableEditorCore', () => {
     expect(core.search.query).toBe('');
   });
 
-  it('viewBadge detects changes after sort', () => {
+  it('viewBadge detects changes after sort apply', () => {
     const core = new TableEditorCore();
     core.init(TEST_COLUMNS);
     expect(core.viewBadge.hasChanges).toBe(false);
     core.sorts.addSort('name');
+    core.sorts.apply();
     expect(core.viewBadge.hasChanges).toBe(true);
   });
 

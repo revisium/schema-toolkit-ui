@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 import { SortModel } from '../../model/SortModel.js';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
+import type { ViewSort } from '../../model/types.js';
 import { FilterFieldType } from '../../../shared/field-types.js';
 import { SortingsWidget } from '../SortingsWidget.js';
+import { SystemFieldId } from '../../../shared/system-fields.js';
 
 export const TEST_COLUMNS: ColumnSpec[] = [
   {
@@ -32,34 +35,47 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isDeprecated: false,
     hasFormula: false,
   },
+  {
+    field: 'createdAt',
+    label: 'createdAt',
+    fieldType: FilterFieldType.DateTime,
+    isSystem: true,
+    systemFieldId: SystemFieldId.CreatedAt,
+    isDeprecated: false,
+    hasFormula: false,
+  },
 ];
 
 export interface SortStoryWrapperProps {
   setup?: (model: SortModel) => void;
+  onChange?: (sorts: ViewSort[]) => void;
 }
 
-export const StoryWrapper = observer(({ setup }: SortStoryWrapperProps) => {
-  const [model] = useState(() => {
-    const m = new SortModel();
-    m.init(TEST_COLUMNS);
-    if (setup) {
-      setup(m);
-    }
-    return m;
-  });
+export const StoryWrapper = observer(
+  ({ setup, onChange }: SortStoryWrapperProps) => {
+    const [model] = useState(() => {
+      const m = new SortModel();
+      m.init(TEST_COLUMNS);
+      if (setup) {
+        setup(m);
+      }
+      return m;
+    });
 
-  return (
-    <SortingsWidget
-      model={model}
-      availableFields={TEST_COLUMNS}
-      onApply={() => {}}
-    />
-  );
-});
+    return (
+      <SortingsWidget
+        model={model}
+        availableFields={TEST_COLUMNS}
+        onChange={onChange ?? (() => {})}
+      />
+    );
+  },
+);
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
   title: 'TableEditor/Sort',
+  excludeStories: ['TEST_COLUMNS', 'StoryWrapper'],
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -71,10 +87,15 @@ const meta: Meta<typeof StoryWrapper> = {
 export default meta;
 type Story = StoryObj<typeof StoryWrapper>;
 
-export const Empty: Story = {};
+export const Empty: Story = {
+  args: {
+    onChange: fn().mockName('onChange'),
+  },
+};
 
 export const WithOneSort: Story = {
   args: {
+    onChange: fn().mockName('onChange'),
     setup: (m: SortModel) => {
       m.addSort('name', 'asc');
     },
@@ -83,6 +104,7 @@ export const WithOneSort: Story = {
 
 export const WithMultipleSorts: Story = {
   args: {
+    onChange: fn().mockName('onChange'),
     setup: (m: SortModel) => {
       m.addSort('name', 'asc');
       m.addSort('age', 'desc');

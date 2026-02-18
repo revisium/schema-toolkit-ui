@@ -81,7 +81,7 @@ export const StoryWrapper = observer(
           <SortingsWidget
             model={state.core.sorts}
             availableFields={columns}
-            onApply={noop}
+            onChange={noop}
           />
         </Flex>
 
