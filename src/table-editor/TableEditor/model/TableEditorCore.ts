@@ -2,7 +2,6 @@ import { makeAutoObservable } from 'mobx';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import { FilterModel } from '../../Filters/model/FilterModel.js';
-import { buildWhereClause } from '../../Filters/model/filterBuilder.js';
 import { SearchModel } from '../../Search/model/SearchModel.js';
 import { SortModel } from '../../Sortings/model/SortModel.js';
 import { ViewSettingsBadgeModel } from '../../Status/model/ViewSettingsBadgeModel.js';
@@ -46,6 +45,7 @@ export class TableEditorCore {
 
     this.columns.setOnChange(() => this._handleColumnsChange());
     this.filters.setOnChange(() => this._handleFilterChange());
+    this.filters.setOnApply((where) => this._handleFilterApply(where));
     this.sorts.setOnChange(() => this._handleSortChange());
 
     makeAutoObservable(this, {}, { autoBind: true });
@@ -67,16 +67,13 @@ export class TableEditorCore {
 
   applyFilter(): void {
     this.filters.apply();
-    const where = buildWhereClause(this.filters.rootGroup);
-    this._callbacks.onFilter?.(where);
-    this._checkViewChanges();
   }
 
   getViewState(): ViewState {
     return {
       columns: this.columns.serializeToViewColumns(),
       filters: this.filters.hasActiveFilters
-        ? JSON.stringify(this.filters.rootGroup)
+        ? JSON.stringify(this.filters.serializeRootGroup())
         : null,
       sorts: this.sorts.serializeToViewSorts(),
       search: this.search.debouncedQuery,
@@ -115,6 +112,11 @@ export class TableEditorCore {
   }
 
   private _handleFilterChange(): void {
+    this._checkViewChanges();
+  }
+
+  private _handleFilterApply(where: Record<string, unknown> | null): void {
+    this._callbacks.onFilter?.(where);
     this._checkViewChanges();
   }
 

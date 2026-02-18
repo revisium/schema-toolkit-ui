@@ -5,6 +5,7 @@ export default {
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^nanoid$': '<rootDir>/node_modules/nanoid/index.cjs',
   },
   transform: {
     '^.+\\.tsx?$': [
@@ -14,6 +15,7 @@ export default {
       },
     ],
   },
+  transformIgnorePatterns: ['node_modules/(?!(@revisium/schema-toolkit)/)'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['**/__tests__/**/*.spec.ts', '**/__tests__/**/*.spec.tsx', '**/?(*.)+(spec|test).ts', '**/?(*.)+(spec|test).tsx'],
   collectCoverageFrom: [

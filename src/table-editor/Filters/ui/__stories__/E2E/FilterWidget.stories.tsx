@@ -25,13 +25,7 @@ const E2EWrapper = observer(({ setup }: FilterStoryWrapperProps) => {
     (window as any).__testModel = model;
   }, [model]);
 
-  return (
-    <FilterWidget
-      model={model}
-      availableFields={TEST_COLUMNS}
-      onApply={() => {}}
-    />
-  );
+  return <FilterWidget model={model} availableFields={TEST_COLUMNS} />;
 });
 
 const meta: Meta<typeof E2EWrapper> = {
@@ -158,10 +152,10 @@ export const NestedGroupWorkflow: Story = {
     await userEvent.click(addConditionButton);
 
     await waitFor(() => {
-      expect(screen.getByTestId('add-group')).toBeVisible();
+      expect(screen.getByTestId('footer-add-group')).toBeVisible();
     });
 
-    const addGroupButton = screen.getByTestId('add-group');
+    const addGroupButton = screen.getByTestId('footer-add-group');
     await userEvent.click(addGroupButton);
 
     await waitFor(() => {
@@ -172,10 +166,16 @@ export const NestedGroupWorkflow: Story = {
     const nestedGroup = model.rootGroup.groups[0];
     expect(nestedGroup).toBeDefined();
 
-    const orButton = within(screen.getByTestId('filter-group')).getByTestId(
-      'logic-or',
+    const logicSelect = within(screen.getByTestId('filter-group')).getByTestId(
+      'logic-select',
     );
-    await userEvent.click(orButton);
+    await userEvent.click(logicSelect);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('logic-or')).toBeVisible();
+    });
+
+    await userEvent.click(screen.getByTestId('logic-or'));
 
     await waitFor(() => {
       expect(model.rootGroup.groups[0]?.logic).toBe('or');

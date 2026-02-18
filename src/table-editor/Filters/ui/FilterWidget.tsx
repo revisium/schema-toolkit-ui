@@ -2,13 +2,12 @@ import { observer } from 'mobx-react-lite';
 import {
   Box,
   Button,
-  HStack,
   IconButton,
   Popover,
   Portal,
   Text,
 } from '@chakra-ui/react';
-import { PiFunnelBold } from 'react-icons/pi';
+import { LuFilter, LuPlus } from 'react-icons/lu';
 import type { FilterModel } from '../model/FilterModel.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import { FilterGroupView } from './FilterGroupView.js';
@@ -16,17 +15,19 @@ import { FilterGroupView } from './FilterGroupView.js';
 interface FilterWidgetProps {
   model: FilterModel;
   availableFields: ColumnSpec[];
-  onApply: () => void;
 }
 
 export const FilterWidget = observer(
-  ({ model, availableFields, onApply }: FilterWidgetProps) => {
+  ({ model, availableFields }: FilterWidgetProps) => {
     const showBadge = model.totalConditionCount > 0 || model.hasActiveFilters;
-    const badgeBg = model.hasPendingChanges ? 'orange.500' : 'gray.500';
 
     const handleApply = () => {
       model.apply();
-      onApply();
+      model.setOpen(false);
+    };
+
+    const handleClearAll = () => {
+      model.clearAll();
       model.setOpen(false);
     };
 
@@ -45,7 +46,7 @@ export const FilterWidget = observer(
               size="sm"
               data-testid="filter-trigger"
             >
-              <PiFunnelBold />
+              <LuFilter />
             </IconButton>
             {showBadge && (
               <Box
@@ -56,7 +57,7 @@ export const FilterWidget = observer(
                 width="16px"
                 height="16px"
                 fontSize="xs"
-                bg={badgeBg}
+                bg={model.hasPendingChanges ? 'red.500' : 'gray.500'}
                 color="white"
                 display="flex"
                 alignItems="center"
@@ -71,62 +72,118 @@ export const FilterWidget = observer(
         </Popover.Trigger>
         <Portal>
           <Popover.Positioner>
-            <Popover.Content p={0} minW="400px" maxW="600px">
-              <HStack p={3} borderBottom="1px solid" borderColor="gray.100">
-                <Text fontWeight="semibold">Filters</Text>
-                {model.totalConditionCount > 0 && (
-                  <Text fontSize="sm" color="gray.500">
-                    ({model.totalConditionCount})
+            <Popover.Content p={4} w="732px" borderRadius="xl">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={!model.isEmpty ? 3 : 0}
+              >
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box color="gray.500">
+                    <LuFilter size={20} />
+                  </Box>
+                  <Text fontSize="xl" fontWeight="medium" color="gray.500">
+                    Filters
                   </Text>
-                )}
-                <Box ml="auto" />
-                {!model.isEmpty && (
+                  {model.totalConditionCount > 0 && (
+                    <Box bg="gray.100" px={2} py={1} borderRadius="sm">
+                      <Text fontSize="sm" fontWeight="medium" color="black">
+                        {model.totalConditionCount}
+                      </Text>
+                    </Box>
+                  )}
+                  {model.hasPendingChanges && (
+                    <Box bg="#fdedea" px={2} py={1} borderRadius="sm">
+                      <Text fontSize="sm" fontWeight="medium" color="#be3e24">
+                        Unsaved
+                      </Text>
+                    </Box>
+                  )}
+                </Box>
+                <Box display="flex" gap={2} alignItems="center">
+                  {!model.isEmpty && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      borderRadius="lg"
+                      fontWeight="medium"
+                      color="black"
+                      onClick={handleClearAll}
+                      data-testid="clear-all"
+                    >
+                      Clear all
+                    </Button>
+                  )}
                   <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => model.clearAll()}
-                    data-testid="clear-all"
+                    size="sm"
+                    bg="gray.100"
+                    borderRadius="lg"
+                    fontWeight="medium"
+                    onClick={handleApply}
+                    disabled={
+                      !model.allFiltersValid || !model.hasPendingChanges
+                    }
+                    color={
+                      model.hasPendingChanges && model.allFiltersValid
+                        ? 'black'
+                        : 'rgba(0,0,0,0.2)'
+                    }
+                    _hover={
+                      model.hasPendingChanges && model.allFiltersValid
+                        ? { bg: 'gray.200' }
+                        : undefined
+                    }
+                    _disabled={{
+                      opacity: 1,
+                      bg: 'gray.100',
+                      cursor: 'default',
+                    }}
+                    data-testid="apply-filters"
                   >
-                    Clear all
+                    Apply
                   </Button>
-                )}
-              </HStack>
+                </Box>
+              </Box>
 
-              <Box p={3}>
-                {model.isEmpty ? (
-                  <Text fontSize="sm" color="gray.500">
-                    No filters. Add a condition to get started.
-                  </Text>
-                ) : (
+              {!model.isEmpty && (
+                <>
+                  <Box h="1px" bg="gray.200" mb={3} />
                   <FilterGroupView
                     model={model}
                     group={model.rootGroup}
                     availableFields={availableFields}
                     isRoot={true}
                   />
-                )}
-              </Box>
+                </>
+              )}
 
-              <HStack p={3} borderTop="1px solid" borderColor="gray.100">
+              <Box mt={!model.isEmpty ? 2 : 0}>
                 <Button
                   variant="ghost"
                   size="sm"
+                  borderRadius="lg"
+                  fontWeight="medium"
+                  color="gray.500"
                   onClick={() => model.addCondition()}
                   data-testid="footer-add-condition"
                 >
-                  Add condition
+                  <LuPlus size={14} />
+                  <Text ml={1}>Add condition</Text>
                 </Button>
-                <Box ml="auto" />
                 <Button
-                  colorPalette="blue"
+                  variant="ghost"
                   size="sm"
-                  disabled={!model.allFiltersValid || !model.hasPendingChanges}
-                  onClick={handleApply}
-                  data-testid="apply-filters"
+                  borderRadius="lg"
+                  fontWeight="medium"
+                  color="gray.500"
+                  onClick={() => model.addGroup()}
+                  data-testid="footer-add-group"
                 >
-                  Apply
+                  <LuPlus size={14} />
+                  <Text ml={1}>Add group</Text>
                 </Button>
-              </HStack>
+              </Box>
             </Popover.Content>
           </Popover.Positioner>
         </Portal>

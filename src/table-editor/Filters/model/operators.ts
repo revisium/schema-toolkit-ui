@@ -15,6 +15,7 @@ export enum FilterOperator {
   Lte = 'lte',
   IsTrue = 'is_true',
   IsFalse = 'is_false',
+  Search = 'search',
 }
 
 export interface OperatorInfo {
@@ -34,96 +35,81 @@ export function operatorRequiresValue(operator: FilterOperator): boolean {
   return !UNARY_OPERATORS.has(operator);
 }
 
-const ALL_OPERATORS: OperatorInfo[] = [
-  { operator: FilterOperator.Equals, label: 'equals', requiresValue: true },
-  {
-    operator: FilterOperator.NotEquals,
-    label: 'not equals',
-    requiresValue: true,
-  },
-  { operator: FilterOperator.Contains, label: 'contains', requiresValue: true },
-  {
-    operator: FilterOperator.NotContains,
-    label: 'not contains',
-    requiresValue: true,
-  },
-  {
-    operator: FilterOperator.StartsWith,
-    label: 'starts with',
-    requiresValue: true,
-  },
-  {
-    operator: FilterOperator.EndsWith,
-    label: 'ends with',
-    requiresValue: true,
-  },
-  { operator: FilterOperator.IsEmpty, label: 'is empty', requiresValue: false },
-  {
-    operator: FilterOperator.IsNotEmpty,
-    label: 'is not empty',
-    requiresValue: false,
-  },
-  { operator: FilterOperator.Gt, label: '>', requiresValue: true },
-  { operator: FilterOperator.Gte, label: '>=', requiresValue: true },
-  { operator: FilterOperator.Lt, label: '<', requiresValue: true },
-  { operator: FilterOperator.Lte, label: '<=', requiresValue: true },
-  { operator: FilterOperator.IsTrue, label: 'is true', requiresValue: false },
-  { operator: FilterOperator.IsFalse, label: 'is false', requiresValue: false },
+function op(
+  operator: FilterOperator,
+  label: string,
+  requiresValue = true,
+): OperatorInfo {
+  return { operator, label, requiresValue };
+}
+
+const STRING_OPERATORS: OperatorInfo[] = [
+  op(FilterOperator.Equals, 'equals'),
+  op(FilterOperator.NotEquals, 'not equals'),
+  op(FilterOperator.Contains, 'contains'),
+  op(FilterOperator.NotContains, 'not contains'),
+  op(FilterOperator.StartsWith, 'starts with'),
+  op(FilterOperator.EndsWith, 'ends with'),
+  op(FilterOperator.IsEmpty, 'is empty', false),
+  op(FilterOperator.IsNotEmpty, 'is not empty', false),
+  op(FilterOperator.Search, 'search'),
 ];
 
-const STRING_OPERATORS: FilterOperator[] = [
-  FilterOperator.Equals,
-  FilterOperator.NotEquals,
-  FilterOperator.Contains,
-  FilterOperator.NotContains,
-  FilterOperator.StartsWith,
-  FilterOperator.EndsWith,
-  FilterOperator.IsEmpty,
-  FilterOperator.IsNotEmpty,
+const NUMBER_OPERATORS: OperatorInfo[] = [
+  op(FilterOperator.Equals, '='),
+  op(FilterOperator.NotEquals, '!='),
+  op(FilterOperator.Gt, '>'),
+  op(FilterOperator.Gte, '>='),
+  op(FilterOperator.Lt, '<'),
+  op(FilterOperator.Lte, '<='),
+  op(FilterOperator.IsEmpty, 'is empty', false),
+  op(FilterOperator.IsNotEmpty, 'is not empty', false),
 ];
 
-const NUMBER_OPERATORS: FilterOperator[] = [
-  FilterOperator.Equals,
-  FilterOperator.NotEquals,
-  FilterOperator.Gt,
-  FilterOperator.Gte,
-  FilterOperator.Lt,
-  FilterOperator.Lte,
-  FilterOperator.IsEmpty,
-  FilterOperator.IsNotEmpty,
+const BOOLEAN_OPERATORS: OperatorInfo[] = [
+  op(FilterOperator.IsTrue, 'is true', false),
+  op(FilterOperator.IsFalse, 'is false', false),
+  op(FilterOperator.IsEmpty, 'is empty', false),
+  op(FilterOperator.IsNotEmpty, 'is not empty', false),
 ];
 
-const BOOLEAN_OPERATORS: FilterOperator[] = [
-  FilterOperator.IsTrue,
-  FilterOperator.IsFalse,
-  FilterOperator.IsEmpty,
-  FilterOperator.IsNotEmpty,
+const FOREIGN_KEY_OPERATORS: OperatorInfo[] = [
+  op(FilterOperator.Equals, 'equals'),
+  op(FilterOperator.NotEquals, 'not equals'),
+  op(FilterOperator.IsEmpty, 'is empty', false),
+  op(FilterOperator.IsNotEmpty, 'is not empty', false),
 ];
 
-const FOREIGN_KEY_OPERATORS: FilterOperator[] = [
-  FilterOperator.Equals,
-  FilterOperator.NotEquals,
-  FilterOperator.IsEmpty,
-  FilterOperator.IsNotEmpty,
+const DATETIME_OPERATORS: OperatorInfo[] = [
+  op(FilterOperator.Equals, 'is'),
+  op(FilterOperator.NotEquals, 'is not'),
+  op(FilterOperator.Lt, 'before'),
+  op(FilterOperator.Gt, 'after'),
+  op(FilterOperator.Lte, 'on or before'),
+  op(FilterOperator.Gte, 'on or after'),
 ];
 
 export const OPERATORS_BY_TYPE: Readonly<
-  Record<FilterFieldType, readonly FilterOperator[]>
+  Record<FilterFieldType, readonly OperatorInfo[]>
 > = {
   [FilterFieldType.String]: STRING_OPERATORS,
   [FilterFieldType.Number]: NUMBER_OPERATORS,
   [FilterFieldType.Boolean]: BOOLEAN_OPERATORS,
   [FilterFieldType.ForeignKey]: FOREIGN_KEY_OPERATORS,
   [FilterFieldType.File]: STRING_OPERATORS,
-  [FilterFieldType.DateTime]: NUMBER_OPERATORS,
+  [FilterFieldType.DateTime]: DATETIME_OPERATORS,
 };
 
-export function getOperatorInfo(operator: FilterOperator): OperatorInfo {
-  const info = ALL_OPERATORS.find((o) => o.operator === operator);
-  if (!info) {
-    throw new Error(`Unknown operator: ${operator}`);
+export function getOperatorLabel(
+  operator: FilterOperator,
+  fieldType: FilterFieldType,
+): string {
+  const ops = OPERATORS_BY_TYPE[fieldType];
+  const found = ops.find((o) => o.operator === operator);
+  if (found) {
+    return found.label;
   }
-  return info;
+  return operator;
 }
 
 export function getDefaultOperator(fieldType: FilterFieldType): FilterOperator {
@@ -132,12 +118,11 @@ export function getDefaultOperator(fieldType: FilterFieldType): FilterOperator {
   if (!first) {
     throw new Error(`No operators defined for field type: ${fieldType}`);
   }
-  return first;
+  return first.operator;
 }
 
 export function getOperatorsForType(
   fieldType: FilterFieldType,
 ): OperatorInfo[] {
-  const operators = OPERATORS_BY_TYPE[fieldType];
-  return operators.map((op) => getOperatorInfo(op));
+  return [...OPERATORS_BY_TYPE[fieldType]];
 }

@@ -7,10 +7,7 @@ function parseValue(
   value: string,
   fieldType: FilterFieldType,
 ): string | number {
-  if (
-    fieldType === FilterFieldType.Number ||
-    fieldType === FilterFieldType.DateTime
-  ) {
+  if (fieldType === FilterFieldType.Number) {
     const num = Number(value);
     if (!Number.isNaN(num)) {
       return num;
@@ -55,6 +52,8 @@ function buildOperatorClause(
       return { equals: true };
     case FilterOperator.IsFalse:
       return { equals: false };
+    case FilterOperator.Search:
+      return { search: value };
   }
 }
 
@@ -63,6 +62,17 @@ function buildConditionClause(
 ): Record<string, unknown> | null {
   if (operatorRequiresValue(condition.operator) && condition.value === '') {
     return null;
+  }
+
+  if (condition.operator === FilterOperator.Search) {
+    return {
+      data: {
+        path: condition.field,
+        search: condition.value,
+        searchLanguage: condition.searchLanguage || 'simple',
+        searchType: condition.searchType || 'plain',
+      },
+    };
   }
 
   const opClause = buildOperatorClause(

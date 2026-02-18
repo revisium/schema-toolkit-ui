@@ -1,26 +1,38 @@
 import { observer } from 'mobx-react-lite';
-import { HStack, IconButton } from '@chakra-ui/react';
-import { PiXBold } from 'react-icons/pi';
+import { Box, IconButton } from '@chakra-ui/react';
+import { LuX } from 'react-icons/lu';
 import type { FilterModel } from '../model/FilterModel.js';
-import type { FilterCondition } from '../model/types.js';
+import type { FilterConditionVM } from '../model/FilterConditionVM.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
-import { operatorRequiresValue } from '../model/operators.js';
+import { FilterOperator, operatorRequiresValue } from '../model/operators.js';
 import { FieldSelect } from './FieldSelect.js';
 import { OperatorSelect } from './OperatorSelect.js';
 import { FilterValueInput } from './FilterValueInput.js';
+import { SearchLanguageSelect } from './SearchLanguageSelect.js';
+import { SearchTypeSelect } from './SearchTypeSelect.js';
 
 interface FilterConditionViewProps {
   model: FilterModel;
-  condition: FilterCondition;
+  condition: FilterConditionVM;
   availableFields: ColumnSpec[];
 }
 
 export const FilterConditionView = observer(
   ({ model, condition, availableFields }: FilterConditionViewProps) => {
+    const isSearch = condition.operator === FilterOperator.Search;
+
     return (
-      <HStack gap={2} data-testid="filter-condition">
+      <Box
+        display="flex"
+        alignItems="center"
+        gap={2}
+        minH="40px"
+        flexWrap="wrap"
+        data-testid="filter-condition"
+      >
         <FieldSelect
           value={condition.field}
+          fieldType={condition.fieldType}
           fields={availableFields}
           onChange={(field) => model.updateCondition(condition.id, { field })}
         />
@@ -34,20 +46,40 @@ export const FilterConditionView = observer(
         {operatorRequiresValue(condition.operator) && (
           <FilterValueInput
             value={condition.value}
+            fieldType={condition.fieldType}
             onChange={(value) => model.updateCondition(condition.id, { value })}
             error={model.getConditionError(condition.id)}
           />
         )}
+        {isSearch && (
+          <>
+            <SearchLanguageSelect
+              value={condition.searchLanguage}
+              onChange={(searchLanguage) =>
+                model.updateCondition(condition.id, { searchLanguage })
+              }
+            />
+            <SearchTypeSelect
+              value={condition.searchType}
+              onChange={(searchType) =>
+                model.updateCondition(condition.id, { searchType })
+              }
+            />
+          </>
+        )}
         <IconButton
           aria-label="Remove condition"
           variant="ghost"
-          size="2xs"
+          size="sm"
+          borderRadius="lg"
+          color="gray.400"
+          _hover={{ bg: 'gray.100', color: 'gray.600' }}
           onClick={() => model.removeCondition(condition.id)}
           data-testid="remove-condition"
         >
-          <PiXBold />
+          <LuX size={20} />
         </IconButton>
-      </HStack>
+      </Box>
     );
   },
 );

@@ -141,4 +141,45 @@ describe('buildWhereClause', () => {
       ],
     });
   });
+
+  it('datetime before', () => {
+    const group = createGroup({
+      conditions: [
+        {
+          id: 'c-1',
+          field: 'createdAt',
+          fieldType: FilterFieldType.DateTime,
+          operator: FilterOperator.Lt,
+          value: '2024-01-15T10:30:00.000Z',
+        },
+      ],
+    });
+    expect(buildWhereClause(group)).toEqual({
+      createdAt: { lt: '2024-01-15T10:30:00.000Z' },
+    });
+  });
+
+  it('search operator', () => {
+    const group = createGroup({
+      conditions: [
+        {
+          id: 'c-1',
+          field: 'name',
+          fieldType: FilterFieldType.String,
+          operator: FilterOperator.Search,
+          value: 'hello world',
+          searchLanguage: 'english',
+          searchType: 'phrase',
+        },
+      ],
+    });
+    expect(buildWhereClause(group)).toEqual({
+      data: {
+        path: 'name',
+        search: 'hello world',
+        searchLanguage: 'english',
+        searchType: 'phrase',
+      },
+    });
+  });
 });

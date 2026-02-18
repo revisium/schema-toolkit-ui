@@ -9,12 +9,11 @@ export function isConditionValueValid(condition: FilterCondition): boolean {
   if (condition.value === '') {
     return false;
   }
-  if (
-    (condition.fieldType === FilterFieldType.Number ||
-      condition.fieldType === FilterFieldType.DateTime) &&
-    Number.isNaN(Number(condition.value))
-  ) {
-    return false;
+  if (condition.fieldType === FilterFieldType.Number) {
+    return !Number.isNaN(Number(condition.value));
+  }
+  if (condition.fieldType === FilterFieldType.DateTime) {
+    return !Number.isNaN(new Date(condition.value).getTime());
   }
   return true;
 }
@@ -44,12 +43,16 @@ export function getConditionErrorMessage(
     return 'Value is required';
   }
 
-  if (
-    (condition.fieldType === FilterFieldType.Number ||
-      condition.fieldType === FilterFieldType.DateTime) &&
-    Number.isNaN(Number(condition.value))
-  ) {
-    return 'Value must be a number';
+  if (condition.fieldType === FilterFieldType.Number) {
+    if (Number.isNaN(Number(condition.value))) {
+      return 'Value must be a number';
+    }
+  }
+
+  if (condition.fieldType === FilterFieldType.DateTime) {
+    if (Number.isNaN(new Date(condition.value).getTime())) {
+      return 'Value must be a valid date';
+    }
   }
 
   return null;
