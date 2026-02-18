@@ -73,11 +73,7 @@ export const StoryWrapper = observer(
           borderColor="gray.100"
         >
           <SearchWidget model={state.core.search} />
-          <FilterWidget
-            model={state.core.filters}
-            availableFields={columns}
-            onApply={() => state.core.applyFilter()}
-          />
+          <FilterWidget model={state.core.filters} availableFields={columns} />
           <SortingsWidget
             model={state.core.sorts}
             availableFields={columns}

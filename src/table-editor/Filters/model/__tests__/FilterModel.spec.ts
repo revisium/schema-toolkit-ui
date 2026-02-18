@@ -1,7 +1,10 @@
+import { jest } from '@jest/globals';
 import { FilterFieldType } from '../../../shared/field-types';
 import { testCol as col } from '../../../__tests__/helpers';
 import { FilterOperator } from '../operators';
+import { SearchLanguage, SearchType } from '../searchTypes';
 import { FilterModel } from '../FilterModel';
+import { buildWhereClause } from '../filterBuilder';
 
 describe('FilterModel', () => {
   let model: FilterModel;
@@ -12,6 +15,7 @@ describe('FilterModel', () => {
       col({ field: 'name' }),
       col({ field: 'age', fieldType: FilterFieldType.Number }),
       col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+      col({ field: 'createdAt', fieldType: FilterFieldType.DateTime }),
     ]);
   });
 
@@ -25,7 +29,7 @@ describe('FilterModel', () => {
       expect(condition?.value).toBe('');
     });
 
-    it('updateCondition field resets operator and value', () => {
+    it('updateCondition field resets operator and value when type changes', () => {
       model.addCondition();
       const id = model.rootGroup.conditions[0]!.id;
       model.updateCondition(id, { value: 'test' });
@@ -35,6 +39,17 @@ describe('FilterModel', () => {
       expect(condition?.fieldType).toBe(FilterFieldType.Boolean);
       expect(condition?.operator).toBe(FilterOperator.IsTrue);
       expect(condition?.value).toBe('');
+    });
+
+    it('updateCondition field preserves value when same type', () => {
+      model.init([col({ field: 'first_name' }), col({ field: 'last_name' })]);
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'Alice' });
+      model.updateCondition(id, { field: 'last_name' });
+      const condition = model.rootGroup.conditions[0];
+      expect(condition?.field).toBe('last_name');
+      expect(condition?.value).toBe('Alice');
     });
 
     it('updateCondition operator resets value', () => {
@@ -67,6 +82,48 @@ describe('FilterModel', () => {
       expect(model.rootGroup.conditions[0]?.operator).toBe(
         FilterOperator.IsTrue,
       );
+    });
+  });
+
+  describe('search operator', () => {
+    it('switching to search sets language and type defaults', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { operator: FilterOperator.Search });
+      const condition = model.rootGroup.conditions[0];
+      expect(condition?.operator).toBe(FilterOperator.Search);
+      expect(condition?.searchLanguage).toBe(SearchLanguage.Simple);
+      expect(condition?.searchType).toBe(SearchType.Plain);
+    });
+
+    it('switching away from search clears language and type', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { operator: FilterOperator.Search });
+      model.updateCondition(id, { operator: FilterOperator.Equals });
+      const condition = model.rootGroup.conditions[0];
+      expect(condition?.searchLanguage).toBe('');
+      expect(condition?.searchType).toBe('');
+    });
+
+    it('updateCondition searchLanguage', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { operator: FilterOperator.Search });
+      model.updateCondition(id, {
+        searchLanguage: SearchLanguage.English,
+      });
+      expect(model.rootGroup.conditions[0]?.searchLanguage).toBe(
+        SearchLanguage.English,
+      );
+    });
+
+    it('updateCondition searchType', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { operator: FilterOperator.Search });
+      model.updateCondition(id, { searchType: SearchType.Phrase });
+      expect(model.rootGroup.conditions[0]?.searchType).toBe(SearchType.Phrase);
     });
   });
 
@@ -105,6 +162,11 @@ describe('FilterModel', () => {
       expect(model.rootGroup.conditions).toHaveLength(0);
       expect(model.rootGroup.groups[0]?.conditions).toHaveLength(1);
     });
+
+    it('nested groups always have empty groups array', () => {
+      model.addGroup();
+      expect(model.rootGroup.groups[0]?.groups).toEqual([]);
+    });
   });
 
   describe('validation', () => {
@@ -126,6 +188,26 @@ describe('FilterModel', () => {
       model.addCondition();
       const id = model.rootGroup.conditions[0]!.id;
       model.updateCondition(id, { value: 'abc' });
+      expect(model.isConditionValid(id)).toBe(false);
+    });
+
+    it('valid datetime value', () => {
+      model.init([
+        col({ field: 'createdAt', fieldType: FilterFieldType.DateTime }),
+      ]);
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: '2024-01-15T10:30:00.000Z' });
+      expect(model.isConditionValid(id)).toBe(true);
+    });
+
+    it('invalid datetime value', () => {
+      model.init([
+        col({ field: 'createdAt', fieldType: FilterFieldType.DateTime }),
+      ]);
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'not-a-date' });
       expect(model.isConditionValid(id)).toBe(false);
     });
 
@@ -197,12 +279,115 @@ describe('FilterModel', () => {
       expect(model.hasActiveFilters).toBe(false);
     });
 
+    it('init resets dirty state', () => {
+      model.addCondition();
+      model.init([
+        col({ field: 'name' }),
+        col({ field: 'age', fieldType: FilterFieldType.Number }),
+        col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+      ]);
+      expect(model.hasPendingChanges).toBe(false);
+    });
+
+    it('apply removes empty groups', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'test' });
+      model.addGroup();
+      expect(model.rootGroup.groups).toHaveLength(1);
+      model.apply();
+      expect(model.rootGroup.groups).toHaveLength(0);
+    });
+
+    it('apply calls onApply with where clause', () => {
+      const onApply = jest.fn();
+      model.setOnApply(onApply);
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'Alice' });
+      model.apply();
+      expect(onApply).toHaveBeenCalledTimes(1);
+      const expected = buildWhereClause(model.rootGroup);
+      expect(onApply).toHaveBeenCalledWith(expected);
+    });
+
+    it('apply calls onApply with null when no conditions', () => {
+      const onApply = jest.fn();
+      model.setOnApply(onApply);
+      model.apply();
+      expect(onApply).toHaveBeenCalledWith(null);
+    });
+
+    it('clearAll calls onApply with null', () => {
+      const onApply = jest.fn();
+      model.setOnApply(onApply);
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'test' });
+      model.apply();
+      onApply.mockClear();
+      model.clearAll();
+      expect(onApply).toHaveBeenCalledWith(null);
+    });
+
+    it('onApply not called when not set', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'test' });
+      expect(() => model.apply()).not.toThrow();
+    });
+
+    it('dispose clears onApply', () => {
+      const onApply = jest.fn();
+      model.setOnApply(onApply);
+      model.dispose();
+      model = new FilterModel();
+      model.init([col({ field: 'name' })]);
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'test' });
+      model.apply();
+      expect(onApply).not.toHaveBeenCalled();
+    });
+
+    it('apply builds correct where clause for multiple conditions', () => {
+      const onApply = jest.fn();
+      model.setOnApply(onApply);
+      model.addCondition();
+      model.addCondition();
+      const c1 = model.rootGroup.conditions[0]!.id;
+      const c2 = model.rootGroup.conditions[1]!.id;
+      model.updateCondition(c1, { value: 'Alice' });
+      model.updateCondition(c2, { field: 'age' });
+      model.updateCondition(c2, { value: '25' });
+      model.apply();
+      expect(onApply).toHaveBeenCalledWith({
+        AND: [
+          { data: { path: 'name', equals: 'Alice' } },
+          { data: { path: 'age', equals: 25 } },
+        ],
+      });
+    });
+
     it('applySnapshot syncs next IDs to avoid collisions', () => {
       model.addCondition();
       model.addCondition();
       model.addCondition();
       model.apply();
-      const snapshot = JSON.stringify(model.rootGroup);
+
+      const rg = model.rootGroup;
+      const snapshot = JSON.stringify({
+        id: rg.id,
+        logic: rg.logic,
+        conditions: rg.conditions.map((c) => ({
+          id: c.id,
+          field: c.field,
+          fieldType: c.fieldType,
+          operator: c.operator,
+          value: c.value,
+        })),
+        groups: [],
+      });
 
       model.init([
         col({ field: 'name' }),

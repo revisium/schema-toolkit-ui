@@ -7,6 +7,8 @@ export interface FilterCondition {
   fieldType: FilterFieldType;
   operator: FilterOperator;
   value: string;
+  searchLanguage?: string;
+  searchType?: string;
 }
 
 export interface FilterGroup {
