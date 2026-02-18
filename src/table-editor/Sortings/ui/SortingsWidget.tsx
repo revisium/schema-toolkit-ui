@@ -56,7 +56,7 @@ export const SortingsWidget = observer(
             >
               <LuArrowUpDown />
             </IconButton>
-            {(model.hasAppliedSorts || model.hasPendingChanges) && (
+            {(model.hasSorts || model.hasPendingChanges) && (
               <Box
                 position="absolute"
                 top="-1"
@@ -73,9 +73,7 @@ export const SortingsWidget = observer(
                 lineHeight="1"
                 data-testid="sort-badge"
               >
-                {model.hasPendingChanges
-                  ? model.sortCount
-                  : model.appliedSortCount}
+                {model.sortCount}
               </Box>
             )}
           </Box>
@@ -133,7 +131,7 @@ export const SortingsWidget = observer(
                     onClick={handleApply}
                     disabled={!model.hasPendingChanges}
                     color={
-                      !model.hasPendingChanges ? 'rgba(0,0,0,0.2)' : 'black'
+                      model.hasPendingChanges ? 'black' : 'rgba(0,0,0,0.2)'
                     }
                     _hover={
                       model.hasPendingChanges ? { bg: 'gray.200' } : undefined

@@ -110,28 +110,15 @@ describe('SortModel', () => {
       expect(model.hasPendingChanges).toBe(false);
     });
 
-    it('initial state has no applied sorts', () => {
-      expect(model.hasAppliedSorts).toBe(false);
-      expect(model.appliedSortCount).toBe(0);
-    });
-
     it('addSort creates pending changes', () => {
       model.addSort('name');
       expect(model.hasPendingChanges).toBe(true);
     });
 
-    it('addSort does not affect applied sorts', () => {
-      model.addSort('name');
-      expect(model.hasAppliedSorts).toBe(false);
-      expect(model.appliedSortCount).toBe(0);
-    });
-
-    it('apply commits draft to applied', () => {
+    it('apply commits draft', () => {
       model.addSort('name');
       model.apply();
       expect(model.hasPendingChanges).toBe(false);
-      expect(model.hasAppliedSorts).toBe(true);
-      expect(model.appliedSortCount).toBe(1);
     });
 
     it('setDirection creates pending changes after apply', () => {
@@ -169,8 +156,6 @@ describe('SortModel', () => {
 
       model.addSort('age');
       expect(model.hasPendingChanges).toBe(true);
-      expect(model.hasAppliedSorts).toBe(true);
-      expect(model.appliedSortCount).toBe(1);
     });
 
     it('removeSort after apply creates pending changes', () => {
@@ -180,19 +165,16 @@ describe('SortModel', () => {
 
       model.removeSort('name');
       expect(model.hasPendingChanges).toBe(true);
-      expect(model.hasAppliedSorts).toBe(true);
     });
 
-    it('clearAll resets both draft and applied', () => {
+    it('clearAll resets to clean state', () => {
       model.addSort('name');
       model.addSort('age');
       model.apply();
-      expect(model.hasAppliedSorts).toBe(true);
 
       model.clearAll();
       expect(model.hasPendingChanges).toBe(false);
-      expect(model.hasAppliedSorts).toBe(false);
-      expect(model.appliedSortCount).toBe(0);
+      expect(model.sorts).toHaveLength(0);
     });
 
     it('clearAll fires onChange', () => {
@@ -206,11 +188,10 @@ describe('SortModel', () => {
       expect(onChange).toHaveBeenCalled();
     });
 
-    it('applyViewSorts sets applied state', () => {
+    it('applyViewSorts sets committed state', () => {
       model.applyViewSorts([{ field: 'data.name', direction: 'asc' }]);
       expect(model.hasPendingChanges).toBe(false);
-      expect(model.hasAppliedSorts).toBe(true);
-      expect(model.appliedSortCount).toBe(1);
+      expect(model.sorts).toHaveLength(1);
     });
 
     it('toggleDirection creates pending changes after apply', () => {
@@ -234,11 +215,11 @@ describe('SortModel', () => {
     it('multiple apply cycles work correctly', () => {
       model.addSort('name');
       model.apply();
-      expect(model.appliedSortCount).toBe(1);
+      expect(model.sortCount).toBe(1);
 
       model.addSort('age');
       model.apply();
-      expect(model.appliedSortCount).toBe(2);
+      expect(model.sortCount).toBe(2);
       expect(model.hasPendingChanges).toBe(false);
     });
 
@@ -252,45 +233,52 @@ describe('SortModel', () => {
       model.setDirection('name', 'asc');
       expect(model.hasPendingChanges).toBe(false);
     });
+
+    it('init resets dirty state', () => {
+      model.addSort('name');
+      expect(model.hasPendingChanges).toBe(true);
+
+      model.init([col({ field: 'name' }), col({ field: 'age' })]);
+      expect(model.hasPendingChanges).toBe(false);
+      expect(model.sorts).toEqual([]);
+    });
   });
 
   describe('badge state', () => {
-    it('no badge when empty and no applied', () => {
+    it('no badge when empty', () => {
       expect(model.hasSorts).toBe(false);
-      expect(model.hasAppliedSorts).toBe(false);
       expect(model.hasPendingChanges).toBe(false);
     });
 
     it('pending badge when draft has sorts but not applied', () => {
       model.addSort('name');
       expect(model.hasSorts).toBe(true);
-      expect(model.hasAppliedSorts).toBe(false);
       expect(model.hasPendingChanges).toBe(true);
+      expect(model.sortCount).toBe(1);
     });
 
-    it('applied badge when sorts are committed', () => {
+    it('committed badge when sorts are applied', () => {
       model.addSort('name');
       model.apply();
       expect(model.hasSorts).toBe(true);
-      expect(model.hasAppliedSorts).toBe(true);
       expect(model.hasPendingChanges).toBe(false);
+      expect(model.sortCount).toBe(1);
     });
 
     it('pending badge when applied sorts modified', () => {
       model.addSort('name', 'asc');
       model.apply();
       model.setDirection('name', 'desc');
-      expect(model.hasAppliedSorts).toBe(true);
       expect(model.hasPendingChanges).toBe(true);
+      expect(model.sortCount).toBe(1);
     });
 
-    it('badge count reflects applied count not draft count', () => {
+    it('badge count reflects current sort count', () => {
       model.addSort('name');
       model.apply();
-      expect(model.appliedSortCount).toBe(1);
+      expect(model.sortCount).toBe(1);
 
       model.addSort('age');
-      expect(model.appliedSortCount).toBe(1);
       expect(model.sortCount).toBe(2);
     });
   });
