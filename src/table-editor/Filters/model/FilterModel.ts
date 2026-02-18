@@ -135,33 +135,12 @@ export class FilterModel {
       updates.field !== undefined &&
       updates.field !== condNode.child('field').value
     ) {
-      const col = this._availableFields.find((c) => c.field === updates.field);
-      if (col) {
-        const oldFieldType = condNode.child('fieldType').value;
-        condNode.child('field').setValue(col.field);
-        condNode.child('fieldType').setValue(col.fieldType);
-        if (col.fieldType !== oldFieldType) {
-          condNode
-            .child('operator')
-            .setValue(getDefaultOperator(col.fieldType));
-          condNode.child('value').setValue('');
-          condNode.child('searchLanguage').setValue('');
-          condNode.child('searchType').setValue('');
-        }
-      }
+      this._applyFieldUpdate(condNode, updates.field);
     } else if (
       updates.operator !== undefined &&
       updates.operator !== condNode.child('operator').value
     ) {
-      condNode.child('operator').setValue(updates.operator);
-      condNode.child('value').setValue('');
-      if (updates.operator === FilterOperator.Search) {
-        condNode.child('searchLanguage').setValue(SearchLanguage.Simple);
-        condNode.child('searchType').setValue(SearchType.Plain);
-      } else {
-        condNode.child('searchLanguage').setValue('');
-        condNode.child('searchType').setValue('');
-      }
+      this._applyOperatorUpdate(condNode, updates.operator);
     } else if (updates.value !== undefined) {
       condNode.child('value').setValue(updates.value);
     } else if (updates.searchLanguage !== undefined) {
@@ -311,6 +290,40 @@ export class FilterModel {
     this._row.dispose();
   }
 
+  private _applyFieldUpdate(
+    condNode: NonNullable<ReturnType<FilterModel['_findConditionNode']>>,
+    field: string,
+  ): void {
+    const col = this._availableFields.find((c) => c.field === field);
+    if (!col) {
+      return;
+    }
+    const oldFieldType = condNode.child('fieldType').value;
+    condNode.child('field').setValue(col.field);
+    condNode.child('fieldType').setValue(col.fieldType);
+    if (col.fieldType !== oldFieldType) {
+      condNode.child('operator').setValue(getDefaultOperator(col.fieldType));
+      condNode.child('value').setValue('');
+      condNode.child('searchLanguage').setValue('');
+      condNode.child('searchType').setValue('');
+    }
+  }
+
+  private _applyOperatorUpdate(
+    condNode: NonNullable<ReturnType<FilterModel['_findConditionNode']>>,
+    operator: FilterOperator,
+  ): void {
+    condNode.child('operator').setValue(operator);
+    condNode.child('value').setValue('');
+    if (operator === FilterOperator.Search) {
+      condNode.child('searchLanguage').setValue(SearchLanguage.Simple);
+      condNode.child('searchType').setValue(SearchType.Plain);
+    } else {
+      condNode.child('searchLanguage').setValue('');
+      condNode.child('searchType').setValue('');
+    }
+  }
+
   private _newConditionData(col: ColumnSpec) {
     return {
       id: this._generateConditionId(),
@@ -391,7 +404,7 @@ export class FilterModel {
     const rootConditions = this._row.root.child('conditions');
     for (let i = 0; i < rootConditions.length; i++) {
       const item = rootConditions.at(i);
-      if (item && item.child('id').value === id) {
+      if (item?.child('id').value === id) {
         return item;
       }
     }
@@ -401,7 +414,7 @@ export class FilterModel {
       if (groupConditions) {
         for (let ci = 0; ci < groupConditions.length; ci++) {
           const item = groupConditions.at(ci);
-          if (item && item.child('id').value === id) {
+          if (item?.child('id').value === id) {
             return item;
           }
         }
@@ -414,7 +427,7 @@ export class FilterModel {
     const rootConditions = this._row.root.child('conditions');
     for (let i = 0; i < rootConditions.length; i++) {
       const item = rootConditions.at(i);
-      if (item && item.child('id').value === id) {
+      if (item?.child('id').value === id) {
         return { conditionsNode: rootConditions, index: i };
       }
     }
@@ -424,7 +437,7 @@ export class FilterModel {
       if (groupConditions) {
         for (let ci = 0; ci < groupConditions.length; ci++) {
           const item = groupConditions.at(ci);
-          if (item && item.child('id').value === id) {
+          if (item?.child('id').value === id) {
             return { conditionsNode: groupConditions, index: ci };
           }
         }
@@ -472,7 +485,7 @@ export class FilterModel {
     const groupsNode = this._row.root.child('groups');
     for (let i = groupsNode.length - 1; i >= 0; i--) {
       const group = groupsNode.at(i);
-      if (group && group.child('conditions').length === 0) {
+      if (group?.child('conditions').length === 0) {
         groupsNode.removeAt(i);
       }
     }

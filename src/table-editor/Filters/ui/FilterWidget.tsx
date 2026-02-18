@@ -157,7 +157,7 @@ export const FilterWidget = observer(
                 />
               )}
 
-              <Box mt={!model.isEmpty ? 2 : 0}>
+              <Box mt={model.isEmpty ? 0 : 2}>
                 <Button
                   variant="ghost"
                   size="sm"
