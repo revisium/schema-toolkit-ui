@@ -77,7 +77,7 @@ export const FilterWidget = observer(
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                mb={!model.isEmpty ? 3 : 0}
+                mb={3}
               >
                 <Box display="flex" alignItems="center" gap={2}>
                   <Box color="gray.500">
@@ -146,16 +146,15 @@ export const FilterWidget = observer(
                 </Box>
               </Box>
 
+              <Box h="1px" bg="gray.200" mb={3} />
+
               {!model.isEmpty && (
-                <>
-                  <Box h="1px" bg="gray.200" mb={3} />
-                  <FilterGroupView
-                    model={model}
-                    group={model.rootGroup}
-                    availableFields={availableFields}
-                    isRoot={true}
-                  />
-                </>
+                <FilterGroupView
+                  model={model}
+                  group={model.rootGroup}
+                  availableFields={availableFields}
+                  isRoot={true}
+                />
               )}
 
               <Box mt={!model.isEmpty ? 2 : 0}>
