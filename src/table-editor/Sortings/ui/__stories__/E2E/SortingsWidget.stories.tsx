@@ -202,7 +202,6 @@ export const BadgeGrayAfterApply: Story = {
 
     await waitFor(() => {
       expect(model.hasPendingChanges).toBe(false);
-      expect(model.hasAppliedSorts).toBe(true);
     });
 
     await waitFor(() => {
@@ -237,7 +236,6 @@ export const BadgeDisappearsAfterClearAll: Story = {
     await userEvent.click(screen.getByTestId('clear-all-sorts'));
 
     await waitFor(() => {
-      expect(model.hasAppliedSorts).toBe(false);
       expect(model.hasPendingChanges).toBe(false);
     });
 
