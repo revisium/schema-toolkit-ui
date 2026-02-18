@@ -1,10 +1,11 @@
 import { observer } from 'mobx-react-lite';
-import { Box, HStack, IconButton, Text } from '@chakra-ui/react';
-import { LuArrowDown, LuArrowUp, LuX } from 'react-icons/lu';
+import { Box, IconButton, Text } from '@chakra-ui/react';
+import { LuX } from 'react-icons/lu';
 import type { SortEntry } from '../model/types.js';
 import type { SortModel } from '../model/SortModel.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import { SortFieldSelect } from './SortFieldSelect.js';
+import { SortDirectionSelect } from './SortDirectionSelect.js';
 
 interface SortRowProps {
   sort: SortEntry;
@@ -19,43 +20,43 @@ export const SortRow = observer(
       model.replaceField(sort.field, newField);
     };
 
+    const handleDirectionChange = (direction: 'asc' | 'desc') => {
+      model.setDirection(sort.field, direction);
+    };
+
     return (
-      <HStack gap={2} data-testid="sort-row">
-        <Text fontSize="sm" color="gray.400" minW="20px">
+      <Box
+        display="flex"
+        alignItems="center"
+        gap={2}
+        h="40px"
+        data-testid="sort-row"
+      >
+        <Text fontSize="md" color="gray.400" minW="20px">
           {index + 1}.
         </Text>
         <SortFieldSelect
           currentField={sort.field}
           availableFields={availableFields}
-          usedFields={model.sorts.map((s) => s.field)}
           onChange={handleFieldChange}
         />
-        <IconButton
-          aria-label={
-            sort.direction === 'asc' ? 'Sort ascending' : 'Sort descending'
-          }
-          variant="ghost"
-          size="xs"
-          onClick={() => model.toggleDirection(sort.field)}
-          data-testid="toggle-direction"
-        >
-          {sort.direction === 'asc' ? <LuArrowUp /> : <LuArrowDown />}
-        </IconButton>
-        <Box flex={1}>
-          <Text fontSize="xs" color="gray.500">
-            {sort.direction === 'asc' ? 'A → Z' : 'Z → A'}
-          </Text>
-        </Box>
+        <SortDirectionSelect
+          selectedDirection={sort.direction}
+          onSelect={handleDirectionChange}
+        />
         <IconButton
           aria-label="Remove sort"
           variant="ghost"
-          size="xs"
+          size="sm"
+          borderRadius="lg"
+          color="gray.400"
+          _hover={{ bg: 'gray.100', color: 'gray.600' }}
           onClick={() => model.removeSort(sort.field)}
           data-testid="remove-sort"
         >
-          <LuX />
+          <LuX size={20} />
         </IconButton>
-      </HStack>
+      </Box>
     );
   },
 );

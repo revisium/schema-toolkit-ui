@@ -7,6 +7,7 @@ export class SortModel {
   private _availableFields: ColumnSpec[] = [];
   private _isOpen = false;
   private _onChange: (() => void) | null = null;
+  private _appliedSnapshot: string | null = null;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -28,6 +29,26 @@ export class SortModel {
     return this._isOpen;
   }
 
+  get hasPendingChanges(): boolean {
+    return JSON.stringify(this._sorts) !== this._appliedSnapshot;
+  }
+
+  get hasAppliedSorts(): boolean {
+    if (this._appliedSnapshot === null) {
+      return false;
+    }
+    const applied = JSON.parse(this._appliedSnapshot) as SortEntry[];
+    return applied.length > 0;
+  }
+
+  get appliedSortCount(): number {
+    if (this._appliedSnapshot === null) {
+      return 0;
+    }
+    const applied = JSON.parse(this._appliedSnapshot) as SortEntry[];
+    return applied.length;
+  }
+
   setOpen(value: boolean): void {
     this._isOpen = value;
   }
@@ -44,6 +65,12 @@ export class SortModel {
   init(availableFields: ColumnSpec[]): void {
     this._availableFields = availableFields;
     this._sorts = [];
+    this._appliedSnapshot = JSON.stringify(this._sorts);
+  }
+
+  apply(): void {
+    this._appliedSnapshot = JSON.stringify(this._sorts);
+    this._notifyChange();
   }
 
   addSort(field: string, direction: 'asc' | 'desc' = 'asc'): void {
@@ -51,18 +78,18 @@ export class SortModel {
       return;
     }
     this._sorts.push({ field, direction });
-    this._notifyChange();
   }
 
   replaceField(oldField: string, newField: string): void {
-    if (this._sorts.some((s) => s.field === newField)) {
+    if (oldField === newField) {
       return;
     }
     const entry = this._sorts.find((s) => s.field === oldField);
-    if (entry) {
-      entry.field = newField;
-      this._notifyChange();
+    if (!entry) {
+      return;
     }
+    this._sorts = this._sorts.filter((s) => s.field !== newField);
+    entry.field = newField;
   }
 
   getSortDirection(field: string): 'asc' | 'desc' | null {
@@ -86,19 +113,24 @@ export class SortModel {
     } else {
       this._sorts.push({ field, direction });
     }
-    this._notifyChange();
+    this.apply();
+  }
+
+  setDirection(field: string, direction: 'asc' | 'desc'): void {
+    const sort = this._sorts.find((s) => s.field === field);
+    if (sort) {
+      sort.direction = direction;
+    }
   }
 
   removeSort(field: string): void {
     this._sorts = this._sorts.filter((s) => s.field !== field);
-    this._notifyChange();
   }
 
   toggleDirection(field: string): void {
     const sort = this._sorts.find((s) => s.field === field);
     if (sort) {
       sort.direction = sort.direction === 'asc' ? 'desc' : 'asc';
-      this._notifyChange();
     }
   }
 
@@ -112,11 +144,11 @@ export class SortModel {
       }
     }
     this._sorts = reordered;
-    this._notifyChange();
   }
 
   clearAll(): void {
     this._sorts = [];
+    this._appliedSnapshot = JSON.stringify(this._sorts);
     this._notifyChange();
   }
 
@@ -142,6 +174,7 @@ export class SortModel {
     }
 
     this._sorts = sorts;
+    this._appliedSnapshot = JSON.stringify(this._sorts);
     this._notifyChange();
   }
 

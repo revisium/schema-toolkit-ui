@@ -256,6 +256,7 @@ export const ViewSettingsChange: Story = {
     expect(state.core.viewBadge.hasChanges).toBe(false);
 
     state.core.sorts.addSort('age', 'asc');
+    state.core.sorts.apply();
 
     await waitFor(() => {
       expect(state.core.viewBadge.hasChanges).toBe(true);
@@ -364,6 +365,7 @@ export const ReadonlyLocalBadge: Story = {
     expect(state.core.viewBadge.canSave).toBe(false);
 
     state.core.sorts.addSort('age', 'asc');
+    state.core.sorts.apply();
 
     await waitFor(() => {
       expect(state.core.viewBadge.hasChanges).toBe(true);
