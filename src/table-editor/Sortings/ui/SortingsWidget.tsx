@@ -11,6 +11,7 @@ import { LuArrowUpDown, LuPlus } from 'react-icons/lu';
 import type { SortModel } from '../model/SortModel.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import { SortRow } from './SortRow.js';
+import { CopyJsonPopover } from '../../shared/CopyJsonPopover/index.js';
 
 interface SortingsWidgetProps {
   model: SortModel;
@@ -122,6 +123,13 @@ export const SortingsWidget = observer(
                     >
                       Clear all
                     </Button>
+                  )}
+                  {model.hasSorts && (
+                    <CopyJsonPopover
+                      data={model.serializeToViewSorts()}
+                      tooltipContent="Copy sort JSON"
+                      testId="sort-copy-json"
+                    />
                   )}
                   <Button
                     size="sm"

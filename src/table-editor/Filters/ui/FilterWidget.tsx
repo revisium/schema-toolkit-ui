@@ -11,6 +11,7 @@ import { LuFilter, LuPlus } from 'react-icons/lu';
 import type { FilterModel } from '../model/FilterModel.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import { FilterGroupView } from './FilterGroupView.js';
+import { CopyJsonPopover } from '../../shared/CopyJsonPopover/index.js';
 
 interface FilterWidgetProps {
   model: FilterModel;
@@ -114,6 +115,13 @@ export const FilterWidget = observer(
                     >
                       Clear all
                     </Button>
+                  )}
+                  {!model.isEmpty && model.allFiltersValid && (
+                    <CopyJsonPopover
+                      data={model.buildCurrentWhereClause() ?? {}}
+                      tooltipContent="Copy filter JSON"
+                      testId="filter-copy-json"
+                    />
                   )}
                   <Button
                     size="sm"
