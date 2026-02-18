@@ -260,7 +260,10 @@ describe('countConditions', () => {
   });
 
   it('counts conditions in nested groups', () => {
-    const child = makeGroup('g-2', [makeCondition('c-2'), makeCondition('c-3')]);
+    const child = makeGroup('g-2', [
+      makeCondition('c-2'),
+      makeCondition('c-3'),
+    ]);
     const root = makeGroup('g-1', [makeCondition('c-1')], [child]);
 
     expect(countConditions(root)).toBe(3);
@@ -268,7 +271,11 @@ describe('countConditions', () => {
 
   it('counts conditions across deeply nested groups', () => {
     const deep = makeGroup('g-3', [makeCondition('c-4')]);
-    const mid = makeGroup('g-2', [makeCondition('c-2'), makeCondition('c-3')], [deep]);
+    const mid = makeGroup(
+      'g-2',
+      [makeCondition('c-2'), makeCondition('c-3')],
+      [deep],
+    );
     const root = makeGroup('g-1', [makeCondition('c-1')], [mid]);
 
     expect(countConditions(root)).toBe(4);
@@ -276,7 +283,10 @@ describe('countConditions', () => {
 
   it('counts conditions across multiple sibling groups', () => {
     const child1 = makeGroup('g-2', [makeCondition('c-2')]);
-    const child2 = makeGroup('g-3', [makeCondition('c-3'), makeCondition('c-4')]);
+    const child2 = makeGroup('g-3', [
+      makeCondition('c-3'),
+      makeCondition('c-4'),
+    ]);
     const root = makeGroup('g-1', [makeCondition('c-1')], [child1, child2]);
 
     expect(countConditions(root)).toBe(4);

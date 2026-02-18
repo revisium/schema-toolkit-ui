@@ -31,13 +31,17 @@ function group(overrides: Partial<FilterGroup> = {}): FilterGroup {
 describe('isConditionValueValid', () => {
   it('returns true for unary operator IsEmpty', () => {
     expect(
-      isConditionValueValid(cond({ operator: FilterOperator.IsEmpty, value: '' })),
+      isConditionValueValid(
+        cond({ operator: FilterOperator.IsEmpty, value: '' }),
+      ),
     ).toBe(true);
   });
 
   it('returns true for unary operator IsNotEmpty', () => {
     expect(
-      isConditionValueValid(cond({ operator: FilterOperator.IsNotEmpty, value: '' })),
+      isConditionValueValid(
+        cond({ operator: FilterOperator.IsNotEmpty, value: '' }),
+      ),
     ).toBe(true);
   });
 
@@ -202,7 +206,9 @@ describe('validateGroup', () => {
 describe('getConditionErrorMessage', () => {
   it('returns null for unary operator', () => {
     expect(
-      getConditionErrorMessage(cond({ operator: FilterOperator.IsEmpty, value: '' })),
+      getConditionErrorMessage(
+        cond({ operator: FilterOperator.IsEmpty, value: '' }),
+      ),
     ).toBeNull();
   });
 

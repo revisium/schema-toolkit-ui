@@ -15,6 +15,11 @@ const E2EWrapper = observer(({ setup }: FilterStoryWrapperProps) => {
   const [model] = useState(() => {
     const m = new FilterModel();
     m.init(TEST_COLUMNS);
+    const calls: (Record<string, unknown> | null)[] = [];
+    (window as any).__testOnApplyCalls = calls;
+    m.setOnApply((where) => {
+      calls.push(where);
+    });
     if (setup) {
       setup(m);
     }
@@ -42,143 +47,290 @@ const meta: Meta<typeof E2EWrapper> = {
 export default meta;
 type Story = StoryObj<typeof E2EWrapper>;
 
-export const AddAndRemoveCondition: Story = {
+async function openPopover(canvas: ReturnType<typeof within>) {
+  const trigger = canvas.getByTestId('filter-trigger');
+  await userEvent.click(trigger);
+  await waitFor(() => {
+    expect(screen.getByTestId('footer-add-condition')).toBeVisible();
+  });
+}
+
+export const FullFilterWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const model = () => (window as any).__testModel as FilterModel;
 
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
+    // 1. Open popover — empty state
+    await openPopover(canvas);
+    expect(screen.queryByTestId('filter-condition')).toBeNull();
+    expect(screen.getByTestId('apply-filters')).toBeDisabled();
+    expect(screen.queryByTestId('clear-all')).toBeNull();
+    expect(canvas.queryByTestId('filter-badge')).toBeNull();
 
-    await waitFor(() => {
-      expect(screen.getByTestId('footer-add-condition')).toBeVisible();
-    });
-
-    const addButton = screen.getByTestId('footer-add-condition');
-    await userEvent.click(addButton);
-
+    // 2. Add condition — default field Name, operator equals, value input visible
+    await userEvent.click(screen.getByTestId('footer-add-condition'));
     await waitFor(() => {
       expect(screen.getByTestId('filter-condition')).toBeVisible();
     });
+    expect(screen.getByTestId('field-select')).toHaveTextContent('Name');
+    expect(screen.getByTestId('operator-select')).toHaveTextContent('equals');
+    expect(screen.getByTestId('filter-value-input')).toBeVisible();
 
-    const removeButton = screen.getByTestId('remove-condition');
-    await userEvent.click(removeButton);
+    // 3. Unsaved badge visible (pending changes)
+    expect(screen.getByText('Unsaved')).toBeVisible();
 
+    // 4. Apply still disabled — value empty, filter invalid
+    expect(screen.getByTestId('apply-filters')).toBeDisabled();
+
+    // 5. Type value "Alice" — Apply becomes enabled
+    await userEvent.type(screen.getByTestId('filter-value-input'), 'Alice');
     await waitFor(() => {
-      expect(screen.queryByTestId('filter-condition')).toBeNull();
-    });
-  },
-};
-
-export const ChangeFieldAndOperator: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: FilterModel) => {
-      m.addCondition();
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('field-select')).toBeVisible();
+      expect(screen.getByTestId('apply-filters')).not.toBeDisabled();
     });
 
-    const fieldSelect = screen.getByTestId('field-select');
-    await userEvent.click(fieldSelect);
+    // 6. Apply — popover closes, badge shows count=1, no Unsaved
+    await userEvent.click(screen.getByTestId('apply-filters'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('footer-add-condition')).toBeNull();
+    });
+    expect(canvas.getByTestId('filter-badge')).toHaveTextContent('1');
+    expect(model().hasActiveFilters).toBe(true);
+    expect(model().hasPendingChanges).toBe(false);
 
+    // 7. Reopen — condition still "Name equals Alice"
+    await openPopover(canvas);
+    expect(screen.getByTestId('field-select')).toHaveTextContent('Name');
+    expect(screen.getByTestId('operator-select')).toHaveTextContent('equals');
+    expect(screen.getByTestId('filter-value-input')).toHaveValue('Alice');
+    expect(screen.queryByText('Unsaved')).toBeNull();
+
+    // 8. Change field to Age — operator resets to "=" (Number default), value clears
+    await userEvent.click(screen.getByTestId('field-select'));
     await waitFor(() => {
       expect(screen.getByText('Age')).toBeVisible();
     });
-
     await userEvent.click(screen.getByText('Age'));
-
-    const model = (window as any).__testModel as FilterModel;
     await waitFor(() => {
-      const condition = model.rootGroup.conditions[0];
-      expect(condition?.fieldType).toBe(FilterFieldType.Number);
+      expect(model().rootGroup.conditions[0]?.fieldType).toBe(
+        FilterFieldType.Number,
+      );
     });
-  },
-};
+    expect(screen.getByTestId('operator-select')).toHaveTextContent('=');
+    expect(screen.getByTestId('filter-value-input')).toHaveValue('');
 
-export const ApplyFilters: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: FilterModel) => {
-      m.addCondition();
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
-
+    // 9. Change operator to ">" — value clears
+    await userEvent.click(screen.getByTestId('operator-select'));
     await waitFor(() => {
-      expect(screen.getByTestId('filter-value-input')).toBeVisible();
+      expect(screen.getByText('>')).toBeVisible();
+    });
+    await userEvent.click(screen.getByText('>'));
+    await waitFor(() => {
+      expect(screen.getByTestId('operator-select')).toHaveTextContent('>');
     });
 
-    const input = screen.getByTestId('filter-value-input');
-    await userEvent.type(input, 'test value');
-
-    const applyButton = screen.getByTestId('apply-filters');
+    // 10. Type "25" — Apply enabled, Unsaved visible
+    await userEvent.type(screen.getByTestId('filter-value-input'), '25');
     await waitFor(() => {
-      expect(applyButton).not.toBeDisabled();
+      expect(screen.getByTestId('apply-filters')).not.toBeDisabled();
+    });
+    expect(screen.getByText('Unsaved')).toBeVisible();
+
+    // 11. Add second condition — count = 2 in model
+    await userEvent.click(screen.getByTestId('footer-add-condition'));
+    await waitFor(() => {
+      expect(model().totalConditionCount).toBe(2);
     });
 
-    await userEvent.click(applyButton);
-
-    const model = (window as any).__testModel as FilterModel;
-    expect(model.hasActiveFilters).toBe(true);
-  },
-};
-
-export const NestedGroupWorkflow: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
-
+    // 12. Switch root logic to "Any" (or)
+    const rootLogic = screen.getAllByTestId('logic-select')[0]!;
+    await userEvent.click(rootLogic);
     await waitFor(() => {
-      expect(screen.getByTestId('footer-add-condition')).toBeVisible();
+      expect(screen.getByTestId('logic-or')).toBeVisible();
+    });
+    await userEvent.click(screen.getByTestId('logic-or'));
+    await waitFor(() => {
+      expect(model().rootGroup.logic).toBe('or');
     });
 
-    const addConditionButton = screen.getByTestId('footer-add-condition');
-    await userEvent.click(addConditionButton);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('footer-add-group')).toBeVisible();
-    });
-
-    const addGroupButton = screen.getByTestId('footer-add-group');
-    await userEvent.click(addGroupButton);
-
+    // 13. Add group — nested group visible
+    await userEvent.click(screen.getByTestId('footer-add-group'));
     await waitFor(() => {
       expect(screen.getByTestId('filter-group')).toBeVisible();
     });
 
-    const model = (window as any).__testModel as FilterModel;
-    const nestedGroup = model.rootGroup.groups[0];
-    expect(nestedGroup).toBeDefined();
+    // 14. Add condition inside nested group
+    const groupEl = screen.getByTestId('filter-group');
+    const addInGroup = within(groupEl).getByTestId('add-condition');
+    await userEvent.click(addInGroup);
+    await waitFor(() => {
+      expect(model().totalConditionCount).toBe(3);
+    });
 
-    const logicSelect = within(screen.getByTestId('filter-group')).getByTestId(
-      'logic-select',
+    // 15. Change nested condition field to Active (Boolean) — operator = "is true", no value input
+    const conditions = screen.getAllByTestId('filter-condition');
+    const nestedCondition = conditions[conditions.length - 1]!;
+    const nestedFieldSelect =
+      within(nestedCondition).getByTestId('field-select');
+    await userEvent.click(nestedFieldSelect);
+    await waitFor(() => {
+      expect(screen.getByText('Active')).toBeVisible();
+    });
+    await userEvent.click(screen.getByText('Active'));
+    await waitFor(() => {
+      const nestedGroup = model().rootGroup.groups[0];
+      const cond = nestedGroup?.conditions[0];
+      expect(cond?.fieldType).toBe(FilterFieldType.Boolean);
+    });
+    expect(
+      within(nestedCondition).getByTestId('operator-select'),
+    ).toHaveTextContent('is true');
+    expect(
+      within(nestedCondition).queryByTestId('filter-value-input'),
+    ).toBeNull();
+
+    // 16. Apply — popover closes, badge count=3, hasActiveFilters
+    // First fill value for second root condition
+    const allConditions = screen.getAllByTestId('filter-condition');
+    const secondCondition = allConditions[1]!;
+    const secondValueInput =
+      within(secondCondition).getByTestId('filter-value-input');
+    await userEvent.type(secondValueInput, 'test');
+    await waitFor(() => {
+      expect(screen.getByTestId('apply-filters')).not.toBeDisabled();
+    });
+    await userEvent.click(screen.getByTestId('apply-filters'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('footer-add-condition')).toBeNull();
+    });
+    expect(canvas.getByTestId('filter-badge')).toHaveTextContent('3');
+    expect(model().hasActiveFilters).toBe(true);
+    expect(model().hasPendingChanges).toBe(false);
+
+    // 17. Verify onApply was called with correct where clause
+    const applyCalls = () =>
+      (window as any).__testOnApplyCalls as (Record<string, unknown> | null)[];
+    expect(applyCalls()).toHaveLength(2);
+    expect(applyCalls()[0]).toEqual({
+      data: { path: 'name', equals: 'Alice' },
+    });
+    expect(applyCalls()[1]).toEqual({
+      OR: [
+        { data: { path: 'age', gt: 25 } },
+        { data: { path: 'name', equals: 'test' } },
+        { data: { path: 'active', equals: true } },
+      ],
+    });
+
+    // 18. Reopen — filters preserved (3 conditions)
+    await openPopover(canvas);
+    expect(model().totalConditionCount).toBe(3);
+    expect(screen.queryByText('Unsaved')).toBeNull();
+
+    // 19. Clear All — everything cleared, popover closes
+    await userEvent.click(screen.getByTestId('clear-all'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('footer-add-condition')).toBeNull();
+    });
+
+    // 20. No badge, hasActiveFilters = false
+    expect(canvas.queryByTestId('filter-badge')).toBeNull();
+    expect(model().hasActiveFilters).toBe(false);
+
+    // 21. Verify onApply called with null on clearAll
+    expect(applyCalls()).toHaveLength(3);
+    expect(applyCalls()[2]).toBeNull();
+
+    // 22. Reopen — empty popover, add Search condition
+    await openPopover(canvas);
+    expect(screen.queryByTestId('filter-condition')).toBeNull();
+
+    await userEvent.click(screen.getByTestId('footer-add-condition'));
+    await waitFor(() => {
+      expect(screen.getByTestId('filter-condition')).toBeVisible();
+    });
+
+    // 23. Switch operator to "search" — language and type selects appear
+    await userEvent.click(screen.getByTestId('operator-select'));
+    await waitFor(() => {
+      expect(screen.getByText('search')).toBeVisible();
+    });
+    await userEvent.click(screen.getByText('search'));
+    await waitFor(() => {
+      expect(screen.getByTestId('search-language-select')).toBeVisible();
+    });
+    expect(screen.getByTestId('search-type-select')).toBeVisible();
+    expect(screen.getByTestId('filter-value-input')).toBeVisible();
+
+    // 24. Default language is "Simple (no stemming)", default type is "Words (any order)"
+    expect(screen.getByTestId('search-language-select')).toHaveTextContent(
+      'Simple (no stemming)',
     );
-    await userEvent.click(logicSelect);
+    expect(screen.getByTestId('search-type-select')).toHaveTextContent(
+      'Words (any order)',
+    );
 
+    // 25. Change language to English
+    await userEvent.click(screen.getByTestId('search-language-select'));
     await waitFor(() => {
-      expect(screen.getByTestId('logic-or')).toBeVisible();
+      expect(screen.getByText('English')).toBeVisible();
+    });
+    await userEvent.click(screen.getByText('English'));
+    await waitFor(() => {
+      expect(screen.getByTestId('search-language-select')).toHaveTextContent(
+        'English',
+      );
     });
 
-    await userEvent.click(screen.getByTestId('logic-or'));
-
+    // 26. Change type to "Exact phrase"
+    await userEvent.click(screen.getByTestId('search-type-select'));
     await waitFor(() => {
-      expect(model.rootGroup.groups[0]?.logic).toBe('or');
+      expect(screen.getByText('Exact phrase')).toBeVisible();
     });
+    await userEvent.click(screen.getByText('Exact phrase'));
+    await waitFor(() => {
+      expect(screen.getByTestId('search-type-select')).toHaveTextContent(
+        'Exact phrase',
+      );
+    });
+
+    // 27. Type search value and apply
+    await userEvent.type(
+      screen.getByTestId('filter-value-input'),
+      'hello world',
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId('apply-filters')).not.toBeDisabled();
+    });
+    await userEvent.click(screen.getByTestId('apply-filters'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('footer-add-condition')).toBeNull();
+    });
+
+    // 28. Verify onApply for search with correct language and type
+    expect(applyCalls()).toHaveLength(4);
+    expect(applyCalls()[3]).toEqual({
+      data: {
+        path: 'name',
+        search: 'hello world',
+        searchLanguage: 'english',
+        searchType: 'phrase',
+      },
+    });
+
+    // 29. Badge shows 1 filter
+    expect(canvas.getByTestId('filter-badge')).toHaveTextContent('1');
+    expect(model().hasActiveFilters).toBe(true);
+
+    // 30. Final clear all
+    await openPopover(canvas);
+    await userEvent.click(screen.getByTestId('clear-all'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('footer-add-condition')).toBeNull();
+    });
+    expect(canvas.queryByTestId('filter-badge')).toBeNull();
+    expect(model().hasActiveFilters).toBe(false);
+    expect(applyCalls()).toHaveLength(5);
+    expect(applyCalls()[4]).toBeNull();
   },
 };
