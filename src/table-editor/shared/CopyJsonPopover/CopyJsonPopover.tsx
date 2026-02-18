@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 import { Box, IconButton, Popover, Portal } from '@chakra-ui/react';
 import { githubLight } from '@uiw/codemirror-theme-github';
 import CodeMirror, { EditorView } from '@uiw/react-codemirror';
@@ -19,10 +19,14 @@ export const CopyJsonPopover: FC<CopyJsonPopoverProps> = ({
   testId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const text = JSON.stringify(data, null, 2);
+  const text = useMemo(() => JSON.stringify(data, null, 2), [data]);
 
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(text);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // clipboard write can fail in non-secure contexts or without permissions
+    }
   }, [text]);
 
   return (
