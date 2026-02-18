@@ -82,21 +82,25 @@ export class FilterModel {
       return;
     }
 
-    const conditionData = this._newConditionData(firstField);
-
     if (groupId) {
       const groupsNode = this._row.root.child('groups');
       const groupIndex = groupsNode.findIndex(
         (g) => g.child('id').value === groupId,
       );
-      if (groupIndex >= 0) {
-        const groupNode = groupsNode.at(groupIndex);
-        if (groupNode) {
-          groupNode.child('conditions').pushValue(conditionData);
-        }
+      if (groupIndex < 0) {
+        return;
       }
+      const groupNode = groupsNode.at(groupIndex);
+      if (!groupNode) {
+        return;
+      }
+      groupNode
+        .child('conditions')
+        .pushValue(this._newConditionData(firstField));
     } else {
-      this._row.root.child('conditions').pushValue(conditionData);
+      this._row.root
+        .child('conditions')
+        .pushValue(this._newConditionData(firstField));
     }
 
     this._notifyChange();
@@ -177,7 +181,7 @@ export class FilterModel {
     }
   }
 
-  addGroup(_parentGroupId?: string): void {
+  addGroup(): void {
     const groupData = {
       id: this._generateGroupId(),
       logic: 'and',

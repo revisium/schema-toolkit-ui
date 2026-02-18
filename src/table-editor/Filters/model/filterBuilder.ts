@@ -65,6 +65,15 @@ function buildConditionClause(
   }
 
   if (condition.operator === FilterOperator.Search) {
+    if (SYSTEM_FIELD_IDS.has(condition.field)) {
+      return {
+        [condition.field]: {
+          search: condition.value,
+          searchLanguage: condition.searchLanguage || 'simple',
+          searchType: condition.searchType || 'plain',
+        },
+      };
+    }
     return {
       data: {
         path: condition.field,

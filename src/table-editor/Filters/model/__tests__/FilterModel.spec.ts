@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { FilterFieldType } from '../../../shared/field-types';
 import { testCol as col } from '../../../__tests__/helpers';
 import { FilterOperator } from '../operators';
