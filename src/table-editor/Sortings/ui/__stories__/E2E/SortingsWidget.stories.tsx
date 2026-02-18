@@ -47,241 +47,140 @@ const meta: Meta<typeof E2EWrapper> = {
 export default meta;
 type Story = StoryObj<typeof E2EWrapper>;
 
-export const AddAndRemoveSort: Story = {
+async function openPopover(canvas: ReturnType<typeof within>) {
+  const trigger = canvas.getByTestId('sort-trigger');
+  await userEvent.click(trigger);
+  await waitFor(() => {
+    expect(screen.getByTestId('add-sort')).toBeVisible();
+  });
+}
+
+export const FullSortWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const model = () => (window as any).__testModel as SortModel;
 
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
+    // 1. Open popover — empty, no badge, no rows, no copy-json
+    expect(canvas.queryByTestId('sort-badge')).toBeNull();
+    await openPopover(canvas);
+    expect(screen.queryByTestId('sort-row')).toBeNull();
+    expect(screen.queryByText('Unsaved')).toBeNull();
+    expect(screen.queryByTestId('sort-copy-json')).toBeNull();
 
-    await waitFor(() => {
-      expect(screen.getByTestId('add-sort')).toBeVisible();
-    });
-
+    // 2. Add sort — Name asc, row visible, Unsaved, copy-json visible
     await userEvent.click(screen.getByTestId('add-sort'));
-
     await waitFor(() => {
       expect(screen.getByTestId('sort-row')).toBeVisible();
     });
+    expect(screen.getByTestId('sort-field-select')).toHaveTextContent('Name');
+    expect(screen.getByText('Unsaved')).toBeVisible();
+    expect(model().hasPendingChanges).toBe(true);
+    expect(screen.getByTestId('sort-copy-json')).toBeVisible();
 
-    await userEvent.click(screen.getByTestId('remove-sort'));
-
+    // 3. Apply — closes, badge=1, no Unsaved
+    await userEvent.click(screen.getByTestId('apply-sorts'));
     await waitFor(() => {
-      expect(screen.queryByTestId('sort-row')).toBeNull();
+      expect(model().hasPendingChanges).toBe(false);
     });
-  },
-};
-
-export const ChangeDirection: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-      m.apply();
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const model = (window as any).__testModel as SortModel;
-
-    expect(model.hasPendingChanges).toBe(false);
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
     await waitFor(() => {
-      expect(screen.getByTestId('sort-direction-select')).toBeVisible();
+      const badge = canvas.getByTestId('sort-badge');
+      expect(badge).toBeVisible();
+      expect(badge.textContent).toBe('1');
     });
 
+    // 4. Reopen — sort preserved, sort-copy-json visible
+    await openPopover(canvas);
+    expect(screen.getByTestId('sort-row')).toBeVisible();
+    expect(screen.getByTestId('sort-field-select')).toHaveTextContent('Name');
     expect(screen.queryByText('Unsaved')).toBeNull();
+    expect(screen.getByTestId('sort-copy-json')).toBeVisible();
 
+    // 5. Change direction to desc — Unsaved, sort-copy-json still visible
     await userEvent.click(screen.getByTestId('sort-direction-select'));
-
     await waitFor(() => {
       const menuItems = screen.getAllByRole('menuitem');
       expect(menuItems.length).toBeGreaterThan(0);
     });
-
-    const menuItems = screen.getAllByRole('menuitem');
-    const descItem = menuItems.find((item) =>
-      item.textContent?.includes('Z—A'),
-    );
+    const descItem = screen
+      .getAllByRole('menuitem')
+      .find((item) => item.textContent?.includes('Z—A'));
     if (descItem) {
       await userEvent.click(descItem);
     }
-
     await waitFor(() => {
-      expect(model.sorts[0]?.direction).toBe('desc');
-      expect(model.hasPendingChanges).toBe(true);
+      expect(model().sorts[0]?.direction).toBe('desc');
+      expect(model().hasPendingChanges).toBe(true);
     });
+    expect(screen.getByText('Unsaved')).toBeVisible();
+    expect(screen.getByTestId('sort-copy-json')).toBeVisible();
 
-    await waitFor(() => {
-      expect(screen.getByText('Unsaved')).toBeVisible();
-    });
-  },
-};
-
-export const ClearAllSorts: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-      m.addSort('age', 'desc');
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('clear-all-sorts')).toBeVisible();
-    });
-
-    await userEvent.click(screen.getByTestId('clear-all-sorts'));
-
-    const model = (window as any).__testModel as SortModel;
-    await waitFor(() => {
-      expect(model.sorts).toHaveLength(0);
-    });
-  },
-};
-
-export const BadgePendingAfterAdd: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const model = (window as any).__testModel as SortModel;
-
-    expect(canvas.queryByTestId('sort-badge')).toBeNull();
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('add-sort')).toBeVisible();
-    });
-
-    await userEvent.click(screen.getByTestId('add-sort'));
-
-    await waitFor(() => {
-      expect(model.hasPendingChanges).toBe(true);
-    });
-
-    await waitFor(() => {
-      const badge = canvas.getByTestId('sort-badge');
-      expect(badge).toBeVisible();
-      expect(badge.textContent).toBe('1');
-    });
-  },
-};
-
-export const BadgeGrayAfterApply: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const model = (window as any).__testModel as SortModel;
-
-    expect(model.hasPendingChanges).toBe(true);
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('apply-sorts')).toBeVisible();
-    });
-
+    // 6. Apply — badge=1
     await userEvent.click(screen.getByTestId('apply-sorts'));
-
     await waitFor(() => {
-      expect(model.hasPendingChanges).toBe(false);
+      expect(model().hasPendingChanges).toBe(false);
     });
+    expect(canvas.getByTestId('sort-badge')).toHaveTextContent('1');
 
-    await waitFor(() => {
-      const badge = canvas.getByTestId('sort-badge');
-      expect(badge).toBeVisible();
-      expect(badge.textContent).toBe('1');
-    });
-  },
-};
+    await openPopover(canvas);
+    expect(screen.getByTestId('sort-copy-json')).toBeVisible();
 
-export const BadgeDisappearsAfterClearAll: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-      m.apply();
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const model = (window as any).__testModel as SortModel;
-
-    expect(canvas.getByTestId('sort-badge')).toBeVisible();
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
-    await waitFor(() => {
-      expect(screen.getByTestId('clear-all-sorts')).toBeVisible();
-    });
-
-    await userEvent.click(screen.getByTestId('clear-all-sorts'));
-
-    await waitFor(() => {
-      expect(model.hasPendingChanges).toBe(false);
-    });
-
-    await waitFor(() => {
-      expect(canvas.queryByTestId('sort-badge')).toBeNull();
-    });
-  },
-};
-
-export const SwapFieldRemovesDuplicate: Story = {
-  tags: ['test'],
-  args: {
-    setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-      m.addSort('age', 'desc');
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const model = (window as any).__testModel as SortModel;
-
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
-
+    // 7. Add second sort (Age) — count=2, Unsaved, copy-json visible
+    await userEvent.click(screen.getByTestId('add-sort'));
     await waitFor(() => {
       const rows = screen.getAllByTestId('sort-row');
       expect(rows).toHaveLength(2);
     });
+    expect(screen.getByText('Unsaved')).toBeVisible();
+    expect(screen.getByTestId('sort-copy-json')).toBeVisible();
 
+    // 8. Apply — badge=2
+    await userEvent.click(screen.getByTestId('apply-sorts'));
+    await waitFor(() => {
+      expect(model().hasPendingChanges).toBe(false);
+    });
+    expect(canvas.getByTestId('sort-badge')).toHaveTextContent('2');
+
+    // 9. Swap first field to Age — duplicate removed, count=1
+    await openPopover(canvas);
     const fieldSelects = screen.getAllByTestId('sort-field-select');
     await userEvent.click(fieldSelects[0]!);
-
     await waitFor(() => {
       const menuItems = screen.getAllByRole('menuitem');
       expect(menuItems.length).toBe(TEST_COLUMNS.length);
     });
-
-    const menuItems = screen.getAllByRole('menuitem');
-    const ageItem = menuItems.find((item) => item.textContent?.includes('Age'));
+    const ageItem = screen
+      .getAllByRole('menuitem')
+      .find((item) => item.textContent?.includes('Age'));
     expect(ageItem).toBeTruthy();
     await userEvent.click(ageItem!);
-
     await waitFor(() => {
-      expect(model.sorts).toHaveLength(1);
-      expect(model.sorts[0]?.field).toBe('age');
-      expect(model.sorts[0]?.direction).toBe('asc');
+      expect(model().sorts).toHaveLength(1);
+      expect(model().sorts[0]?.field).toBe('age');
+      expect(model().sorts[0]?.direction).toBe('desc');
     });
+
+    // 10. Apply
+    await userEvent.click(screen.getByTestId('apply-sorts'));
+    await waitFor(() => {
+      expect(model().hasPendingChanges).toBe(false);
+    });
+    expect(canvas.getByTestId('sort-badge')).toHaveTextContent('1');
+
+    // 11. Clear all — no badge, no sorts, sort-copy-json hidden
+    await openPopover(canvas);
+    await userEvent.click(screen.getByTestId('clear-all-sorts'));
+    await waitFor(() => {
+      expect(model().sorts).toHaveLength(0);
+      expect(model().hasPendingChanges).toBe(false);
+    });
+    await waitFor(() => {
+      expect(canvas.queryByTestId('sort-badge')).toBeNull();
+    });
+
+    // 12. Reopen — empty
+    await openPopover(canvas);
+    expect(screen.queryByTestId('sort-row')).toBeNull();
+    expect(screen.queryByTestId('sort-copy-json')).toBeNull();
   },
 };

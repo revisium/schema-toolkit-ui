@@ -64,6 +64,10 @@ export class FilterModel {
     return this._validateAll();
   }
 
+  buildCurrentWhereClause(): Record<string, unknown> | null {
+    return buildWhereClause(this.serializeRootGroup());
+  }
+
   get isEmpty(): boolean {
     const conditionsNode = this._row.root.child('conditions');
     const groupsNode = this._row.root.child('groups');

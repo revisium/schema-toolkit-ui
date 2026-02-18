@@ -80,14 +80,16 @@ export const FullFilterWorkflow: Story = {
     // 3. Unsaved badge visible (pending changes)
     expect(screen.getByText('Unsaved')).toBeVisible();
 
-    // 4. Apply still disabled — value empty, filter invalid
+    // 4. Apply still disabled — value empty, filter invalid, no copy-json
     expect(screen.getByTestId('apply-filters')).toBeDisabled();
+    expect(screen.queryByTestId('filter-copy-json')).toBeNull();
 
-    // 5. Type value "Alice" — Apply becomes enabled
+    // 5. Type value "Alice" — Apply becomes enabled, copy-json appears
     await userEvent.type(screen.getByTestId('filter-value-input'), 'Alice');
     await waitFor(() => {
       expect(screen.getByTestId('apply-filters')).not.toBeDisabled();
     });
+    expect(screen.getByTestId('filter-copy-json')).toBeVisible();
 
     // 6. Apply — popover closes, badge shows count=1, no Unsaved
     await userEvent.click(screen.getByTestId('apply-filters'));
@@ -98,12 +100,13 @@ export const FullFilterWorkflow: Story = {
     expect(model().hasActiveFilters).toBe(true);
     expect(model().hasPendingChanges).toBe(false);
 
-    // 7. Reopen — condition still "Name equals Alice"
+    // 7. Reopen — condition still "Name equals Alice", filter-copy-json visible
     await openPopover(canvas);
     expect(screen.getByTestId('field-select')).toHaveTextContent('Name');
     expect(screen.getByTestId('operator-select')).toHaveTextContent('equals');
     expect(screen.getByTestId('filter-value-input')).toHaveValue('Alice');
     expect(screen.queryByText('Unsaved')).toBeNull();
+    expect(screen.getByTestId('filter-copy-json')).toBeVisible();
 
     // 8. Change field to Age — operator resets to "=" (Number default), value clears
     await userEvent.click(screen.getByTestId('field-select'));
@@ -118,6 +121,7 @@ export const FullFilterWorkflow: Story = {
     });
     expect(screen.getByTestId('operator-select')).toHaveTextContent('=');
     expect(screen.getByTestId('filter-value-input')).toHaveValue('');
+    expect(screen.queryByTestId('filter-copy-json')).toBeNull();
 
     // 9. Change operator to ">" — value clears
     await userEvent.click(screen.getByTestId('operator-select'));
@@ -135,6 +139,7 @@ export const FullFilterWorkflow: Story = {
       expect(screen.getByTestId('apply-filters')).not.toBeDisabled();
     });
     expect(screen.getByText('Unsaved')).toBeVisible();
+    expect(screen.getByTestId('filter-copy-json')).toBeVisible();
 
     // 11. Add second condition — count = 2 in model
     await userEvent.click(screen.getByTestId('footer-add-condition'));
@@ -241,9 +246,10 @@ export const FullFilterWorkflow: Story = {
     expect(applyCalls()).toHaveLength(3);
     expect(applyCalls()[2]).toBeNull();
 
-    // 22. Reopen — empty popover, add Search condition
+    // 22. Reopen — empty popover, filter-copy-json not visible, add Search condition
     await openPopover(canvas);
     expect(screen.queryByTestId('filter-condition')).toBeNull();
+    expect(screen.queryByTestId('filter-copy-json')).toBeNull();
 
     await userEvent.click(screen.getByTestId('footer-add-condition'));
     await waitFor(() => {
@@ -318,12 +324,14 @@ export const FullFilterWorkflow: Story = {
       },
     });
 
-    // 29. Badge shows 1 filter
+    // 29. Badge shows 1 filter, filter-copy-json visible after reopen
     expect(canvas.getByTestId('filter-badge')).toHaveTextContent('1');
     expect(model().hasActiveFilters).toBe(true);
 
-    // 30. Final clear all
     await openPopover(canvas);
+    expect(screen.getByTestId('filter-copy-json')).toBeVisible();
+
+    // 30. Final clear all
     await userEvent.click(screen.getByTestId('clear-all'));
     await waitFor(() => {
       expect(screen.queryByTestId('footer-add-condition')).toBeNull();
