@@ -14,7 +14,11 @@ const preview: Preview = {
   decorators: [
     (Story) => (
       <ChakraProvider value={defaultSystem}>
-        <ThemeProvider attribute="class" disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          forcedTheme="light"
+          disableTransitionOnChange
+        >
           <Story />
         </ThemeProvider>
       </ChakraProvider>
