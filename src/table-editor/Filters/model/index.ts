@@ -6,15 +6,16 @@ export {
   getOperatorLabel,
   getDefaultOperator,
   getOperatorsForType,
-} from './operators';
+} from './utils/operators';
 export {
   SearchLanguage,
   SearchType,
   SEARCH_LANGUAGES,
   SEARCH_TYPES,
-} from './searchTypes';
+} from './utils/searchTypes';
 export type { FilterCondition, FilterGroup } from './types';
-export { FilterModel } from './FilterModel';
-export { FilterConditionVM } from './FilterConditionVM';
-export { FilterGroupVM } from './FilterGroupVM';
-export { buildWhereClause } from './filterBuilder';
+export { FilterCore } from './core/FilterCore';
+export { FilterCore as FilterModel } from './core/FilterCore';
+export { FilterConditionVM } from './vm/FilterConditionVM';
+export { FilterGroupVM } from './vm/FilterGroupVM';
+export { buildWhereClause } from './utils/filterBuilder';
