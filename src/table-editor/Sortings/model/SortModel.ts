@@ -1,15 +1,9 @@
 import { makeAutoObservable } from 'mobx';
-import { createRowModel, obj, arr, str } from '@revisium/schema-toolkit';
+import { createRowModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../lib/initReactivity.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
+import { SORT_SCHEMA } from './sortSchema.js';
 import type { SortEntry, ViewSort } from './types.js';
-
-const SORT_SCHEMA = arr(
-  obj({
-    field: str(),
-    direction: str(),
-  }),
-);
 
 type SortRowModel = ReturnType<typeof createRowModel<typeof SORT_SCHEMA>>;
 type SortRootNode = SortRowModel['root'];
@@ -20,6 +14,9 @@ export class SortModel {
   private _availableFields: ColumnSpec[] = [];
   private _isOpen = false;
   private _onChange: (() => void) | null = null;
+  private _onApply:
+    | ((sorts: ReturnType<SortModel['serializeToViewSorts']>) => void)
+    | null = null;
 
   constructor() {
     ensureReactivityProvider();
@@ -92,7 +89,13 @@ export class SortModel {
 
   apply(): void {
     this._row.commit();
+    this._fireOnApply();
     this._notifyChange();
+  }
+
+  applyAndClose(): void {
+    this.apply();
+    this.setOpen(false);
   }
 
   addSort(field: string, direction: 'asc' | 'desc' = 'asc'): void {
@@ -186,7 +189,20 @@ export class SortModel {
   clearAll(): void {
     this._rootNode.clear();
     this._row.commit();
+    this._fireOnApply();
     this._notifyChange();
+  }
+
+  clearAllAndClose(): void {
+    this.clearAll();
+    this.setOpen(false);
+  }
+
+  addFirstAvailableSort(): void {
+    const firstAvailable = this.availableFields[0];
+    if (firstAvailable) {
+      this.addSort(firstAvailable.field);
+    }
   }
 
   serializeToViewSorts(): ViewSort[] {
@@ -219,9 +235,22 @@ export class SortModel {
     this._onChange = cb;
   }
 
+  setOnApply(
+    cb: ((sorts: ReturnType<SortModel['serializeToViewSorts']>) => void) | null,
+  ): void {
+    this._onApply = cb;
+  }
+
   dispose(): void {
     this._onChange = null;
+    this._onApply = null;
     this._row.dispose();
+  }
+
+  private _fireOnApply(): void {
+    if (this._onApply) {
+      this._onApply(this.serializeToViewSorts());
+    }
   }
 
   private _notifyChange(): void {
