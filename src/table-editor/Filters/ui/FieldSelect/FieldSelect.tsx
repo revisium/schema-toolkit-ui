@@ -15,7 +15,7 @@ interface FieldSelectProps {
 
 export const FieldSelect = observer(
   ({ value, fieldType, fields, onChange }: FieldSelectProps) => {
-    const currentLabel = fields.find((f) => f.field === value)?.label ?? value;
+    const currentLabel = fields.find((f) => f.field === value)?.label || value;
     const dataFields = fields.filter((f) => !f.isSystem);
     const systemFields = fields.filter((f) => f.isSystem);
 

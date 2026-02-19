@@ -13,7 +13,7 @@ interface SortFieldSelectProps {
 export const SortFieldSelect = observer(
   ({ currentField, availableFields, onChange }: SortFieldSelectProps) => {
     const currentCol = availableFields.find((f) => f.field === currentField);
-    const currentLabel = currentCol?.label ?? currentField;
+    const currentLabel = currentCol?.label || currentField;
 
     return (
       <Menu.Root>
