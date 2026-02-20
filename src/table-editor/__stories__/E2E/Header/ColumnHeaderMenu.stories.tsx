@@ -81,6 +81,13 @@ const meta: Meta<typeof StoryWrapper> = {
 export default meta;
 type Story = StoryObj<typeof StoryWrapper>;
 
+async function dismissMenu() {
+  await userEvent.keyboard('{Escape}');
+  await waitFor(() => {
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+  });
+}
+
 export const FullHeaderMenuWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
@@ -135,15 +142,13 @@ export const FullHeaderMenuWorkflow: Story = {
         expect(sortModel.isSorted('name')).toBe(true);
         expect(sortModel.getSortDirection('name')).toBe('asc');
       });
+
+      await dismissMenu();
     }
 
     // Step 2: Sort age descending
     // Columns still: [name, age, active]
     {
-      await waitFor(() => {
-        expect(document.querySelector('[data-value="sort-asc"]')).toBeNull();
-      });
-
       const ageHeader = canvas.getByTestId('header-age');
       await userEvent.click(ageHeader);
 
@@ -172,15 +177,13 @@ export const FullHeaderMenuWorkflow: Story = {
         expect(sortModel.isSorted('age')).toBe(true);
         expect(sortModel.getSortDirection('age')).toBe('desc');
       });
+
+      await dismissMenu();
     }
 
     // Step 3: Copy path "name"
     // Columns still: [name, age, active]
     {
-      await waitFor(() => {
-        expect(document.querySelector('[data-value="sort-desc"]')).toBeNull();
-      });
-
       const nameHeader = canvas.getByTestId('header-name');
       await userEvent.click(nameHeader);
 
@@ -197,15 +200,13 @@ export const FullHeaderMenuWorkflow: Story = {
       await waitFor(() => {
         expect(clipboard.getText()).toBe('name');
       });
+
+      await dismissMenu();
     }
 
     // Step 4: Add filter on "name"
     // Columns still: [name, age, active]
     {
-      await waitFor(() => {
-        expect(document.querySelector('[data-value="copy-path"]')).toBeNull();
-      });
-
       expect(filterModel.isOpen).toBe(false);
 
       const nameHeader = canvas.getByTestId('header-name');
@@ -226,15 +227,13 @@ export const FullHeaderMenuWorkflow: Story = {
         expect(filterModel.rootGroup.conditions).toHaveLength(1);
         expect(filterModel.rootGroup.conditions[0]?.field).toBe('name');
       });
+
+      await dismissMenu();
     }
 
     // Step 5: Move name right
     // Columns before: [name, age, active] -> after: [age, name, active]
     {
-      await waitFor(() => {
-        expect(document.querySelector('[data-value="add-filter"]')).toBeNull();
-      });
-
       const nameHeader = canvas.getByTestId('header-name');
       await userEvent.click(nameHeader);
 
@@ -266,15 +265,13 @@ export const FullHeaderMenuWorkflow: Story = {
           'active',
         ]);
       });
+
+      await dismissMenu();
     }
 
     // Step 6: Hide active
     // Columns before: [age, name, active] -> after: [age, name]
     {
-      await waitFor(() => {
-        expect(document.querySelector('[data-value="move-right"]')).toBeNull();
-      });
-
       const activeHeader = canvas.getByTestId('header-active');
       await userEvent.click(activeHeader);
 
@@ -292,15 +289,13 @@ export const FullHeaderMenuWorkflow: Story = {
           columnsModel.visibleColumns.some((c) => c.field === 'active'),
         ).toBe(false);
       });
+
+      await dismissMenu();
     }
 
     // Step 7: Insert active before age
     // Columns before: [age, name] -> after: [active, age, name]
     {
-      await waitFor(() => {
-        expect(document.querySelector('[data-value="hide"]')).toBeNull();
-      });
-
       const ageHeader = canvas.getByTestId('header-age');
       await userEvent.click(ageHeader);
 
@@ -332,17 +327,13 @@ export const FullHeaderMenuWorkflow: Story = {
         const activeIndex = fields.indexOf('active');
         expect(activeIndex).toBeLessThan(ageIndex);
       });
+
+      await dismissMenu();
     }
 
     // Step 8: Hide-all from active header
     // Columns before: [active, age, name] -> after: [active]
     {
-      await waitFor(() => {
-        expect(
-          document.querySelector('[data-value="before-active"]'),
-        ).toBeNull();
-      });
-
       const activeHeader = canvas.getByTestId('header-active');
       await userEvent.click(activeHeader);
 
@@ -361,15 +352,13 @@ export const FullHeaderMenuWorkflow: Story = {
         expect(columnsModel.visibleColumns[0]?.field).toBe('active');
         expect(columnsModel.hasHiddenColumns).toBe(true);
       });
+
+      await dismissMenu();
     }
 
     // Step 9: Verify last column hide/hide-all disabled
     // Columns: [active] (only one)
     {
-      await waitFor(() => {
-        expect(document.querySelector('[data-value="hide"]')).toBeNull();
-      });
-
       const activeHeader = canvas.getByTestId('header-active');
       await userEvent.click(activeHeader);
 
