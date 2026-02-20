@@ -3,8 +3,8 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
-import { SearchModel } from '../../../model/index.js';
-import { SearchWidget } from '../../SearchWidget.js';
+import { SearchModel } from '../../../Search/model/index.js';
+import { SearchWidget } from '../../../Search/ui/SearchWidget.js';
 
 const E2EWrapper = observer(
   ({ initialQuery = '' }: { initialQuery?: string }) => {
@@ -26,7 +26,7 @@ const E2EWrapper = observer(
 
 const meta: Meta<typeof E2EWrapper> = {
   component: E2EWrapper as any,
-  title: 'TableEditor/Search/E2E/SearchWidget',
+  title: 'TableEditor/E2E/Search/SearchWidget',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -38,50 +38,32 @@ const meta: Meta<typeof E2EWrapper> = {
 export default meta;
 type Story = StoryObj<typeof E2EWrapper>;
 
-export const TypeAndSearch: Story = {
+export const FullSearchWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByTestId('search-input');
 
     await userEvent.type(input, 'hello');
-
     expect(input).toHaveValue('hello');
-  },
-};
 
-export const ClearSearch: Story = {
-  tags: ['test'],
-  args: {
-    initialQuery: 'some text',
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const input = canvas.getByTestId('search-input');
+    const model = (window as any).__testModel as SearchModel;
 
-    expect(input).toHaveValue('some text');
+    await waitFor(
+      () => {
+        expect(model.debouncedQuery).toBe('hello');
+      },
+      { timeout: 1000 },
+    );
 
     const clearButton = canvas.getByLabelText('Clear');
     await userEvent.click(clearButton);
 
     expect(input).toHaveValue('');
-  },
-};
-
-export const DebouncedSearch: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const input = canvas.getByTestId('search-input');
-
-    await userEvent.type(input, 'debounce test');
-
-    const model = (window as any).__testModel as SearchModel;
-    expect(input).toHaveValue('debounce test');
 
     await waitFor(
       () => {
-        expect(model.debouncedQuery).toBe('debounce test');
+        expect(model.debouncedQuery).toBe('');
       },
       { timeout: 1000 },
     );

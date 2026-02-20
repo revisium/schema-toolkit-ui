@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
-import type { JsonSchema } from '@revisium/schema-toolkit';
+import {
+  obj,
+  str,
+  num,
+  bool,
+  numFormula,
+  boolFormula,
+} from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../lib/initReactivity.js';
 import {
   col,
@@ -16,33 +23,16 @@ import { SortingsWidget } from '../../Sortings/ui/SortingsWidget.js';
 import { RowCountWidget } from '../../Status/ui/RowCountWidget.js';
 import { ViewSettingsBadge } from '../../Status/ui/ViewSettingsBadge.js';
 import { TableWidget } from '../../Table/ui/TableWidget.js';
+import {
+  TABLE_SCHEMA,
+  TEST_COLUMNS,
+  MOCK_ROWS_DATA,
+  MANY_COLUMNS,
+  MANY_COLUMNS_SCHEMA,
+  MANY_COLUMNS_ROWS,
+} from './tableEditorTestData.js';
 
 ensureReactivityProvider();
-
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
 
 const noop = () => {};
 
@@ -126,6 +116,7 @@ const DefaultWrapper = observer(() => {
 const meta: Meta<typeof DefaultWrapper> = {
   component: DefaultWrapper as any,
   title: 'TableEditor/TableEditor',
+  excludeStories: ['StoryWrapper'],
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -138,72 +129,6 @@ export default meta;
 type Story = StoryObj<typeof DefaultWrapper>;
 
 export const Default: Story = {};
-
-const MANY_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-  col('email', FilterFieldType.String),
-  col('score', FilterFieldType.Number),
-  col('city', FilterFieldType.String),
-];
-
-const MANY_COLUMNS_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-    email: { type: 'string', default: '' },
-    score: { type: 'number', default: 0 },
-    city: { type: 'string', default: '' },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active', 'email', 'score', 'city'],
-};
-
-const MANY_COLUMNS_ROWS = [
-  {
-    name: 'Alice',
-    age: 30,
-    active: true,
-    email: 'alice@example.com',
-    score: 95,
-    city: 'New York',
-  },
-  {
-    name: 'Bob',
-    age: 25,
-    active: false,
-    email: 'bob@example.com',
-    score: 80,
-    city: 'London',
-  },
-  {
-    name: 'Charlie',
-    age: 35,
-    active: true,
-    email: 'charlie@example.com',
-    score: 72,
-    city: 'Tokyo',
-  },
-  {
-    name: 'Diana',
-    age: 28,
-    active: true,
-    email: 'diana@example.com',
-    score: 88,
-    city: 'Paris',
-  },
-  {
-    name: 'Eve',
-    age: 22,
-    active: false,
-    email: 'eve@example.com',
-    score: 91,
-    city: 'Berlin',
-  },
-];
 
 export const ManyColumns: Story = {
   render: () => {
@@ -241,28 +166,13 @@ export const EmptyTable: Story = {
   },
 };
 
-const FORMULA_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    item: { type: 'string', default: '' },
-    price: { type: 'number', default: 0 },
-    quantity: { type: 'number', default: 0 },
-    total: {
-      type: 'number',
-      default: 0,
-      readOnly: true,
-      'x-formula': { version: 1, expression: 'price * quantity' },
-    },
-    expensive: {
-      type: 'boolean',
-      default: false,
-      readOnly: true,
-      'x-formula': { version: 1, expression: 'total > 100' },
-    },
-  },
-  additionalProperties: false,
-  required: ['item', 'price', 'quantity', 'total', 'expensive'],
-} as JsonSchema;
+const FORMULA_SCHEMA = obj({
+  item: str(),
+  price: num(),
+  quantity: num(),
+  total: numFormula('price * quantity'),
+  expensive: boolFormula('total > 100'),
+});
 
 const FORMULA_COLUMNS = [
   col('item', FilterFieldType.String, { label: 'Item' }),
@@ -299,16 +209,11 @@ export const WithFormulas: Story = {
   },
 };
 
-const READONLY_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    name: { type: 'string', default: '', readOnly: true },
-    age: { type: 'number', default: 0, readOnly: true },
-    active: { type: 'boolean', default: false, readOnly: true },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-} as JsonSchema;
+const READONLY_SCHEMA = obj({
+  name: str({ readOnly: true }),
+  age: num({ readOnly: true }),
+  active: bool({ readOnly: true }),
+});
 
 export const Readonly: Story = {
   render: () => {

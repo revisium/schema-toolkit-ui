@@ -4,39 +4,15 @@ import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import { createTableStoryState } from '../../helpers.js';
+import { TableWidget } from '../../../Table/ui/TableWidget.js';
 import {
-  col,
-  createTableStoryState,
-  FilterFieldType,
-} from '../../../__stories__/helpers.js';
-import { TableWidget } from '../TableWidget.js';
+  TABLE_SCHEMA,
+  TEST_COLUMNS,
+  MOCK_ROWS_DATA,
+} from '../../../Table/ui/__stories__/tableTestData.js';
 
 ensureReactivityProvider();
-
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
 
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
@@ -61,7 +37,7 @@ const StoryWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/Table/E2E/CellNavigation',
+  title: 'TableEditor/E2E/Table/CellNavigation',
   decorators: [
     (Story) => (
       <Box p={4}>

@@ -3,8 +3,8 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor } from 'storybook/test';
-import { RowCountModel } from '../../../model/RowCountModel.js';
-import { RowCountWidget } from '../../RowCountWidget.js';
+import { RowCountModel } from '../../../Status/model/RowCountModel.js';
+import { RowCountWidget } from '../../../Status/ui/RowCountWidget.js';
 
 const RowCountWrapper = observer(
   ({
@@ -30,7 +30,7 @@ const RowCountWrapper = observer(
 
 const meta: Meta<typeof RowCountWrapper> = {
   component: RowCountWrapper as any,
-  title: 'TableEditor/Status/E2E/RowCount',
+  title: 'TableEditor/E2E/Status/RowCount',
   decorators: [
     (Story) => (
       <Box p={4} maxW="500px">

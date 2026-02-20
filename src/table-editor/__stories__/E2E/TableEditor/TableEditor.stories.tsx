@@ -2,104 +2,30 @@ import { useEffect, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
-import type { JsonSchema } from '@revisium/schema-toolkit';
+import { obj, str, num, bool } from '@revisium/schema-toolkit';
 import { expect, within, waitFor, screen, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
-  col,
   createTableEditorStoryState,
-  FilterFieldType,
   type TableEditorStoryState,
-} from '../../../__stories__/helpers.js';
-import { StoryWrapper } from '../TableEditor.stories.js';
+} from '../../helpers.js';
+import { StoryWrapper } from '../../../TableEditor/__stories__/TableEditor.stories.js';
+import {
+  TABLE_SCHEMA,
+  TEST_COLUMNS,
+  MOCK_ROWS_DATA,
+  MANY_COLUMNS,
+  MANY_COLUMNS_SCHEMA,
+  MANY_COLUMNS_ROWS,
+} from '../../../TableEditor/__stories__/tableEditorTestData.js';
 
 ensureReactivityProvider();
 
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const READONLY_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    name: { type: 'string', default: '', readOnly: true },
-    age: { type: 'number', default: 0, readOnly: true },
-    active: { type: 'boolean', default: false, readOnly: true },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-} as JsonSchema;
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
-
-const MANY_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-  col('email', FilterFieldType.String),
-  col('score', FilterFieldType.Number),
-  col('city', FilterFieldType.String),
-];
-
-const MANY_COLUMNS_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-    email: { type: 'string', default: '' },
-    score: { type: 'number', default: 0 },
-    city: { type: 'string', default: '' },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active', 'email', 'score', 'city'],
-};
-
-const MANY_COLUMNS_ROWS = [
-  {
-    name: 'Alice',
-    age: 30,
-    active: true,
-    email: 'alice@example.com',
-    score: 95,
-    city: 'New York',
-  },
-  {
-    name: 'Bob',
-    age: 25,
-    active: false,
-    email: 'bob@example.com',
-    score: 80,
-    city: 'London',
-  },
-  {
-    name: 'Charlie',
-    age: 35,
-    active: true,
-    email: 'charlie@example.com',
-    score: 72,
-    city: 'Tokyo',
-  },
-];
+const READONLY_SCHEMA = obj({
+  name: str({ readOnly: true }),
+  age: num({ readOnly: true }),
+  active: bool({ readOnly: true }),
+});
 
 function createEditableState(): TableEditorStoryState {
   return createTableEditorStoryState({
@@ -155,7 +81,7 @@ const ReadonlyE2EWrapper = observer(() => {
 
 const meta: Meta<typeof EditableE2EWrapper> = {
   component: EditableE2EWrapper as any,
-  title: 'TableEditor/E2E/TableEditor',
+  title: 'TableEditor/E2E/TableEditor/TableEditor',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -167,18 +93,20 @@ const meta: Meta<typeof EditableE2EWrapper> = {
 export default meta;
 type Story = StoryObj<typeof EditableE2EWrapper>;
 
-// --- Editable mode tests ---
+// --- Story 1: Editable workflow (filter, sort, search, viewBadge, column visibility) ---
 
-export const FilterWorkflow: Story = {
+export const EditableWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => {
       expect((window as any).__testState).toBeDefined();
     });
+    const state = (window as any).__testState as TableEditorStoryState;
 
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
+    // 1. Filter workflow: open filter → add condition → verify
+    const filterTrigger = canvas.getByTestId('filter-trigger');
+    await userEvent.click(filterTrigger);
 
     await waitFor(() => {
       expect(screen.getByTestId('footer-add-condition')).toBeVisible();
@@ -190,22 +118,13 @@ export const FilterWorkflow: Story = {
       expect(screen.getByTestId('filter-condition')).toBeVisible();
     });
 
-    const state = (window as any).__testState as TableEditorStoryState;
     expect(state.core.filters.rootGroup.conditions).toHaveLength(1);
-  },
-};
 
-export const SortWorkflow: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
+    await userEvent.keyboard('{Escape}');
 
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
+    // 2. Sort workflow: open sort → add sort → verify
+    const sortTrigger = canvas.getByTestId('sort-trigger');
+    await userEvent.click(sortTrigger);
 
     await waitFor(() => {
       expect(screen.getByTestId('add-sort')).toBeVisible();
@@ -218,22 +137,14 @@ export const SortWorkflow: Story = {
     });
 
     expect(state.core.sorts.sorts).toHaveLength(1);
-  },
-};
 
-export const SearchWorkflow: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
+    await userEvent.keyboard('{Escape}');
 
-    const input = canvas.getByTestId('search-input');
-    await userEvent.type(input, 'Alice');
+    // 3. Search workflow: type "Alice" → verify debounced query
+    const searchInput = canvas.getByTestId('search-input');
+    await userEvent.type(searchInput, 'Alice');
 
-    expect(input).toHaveValue('Alice');
+    expect(searchInput).toHaveValue('Alice');
 
     await waitFor(
       () => {
@@ -241,20 +152,8 @@ export const SearchWorkflow: Story = {
       },
       { timeout: 1000 },
     );
-  },
-};
 
-export const ViewSettingsChange: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
-
-    expect(state.core.viewBadge.hasChanges).toBe(false);
-
+    // 4. View settings change: add sort + apply → verify viewBadge.hasChanges
     state.core.sorts.addSort('age', 'asc');
     state.core.sorts.apply();
 
@@ -265,18 +164,8 @@ export const ViewSettingsChange: Story = {
     await waitFor(() => {
       expect(canvas.getByTestId('view-settings-badge')).toBeVisible();
     });
-  },
-};
 
-export const ColumnVisibility: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
-
+    // 5. Column visibility: hide age column → verify 2 columns
     expect(state.core.columns.visibleColumns).toHaveLength(3);
 
     await waitFor(() => {
@@ -303,9 +192,9 @@ export const ColumnVisibility: Story = {
   },
 };
 
-// --- Readonly mode tests ---
+// --- Story 2: Readonly workflow (cells, menus, badge, filter, sort, search, column, focus, context menus) ---
 
-export const ReadonlyCellsNotEditable: Story = {
+export const ReadonlyWorkflow: Story = {
   tags: ['test'],
   render: () => <ReadonlyE2EWrapper />,
   play: async ({ canvasElement }) => {
@@ -315,6 +204,7 @@ export const ReadonlyCellsNotEditable: Story = {
     });
     const state = (window as any).__testState as TableEditorStoryState;
 
+    // 1. Verify cells are readonly and not editable
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
     });
@@ -334,34 +224,13 @@ export const ReadonlyCellsNotEditable: Story = {
     const cellVM3 = row1.getCellVM(TEST_COLUMNS[2]);
     expect(cellVM3.isReadOnly).toBe(true);
     expect(cellVM3.isEditable).toBe(false);
-  },
-};
 
-export const ReadonlyNoRowActionsMenu: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
-    });
-
+    // 2. Verify no row action menus
     expect(canvas.queryByTestId('row-menu-trigger-row-1')).toBeNull();
     expect(canvas.queryByTestId('row-menu-trigger-row-2')).toBeNull();
     expect(canvas.queryByTestId('row-menu-trigger-row-3')).toBeNull();
-  },
-};
 
-export const ReadonlyLocalBadge: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
-
+    // 3. Verify local badge behavior (canSave=false, add sort, revert visible, no save)
     expect(state.core.viewBadge.canSave).toBe(false);
 
     state.core.sorts.addSort('age', 'asc');
@@ -384,21 +253,12 @@ export const ReadonlyLocalBadge: Story = {
     });
 
     expect(screen.queryByTestId('view-settings-save')).toBeNull();
-  },
-};
 
-export const ReadonlyFilterStillWorks: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
+    await userEvent.keyboard('{Escape}');
 
-    const trigger = canvas.getByTestId('filter-trigger');
-    await userEvent.click(trigger);
+    // 4. Filter still works in readonly
+    const filterTrigger = canvas.getByTestId('filter-trigger');
+    await userEvent.click(filterTrigger);
 
     await waitFor(() => {
       expect(screen.getByTestId('footer-add-condition')).toBeVisible();
@@ -411,21 +271,12 @@ export const ReadonlyFilterStillWorks: Story = {
     });
 
     expect(state.core.filters.rootGroup.conditions).toHaveLength(1);
-  },
-};
 
-export const ReadonlySortStillWorks: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
+    await userEvent.keyboard('{Escape}');
 
-    const trigger = canvas.getByTestId('sort-trigger');
-    await userEvent.click(trigger);
+    // 5. Sort still works in readonly
+    const sortTrigger = canvas.getByTestId('sort-trigger');
+    await userEvent.click(sortTrigger);
 
     await waitFor(() => {
       expect(screen.getByTestId('add-sort')).toBeVisible();
@@ -434,27 +285,18 @@ export const ReadonlySortStillWorks: Story = {
     await userEvent.click(screen.getByTestId('add-sort'));
 
     await waitFor(() => {
-      expect(screen.getByTestId('sort-row')).toBeVisible();
+      expect(screen.getAllByTestId('sort-row')).toHaveLength(2);
     });
 
-    expect(state.core.sorts.sorts).toHaveLength(1);
-  },
-};
+    expect(state.core.sorts.sorts).toHaveLength(2);
 
-export const ReadonlySearchStillWorks: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
+    await userEvent.keyboard('{Escape}');
 
-    const input = canvas.getByTestId('search-input');
-    await userEvent.type(input, 'Bob');
+    // 6. Search still works in readonly
+    const searchInput = canvas.getByTestId('search-input');
+    await userEvent.type(searchInput, 'Bob');
 
-    expect(input).toHaveValue('Bob');
+    expect(searchInput).toHaveValue('Bob');
 
     await waitFor(
       () => {
@@ -462,19 +304,8 @@ export const ReadonlySearchStillWorks: Story = {
       },
       { timeout: 1000 },
     );
-  },
-};
 
-export const ReadonlyColumnVisibility: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
-
+    // 7. Column visibility still works in readonly
     expect(state.core.columns.visibleColumns).toHaveLength(3);
 
     const ageHeader = canvas.getByTestId('header-age');
@@ -494,43 +325,21 @@ export const ReadonlyColumnVisibility: Story = {
         state.core.columns.visibleColumns.some((c) => c.field === 'age'),
       ).toBe(false);
     });
-  },
-};
 
-export const ReadonlyFocusShowsBadge: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
-
-    const row1 = state.rows[0];
-    expect(row1).toBeDefined();
-    const cellVM = row1.getCellVM(TEST_COLUMNS[0]);
-
-    cellVM.focus();
+    // 8. Focus shows badge (readonly, not editing)
+    const nameCellVM = row1.getCellVM(TEST_COLUMNS[0]);
+    nameCellVM.focus();
 
     await waitFor(() => {
-      expect(cellVM.isFocused).toBe(true);
+      expect(nameCellVM.isFocused).toBe(true);
     });
 
-    expect(cellVM.isReadOnly).toBe(true);
-    expect(cellVM.isEditing).toBe(false);
-  },
-};
+    expect(nameCellVM.isReadOnly).toBe(true);
+    expect(nameCellVM.isEditing).toBe(false);
 
-export const ReadonlySingleCellContextMenu: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
-    });
+    nameCellVM.blur();
 
+    // 9. Single cell context menu (edit/paste/clear disabled, copy-value/copy-path enabled)
     const nameCell = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(nameCell);
     await waitFor(() => {
@@ -572,8 +381,46 @@ export const ReadonlySingleCellContextMenu: Story = {
     expect(copyPathItem).not.toHaveAttribute('data-disabled');
 
     await userEvent.keyboard('{Escape}');
+
+    // 10. Range context menu (select range, right-click, verify range menu items)
+    await userEvent.click(nameCell);
+    await waitFor(() => {
+      expect(nameCell).toHaveAttribute('tabindex', '0');
+    });
+
+    state.core.cellFSM.selectTo({ rowId: 'row-2', field: 'name' });
+    await waitFor(() => {
+      expect(state.core.cellFSM.hasSelection).toBe(true);
+    });
+
+    await userEvent.pointer({ keys: '[MouseRight]', target: nameCell });
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-value="copy-range"]')).toBeTruthy();
+    });
+
+    const copyRangeItem = document.querySelector(
+      '[data-value="copy-range"]',
+    ) as HTMLElement;
+    expect(copyRangeItem).not.toHaveAttribute('data-disabled');
+
+    const pasteRangeItem = document.querySelector(
+      '[data-value="paste-range"]',
+    ) as HTMLElement;
+    expect(pasteRangeItem).toBeTruthy();
+    expect(pasteRangeItem).not.toHaveAttribute('data-disabled');
+
+    const clearRangeItem = document.querySelector(
+      '[data-value="clear-range"]',
+    ) as HTMLElement;
+    expect(clearRangeItem).toBeTruthy();
+    expect(clearRangeItem).not.toHaveAttribute('data-disabled');
+
+    await userEvent.keyboard('{Escape}');
   },
 };
+
+// --- Story 3: Focus after add column (ManyColumnsE2EWrapper) ---
 
 const ManyColumnsE2EWrapper = observer(() => {
   const [state] = useState(createManyColumnsState);
@@ -681,53 +528,7 @@ export const FocusAfterAddColumn: Story = {
   },
 };
 
-export const ReadonlyRangeContextMenu: Story = {
-  tags: ['test'],
-  render: () => <ReadonlyE2EWrapper />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableEditorStoryState;
-
-    const nameCell = canvas.getByTestId('cell-row-1-name');
-    await userEvent.click(nameCell);
-    await waitFor(() => {
-      expect(nameCell).toHaveAttribute('tabindex', '0');
-    });
-
-    state.core.cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
-    await waitFor(() => {
-      expect(state.core.cellFSM.hasSelection).toBe(true);
-    });
-
-    await userEvent.pointer({ keys: '[MouseRight]', target: nameCell });
-
-    await waitFor(() => {
-      expect(document.querySelector('[data-value="copy-range"]')).toBeTruthy();
-    });
-
-    const copyRangeItem = document.querySelector(
-      '[data-value="copy-range"]',
-    ) as HTMLElement;
-    expect(copyRangeItem).not.toHaveAttribute('data-disabled');
-
-    const pasteRangeItem = document.querySelector(
-      '[data-value="paste-range"]',
-    ) as HTMLElement;
-    expect(pasteRangeItem).toBeTruthy();
-    expect(pasteRangeItem).not.toHaveAttribute('data-disabled');
-
-    const clearRangeItem = document.querySelector(
-      '[data-value="clear-range"]',
-    ) as HTMLElement;
-    expect(clearRangeItem).toBeTruthy();
-    expect(clearRangeItem).not.toHaveAttribute('data-disabled');
-
-    await userEvent.keyboard('{Escape}');
-  },
-};
+// --- Story 4: Selection edges after column reorder (EditableE2EWrapper) ---
 
 export const SelectionEdgesAfterColumnReorder: Story = {
   tags: ['test'],
@@ -772,6 +573,8 @@ export const SelectionEdgesAfterColumnReorder: Story = {
     expect(style.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
   },
 };
+
+// --- Story 5: Blur on click outside (BlurTestWrapper) ---
 
 const BlurTestWrapper = observer(() => {
   const [state] = useState(createEditableState);

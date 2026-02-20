@@ -3,7 +3,15 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
-import type { JsonSchema } from '@revisium/schema-toolkit';
+import {
+  obj,
+  str,
+  num,
+  bool,
+  strFormula,
+  numFormula,
+  boolFormula,
+} from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
   col,
@@ -11,33 +19,9 @@ import {
   FilterFieldType,
 } from '../../../__stories__/helpers.js';
 import { TableWidget } from '../TableWidget.js';
+import { TABLE_SCHEMA, TEST_COLUMNS, MOCK_ROWS_DATA } from './tableTestData.js';
 
 ensureReactivityProvider();
-
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
 
 const noop = () => {};
 
@@ -49,52 +33,21 @@ const EXTENDED_COLUMNS = [
   col('score', FilterFieldType.Number),
 ];
 
-const EXTENDED_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-    email: { type: 'string', default: '' },
-    score: { type: 'number', default: 0 },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active', 'email', 'score'],
-};
+const EXTENDED_SCHEMA = obj({
+  name: str(),
+  age: num(),
+  active: bool(),
+  email: str(),
+  score: num(),
+});
 
-const FORMULA_TABLE_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    greeting: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': { version: 1, expression: '"Hello, " + name' },
-    },
-    ageGroup: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': {
-        version: 1,
-        expression: 'if(age >= 30, "Senior", "Junior")',
-      },
-    },
-    label: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': {
-        version: 1,
-        expression: 'greeting + " (" + ageGroup + ")"',
-      },
-    },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'greeting', 'ageGroup', 'label'],
-} as JsonSchema;
+const FORMULA_TABLE_SCHEMA = obj({
+  name: str(),
+  age: num(),
+  greeting: strFormula('"Hello, " + name'),
+  ageGroup: strFormula('if(age >= 30, "Senior", "Junior")'),
+  label: strFormula('greeting + " (" + ageGroup + ")"'),
+});
 
 const FORMULA_COLUMNS = [
   col('name', FilterFieldType.String),
@@ -110,28 +63,13 @@ const FORMULA_COLUMNS = [
   col('label', FilterFieldType.String, { label: 'Label', hasFormula: true }),
 ];
 
-const MIXED_FORMULA_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    item: { type: 'string', default: '' },
-    price: { type: 'number', default: 0 },
-    quantity: { type: 'number', default: 0 },
-    total: {
-      type: 'number',
-      default: 0,
-      readOnly: true,
-      'x-formula': { version: 1, expression: 'price * quantity' },
-    },
-    expensive: {
-      type: 'boolean',
-      default: false,
-      readOnly: true,
-      'x-formula': { version: 1, expression: 'total > 100' },
-    },
-  },
-  additionalProperties: false,
-  required: ['item', 'price', 'quantity', 'total', 'expensive'],
-} as JsonSchema;
+const MIXED_FORMULA_SCHEMA = obj({
+  item: str(),
+  price: num(),
+  quantity: num(),
+  total: numFormula('price * quantity'),
+  expensive: boolFormula('total > 100'),
+});
 
 const MIXED_FORMULA_COLUMNS = [
   col('item', FilterFieldType.String, { label: 'Item' }),
