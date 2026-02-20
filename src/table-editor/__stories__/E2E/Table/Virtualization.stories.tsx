@@ -3,27 +3,23 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, waitFor, within } from 'storybook/test';
-import { ensureReactivityProvider } from '../../../../../lib/initReactivity.js';
+import { obj, str, num } from '@revisium/schema-toolkit';
+import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
   col,
   createTableStoryState,
   FilterFieldType,
-} from '../../../../__stories__/helpers.js';
-import type { TableStoryState } from '../../../../__stories__/helpers.js';
-import { SelectionModel } from '../../../model/SelectionModel.js';
-import { TableWidget } from '../../TableWidget.js';
+  type TableStoryState,
+} from '../../helpers.js';
+import { SelectionModel } from '../../../Table/model/SelectionModel.js';
+import { TableWidget } from '../../../Table/ui/TableWidget.js';
 
 ensureReactivityProvider();
 
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-  },
-  additionalProperties: false,
-  required: ['name', 'age'],
-};
+const TABLE_SCHEMA = obj({
+  name: str(),
+  age: num(),
+});
 
 const ALL_COLUMNS = [
   col('name', FilterFieldType.String),
@@ -129,7 +125,7 @@ const InfiniteScrollWrapper = observer(() => {
 });
 
 const meta: Meta = {
-  title: 'TableEditor/Table/E2E/Virtualization',
+  title: 'TableEditor/E2E/Table/Virtualization',
   decorators: [
     (Story) => (
       <Box p={4}>

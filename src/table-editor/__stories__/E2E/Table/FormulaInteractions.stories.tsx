@@ -3,50 +3,27 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
-import type { JsonSchema } from '@revisium/schema-toolkit';
-import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
-  col,
-  createTableStoryState,
-  FilterFieldType,
-} from '../../../__stories__/helpers.js';
-import { TableWidget } from '../TableWidget.js';
+  obj,
+  str,
+  num,
+  strFormula,
+  numFormula,
+  boolFormula,
+} from '@revisium/schema-toolkit';
+import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import { col, createTableStoryState, FilterFieldType } from '../../helpers.js';
+import { TableWidget } from '../../../Table/ui/TableWidget.js';
 
 ensureReactivityProvider();
 
-const FORMULA_TABLE_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    greeting: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': { version: 1, expression: '"Hello, " + name' },
-    },
-    ageGroup: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': {
-        version: 1,
-        expression: 'if(age >= 30, "Senior", "Junior")',
-      },
-    },
-    label: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': {
-        version: 1,
-        expression: 'greeting + " (" + ageGroup + ")"',
-      },
-    },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'greeting', 'ageGroup', 'label'],
-} as JsonSchema;
+const FORMULA_TABLE_SCHEMA = obj({
+  name: str(),
+  age: num(),
+  greeting: strFormula('"Hello, " + name'),
+  ageGroup: strFormula('if(age >= 30, "Senior", "Junior")'),
+  label: strFormula('greeting + " (" + ageGroup + ")"'),
+});
 
 const FORMULA_TEST_COLUMNS = [
   col('name', FilterFieldType.String),
@@ -89,28 +66,13 @@ const FormulaStoryWrapper = observer(() => {
   );
 });
 
-const MIXED_FORMULA_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    item: { type: 'string', default: '' },
-    price: { type: 'number', default: 0 },
-    quantity: { type: 'number', default: 0 },
-    total: {
-      type: 'number',
-      default: 0,
-      readOnly: true,
-      'x-formula': { version: 1, expression: 'price * quantity' },
-    },
-    expensive: {
-      type: 'boolean',
-      default: false,
-      readOnly: true,
-      'x-formula': { version: 1, expression: 'total > 100' },
-    },
-  },
-  additionalProperties: false,
-  required: ['item', 'price', 'quantity', 'total', 'expensive'],
-} as JsonSchema;
+const MIXED_FORMULA_SCHEMA = obj({
+  item: str(),
+  price: num(),
+  quantity: num(),
+  total: numFormula('price * quantity'),
+  expensive: boolFormula('total > 100'),
+});
 
 const MIXED_FORMULA_COLUMNS = [
   col('item', FilterFieldType.String, { label: 'Item' }),
@@ -152,7 +114,7 @@ const MixedFormulaWrapper = observer(() => {
 
 const meta: Meta<typeof FormulaStoryWrapper> = {
   component: FormulaStoryWrapper as any,
-  title: 'TableEditor/Table/E2E/FormulaInteractions',
+  title: 'TableEditor/E2E/Table/FormulaInteractions',
   decorators: [
     (Story) => (
       <Box p={4}>

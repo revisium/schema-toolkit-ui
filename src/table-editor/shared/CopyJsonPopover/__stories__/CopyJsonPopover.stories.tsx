@@ -4,7 +4,7 @@ import { CopyJsonPopover } from '../CopyJsonPopover.js';
 
 const meta: Meta<typeof CopyJsonPopover> = {
   component: CopyJsonPopover,
-  title: 'TableEditor/Shared/CopyJsonPopover',
+  title: 'TableEditor/CopyJsonPopover',
   decorators: [
     (Story) => (
       <Box p={4}>

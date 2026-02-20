@@ -3,8 +3,8 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, screen, userEvent } from 'storybook/test';
-import { ViewSettingsBadgeModel } from '../../../model/ViewSettingsBadgeModel.js';
-import { ViewSettingsBadge } from '../../ViewSettingsBadge.js';
+import { ViewSettingsBadgeModel } from '../../../Status/model/ViewSettingsBadgeModel.js';
+import { ViewSettingsBadge } from '../../../Status/ui/ViewSettingsBadge.js';
 
 const E2EWrapper = observer(
   ({
@@ -34,7 +34,7 @@ const E2EWrapper = observer(
 
 const meta: Meta<typeof E2EWrapper> = {
   component: E2EWrapper as any,
-  title: 'TableEditor/Status/E2E/ViewSettingsBadge',
+  title: 'TableEditor/E2E/Status/ViewSettingsBadge',
   decorators: [
     (Story) => (
       <Box p={4} maxW="500px">
@@ -46,20 +46,30 @@ const meta: Meta<typeof E2EWrapper> = {
 export default meta;
 type Story = StoryObj<typeof E2EWrapper>;
 
-export const Revert: Story = {
+export const ViewSettingsBadgeWorkflow: Story = {
   tags: ['test'],
   render: () => <E2EWrapper canSave={true} hasChanges={true} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const badge = canvas.getByTestId('view-settings-badge');
+    await waitFor(() => {
+      expect((window as any).__testModel).toBeDefined();
+    });
+
+    const model = (window as any).__testModel as ViewSettingsBadgeModel;
+
+    const badge = await waitFor(() => {
+      const el = canvas.getByTestId('view-settings-badge');
+      expect(el).toBeVisible();
+      return el;
+    });
     await userEvent.click(badge);
 
     await waitFor(() => {
       expect(screen.getByTestId('view-settings-revert')).toBeVisible();
+      expect(screen.getByTestId('view-settings-save')).toBeVisible();
     });
 
-    const model = (window as any).__testModel as ViewSettingsBadgeModel;
     expect(model.hasChanges).toBe(true);
 
     await userEvent.click(screen.getByTestId('view-settings-revert'));
@@ -67,24 +77,20 @@ export const Revert: Story = {
     await waitFor(() => {
       expect(model.hasChanges).toBe(false);
     });
-  },
-};
 
-export const Save: Story = {
-  tags: ['test'],
-  render: () => <E2EWrapper canSave={true} hasChanges={true} />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    model.saveSnapshot({ columns: ['id'] });
+    model.checkForChanges({ columns: ['id', 'name'] });
 
-    const badge = canvas.getByTestId('view-settings-badge');
-    await userEvent.click(badge);
+    const badge2 = await waitFor(() => {
+      const el = canvas.getByTestId('view-settings-badge');
+      expect(el).toBeVisible();
+      return el;
+    });
+    await userEvent.click(badge2);
 
     await waitFor(() => {
       expect(screen.getByTestId('view-settings-save')).toBeVisible();
     });
-
-    const model = (window as any).__testModel as ViewSettingsBadgeModel;
-    expect(model.hasChanges).toBe(true);
 
     await userEvent.click(screen.getByTestId('view-settings-save'));
 

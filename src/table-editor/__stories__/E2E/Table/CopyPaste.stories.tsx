@@ -3,7 +3,7 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
-import type { JsonSchema } from '@revisium/schema-toolkit';
+import { obj, str, num, strFormula } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
   col,
@@ -11,36 +11,15 @@ import {
   FilterFieldType,
   mockClipboard,
   type TableStoryState,
-} from '../../../__stories__/helpers.js';
-import { CellFSM } from '../../model/CellFSM.js';
-import { TableWidget } from '../TableWidget.js';
+} from '../../helpers.js';
+import { TableWidget } from '../../../Table/ui/TableWidget.js';
+import {
+  TABLE_SCHEMA,
+  TEST_COLUMNS,
+  MOCK_ROWS_DATA,
+} from '../../../Table/ui/__stories__/tableTestData.js';
 
 ensureReactivityProvider();
-
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
 
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
@@ -70,39 +49,13 @@ const StoryWrapper = observer(() => {
   );
 });
 
-const FORMULA_TABLE_SCHEMA: JsonSchema = {
-  type: 'object',
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    greeting: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': { version: 1, expression: '"Hello, " + name' },
-    },
-    ageGroup: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': {
-        version: 1,
-        expression: 'if(age >= 30, "Senior", "Junior")',
-      },
-    },
-    label: {
-      type: 'string',
-      default: '',
-      readOnly: true,
-      'x-formula': {
-        version: 1,
-        expression: 'greeting + " (" + ageGroup + ")"',
-      },
-    },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'greeting', 'ageGroup', 'label'],
-} as JsonSchema;
+const FORMULA_TABLE_SCHEMA = obj({
+  name: str(),
+  age: num(),
+  greeting: strFormula('"Hello, " + name'),
+  ageGroup: strFormula('if(age >= 30, "Senior", "Junior")'),
+  label: strFormula('greeting + " (" + ageGroup + ")"'),
+});
 
 const FORMULA_TEST_COLUMNS = [
   col('name', FilterFieldType.String),
@@ -141,7 +94,7 @@ const CopyFormulaWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/Table/E2E/CopyPaste',
+  title: 'TableEditor/E2E/Table/CopyPaste',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -202,9 +155,21 @@ export const CopyPasteWorkflow: Story = {
       expect(ageCell3).toHaveTextContent('30');
     });
 
+    clipboard.setText('NewName');
+    const nameCell1Again = canvas.getByTestId('cell-row-1-name');
+    await userEvent.click(nameCell1Again);
+    await waitFor(() => {
+      expect(nameCell1Again).toHaveAttribute('tabindex', '0');
+    });
+    await userEvent.keyboard('{Control>}v{/Control}');
+    await waitFor(() => {
+      expect(nameCell1Again).toHaveTextContent('NewName');
+    });
+    expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Alice');
+
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
-      expect(ageCell3).toHaveAttribute('tabindex', '-1');
+      expect(nameCell1Again).toHaveAttribute('tabindex', '-1');
     });
   },
 };
@@ -250,17 +215,17 @@ export const CopyFromFormulaCell: Story = {
   },
 };
 
-export const SingleCellMultiPaste: Story = {
+export const MultiCellPaste: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => {
       expect((window as any).__testState).toBeDefined();
     });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
+    const state = (window as any).__testState as TableStoryState;
+    const { cellFSM } = state;
 
+    // --- multi-line TSV paste from single cell ---
     mockClipboard('X\t99\nY\t88\nZ\t77');
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
@@ -297,105 +262,37 @@ export const SingleCellMultiPaste: Story = {
     expect(canvas.getByTestId('cell-row-1-active')).toHaveTextContent('true');
     expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent('Diana');
 
-    await userEvent.keyboard('{Escape}');
-  },
-};
-
-export const SingleCellSingleValuePaste: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
-    mockClipboard('NewName');
-
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
-        'tabindex',
-        '0',
-      );
-    });
-
-    expect(cellFSM.hasSelection).toBe(false);
-
-    await userEvent.keyboard('{Control>}v{/Control}');
-
-    await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
-        'NewName',
-      );
-    });
-
-    expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Bob');
-
-    await userEvent.keyboard('{Escape}');
-  },
-};
-
-export const PasteQuotedTSVFromExcel: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
+    // --- quoted TSV paste (Excel format with newlines inside quotes) ---
     mockClipboard(
       '"Laptop4 wer we\nsdf sdf sdf sdf sd "\t991\t3\nMouse2\t25\t3',
     );
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-4-name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-4-name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    expect(cellFSM.hasSelection).toBe(false);
-
     await userEvent.keyboard('{Control>}v{/Control}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent(
         'Laptop4 wer we sdf sdf sdf sdf sd',
       );
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('991');
+      expect(canvas.getByTestId('cell-row-4-age')).toHaveTextContent('991');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Mouse2');
+      expect(canvas.getByTestId('cell-row-5-name')).toHaveTextContent('Mouse2');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-age')).toHaveTextContent('25');
+      expect(canvas.getByTestId('cell-row-5-age')).toHaveTextContent('25');
     });
 
-    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
-
-    await userEvent.keyboard('{Escape}');
-  },
-};
-
-export const CopyRangeAfterColumnReorder: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableStoryState;
-    const { cellFSM } = state;
-
+    // --- copy range after column reorder ---
     const clipboard = mockClipboard();
 
     state.columnsModel.moveColumnToStart('active');
@@ -419,47 +316,35 @@ export const CopyRangeAfterColumnReorder: Story = {
 
     await waitFor(() => {
       const text = clipboard.getText();
-      expect(text).toBe('true\tAlice\nfalse\tBob');
+      expect(text).toBe('true\tX\nfalse\tY');
     });
 
-    await userEvent.click(activeCell);
-    await userEvent.keyboard('{Escape}');
-  },
-};
+    // --- paste overflow beyond table bounds ---
+    mockClipboard('A\t11\nB\t22\nC\t33\nD\t44\nE\t55\nF\t66\nG\t77');
 
-export const PasteOverflowBeyondTableBounds: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const cell4 = canvas.getByTestId('cell-row-4-name');
+    await userEvent.click(cell4);
     await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-
-    mockClipboard('X\t99\nY\t88\nZ\t77\nW\t66\nV\t55\nU\t44\nT\t33');
-
-    const cell = canvas.getByTestId('cell-row-4-name');
-    await userEvent.click(cell);
-    await waitFor(() => {
-      expect(cell).toHaveAttribute('tabindex', '0');
+      expect(cell4).toHaveAttribute('tabindex', '0');
     });
 
     await userEvent.keyboard('{Control>}v{/Control}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent('X');
+      expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent('A');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-4-age')).toHaveTextContent('99');
+      expect(canvas.getByTestId('cell-row-4-age')).toHaveTextContent('11');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-5-name')).toHaveTextContent('Y');
+      expect(canvas.getByTestId('cell-row-5-name')).toHaveTextContent('B');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-5-age')).toHaveTextContent('88');
+      expect(canvas.getByTestId('cell-row-5-age')).toHaveTextContent('22');
     });
 
-    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
-    expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('35');
+    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Z');
+    expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('77');
 
     await userEvent.keyboard('{Escape}');
   },

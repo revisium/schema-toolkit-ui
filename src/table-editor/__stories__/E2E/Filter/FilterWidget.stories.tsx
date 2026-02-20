@@ -3,13 +3,13 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, screen, userEvent } from 'storybook/test';
-import { FilterModel } from '../../../model/index.js';
-import { FilterFieldType } from '../../../../shared/field-types.js';
+import { FilterModel } from '../../../Filters/model/index.js';
+import { FilterFieldType } from '../../../shared/field-types.js';
 import {
   TEST_COLUMNS,
   type FilterStoryWrapperProps,
-} from '../FilterWidget.stories.js';
-import { FilterWidget } from '../../FilterWidget.js';
+} from '../../../Filters/ui/__stories__/FilterWidget.stories.js';
+import { FilterWidget } from '../../../Filters/ui/FilterWidget.js';
 
 const E2EWrapper = observer(({ setup }: FilterStoryWrapperProps) => {
   const [model] = useState(() => {
@@ -35,7 +35,7 @@ const E2EWrapper = observer(({ setup }: FilterStoryWrapperProps) => {
 
 const meta: Meta<typeof E2EWrapper> = {
   component: E2EWrapper as any,
-  title: 'TableEditor/Filter/E2E/FilterWidget',
+  title: 'TableEditor/E2E/Filter/FilterWidget',
   decorators: [
     (Story) => (
       <Box p={4}>

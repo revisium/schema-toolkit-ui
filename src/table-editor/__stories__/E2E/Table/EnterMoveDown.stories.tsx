@@ -4,39 +4,15 @@ import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import { createTableStoryState } from '../../helpers.js';
+import { TableWidget } from '../../../Table/ui/TableWidget.js';
 import {
-  col,
-  createTableStoryState,
-  FilterFieldType,
-} from '../../../__stories__/helpers.js';
-import { TableWidget } from '../TableWidget.js';
+  TABLE_SCHEMA,
+  TEST_COLUMNS,
+  MOCK_ROWS_DATA,
+} from '../../../Table/ui/__stories__/tableTestData.js';
 
 ensureReactivityProvider();
-
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
 
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
@@ -61,7 +37,7 @@ const StoryWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/Table/E2E/EnterMoveDown',
+  title: 'TableEditor/E2E/Table/EnterMoveDown',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -77,6 +53,8 @@ export const EnterMoveDown: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+
+    // --- Changed values (string column) ---
 
     const nameCell1 = canvas.getByTestId('cell-row-1-name');
     await userEvent.dblClick(nameCell1);
@@ -128,6 +106,8 @@ export const EnterMoveDown: Story = {
       ).toBeNull();
     });
 
+    // --- Changed values (number column) ---
+
     const ageCell1 = canvas.getByTestId('cell-row-1-age');
     await userEvent.click(ageCell1);
     await userEvent.dblClick(ageCell1);
@@ -161,6 +141,8 @@ export const EnterMoveDown: Story = {
         document.querySelector('[data-testid="number-cell-input"]'),
       ).toBeNull();
     });
+
+    // --- Last row (no row below) ---
 
     const nameCell5 = canvas.getByTestId('cell-row-5-name');
     await userEvent.click(nameCell5);
@@ -210,52 +192,41 @@ export const EnterMoveDown: Story = {
       document.querySelector('[data-testid="string-cell-input"]'),
     ).toBeNull();
 
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(nameCell5).toHaveAttribute('tabindex', '-1');
-    });
-  },
-};
+    // --- Unchanged values (string column) ---
 
-export const EnterMoveDownUnchanged: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const nameCell1 = canvas.getByTestId('cell-row-1-name');
     await userEvent.dblClick(nameCell1);
-    const nameInput = await waitFor(() => {
+    const unchangedNameInput1 = await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="string-cell-input"]',
       ) as HTMLTextAreaElement;
       expect(el).toBeTruthy();
       return el;
     });
-    expect(nameInput.value).toBe('Alice');
+    expect(unchangedNameInput1.value).toBe('Updated');
     await userEvent.keyboard('{Enter}');
 
     await waitFor(() => {
-      expect(nameCell1).toHaveTextContent('Alice');
+      expect(nameCell1).toHaveTextContent('Updated');
     });
 
-    const nameInput2 = await waitFor(() => {
+    const unchangedNameInput2 = await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="string-cell-input"]',
       ) as HTMLTextAreaElement;
       expect(el).toBeTruthy();
       return el;
     });
-    expect(nameInput2.value).toBe('Bob');
+    expect(unchangedNameInput2.value).toBe('Bob2');
 
     await userEvent.keyboard('{Enter}');
-    const nameInput3 = await waitFor(() => {
+    const unchangedNameInput3 = await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="string-cell-input"]',
       ) as HTMLTextAreaElement;
       expect(el).toBeTruthy();
       return el;
     });
-    expect(nameInput3.value).toBe('Charlie');
+    expect(unchangedNameInput3.value).toBe('Charlie');
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
@@ -264,27 +235,29 @@ export const EnterMoveDownUnchanged: Story = {
       ).toBeNull();
     });
 
-    const ageCell1 = canvas.getByTestId('cell-row-1-age');
-    await userEvent.click(ageCell1);
-    await userEvent.dblClick(ageCell1);
-    const ageInput = await waitFor(() => {
+    // --- Unchanged values (number column) ---
+
+    const ageCell3 = canvas.getByTestId('cell-row-3-age');
+    await userEvent.click(ageCell3);
+    await userEvent.dblClick(ageCell3);
+    const unchangedAgeInput3 = await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="number-cell-input"]',
       ) as HTMLTextAreaElement;
       expect(el).toBeTruthy();
       return el;
     });
-    expect(ageInput.value).toBe('30');
+    expect(unchangedAgeInput3.value).toBe('35');
     await userEvent.keyboard('{Enter}');
 
-    const ageInput2 = await waitFor(() => {
+    const unchangedAgeInput4 = await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="number-cell-input"]',
       ) as HTMLTextAreaElement;
       expect(el).toBeTruthy();
       return el;
     });
-    expect(ageInput2.value).toBe('25');
+    expect(unchangedAgeInput4.value).toBe('28');
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
@@ -292,5 +265,9 @@ export const EnterMoveDownUnchanged: Story = {
         document.querySelector('[data-testid="number-cell-input"]'),
       ).toBeNull();
     });
+
+    // --- Final Escape to unfocus ---
+
+    await userEvent.keyboard('{Escape}');
   },
 };

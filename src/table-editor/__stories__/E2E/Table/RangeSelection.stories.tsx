@@ -5,41 +5,18 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
-  col,
   createTableStoryState,
-  FilterFieldType,
   mockClipboard,
   type TableStoryState,
-} from '../../../__stories__/helpers.js';
-import { CellFSM } from '../../model/CellFSM.js';
-import { TableWidget } from '../TableWidget.js';
+} from '../../helpers.js';
+import { TableWidget } from '../../../Table/ui/TableWidget.js';
+import {
+  TABLE_SCHEMA,
+  TEST_COLUMNS,
+  MOCK_ROWS_DATA,
+} from '../../../Table/ui/__stories__/tableTestData.js';
 
 ensureReactivityProvider();
-
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
 
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
@@ -71,7 +48,7 @@ const StoryWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/Table/E2E/RangeSelection',
+  title: 'TableEditor/E2E/Table/RangeSelection',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -83,21 +60,23 @@ const meta: Meta<typeof StoryWrapper> = {
 export default meta;
 type Story = StoryObj<typeof StoryWrapper>;
 
-export const RangeSelectionShiftClick: Story = {
+export const FullRangeSelectionWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => {
       expect((window as any).__testState).toBeDefined();
     });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
+    const state = (window as any).__testState as TableStoryState;
+    const { cellFSM } = state;
 
-    const cell11 = canvas.getByTestId('cell-row-1-name');
-    await userEvent.click(cell11);
+    // --- Shift-click selection ---
+    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {
-      expect(cell11).toHaveAttribute('tabindex', '0');
+      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+        'tabindex',
+        '0',
+      );
     });
 
     cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
@@ -105,7 +84,6 @@ export const RangeSelectionShiftClick: Story = {
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
-
     expect(cellFSM.isCellInSelection('row-1', 'name')).toBe(true);
     expect(cellFSM.isCellInSelection('row-1', 'age')).toBe(true);
     expect(cellFSM.isCellInSelection('row-2', 'name')).toBe(true);
@@ -117,22 +95,9 @@ export const RangeSelectionShiftClick: Story = {
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(false);
     });
-
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const RangeSelectionShiftArrow: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
+    // --- Shift-arrow selection ---
     await userEvent.click(canvas.getByTestId('cell-row-2-age'));
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-2-age')).toHaveAttribute(
@@ -158,26 +123,15 @@ export const RangeSelectionShiftArrow: Story = {
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(false);
     });
-
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const RangeMouseDrag: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    // --- Mouse drag ---
+    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
-    const cell11 = canvas.getByTestId('cell-row-1-name');
-    await userEvent.click(cell11);
-    await waitFor(() => {
-      expect(cell11).toHaveAttribute('tabindex', '0');
+      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+        'tabindex',
+        '0',
+      );
     });
 
     cellFSM.dragStart({ rowId: 'row-1', field: 'name' });
@@ -196,22 +150,9 @@ export const RangeMouseDrag: Story = {
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(false);
     });
-
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const RangeCopy: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
+    // --- Copy range ---
     const clipboard = mockClipboard();
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
@@ -234,21 +175,9 @@ export const RangeCopy: Story = {
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const RangePaste: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
-    mockClipboard('X\t99\nY\t88');
+    // --- Paste range ---
+    clipboard.setText('X\t99\nY\t88');
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {
@@ -277,28 +206,12 @@ export const RangePaste: Story = {
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-2-age')).toHaveTextContent('88');
     });
-
     expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const RangeDelete: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Alice');
-    expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Bob');
-
+    // --- Delete range ---
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
@@ -326,25 +239,13 @@ export const RangeDelete: Story = {
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-2-age')).toHaveTextContent('0');
     });
-
     expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
     expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('35');
 
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const RangeDragAfterColumnReorder: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const state = (window as any).__testState as TableStoryState;
-    const { cellFSM } = state;
-
+    // --- Drag after column reorder ---
     state.columnsModel.moveColumnToStart('active');
 
     await waitFor(() => {
@@ -357,7 +258,6 @@ export const RangeDragAfterColumnReorder: Story = {
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
-
     expect(cellFSM.isCellInSelection('row-1', 'active')).toBe(true);
     expect(cellFSM.isCellInSelection('row-1', 'name')).toBe(true);
     expect(cellFSM.isCellInSelection('row-1', 'age')).toBe(true);
@@ -369,22 +269,9 @@ export const RangeDragAfterColumnReorder: Story = {
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(false);
     });
-
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const RangeClearOnEdit: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
+    // --- Clear on edit ---
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
@@ -416,8 +303,6 @@ export const RangeClearOnEdit: Story = {
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Z');
     });
-
-    expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Bob');
 
     await userEvent.keyboard('{Escape}');
   },

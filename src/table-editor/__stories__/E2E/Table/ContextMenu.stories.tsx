@@ -4,41 +4,16 @@ import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import { createTableStoryState, mockClipboard } from '../../helpers.js';
+import { CellFSM } from '../../../Table/model/CellFSM.js';
+import { TableWidget } from '../../../Table/ui/TableWidget.js';
 import {
-  col,
-  createTableStoryState,
-  FilterFieldType,
-  mockClipboard,
-} from '../../../__stories__/helpers.js';
-import { CellFSM } from '../../model/CellFSM.js';
-import { TableWidget } from '../TableWidget.js';
+  TABLE_SCHEMA,
+  TEST_COLUMNS,
+  MOCK_ROWS_DATA,
+} from '../../../Table/ui/__stories__/tableTestData.js';
 
 ensureReactivityProvider();
-
-const TABLE_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    name: { type: 'string', default: '' },
-    age: { type: 'number', default: 0 },
-    active: { type: 'boolean', default: false },
-  },
-  additionalProperties: false,
-  required: ['name', 'age', 'active'],
-};
-
-const TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
-const MOCK_ROWS_DATA = [
-  { name: 'Alice', age: 30, active: true },
-  { name: 'Bob', age: 25, active: false },
-  { name: 'Charlie', age: 35, active: true },
-  { name: 'Diana', age: 28, active: true },
-  { name: 'Eve', age: 22, active: false },
-];
 
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
@@ -70,7 +45,7 @@ const StoryWrapper = observer(() => {
 
 const meta: Meta<typeof StoryWrapper> = {
   component: StoryWrapper as any,
-  title: 'TableEditor/Table/E2E/ContextMenu',
+  title: 'TableEditor/E2E/Table/ContextMenu',
   decorators: [
     (Story) => (
       <Box p={4}>
@@ -82,11 +57,20 @@ const meta: Meta<typeof StoryWrapper> = {
 export default meta;
 type Story = StoryObj<typeof StoryWrapper>;
 
-export const ContextMenuSingleCell: Story = {
+export const FullContextMenuWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const clipboard = mockClipboard();
 
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
+
+    // --- 1. Single cell context menu ---
     const nameCell = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(nameCell);
     await waitFor(() => {
@@ -124,16 +108,11 @@ export const ContextMenuSingleCell: Story = {
       expect(nameCell2).toHaveAttribute('tabindex', '0');
       expect(nameCell).toHaveAttribute('tabindex', '-1');
     });
-  },
-};
 
-export const ContextMenuCopyPath: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    // cleanup: exit focus
+    await userEvent.keyboard('{Escape}');
 
-    const clipboard = mockClipboard();
-
+    // --- 2. Copy path ---
     const ageCell = canvas.getByTestId('cell-row-2-age');
     await userEvent.pointer({ keys: '[MouseRight]', target: ageCell });
 
@@ -148,20 +127,8 @@ export const ContextMenuCopyPath: Story = {
     await waitFor(() => {
       expect(clipboard.getText()).toBe('row-2/age');
     });
-  },
-};
 
-export const ContextMenuRange: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
+    // --- 3. Range context menu ---
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
@@ -192,29 +159,18 @@ export const ContextMenuRange: Story = {
 
     await userEvent.keyboard('{Escape}');
 
+    // cleanup: clear selection and focus
     await userEvent.click(canvas.getByTestId('cell-row-1-name'));
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const ContextMenuEdit: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    // --- 4. Edit from context menu ---
+    const editTargetCell = canvas.getByTestId('cell-row-1-name');
+    await userEvent.click(editTargetCell);
     await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
-
-    const nameCell = canvas.getByTestId('cell-row-1-name');
-    await userEvent.click(nameCell);
-    await waitFor(() => {
-      expect(nameCell).toHaveAttribute('tabindex', '0');
+      expect(editTargetCell).toHaveAttribute('tabindex', '0');
     });
 
-    await userEvent.pointer({ keys: '[MouseRight]', target: nameCell });
+    await userEvent.pointer({ keys: '[MouseRight]', target: editTargetCell });
 
     const editItem = await waitFor(() => {
       const el = document.querySelector('[data-value="edit"]') as HTMLElement;
@@ -230,20 +186,11 @@ export const ContextMenuEdit: Story = {
     });
 
     await userEvent.keyboard('{Escape}');
-  },
-};
 
-export const ContextMenuRangeFocusRestore: Story = {
-  tags: ['test'],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => {
-      expect((window as any).__testState).toBeDefined();
-    });
-    const { cellFSM } = (window as any).__testState as {
-      cellFSM: CellFSM;
-    };
+    // cleanup: exit focus
+    await userEvent.keyboard('{Escape}');
 
+    // --- 5. Range focus restore ---
     const anchorCell = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(anchorCell);
     await waitFor(() => {

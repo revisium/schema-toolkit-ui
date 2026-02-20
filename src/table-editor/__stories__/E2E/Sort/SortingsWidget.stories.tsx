@@ -3,12 +3,12 @@ import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, screen, userEvent } from 'storybook/test';
-import { SortModel } from '../../../model/SortModel.js';
-import { SortingsWidget } from '../../SortingsWidget.js';
+import { SortModel } from '../../../Sortings/model/SortModel.js';
+import { SortingsWidget } from '../../../Sortings/ui/SortingsWidget.js';
 import {
   TEST_COLUMNS,
   type SortStoryWrapperProps,
-} from '../SortingsWidget.stories.js';
+} from '../../../Sortings/ui/__stories__/SortingsWidget.stories.js';
 
 const E2EWrapper = observer(({ setup }: SortStoryWrapperProps) => {
   const [model] = useState(() => {
@@ -35,7 +35,7 @@ const E2EWrapper = observer(({ setup }: SortStoryWrapperProps) => {
 
 const meta: Meta<typeof E2EWrapper> = {
   component: E2EWrapper as any,
-  title: 'TableEditor/Sort/E2E/SortingsWidget',
+  title: 'TableEditor/E2E/Sort/SortingsWidget',
   decorators: [
     (Story) => (
       <Box p={4}>
