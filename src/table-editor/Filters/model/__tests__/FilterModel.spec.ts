@@ -369,6 +369,55 @@ describe('FilterModel', () => {
       });
     });
 
+    it('hasFilterForField returns false before apply', () => {
+      model.addCondition();
+      expect(model.hasFilterForField('name')).toBe(false);
+    });
+
+    it('hasFilterForField returns true for root condition after apply', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'Alice' });
+      model.apply();
+      expect(model.hasFilterForField('name')).toBe(true);
+      expect(model.hasFilterForField('age')).toBe(false);
+    });
+
+    it('hasFilterForField returns true for group condition after apply', () => {
+      model.addGroup();
+      const groupId = model.rootGroup.groups[0]!.id;
+      model.addCondition(groupId);
+      const condId = model.rootGroup.groups[0]!.conditions[0]!.id;
+      model.updateCondition(condId, { field: 'age' });
+      model.updateCondition(condId, { value: '25' });
+      model.apply();
+      expect(model.hasFilterForField('age')).toBe(true);
+      expect(model.hasFilterForField('name')).toBe(false);
+    });
+
+    it('hasFilterForField returns false after clearAll', () => {
+      model.addCondition();
+      const id = model.rootGroup.conditions[0]!.id;
+      model.updateCondition(id, { value: 'test' });
+      model.apply();
+      model.clearAll();
+      expect(model.hasFilterForField('name')).toBe(false);
+    });
+
+    it('addConditionForField adds condition for specific field', () => {
+      model.addConditionForField('age');
+      expect(model.totalConditionCount).toBe(1);
+      expect(model.rootGroup.conditions[0]?.field).toBe('age');
+      expect(model.rootGroup.conditions[0]?.fieldType).toBe(
+        FilterFieldType.Number,
+      );
+    });
+
+    it('addConditionForField ignores unknown field', () => {
+      model.addConditionForField('unknown');
+      expect(model.totalConditionCount).toBe(0);
+    });
+
     it('applySnapshot syncs next IDs to avoid collisions', () => {
       model.addCondition();
       model.addCondition();
