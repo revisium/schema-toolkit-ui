@@ -44,12 +44,13 @@ export function useScrollShadow(): {
       if (prev) {
         prev.removeEventListener('scroll', handleScroll);
       }
-      if (el && el instanceof HTMLElement) {
+      if (el instanceof HTMLElement) {
         scrollerRef.current = el;
         el.addEventListener('scroll', handleScroll, { passive: true });
-        requestAnimationFrame(update);
+        rafRef.current = requestAnimationFrame(update);
       } else {
         scrollerRef.current = null;
+        setState(INITIAL_STATE);
       }
     },
     [handleScroll, update],

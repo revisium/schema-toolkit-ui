@@ -61,6 +61,7 @@ export const SelectionToolbar = observer(
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="Exit selection"
                   onClick={() => selection.exitSelectionMode()}
                   data-testid="exit-selection"
                 >

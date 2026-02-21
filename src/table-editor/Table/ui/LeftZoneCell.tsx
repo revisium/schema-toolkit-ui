@@ -165,7 +165,7 @@ export const LeftZoneCell: FC<LeftZoneCellProps> = ({
         <Flex alignItems="center" justifyContent="center" height="100%">
           <Checkbox.Root
             checked={isSelected}
-            onCheckedChange={onToggleSelection}
+            onCheckedChange={() => onToggleSelection()}
             size="sm"
             data-testid={`select-${rowId}`}
           >
