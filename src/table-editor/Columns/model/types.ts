@@ -12,7 +12,10 @@ export interface ColumnSpec {
   foreignKeyTableId?: string;
 }
 
+export type PinSide = 'left' | 'right';
+
 export interface ViewColumn {
   field: string;
   width?: number;
+  pinned?: PinSide;
 }

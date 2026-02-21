@@ -17,6 +17,7 @@ export const TableComponent: React.FC<TableProps> = ({
       width: 'max-content',
       minWidth: '100%',
       tableLayout: 'fixed',
+      borderCollapse: 'collapse',
     }}
   >
     {children}

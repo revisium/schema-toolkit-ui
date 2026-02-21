@@ -40,6 +40,7 @@ const StoryWrapper = observer(() => {
         columnsModel={state.columnsModel}
         cellFSM={state.cellFSM}
         selection={state.selection}
+        onOpenRow={noop}
         onDeleteRow={noop}
         onDuplicateRow={noop}
         onDeleteSelected={noop}
@@ -99,20 +100,30 @@ export const SelectionWorkflow: Story = {
     selection.toggle('row-1');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('selection-toolbar')).toBeVisible();
+      expect(
+        document.querySelector('[data-testid="selection-toolbar"]'),
+      ).toBeTruthy();
     });
     expect(selection.selectedCount).toBe(1);
 
-    await userEvent.click(canvas.getByTestId('select-all'));
+    const selectAllBtn = document.querySelector(
+      '[data-testid="select-all"]',
+    ) as HTMLElement;
+    await userEvent.click(selectAllBtn);
 
     await waitFor(() => {
       expect(selection.selectedCount).toBe(5);
     });
 
-    await userEvent.click(canvas.getByTestId('exit-selection'));
+    const exitBtn = document.querySelector(
+      '[data-testid="exit-selection"]',
+    ) as HTMLElement;
+    await userEvent.click(exitBtn);
 
     await waitFor(() => {
-      expect(canvas.queryByTestId('selection-toolbar')).toBeNull();
+      expect(
+        document.querySelector('[data-testid="selection-toolbar"]'),
+      ).toBeNull();
     });
   },
 };

@@ -1,4 +1,4 @@
-import { FC, useContext } from 'react';
+import { useContext } from 'react';
 import { Box, Kbd, Menu, Portal } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { CellVM } from '../../model/CellVM.js';
@@ -9,9 +9,9 @@ interface CellContextMenuProps {
   onEditPointerDown?: () => void;
 }
 
-export const CellContextMenu: FC<CellContextMenuProps> = observer(
-  ({ cell, onEditPointerDown }) => {
-    const rangeActions = useContext(CellContextActionsContext);
+export const CellContextMenu = observer(
+  ({ cell, onEditPointerDown }: CellContextMenuProps) => {
+    const ctx = useContext(CellContextActionsContext);
     const hasRange = cell.hasRangeSelection;
 
     const handleCopyValue = () => {
@@ -31,22 +31,22 @@ export const CellContextMenu: FC<CellContextMenuProps> = observer(
     };
 
     const handleCopyRange = () => {
-      rangeActions?.copyRange();
+      ctx?.copyRange();
     };
 
     const handlePasteRange = () => {
-      rangeActions?.pasteRange();
+      ctx?.pasteRange();
     };
 
     const handleClearRange = () => {
-      rangeActions?.clearRange();
+      ctx?.clearRange();
     };
 
     return (
       <Portal>
         <Menu.Positioner>
           <Menu.Content minW="180px">
-            {hasRange && rangeActions ? (
+            {hasRange && ctx ? (
               <>
                 <Menu.Item value="copy-range" onClick={handleCopyRange}>
                   <Box flex="1">Copy</Box>

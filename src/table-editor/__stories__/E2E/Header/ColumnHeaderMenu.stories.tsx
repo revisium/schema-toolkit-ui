@@ -380,3 +380,159 @@ export const FullHeaderMenuWorkflow: Story = {
     }
   },
 };
+
+export const PinColumnWorkflow: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { columnsModel } = (window as any).__testState as {
+      columnsModel: ColumnsModel;
+    };
+
+    // Initial state: [name, age, active], none pinned
+    expect(columnsModel.visibleColumns).toHaveLength(3);
+    expect(columnsModel.isPinned('name')).toBe(false);
+    expect(columnsModel.isPinned('age')).toBe(false);
+    expect(columnsModel.isPinned('active')).toBe(false);
+
+    // Step 1: Pin 'name' to left
+    {
+      const nameHeader = canvas.getByTestId('header-name');
+      await userEvent.click(nameHeader);
+
+      const pinLeftItem = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-value="pin-left"]',
+        ) as HTMLElement;
+        expect(el).toBeTruthy();
+        return el;
+      });
+
+      await userEvent.click(pinLeftItem);
+
+      await waitFor(() => {
+        expect(columnsModel.isPinned('name')).toBe(true);
+        expect(columnsModel.getPinState('name')).toBe('left');
+      });
+
+      await waitFor(() => {
+        expect(canvas.getByTestId('pin-indicator-name')).toBeTruthy();
+      });
+
+      await dismissMenu();
+    }
+
+    // Step 2: Verify pinned column menu shows "Unpin" instead of pin options
+    {
+      const nameHeader = canvas.getByTestId('header-name');
+      await userEvent.click(nameHeader);
+
+      await waitFor(() => {
+        const unpinItem = document.querySelector(
+          '[data-value="unpin"]',
+        ) as HTMLElement;
+        expect(unpinItem).toBeTruthy();
+      });
+
+      await waitFor(() => {
+        const pinLeftItem = document.querySelector('[data-value="pin-left"]');
+        expect(pinLeftItem).toBeNull();
+      });
+
+      await waitFor(() => {
+        const pinRightItem = document.querySelector('[data-value="pin-right"]');
+        expect(pinRightItem).toBeNull();
+      });
+
+      await dismissMenu();
+    }
+
+    // Step 3: Pin 'active' to right
+    {
+      const activeHeader = canvas.getByTestId('header-active');
+      await userEvent.click(activeHeader);
+
+      const pinRightItem = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-value="pin-right"]',
+        ) as HTMLElement;
+        expect(el).toBeTruthy();
+        return el;
+      });
+
+      await userEvent.click(pinRightItem);
+
+      await waitFor(() => {
+        expect(columnsModel.getPinState('active')).toBe('right');
+      });
+
+      await dismissMenu();
+    }
+
+    // Step 4: Verify column order after pins
+    {
+      await waitFor(() => {
+        expect(columnsModel.visibleColumns.map((c) => c.field)).toEqual([
+          'name',
+          'age',
+          'active',
+        ]);
+      });
+    }
+
+    // Step 5: Unpin 'name'
+    {
+      const nameHeader = canvas.getByTestId('header-name');
+      await userEvent.click(nameHeader);
+
+      const unpinItem = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-value="unpin"]',
+        ) as HTMLElement;
+        expect(el).toBeTruthy();
+        return el;
+      });
+
+      await userEvent.click(unpinItem);
+
+      await waitFor(() => {
+        expect(columnsModel.isPinned('name')).toBe(false);
+      });
+
+      await waitFor(() => {
+        expect(
+          canvasElement.querySelector('[data-testid="pin-indicator-name"]'),
+        ).toBeNull();
+      });
+
+      await dismissMenu();
+    }
+
+    // Step 6: Verify unpinned column menu shows pin options again
+    {
+      const nameHeader = canvas.getByTestId('header-name');
+      await userEvent.click(nameHeader);
+
+      await waitFor(() => {
+        const pinLeftItem = document.querySelector('[data-value="pin-left"]');
+        expect(pinLeftItem).toBeTruthy();
+      });
+
+      await waitFor(() => {
+        const pinRightItem = document.querySelector('[data-value="pin-right"]');
+        expect(pinRightItem).toBeTruthy();
+      });
+
+      await waitFor(() => {
+        const unpinItem = document.querySelector('[data-value="unpin"]');
+        expect(unpinItem).toBeNull();
+      });
+
+      await dismissMenu();
+    }
+  },
+};
