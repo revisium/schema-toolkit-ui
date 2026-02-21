@@ -1,15 +1,8 @@
 import { FC, useState } from 'react';
-import {
-  Box,
-  Checkbox,
-  Flex,
-  Icon,
-  Menu,
-  Portal,
-  Text,
-} from '@chakra-ui/react';
-import { LuChevronDown, LuCopy, LuTrash2 } from 'react-icons/lu';
-import { PiCheckSquare, PiSidebarSimpleBold } from 'react-icons/pi';
+import { Box, Checkbox, Flex, Icon, Menu, Portal } from '@chakra-ui/react';
+import { LuChevronDown } from 'react-icons/lu';
+import { PiSidebarSimpleBold } from 'react-icons/pi';
+import { RowActionMenuItems } from './RowActionMenuItems.js';
 
 interface LeftZoneCellProps {
   rowId: string;
@@ -30,6 +23,14 @@ const SplitButton: FC<{
   onDelete?: (rowId: string) => void;
 }> = ({ rowId, onOpen, onSelect, onDuplicate, onDelete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const hasMenuItems = Boolean(onOpen || onSelect || onDuplicate || onDelete);
+
+  if (!hasMenuItems) {
+    return null;
+  }
+
+  const hasDropdownItems = Boolean(onSelect || onDuplicate || onDelete);
+  const showChevron = hasDropdownItems || onOpen;
 
   return (
     <Flex
@@ -62,81 +63,60 @@ const SplitButton: FC<{
           <Icon size="xs" color="gray.500" as={PiSidebarSimpleBold} />
         </Flex>
       )}
-      <Menu.Root
-        lazyMount
-        unmountOnExit
-        onOpenChange={({ open }) => setIsMenuOpen(open)}
-        positioning={{ placement: 'bottom-start' }}
-      >
-        <Menu.Trigger asChild>
-          <Flex
-            alignItems="center"
-            justifyContent="center"
-            height="100%"
-            width="16px"
-            minWidth="16px"
-            cursor="pointer"
-            borderLeft={onOpen ? '1px solid' : undefined}
-            borderColor="gray.200"
-            _hover={{ bg: 'gray.100' }}
-            data-testid={`left-zone-trigger-${rowId}`}
-          >
-            <Icon as={LuChevronDown} boxSize="10px" color="gray.500" />
-          </Flex>
-        </Menu.Trigger>
-        <Portal>
-          <Menu.Positioner>
-            <Menu.Content minW="180px" data-testid={`left-zone-menu-${rowId}`}>
-              {onOpen && (
-                <Menu.Item
-                  value="open"
-                  onClick={() => onOpen(rowId)}
-                  data-testid={`left-zone-menu-open-${rowId}`}
-                >
-                  <PiSidebarSimpleBold />
-                  <Text>Open</Text>
-                </Menu.Item>
-              )}
-              {onOpen && (onSelect || onDuplicate || onDelete) && (
-                <Menu.Separator />
-              )}
-              {onSelect && (
-                <Menu.Item
-                  value="select"
-                  onClick={() => onSelect(rowId)}
-                  data-testid={`left-zone-select-${rowId}`}
-                >
-                  <PiCheckSquare />
-                  <Text>Select</Text>
-                </Menu.Item>
-              )}
-              {onDuplicate && (
-                <Menu.Item
-                  value="duplicate"
-                  onClick={() => onDuplicate(rowId)}
-                  data-testid={`left-zone-duplicate-${rowId}`}
-                >
-                  <LuCopy />
-                  <Text>Duplicate</Text>
-                </Menu.Item>
-              )}
-              {onDelete && (
-                <>
-                  {(onSelect || onDuplicate) && <Menu.Separator />}
+      {showChevron && (
+        <Menu.Root
+          lazyMount
+          unmountOnExit
+          onOpenChange={({ open }) => setIsMenuOpen(open)}
+          positioning={{ placement: 'bottom-start' }}
+        >
+          <Menu.Trigger asChild>
+            <Flex
+              alignItems="center"
+              justifyContent="center"
+              height="100%"
+              width="16px"
+              minWidth="16px"
+              cursor="pointer"
+              borderLeft={onOpen ? '1px solid' : undefined}
+              borderColor="gray.200"
+              _hover={{ bg: 'gray.100' }}
+              data-testid={`left-zone-trigger-${rowId}`}
+            >
+              <Icon as={LuChevronDown} boxSize="10px" color="gray.500" />
+            </Flex>
+          </Menu.Trigger>
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content
+                minW="180px"
+                data-testid={`left-zone-menu-${rowId}`}
+              >
+                {onOpen && (
                   <Menu.Item
-                    value="delete"
-                    onClick={() => onDelete(rowId)}
-                    data-testid={`left-zone-delete-${rowId}`}
+                    value="open"
+                    onClick={() => onOpen(rowId)}
+                    data-testid={`left-zone-menu-open-${rowId}`}
                   >
-                    <LuTrash2 />
-                    <Text color="red.600">Delete</Text>
+                    <PiSidebarSimpleBold />
+                    Open
                   </Menu.Item>
-                </>
-              )}
-            </Menu.Content>
-          </Menu.Positioner>
-        </Portal>
-      </Menu.Root>
+                )}
+                {onOpen && (onSelect || onDuplicate || onDelete) && (
+                  <Menu.Separator />
+                )}
+                <RowActionMenuItems
+                  rowId={rowId}
+                  testIdPrefix="left-zone"
+                  onSelect={onSelect}
+                  onDuplicate={onDuplicate}
+                  onDelete={onDelete}
+                />
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
+      )}
     </Flex>
   );
 };

@@ -61,7 +61,10 @@ function buildCellCss(
   const needsHover = isFirstColumn && hasRowActions;
   const hoverCss: SystemStyleObject = needsHover
     ? {
-        '&:hover .row-action-buttons': {
+        '& .row-action-buttons': {
+          opacity: 0,
+        },
+        '&:hover .row-action-buttons, & .row-action-buttons[data-menu-open]': {
           opacity: 1,
           transition: 'opacity 0.15s ease',
         },
@@ -80,6 +83,56 @@ function buildCellCss(
   }
 
   return undefined;
+}
+
+interface StickyColumnProps {
+  isSticky: boolean;
+  isBoundary: boolean;
+  boundarySide: 'left' | 'right';
+  showShadow: boolean;
+  leftOffset?: number;
+  rightOffset?: number;
+  colWidth?: string;
+}
+
+function computeStickyProps(
+  col: { field: string },
+  columnsModel: ColumnsModel,
+  selectionWidth: number,
+  addColOffset: number,
+  showLeftShadow: boolean | undefined,
+  showRightShadow: boolean | undefined,
+): StickyColumnProps {
+  const leftOffset = columnsModel.getColumnStickyLeft(
+    col.field,
+    selectionWidth,
+  );
+  const rightBase = columnsModel.getColumnStickyRight(col.field);
+  const isStickyLeft = leftOffset !== undefined;
+  const isStickyRight = rightBase !== undefined;
+  const isSticky = isStickyLeft || isStickyRight;
+  const isLeftBoundary = columnsModel.isStickyLeftBoundary(col.field);
+  const isRightBoundary = columnsModel.isStickyRightBoundary(col.field);
+
+  return {
+    isSticky,
+    isBoundary: isLeftBoundary || isRightBoundary,
+    boundarySide: isStickyLeft ? 'left' : 'right',
+    showShadow:
+      (isLeftBoundary && Boolean(showLeftShadow)) ||
+      (isRightBoundary && Boolean(showRightShadow)),
+    leftOffset: isStickyLeft ? leftOffset : undefined,
+    rightOffset: isStickyRight ? rightBase + addColOffset : undefined,
+    colWidth: isSticky
+      ? `${columnsModel.resolveColumnWidth(col.field)}px`
+      : undefined,
+  };
+}
+
+function getStickyBorder(side: 'left' | 'right'): string {
+  return side === 'left'
+    ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
+    : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
 }
 
 export const DataRow = observer(
@@ -118,61 +171,53 @@ export const DataRow = observer(
           const showOverlay =
             isFirstColumn && hasRowActions && !cellVM.isEditing;
 
-          const leftOffset = columnsModel.getColumnStickyLeft(
-            col.field,
+          const sticky = computeStickyProps(
+            col,
+            columnsModel,
             selectionWidth,
+            addColOffset,
+            showLeftShadow,
+            showRightShadow,
           );
-          const rightBase = columnsModel.getColumnStickyRight(col.field);
-          const isStickyLeft = leftOffset !== undefined;
-          const isStickyRight = rightBase !== undefined;
-          const isSticky = isStickyLeft || isStickyRight;
-          const isLeftBoundary = columnsModel.isStickyLeftBoundary(col.field);
-          const isRightBoundary = columnsModel.isStickyRightBoundary(col.field);
-          const isBoundary = isLeftBoundary || isRightBoundary;
-          const showShadow =
-            (isLeftBoundary && Boolean(showLeftShadow)) ||
-            (isRightBoundary && Boolean(showRightShadow));
-          const boundarySide = isStickyLeft ? 'left' : 'right';
-
-          const rightValue =
-            isStickyRight && rightBase !== undefined
-              ? rightBase + addColOffset
-              : undefined;
-
-          const colWidth = isSticky
-            ? `${columnsModel.resolveColumnWidth(col.field)}px`
-            : undefined;
-
-          const stickyBorder = isStickyLeft
-            ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
-            : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
 
           return (
             <Box
               as="td"
               key={col.field}
-              width={colWidth}
-              minWidth={colWidth}
-              maxWidth={isSticky ? colWidth : '0'}
-              overflow={isBoundary ? 'visible' : 'hidden'}
-              borderRight={isSticky ? undefined : '1px solid'}
-              borderColor={isSticky ? undefined : 'gray.100'}
+              width={sticky.colWidth}
+              minWidth={sticky.colWidth}
+              maxWidth={sticky.isSticky ? sticky.colWidth : '0'}
+              overflow={sticky.isBoundary ? 'visible' : 'hidden'}
+              borderRight={sticky.isSticky ? undefined : '1px solid'}
+              borderColor={sticky.isSticky ? undefined : 'gray.100'}
               p={0}
-              position={isSticky ? 'sticky' : 'relative'}
-              left={isStickyLeft ? `${leftOffset}px` : undefined}
-              right={rightValue !== undefined ? `${rightValue}px` : undefined}
-              zIndex={isSticky ? 1 : undefined}
-              bg={isSticky ? 'white' : undefined}
-              boxShadow={isSticky ? stickyBorder : undefined}
+              position={sticky.isSticky ? 'sticky' : 'relative'}
+              left={
+                sticky.leftOffset !== undefined
+                  ? `${sticky.leftOffset}px`
+                  : undefined
+              }
+              right={
+                sticky.rightOffset !== undefined
+                  ? `${sticky.rightOffset}px`
+                  : undefined
+              }
+              zIndex={sticky.isSticky ? 1 : undefined}
+              bg={sticky.isSticky ? 'white' : undefined}
+              boxShadow={
+                sticky.isSticky
+                  ? getStickyBorder(sticky.boundarySide)
+                  : undefined
+              }
               css={buildCellCss(
-                isBoundary,
-                boundarySide,
-                showShadow,
+                sticky.isBoundary,
+                sticky.boundarySide,
+                sticky.showShadow,
                 hasRowActions,
                 isFirstColumn,
               )}
             >
-              {isBoundary ? (
+              {sticky.isBoundary ? (
                 <Box overflow="hidden">
                   <CellRenderer
                     cell={cellVM}

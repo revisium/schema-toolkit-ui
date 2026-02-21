@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Flex, Menu, Portal, Text } from '@chakra-ui/react';
+import type { SystemStyleObject } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
 import type { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
@@ -15,6 +16,39 @@ export interface StickyPosition {
   side: 'left' | 'right';
   offset: number;
   isBoundary: boolean;
+}
+
+function buildHeaderShadowCss(
+  position: StickyPosition,
+  showShadow: boolean,
+): SystemStyleObject {
+  return {
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      width: '8px',
+      pointerEvents: 'none',
+      transition: 'opacity 0.15s',
+      opacity: showShadow ? 1 : 0,
+      ...(position.side === 'left'
+        ? {
+            right: '-8px',
+            boxShadow: 'inset 8px 0 12px -8px rgba(0,0,0,0.1)',
+          }
+        : {
+            left: '-8px',
+            boxShadow: 'inset -8px 0 12px -8px rgba(0,0,0,0.1)',
+          }),
+    },
+  };
+}
+
+function getStickyBorder(side: 'left' | 'right'): string {
+  return side === 'left'
+    ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
+    : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
 }
 
 interface ColumnHeaderProps {
@@ -45,15 +79,10 @@ export const ColumnHeader = observer(
     const w = width ? `${width}px` : '150px';
 
     const isSticky = Boolean(stickyPosition);
-    const showShadow =
-      stickyPosition?.isBoundary &&
-      ((stickyPosition.side === 'left' && showLeftShadow) ||
-        (stickyPosition.side === 'right' && showRightShadow));
-
-    const stickyBorder =
-      stickyPosition?.side === 'left'
-        ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
-        : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
+    const showShadow = stickyPosition?.isBoundary
+      ? (stickyPosition.side === 'left' && Boolean(showLeftShadow)) ||
+        (stickyPosition.side === 'right' && Boolean(showRightShadow))
+      : false;
 
     return (
       <Box
@@ -78,33 +107,15 @@ export const ColumnHeader = observer(
         borderBottom="1px solid"
         borderBottomColor="gray.200"
         bg="gray.50"
-        boxShadow={isSticky ? stickyBorder : undefined}
+        boxShadow={
+          stickyPosition ? getStickyBorder(stickyPosition.side) : undefined
+        }
         textAlign="left"
         fontWeight="normal"
         p={0}
         css={
           stickyPosition?.isBoundary
-            ? {
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  width: '8px',
-                  pointerEvents: 'none',
-                  transition: 'opacity 0.15s',
-                  opacity: showShadow ? 1 : 0,
-                  ...(stickyPosition.side === 'left'
-                    ? {
-                        right: '-8px',
-                        boxShadow: 'inset 8px 0 12px -8px rgba(0,0,0,0.1)',
-                      }
-                    : {
-                        left: '-8px',
-                        boxShadow: 'inset -8px 0 12px -8px rgba(0,0,0,0.1)',
-                      }),
-                },
-              }
+            ? buildHeaderShadowCss(stickyPosition, showShadow)
             : undefined
         }
       >

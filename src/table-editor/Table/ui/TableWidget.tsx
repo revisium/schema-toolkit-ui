@@ -122,7 +122,8 @@ export const TableWidget = observer(
 
     const canDeleteRow = Boolean(onDeleteRow || onDeleteSelected);
     const canDuplicateRow = Boolean(onDuplicateRow);
-    const canSelect = canDeleteRow || canDuplicateRow;
+    const canSelect =
+      canDeleteRow || canDuplicateRow || Boolean(onDuplicateSelected);
 
     const contextActions = useMemo(
       (): CellContextActions => ({

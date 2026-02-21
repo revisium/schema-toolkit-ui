@@ -83,6 +83,40 @@ const meta: Meta<typeof StoryWrapper> = {
 export default meta;
 type Story = StoryObj<typeof StoryWrapper>;
 
+export const HoverVisibility: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+
+    const buttons = canvas.getByTestId('row-action-buttons-row-1');
+
+    // Initially hidden (no hover)
+    const initialOpacity = window.getComputedStyle(buttons).opacity;
+    expect(initialOpacity).toBe('0');
+
+    // Open the menu — this should force buttons visible even without hover
+    const trigger = canvas.getByTestId('row-action-trigger-row-1');
+    await userEvent.click(trigger);
+
+    await waitFor(() => {
+      const menuOpenOpacity = window.getComputedStyle(buttons).opacity;
+      expect(menuOpenOpacity).toBe('1');
+    });
+
+    // Close the menu by pressing Escape
+    await userEvent.keyboard('{Escape}');
+
+    // After menu closes, buttons should be hidden again
+    await waitFor(() => {
+      const afterCloseOpacity = window.getComputedStyle(buttons).opacity;
+      expect(afterCloseOpacity).toBe('0');
+    });
+  },
+};
+
 export const FullRowActionsWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {

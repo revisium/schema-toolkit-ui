@@ -5,21 +5,34 @@ export interface ScrollShadowState {
   showRightShadow: boolean;
 }
 
+type ScrollTarget = HTMLElement | Window;
+
 const INITIAL_STATE: ScrollShadowState = {
   showLeftShadow: false,
   showRightShadow: false,
 };
 
+function getScrollElement(target: ScrollTarget): HTMLElement | null {
+  if (target instanceof HTMLElement) {
+    return target;
+  }
+  return document.scrollingElement as HTMLElement | null;
+}
+
 export function useScrollShadow(): {
   state: ScrollShadowState;
-  setScrollerRef: (el: HTMLElement | Window | null) => void;
+  setScrollerRef: (el: ScrollTarget | null) => void;
 } {
   const [state, setState] = useState<ScrollShadowState>(INITIAL_STATE);
-  const scrollerRef = useRef<HTMLElement | null>(null);
+  const targetRef = useRef<ScrollTarget | null>(null);
   const rafRef = useRef<number>(0);
 
   const update = useCallback(() => {
-    const el = scrollerRef.current;
+    const target = targetRef.current;
+    if (!target) {
+      return;
+    }
+    const el = getScrollElement(target);
     if (!el) {
       return;
     }
@@ -39,17 +52,17 @@ export function useScrollShadow(): {
   }, [update]);
 
   const setScrollerRef = useCallback(
-    (el: HTMLElement | Window | null) => {
-      const prev = scrollerRef.current;
+    (el: ScrollTarget | null) => {
+      const prev = targetRef.current;
       if (prev) {
         prev.removeEventListener('scroll', handleScroll);
       }
-      if (el instanceof HTMLElement) {
-        scrollerRef.current = el;
+      if (el) {
+        targetRef.current = el;
         el.addEventListener('scroll', handleScroll, { passive: true });
         rafRef.current = requestAnimationFrame(update);
       } else {
-        scrollerRef.current = null;
+        targetRef.current = null;
         setState(INITIAL_STATE);
       }
     },
@@ -58,7 +71,7 @@ export function useScrollShadow(): {
 
   useEffect(() => {
     return () => {
-      const prev = scrollerRef.current;
+      const prev = targetRef.current;
       if (prev) {
         prev.removeEventListener('scroll', handleScroll);
       }
