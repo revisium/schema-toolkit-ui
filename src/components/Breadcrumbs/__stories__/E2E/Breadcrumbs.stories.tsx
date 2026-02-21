@@ -39,13 +39,17 @@ const EditableWrapper = ({
   onChange,
   onBlur,
   tooltip,
+  initialValue = 'john',
+  placeholder,
 }: {
   onSegmentClick?: BreadcrumbsProps['onSegmentClick'];
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
   tooltip?: string;
+  initialValue?: string;
+  placeholder?: string;
 }) => {
-  const [value, setValue] = useState('john');
+  const [value, setValue] = useState(initialValue);
 
   return (
     <Breadcrumbs
@@ -63,6 +67,7 @@ const EditableWrapper = ({
         },
         onBlur,
         tooltip,
+        placeholder,
         dataTestId: 'editable',
       }}
     />
@@ -250,6 +255,70 @@ export const EditableWorkflow: Story = {
     await waitFor(() => {
       expect(onBlurSpy).toHaveBeenCalledTimes(1);
       expect(onBlurSpy).toHaveBeenCalledWith('final');
+    });
+  },
+};
+
+export const PlaceholderWorkflow: Story = {
+  tags: ['test'],
+  render: () => (
+    <EditableWrapper
+      initialValue=""
+      placeholder="Enter name"
+      onChange={onChangeSpy}
+      onBlur={onBlurSpy}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    onChangeSpy.mockClear();
+    onBlurSpy.mockClear();
+
+    const editable = canvas.getByTestId('editable');
+    expect(editable).toHaveTextContent('');
+
+    const placeholderEl = canvas.getByText('Enter name');
+    expect(placeholderEl).toBeVisible();
+    expect(placeholderEl).toHaveStyle({ fontWeight: '400' });
+
+    editable.focus();
+    await waitFor(() => {
+      expect(editable).toHaveFocus();
+    });
+    await waitFor(() => {
+      expect(canvas.queryByText('Enter name')).not.toBeInTheDocument();
+    });
+
+    for (const char of 'hello') {
+      await userEvent.keyboard(char);
+    }
+    await waitFor(() => {
+      expect(canvas.queryByText('Enter name')).not.toBeInTheDocument();
+    });
+
+    const selection = window.getSelection()!;
+    const range = document.createRange();
+    range.selectNodeContents(editable);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => {
+      expect(editable).toHaveTextContent('');
+    });
+    expect(canvas.queryByText('Enter name')).not.toBeInTheDocument();
+
+    editable.blur();
+    await waitFor(() => {
+      expect(canvas.getByText('Enter name')).toBeVisible();
+    });
+
+    const placeholderArea = canvas.getByText('Enter name');
+    await userEvent.click(placeholderArea.parentElement!);
+    await waitFor(() => {
+      expect(editable).toHaveFocus();
+    });
+    await waitFor(() => {
+      expect(canvas.queryByText('Enter name')).not.toBeInTheDocument();
     });
   },
 };

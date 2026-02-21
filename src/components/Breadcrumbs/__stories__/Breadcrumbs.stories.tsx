@@ -79,14 +79,18 @@ interface EditableWrapperProps {
   onSegmentClick?: (segment: BreadcrumbSegment, index: number) => void;
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
+  initialValue?: string;
+  placeholder?: string;
 }
 
 const EditableWrapper = ({
   onSegmentClick,
   onChange,
   onBlur,
+  initialValue = 'john',
+  placeholder,
 }: EditableWrapperProps) => {
-  const [value, setValue] = useState('john');
+  const [value, setValue] = useState(initialValue);
 
   return (
     <Breadcrumbs
@@ -100,6 +104,7 @@ const EditableWrapper = ({
         },
         onBlur,
         tooltip: 'Rename row',
+        placeholder,
       }}
     />
   );
@@ -111,6 +116,7 @@ export const Editable: Story = {
       onSegmentClick={args.onSegmentClick}
       onChange={args.editable?.onChange}
       onBlur={args.editable?.onBlur}
+      placeholder="Enter name"
     />
   ),
   args: {
@@ -121,4 +127,16 @@ export const Editable: Story = {
       onBlur: fn().mockName('editable.onBlur'),
     },
   },
+};
+
+export const EditableEmpty: Story = {
+  render: () => (
+    <EditableWrapper
+      initialValue=""
+      placeholder="Enter name"
+      onSegmentClick={fn().mockName('onSegmentClick')}
+      onChange={fn().mockName('editable.onChange')}
+      onBlur={fn().mockName('editable.onBlur')}
+    />
+  ),
 };

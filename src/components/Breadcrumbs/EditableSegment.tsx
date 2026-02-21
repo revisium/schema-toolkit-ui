@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Box, Text } from '@chakra-ui/react';
 import React, { useCallback, useRef, useState } from 'react';
 import { useContentEditable } from '../../hooks/useContentEditable';
 import { Tooltip } from '../Tooltip';
@@ -15,6 +15,7 @@ export const EditableSegment: React.FC<BreadcrumbEditableProps> = ({
   onChange,
   onBlur,
   tooltip,
+  placeholder,
   dataTestId,
 }) => {
   const [focused, setFocused] = useState(false);
@@ -53,16 +54,30 @@ export const EditableSegment: React.FC<BreadcrumbEditableProps> = ({
     elementRef.current?.focus();
   }, []);
 
+  const showPlaceholder = !value && !focused && !!placeholder;
+
   const box = (
     <Box
       borderRadius={BREADCRUMB_BORDER_RADIUS}
       px={BREADCRUMB_PADDING}
       py={BREADCRUMB_PADDING}
-      bg={focused ? HOVER_BG : undefined}
+      bg={focused || showPlaceholder ? HOVER_BG : undefined}
       _hover={{ bg: HOVER_BG }}
       cursor="text"
       onClick={handleParentClick}
+      position="relative"
     >
+      {showPlaceholder && (
+        <Text
+          pointerEvents="none"
+          userSelect="none"
+          whiteSpace="nowrap"
+          color="gray.400"
+          fontWeight="400"
+        >
+          {placeholder}
+        </Text>
+      )}
       <Box
         ref={combinedRef}
         color={CURRENT_COLOR}
@@ -77,6 +92,9 @@ export const EditableSegment: React.FC<BreadcrumbEditableProps> = ({
         onBlur={editableProps.onBlur}
         onFocus={editableProps.onFocus}
         onKeyDown={editableProps.onKeyDown}
+        {...(showPlaceholder
+          ? { position: 'absolute' as const, inset: 0 }
+          : {})}
       />
     </Box>
   );
