@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
+import { runInAction } from 'mobx';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
 import {
@@ -13,6 +14,7 @@ import {
   boolFormula,
 } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import type { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
 import {
   col,
   createTableStoryState,
@@ -122,6 +124,7 @@ const DefaultWrapper = observer(
           selection={state.selection}
           sortModel={state.sortModel}
           filterModel={state.filterModel}
+          onOpenRow={withRowActions ? noop : undefined}
           onDeleteRow={withRowActions ? noop : undefined}
           onDuplicateRow={withRowActions ? noop : undefined}
           onDeleteSelected={withRowActions ? noop : undefined}
@@ -219,6 +222,7 @@ export const WithHiddenColumns: Story = {
             selection={state.selection}
             sortModel={state.sortModel}
             filterModel={state.filterModel}
+            onOpenRow={noop}
             onDeleteRow={noop}
             onDuplicateRow={noop}
             onDeleteSelected={noop}
@@ -280,6 +284,7 @@ const ManyRowsWrapper = observer(
           columnsModel={state.columnsModel}
           cellFSM={state.cellFSM}
           selection={state.selection}
+          onOpenRow={noop}
           onDeleteRow={noop}
           onDuplicateRow={noop}
           onDeleteSelected={noop}
@@ -324,6 +329,7 @@ export const InSelectionMode: Story = {
             columnsModel={state.columnsModel}
             cellFSM={state.cellFSM}
             selection={state.selection}
+            onOpenRow={noop}
             onDeleteRow={noop}
             onDuplicateRow={noop}
             onDeleteSelected={noop}
@@ -412,6 +418,222 @@ export const MixedFormulaColumns: Story = {
   },
 };
 
+const PINNED_COLUMN_WIDTH = 250;
+const PINNED_CONTAINER_WIDTH = '1000px';
+
+function setAllColumnWidths(
+  columnsModel: ColumnsModel,
+  fields: string[],
+  width: number,
+): void {
+  for (const field of fields) {
+    columnsModel.setColumnWidth(field, width);
+  }
+}
+
+export const PinnedLeftColumn: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() => {
+        const s = createTableStoryState({
+          schema: EXTENDED_SCHEMA,
+          columns: EXTENDED_COLUMNS,
+          rowsData: [
+            { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
+            { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
+            {
+              name: 'Charlie',
+              age: 35,
+              active: true,
+              email: 'c@d.e',
+              score: 70,
+            },
+          ],
+        });
+        runInAction(() => {
+          setAllColumnWidths(
+            s.columnsModel,
+            ['name', 'age', 'active', 'email', 'score'],
+            PINNED_COLUMN_WIDTH,
+          );
+          s.columnsModel.pinLeft('name');
+        });
+        return s;
+      });
+
+      return (
+        <Box
+          width={PINNED_CONTAINER_WIDTH}
+          height="300px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            onOpenRow={noop}
+            onDeleteRow={noop}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const MultiplePinnedLeft: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() => {
+        const s = createTableStoryState({
+          schema: EXTENDED_SCHEMA,
+          columns: EXTENDED_COLUMNS,
+          rowsData: [
+            { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
+            { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
+          ],
+        });
+        runInAction(() => {
+          setAllColumnWidths(
+            s.columnsModel,
+            ['name', 'age', 'active', 'email', 'score'],
+            PINNED_COLUMN_WIDTH,
+          );
+          s.columnsModel.pinLeft('name');
+          s.columnsModel.pinLeft('age');
+        });
+        return s;
+      });
+
+      return (
+        <Box
+          width={PINNED_CONTAINER_WIDTH}
+          height="300px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            onOpenRow={noop}
+            onDeleteRow={noop}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const PinnedLeftAndRight: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() => {
+        const s = createTableStoryState({
+          schema: EXTENDED_SCHEMA,
+          columns: EXTENDED_COLUMNS,
+          rowsData: [
+            { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
+            { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
+          ],
+        });
+        runInAction(() => {
+          setAllColumnWidths(
+            s.columnsModel,
+            ['name', 'age', 'active', 'email', 'score'],
+            PINNED_COLUMN_WIDTH,
+          );
+          s.columnsModel.pinLeft('name');
+          s.columnsModel.pinRight('score');
+        });
+        return s;
+      });
+
+      return (
+        <Box
+          width={PINNED_CONTAINER_WIDTH}
+          height="300px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            onOpenRow={noop}
+            onDeleteRow={noop}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const PinnedWithSelection: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() => {
+        const s = createTableStoryState({
+          schema: EXTENDED_SCHEMA,
+          columns: EXTENDED_COLUMNS,
+          rowsData: [
+            { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
+            { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
+            {
+              name: 'Charlie',
+              age: 35,
+              active: true,
+              email: 'c@d.e',
+              score: 70,
+            },
+          ],
+        });
+        runInAction(() => {
+          setAllColumnWidths(
+            s.columnsModel,
+            ['name', 'age', 'active', 'email', 'score'],
+            PINNED_COLUMN_WIDTH,
+          );
+          s.columnsModel.pinLeft('name');
+          s.columnsModel.pinRight('score');
+        });
+        s.selection.toggle('row-1');
+        return s;
+      });
+
+      return (
+        <Box
+          width={PINNED_CONTAINER_WIDTH}
+          height="300px"
+          borderWidth="1px"
+          borderColor="gray.200"
+        >
+          <TableWidget
+            rows={state.rows}
+            columnsModel={state.columnsModel}
+            cellFSM={state.cellFSM}
+            selection={state.selection}
+            onOpenRow={noop}
+            onDeleteRow={noop}
+            onDeleteSelected={noop}
+          />
+        </Box>
+      );
+    });
+
+    return <Wrapper />;
+  },
+};
+
 const TOTAL_ROWS = 200;
 const PAGE_SIZE = 50;
 
@@ -455,6 +677,7 @@ export const InfiniteScroll: Story = {
             columnsModel={state.columnsModel}
             cellFSM={state.cellFSM}
             selection={state.selection}
+            onOpenRow={noop}
             onDeleteRow={noop}
             onDuplicateRow={noop}
             onDeleteSelected={noop}
