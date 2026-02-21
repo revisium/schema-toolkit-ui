@@ -183,9 +183,13 @@ export const FullRowActionsWorkflow: Story = {
         expect(dialog).toBeTruthy();
       });
 
-      const cancelBtn = document.querySelector(
-        '[data-testid="delete-cancel"]',
-      ) as HTMLElement;
+      const cancelBtn = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-testid="delete-cancel"]',
+        ) as HTMLElement;
+        expect(el).toBeTruthy();
+        return el;
+      });
       await userEvent.click(cancelBtn);
 
       await waitFor(() => {
@@ -263,9 +267,13 @@ export const FullRowActionsWorkflow: Story = {
         expect(dialog).toBeTruthy();
       });
 
-      const confirmBtn = document.querySelector(
-        '[data-testid="delete-confirm"]',
-      ) as HTMLElement;
+      const confirmBtn = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-testid="delete-confirm"]',
+        ) as HTMLElement;
+        expect(el).toBeTruthy();
+        return el;
+      });
       await userEvent.click(confirmBtn);
 
       await waitFor(() => {
