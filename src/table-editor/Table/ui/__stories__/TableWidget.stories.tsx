@@ -111,12 +111,7 @@ const DefaultWrapper = observer(
     );
 
     return (
-      <Box
-        width="600px"
-        height="400px"
-        borderWidth="1px"
-        borderColor="gray.200"
-      >
+      <Box width="600px" height="400px">
         <TableWidget
           rows={state.rows}
           columnsModel={state.columnsModel}
@@ -171,12 +166,7 @@ export const SingleColumn: Story = {
       );
 
       return (
-        <Box
-          width="600px"
-          height="400px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width="600px" height="400px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -209,12 +199,7 @@ export const WithHiddenColumns: Story = {
       );
 
       return (
-        <Box
-          width="600px"
-          height="400px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width="600px" height="400px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -273,12 +258,7 @@ const ManyRowsWrapper = observer(
     }, [loading, visibleCount, onEndReachedAction]);
 
     return (
-      <Box
-        width="600px"
-        height="400px"
-        borderWidth="1px"
-        borderColor="gray.200"
-      >
+      <Box width="600px" height="400px">
         <TableWidget
           rows={visibleRows}
           columnsModel={state.columnsModel}
@@ -318,12 +298,7 @@ export const InSelectionMode: Story = {
       });
 
       return (
-        <Box
-          width="600px"
-          height="400px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width="600px" height="400px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -362,12 +337,7 @@ export const FormulaColumns: Story = {
       );
 
       return (
-        <Box
-          width="900px"
-          height="400px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width="900px" height="400px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -398,12 +368,7 @@ export const MixedFormulaColumns: Story = {
       );
 
       return (
-        <Box
-          width="900px"
-          height="400px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width="900px" height="400px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -462,12 +427,7 @@ export const PinnedLeftColumn: Story = {
       });
 
       return (
-        <Box
-          width={PINNED_CONTAINER_WIDTH}
-          height="300px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width={PINNED_CONTAINER_WIDTH} height="300px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -509,12 +469,7 @@ export const MultiplePinnedLeft: Story = {
       });
 
       return (
-        <Box
-          width={PINNED_CONTAINER_WIDTH}
-          height="300px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width={PINNED_CONTAINER_WIDTH} height="300px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -556,12 +511,7 @@ export const PinnedLeftAndRight: Story = {
       });
 
       return (
-        <Box
-          width={PINNED_CONTAINER_WIDTH}
-          height="300px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width={PINNED_CONTAINER_WIDTH} height="300px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -611,12 +561,7 @@ export const PinnedWithSelection: Story = {
       });
 
       return (
-        <Box
-          width={PINNED_CONTAINER_WIDTH}
-          height="300px"
-          borderWidth="1px"
-          borderColor="gray.200"
-        >
+        <Box width={PINNED_CONTAINER_WIDTH} height="300px">
           <TableWidget
             rows={state.rows}
             columnsModel={state.columnsModel}
@@ -671,7 +616,7 @@ export const InfiniteScroll: Story = {
       }, [loading, visibleCount]);
 
       return (
-        <Box width="600px" borderWidth="1px" borderColor="gray.200">
+        <Box width="600px">
           <TableWidget
             rows={visibleRows}
             columnsModel={state.columnsModel}

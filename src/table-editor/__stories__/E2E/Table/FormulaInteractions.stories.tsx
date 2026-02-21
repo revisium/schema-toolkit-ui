@@ -55,7 +55,7 @@ const FormulaStoryWrapper = observer(() => {
   );
 
   return (
-    <Box width="900px" height="400px" borderWidth="1px" borderColor="gray.200">
+    <Box width="900px" height="400px">
       <TableWidget
         rows={state.rows}
         columnsModel={state.columnsModel}
@@ -101,7 +101,7 @@ const MixedFormulaWrapper = observer(() => {
   );
 
   return (
-    <Box width="900px" height="400px" borderWidth="1px" borderColor="gray.200">
+    <Box width="900px" height="400px">
       <TableWidget
         rows={state.rows}
         columnsModel={state.columnsModel}

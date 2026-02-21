@@ -340,7 +340,8 @@ export const TableWidget = observer(
                   width: 'max-content',
                   minWidth: '100%',
                   tableLayout: 'fixed',
-                  borderCollapse: 'collapse',
+                  borderCollapse: 'separate',
+                  borderSpacing: 0,
                 }}
               >
                 <thead>

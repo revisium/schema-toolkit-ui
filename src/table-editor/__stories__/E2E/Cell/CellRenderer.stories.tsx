@@ -84,34 +84,19 @@ const MultiCellWrapper = observer(() => {
 
   return (
     <Flex direction="column" gap="8px" onKeyDown={handleKeyDown}>
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        data-testid="string-cell-wrapper"
-      >
+      <Box width="200px" data-testid="string-cell-wrapper">
         <CellRenderer
           cell={state.nameCell}
           onSearchForeignKey={mockSearchForeignKey}
         />
       </Box>
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        data-testid="number-cell-wrapper"
-      >
+      <Box width="200px" data-testid="number-cell-wrapper">
         <CellRenderer
           cell={state.ageCell}
           onSearchForeignKey={mockSearchForeignKey}
         />
       </Box>
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        data-testid="boolean-cell-wrapper"
-      >
+      <Box width="200px" data-testid="boolean-cell-wrapper">
         <CellRenderer
           cell={state.activeCell}
           onSearchForeignKey={mockSearchForeignKey}

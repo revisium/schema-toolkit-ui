@@ -9,6 +9,7 @@ import { AddColumnButton } from './Header/AddColumnButton.js';
 
 const SELECTION_COLUMN_WIDTH = 40;
 const ADD_COLUMN_BUTTON_WIDTH = 40;
+const BOTTOM_BORDER_SHADOW = 'inset 0 -1px 0 0 var(--chakra-colors-gray-100)';
 
 interface HeaderRowProps {
   columnsModel: ColumnsModel;
@@ -41,14 +42,12 @@ export const HeaderRow = observer(
             width="40px"
             minWidth="40px"
             maxWidth="40px"
-            bg="gray.50"
-            borderBottom="1px solid"
-            borderBottomColor="gray.200"
+            bg="white"
             p={0}
             position="sticky"
             left={0}
             zIndex={2}
-            boxShadow="inset -1px 0 0 0 var(--chakra-colors-gray-100)"
+            boxShadow={BOTTOM_BORDER_SHADOW}
           />
         )}
         {columnsModel.visibleColumns.map((col) => {
@@ -75,25 +74,18 @@ export const HeaderRow = observer(
         <Box
           as="th"
           width="100%"
-          bg="gray.50"
-          borderBottom="1px solid"
-          borderBottomColor="gray.200"
+          bg="white"
           p={0}
+          boxShadow={BOTTOM_BORDER_SHADOW}
         />
         <Box
           as="th"
-          bg="gray.50"
-          borderBottom="1px solid"
-          borderBottomColor="gray.200"
+          bg="white"
           p={0}
           position={addColumnStickyRight ? 'sticky' : undefined}
           right={addColumnStickyRight ? 0 : undefined}
           zIndex={addColumnStickyRight ? 2 : undefined}
-          boxShadow={
-            addColumnStickyRight
-              ? 'inset 1px 0 0 0 var(--chakra-colors-gray-100)'
-              : undefined
-          }
+          boxShadow={BOTTOM_BORDER_SHADOW}
         >
           <AddColumnButton columnsModel={columnsModel} />
         </Box>

@@ -54,7 +54,7 @@ const StoryWrapper = observer(() => {
   }, [state]);
 
   return (
-    <Box width="500px" height="400px" borderWidth="1px" borderColor="gray.200">
+    <Box width="500px" height="400px">
       <TableWidget
         rows={state.rows}
         columnsModel={state.columnsModel}

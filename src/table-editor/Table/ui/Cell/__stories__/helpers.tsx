@@ -121,12 +121,7 @@ export const StoryWrapper = observer(
     );
 
     return (
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        onKeyDown={handleKeyDown}
-      >
+      <Box width="200px" onKeyDown={handleKeyDown}>
         <CellRenderer
           cell={state.cell}
           onSearchForeignKey={mockSearchForeignKey}

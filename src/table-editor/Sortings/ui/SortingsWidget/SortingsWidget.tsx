@@ -43,7 +43,8 @@ export const SortingsWidget = observer(
             <IconButton
               aria-label="Sort"
               variant="ghost"
-              size="sm"
+              size="xs"
+              color="gray.400"
               data-testid="sort-trigger"
             >
               <LuArrowUpDown />

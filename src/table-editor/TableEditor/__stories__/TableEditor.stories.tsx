@@ -12,6 +12,8 @@ import {
   boolFormula,
 } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../lib/initReactivity.js';
+import { Breadcrumbs } from '../../../components/Breadcrumbs/Breadcrumbs.js';
+import { PlusButton } from '../../../components/PlusButton/index.js';
 import {
   col,
   createTableEditorStoryState,
@@ -58,29 +60,32 @@ export const StoryWrapper = observer(
     const columns = state.core.columns.visibleColumns;
 
     return (
-      <Box
-        width="800px"
-        height="500px"
-        display="flex"
-        flexDirection="column"
-        borderWidth="1px"
-        borderColor="gray.200"
-      >
+      <Box width="800px" height="500px" display="flex" flexDirection="column">
         <Flex
           px={3}
-          py={2}
-          gap={2}
+          pt={2}
+          mb="48px"
           alignItems="center"
-          borderBottom="1px solid"
-          borderColor="gray.100"
+          justifyContent="space-between"
         >
-          <SearchWidget model={state.core.search} />
-          <FilterWidget model={state.core.filters} availableFields={columns} />
-          <SortingsWidget
-            model={state.core.sorts}
-            availableFields={columns}
-            onChange={noop}
+          <Breadcrumbs
+            segments={[{ label: 'Database' }, { label: 'invoices' }]}
+            highlightLast={false}
+            onSegmentClick={noop}
+            action={<PlusButton tooltip="New row" onClick={noop} />}
           />
+          <Flex alignItems="center" gap="8px">
+            <SearchWidget model={state.core.search} />
+            <FilterWidget
+              model={state.core.filters}
+              availableFields={columns}
+            />
+            <SortingsWidget
+              model={state.core.sorts}
+              availableFields={columns}
+              onChange={noop}
+            />
+          </Flex>
         </Flex>
 
         <Box flex={1}>
@@ -98,14 +103,7 @@ export const StoryWrapper = observer(
           />
         </Box>
 
-        <Flex
-          px={3}
-          py={2}
-          alignItems="center"
-          justifyContent="space-between"
-          borderTop="1px solid"
-          borderColor="gray.100"
-        >
+        <Flex px={3} py={2} alignItems="center" justifyContent="space-between">
           <RowCountWidget model={state.rowCount} />
           <ViewSettingsBadge model={state.core.viewBadge} />
         </Flex>

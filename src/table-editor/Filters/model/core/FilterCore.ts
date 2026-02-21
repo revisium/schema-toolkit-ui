@@ -85,6 +85,13 @@ export class FilterCore {
     return this._treeOps.isEmpty();
   }
 
+  hasFilterForField(field: string): boolean {
+    if (!this._committedHasFilters) {
+      return false;
+    }
+    return this._treeOps.hasConditionForField(field);
+  }
+
   get showBadge(): boolean {
     return this.totalConditionCount > 0 || this.hasActiveFilters;
   }

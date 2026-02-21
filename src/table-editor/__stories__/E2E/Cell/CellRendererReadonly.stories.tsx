@@ -110,45 +110,25 @@ const MultiReadonlyWrapper = observer(() => {
 
   return (
     <Flex direction="column" gap="8px" onKeyDown={handleKeyDown}>
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        data-testid="readonly-string-wrapper"
-      >
+      <Box width="200px" data-testid="readonly-string-wrapper">
         <CellRenderer
           cell={state.greetingCell}
           onSearchForeignKey={mockSearchForeignKey}
         />
       </Box>
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        data-testid="readonly-number-wrapper"
-      >
+      <Box width="200px" data-testid="readonly-number-wrapper">
         <CellRenderer
           cell={state.totalCell}
           onSearchForeignKey={mockSearchForeignKey}
         />
       </Box>
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        data-testid="regular-string-wrapper"
-      >
+      <Box width="200px" data-testid="regular-string-wrapper">
         <CellRenderer
           cell={state.nameCell}
           onSearchForeignKey={mockSearchForeignKey}
         />
       </Box>
-      <Box
-        width="200px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        data-testid="readonly-boolean-wrapper"
-      >
+      <Box width="200px" data-testid="readonly-boolean-wrapper">
         <CellRenderer
           cell={state.expensiveCell}
           onSearchForeignKey={mockSearchForeignKey}
