@@ -99,6 +99,7 @@ const EditableWrapper = ({
           onChange?.(v);
         },
         onBlur,
+        tooltip: 'Rename row',
       }}
     />
   );

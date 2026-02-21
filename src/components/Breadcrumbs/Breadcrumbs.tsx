@@ -18,6 +18,7 @@ export interface BreadcrumbEditableProps {
   value: string;
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
+  tooltip?: string;
   dataTestId?: string;
 }
 
@@ -78,6 +79,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
                 value={editable.value}
                 onChange={editable.onChange}
                 onBlur={editable.onBlur}
+                tooltip={editable.tooltip}
                 dataTestId={editable.dataTestId}
               />
             </Breadcrumb.Item>

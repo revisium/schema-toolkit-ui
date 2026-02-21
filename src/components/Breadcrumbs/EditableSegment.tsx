@@ -1,6 +1,7 @@
 import { Box } from '@chakra-ui/react';
 import React, { useCallback, useRef, useState } from 'react';
 import { useContentEditable } from '../../hooks/useContentEditable';
+import { Tooltip } from '../Tooltip';
 import { type BreadcrumbEditableProps } from './Breadcrumbs';
 import {
   BREADCRUMB_BORDER_RADIUS,
@@ -13,6 +14,7 @@ export const EditableSegment: React.FC<BreadcrumbEditableProps> = ({
   value,
   onChange,
   onBlur,
+  tooltip,
   dataTestId,
 }) => {
   const [focused, setFocused] = useState(false);
@@ -51,7 +53,7 @@ export const EditableSegment: React.FC<BreadcrumbEditableProps> = ({
     elementRef.current?.focus();
   }, []);
 
-  return (
+  const box = (
     <Box
       borderRadius={BREADCRUMB_BORDER_RADIUS}
       px={BREADCRUMB_PADDING}
@@ -78,4 +80,19 @@ export const EditableSegment: React.FC<BreadcrumbEditableProps> = ({
       />
     </Box>
   );
+
+  if (tooltip) {
+    return (
+      <Tooltip
+        content={tooltip}
+        openDelay={300}
+        open={focused ? false : undefined}
+        closeOnClick={false}
+      >
+        {box}
+      </Tooltip>
+    );
+  }
+
+  return box;
 };

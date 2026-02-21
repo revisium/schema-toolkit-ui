@@ -38,10 +38,12 @@ const EditableWrapper = ({
   onSegmentClick,
   onChange,
   onBlur,
+  tooltip,
 }: {
   onSegmentClick?: BreadcrumbsProps['onSegmentClick'];
   onChange?: (value: string) => void;
   onBlur?: (value: string) => void;
+  tooltip?: string;
 }) => {
   const [value, setValue] = useState('john');
 
@@ -60,6 +62,7 @@ const EditableWrapper = ({
           onChange?.(v);
         },
         onBlur,
+        tooltip,
         dataTestId: 'editable',
       }}
     />
@@ -160,6 +163,7 @@ export const EditableWorkflow: Story = {
       onSegmentClick={onSegmentClickSpy}
       onChange={onChangeSpy}
       onBlur={onBlurSpy}
+      tooltip="Rename row"
     />
   ),
   play: async ({ canvasElement }) => {
@@ -174,6 +178,14 @@ export const EditableWorkflow: Story = {
     const separators = canvas.getAllByText('/');
     expect(separators).toHaveLength(2);
 
+    const body = within(document.body);
+    const editableParent = editable.parentElement!;
+    await userEvent.hover(editableParent);
+    await waitFor(() => {
+      expect(body.getByText('Rename row')).toBeVisible();
+    });
+    await userEvent.unhover(editableParent);
+
     await userEvent.click(canvas.getByTestId('seg-0'));
     await waitFor(() => {
       expect(onSegmentClickSpy).toHaveBeenCalledTimes(1);
@@ -183,6 +195,10 @@ export const EditableWorkflow: Story = {
     editable.focus();
     await waitFor(() => {
       expect(editable).toHaveFocus();
+    });
+
+    await waitFor(() => {
+      expect(body.queryByText('Rename row')).not.toBeInTheDocument();
     });
 
     const selection = window.getSelection()!;
@@ -205,6 +221,12 @@ export const EditableWorkflow: Story = {
       expect(onBlurSpy).toHaveBeenCalledTimes(1);
       expect(onBlurSpy).toHaveBeenCalledWith('test');
     });
+
+    await userEvent.hover(editableParent);
+    await waitFor(() => {
+      expect(body.getByText('Rename row')).toBeVisible();
+    });
+    await userEvent.unhover(editableParent);
 
     onChangeSpy.mockClear();
     onBlurSpy.mockClear();
