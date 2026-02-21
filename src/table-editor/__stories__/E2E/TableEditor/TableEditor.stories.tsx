@@ -150,8 +150,11 @@ export const EditableWorkflow: Story = {
 
     await userEvent.keyboard('{Escape}');
 
-    // 3. Search workflow: type "Alice" → verify debounced query
-    const searchInput = canvas.getByTestId('search-input');
+    // 3. Search workflow: expand search → type "Alice" → verify debounced query
+    const searchTrigger = canvas.getByTestId('search-trigger');
+    await userEvent.click(searchTrigger);
+
+    const searchInput = await waitFor(() => canvas.getByTestId('search-input'));
     await userEvent.type(searchInput, 'Alice');
 
     expect(searchInput).toHaveValue('Alice');
@@ -303,7 +306,10 @@ export const ReadonlyWorkflow: Story = {
     await userEvent.keyboard('{Escape}');
 
     // 6. Search still works in readonly
-    const searchInput = canvas.getByTestId('search-input');
+    const searchTrigger2 = canvas.getByTestId('search-trigger');
+    await userEvent.click(searchTrigger2);
+
+    const searchInput = await waitFor(() => canvas.getByTestId('search-input'));
     await userEvent.type(searchInput, 'Bob');
 
     expect(searchInput).toHaveValue('Bob');

@@ -138,6 +138,27 @@ export class FilterTreeOps {
     return conditionsNode.length === 0 && groupsNode.length === 0;
   }
 
+  hasConditionForField(field: string): boolean {
+    const rootConditions = this._row.root.child('conditions');
+    for (let i = 0; i < rootConditions.length; i++) {
+      if (rootConditions.at(i)?.child('field').value === field) {
+        return true;
+      }
+    }
+    const groups = this._row.root.child('groups');
+    for (let gi = 0; gi < groups.length; gi++) {
+      const groupConditions = groups.at(gi)?.child('conditions');
+      if (groupConditions) {
+        for (let ci = 0; ci < groupConditions.length; ci++) {
+          if (groupConditions.at(ci)?.child('field').value === field) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   removeEmptyGroups(): void {
     const groupsNode = this._row.root.child('groups');
     for (let i = groupsNode.length - 1; i >= 0; i--) {

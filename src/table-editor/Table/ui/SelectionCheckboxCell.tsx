@@ -23,7 +23,7 @@ export const SelectionCheckboxCell: FC<SelectionCheckboxCellProps> = ({
       left={0}
       zIndex={1}
       bg="white"
-      boxShadow="inset -1px 0 0 0 var(--chakra-colors-gray-100)"
+      boxShadow="inset 0 -1px 0 0 var(--chakra-colors-gray-100), inset -1px 0 0 0 var(--chakra-colors-gray-100)"
     >
       <Flex alignItems="center" justifyContent="center" height="100%">
         <Checkbox.Root

@@ -51,7 +51,7 @@ const LargeTableWrapper = observer(
     }, [state]);
 
     return (
-      <Box width="500px" borderWidth="1px" borderColor="gray.200">
+      <Box width="500px">
         <TableWidget
           rows={state.rows}
           columnsModel={state.columnsModel}

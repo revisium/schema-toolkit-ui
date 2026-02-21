@@ -32,7 +32,8 @@ export const FilterWidget = observer(
             <IconButton
               aria-label="Filters"
               variant="ghost"
-              size="sm"
+              size="xs"
+              color="gray.400"
               data-testid="filter-trigger"
             >
               <LuFilter />

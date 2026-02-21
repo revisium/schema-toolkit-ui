@@ -9,6 +9,7 @@ import type { SortModel } from '../../../Sortings/model/SortModel.js';
 import { ResizeHandle } from '../ResizeHandle.js';
 import { SortIndicator } from './SortIndicator.js';
 import { PinIndicator } from './PinIndicator.js';
+import { FilterIndicator } from './FilterIndicator.js';
 import { ColumnHeaderMenu } from './ColumnHeaderMenu.js';
 import { getFieldTypeIcon } from './getFieldTypeIcon.js';
 
@@ -45,10 +46,17 @@ function buildHeaderShadowCss(
   };
 }
 
-function getStickyBorder(side: 'left' | 'right'): string {
-  return side === 'left'
-    ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
-    : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
+const BOTTOM_BORDER_SHADOW = 'inset 0 -1px 0 0 var(--chakra-colors-gray-100)';
+
+function getHeaderBoxShadow(stickyPosition?: StickyPosition): string {
+  if (!stickyPosition) {
+    return BOTTOM_BORDER_SHADOW;
+  }
+  const stickyBorder =
+    stickyPosition.side === 'left'
+      ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
+      : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
+  return `${BOTTOM_BORDER_SHADOW}, ${stickyBorder}`;
 }
 
 interface ColumnHeaderProps {
@@ -102,14 +110,9 @@ export const ColumnHeader = observer(
         width={w}
         minWidth={w}
         maxWidth={w}
-        borderRight={isSticky ? undefined : '1px solid'}
-        borderColor={isSticky ? undefined : 'gray.100'}
-        borderBottom="1px solid"
-        borderBottomColor="gray.200"
-        bg="gray.50"
-        boxShadow={
-          stickyPosition ? getStickyBorder(stickyPosition.side) : undefined
-        }
+        height="inherit"
+        bg="white"
+        boxShadow={getHeaderBoxShadow(stickyPosition)}
         textAlign="left"
         fontWeight="normal"
         p={0}
@@ -130,7 +133,8 @@ export const ColumnHeader = observer(
             <Flex
               alignItems="center"
               height="100%"
-              px="8px"
+              pl="8px"
+              pr="16px"
               gap="4px"
               cursor="pointer"
               transition="background 0.15s"
@@ -151,7 +155,7 @@ export const ColumnHeader = observer(
               <Text
                 fontSize="sm"
                 fontWeight="500"
-                color="gray.600"
+                color="gray.400"
                 whiteSpace="nowrap"
                 textOverflow="ellipsis"
                 overflow="hidden"
@@ -164,6 +168,12 @@ export const ColumnHeader = observer(
                 {column.label}
               </Text>
               <PinIndicator field={column.field} columnsModel={columnsModel} />
+              {filterModel && !column.hasFormula && (
+                <FilterIndicator
+                  field={column.field}
+                  filterModel={filterModel}
+                />
+              )}
               {sortModel && !column.hasFormula && (
                 <SortIndicator field={column.field} sortModel={sortModel} />
               )}

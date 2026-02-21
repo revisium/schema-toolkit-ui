@@ -25,7 +25,6 @@ export const TableRowComponent: React.FC<TableRowProps> = ({
       style={{
         ...style,
         height: '40px',
-        borderBottom: '1px solid var(--chakra-colors-gray-100)',
       }}
     >
       {children}

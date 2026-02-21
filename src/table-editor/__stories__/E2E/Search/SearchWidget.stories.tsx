@@ -42,7 +42,11 @@ export const FullSearchWorkflow: Story = {
   tags: ['test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const input = canvas.getByTestId('search-input');
+
+    const trigger = canvas.getByTestId('search-trigger');
+    await userEvent.click(trigger);
+
+    const input = await waitFor(() => canvas.getByTestId('search-input'));
 
     await userEvent.type(input, 'hello');
     expect(input).toHaveValue('hello');

@@ -129,10 +129,17 @@ function computeStickyProps(
   };
 }
 
-function getStickyBorder(side: 'left' | 'right'): string {
-  return side === 'left'
-    ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
-    : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
+const BOTTOM_BORDER_SHADOW = 'inset 0 -1px 0 0 var(--chakra-colors-gray-100)';
+
+function getCellBoxShadow(isSticky: boolean, side: 'left' | 'right'): string {
+  if (!isSticky) {
+    return BOTTOM_BORDER_SHADOW;
+  }
+  const stickyBorder =
+    side === 'left'
+      ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
+      : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
+  return `${BOTTOM_BORDER_SHADOW}, ${stickyBorder}`;
 }
 
 export const DataRow = observer(
@@ -204,11 +211,7 @@ export const DataRow = observer(
               }
               zIndex={sticky.isSticky ? 1 : undefined}
               bg={sticky.isSticky ? 'white' : undefined}
-              boxShadow={
-                sticky.isSticky
-                  ? getStickyBorder(sticky.boundarySide)
-                  : undefined
-              }
+              boxShadow={getCellBoxShadow(sticky.isSticky, sticky.boundarySide)}
               css={buildCellCss(
                 sticky.isBoundary,
                 sticky.boundarySide,
@@ -242,7 +245,7 @@ export const DataRow = observer(
             </Box>
           );
         })}
-        <Box as="td" width="100%" p={0} />
+        <Box as="td" width="100%" p={0} boxShadow={BOTTOM_BORDER_SHADOW} />
         {addColumnStickyRight && (
           <Box
             as="td"
@@ -254,7 +257,7 @@ export const DataRow = observer(
             right={0}
             zIndex={1}
             bg="white"
-            boxShadow="inset 1px 0 0 0 var(--chakra-colors-gray-100)"
+            boxShadow={`${BOTTOM_BORDER_SHADOW}, inset 1px 0 0 0 var(--chakra-colors-gray-100)`}
           />
         )}
       </>
