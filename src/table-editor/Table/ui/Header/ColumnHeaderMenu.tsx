@@ -1,6 +1,6 @@
 import { Menu, Text } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import { LuCopy, LuFilter } from 'react-icons/lu';
+import { LuCopy, LuFilter, LuPin, LuPinOff } from 'react-icons/lu';
 import { PiEyeSlash, PiListBullets } from 'react-icons/pi';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
 import type { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
@@ -16,6 +16,7 @@ interface ColumnHeaderMenuProps {
   sortModel?: SortModel;
   filterModel?: FilterModel;
   onCopyPath?: (path: string) => void;
+  onClose?: () => void;
 }
 
 export const ColumnHeaderMenu = observer(
@@ -25,6 +26,7 @@ export const ColumnHeaderMenu = observer(
     sortModel,
     filterModel,
     onCopyPath,
+    onClose,
   }: ColumnHeaderMenuProps) => {
     const canRemove = columnsModel.canRemoveColumn;
     const availableFields = columnsModel.availableFieldsToAdd;
@@ -32,6 +34,10 @@ export const ColumnHeaderMenu = observer(
     const canMove =
       columnsModel.canMoveLeft(column.field) ||
       columnsModel.canMoveRight(column.field);
+
+    const isPinned = columnsModel.isPinned(column.field);
+    const canPinLeft = columnsModel.canPinLeft(column.field);
+    const canPinRight = columnsModel.canPinRight(column.field);
 
     const handleHide = () => {
       columnsModel.hideColumn(column.field);
@@ -54,10 +60,24 @@ export const ColumnHeaderMenu = observer(
 
     const handleInsertBefore = (field: string) => {
       columnsModel.insertColumnBefore(column.field, field);
+      onClose?.();
     };
 
     const handleInsertAfter = (field: string) => {
       columnsModel.insertColumnAfter(column.field, field);
+      onClose?.();
+    };
+
+    const handlePinLeft = () => {
+      columnsModel.pinLeft(column.field);
+    };
+
+    const handlePinRight = () => {
+      columnsModel.pinRight(column.field);
+    };
+
+    const handleUnpin = () => {
+      columnsModel.unpin(column.field);
     };
 
     return (
@@ -84,6 +104,31 @@ export const ColumnHeaderMenu = observer(
               columnsModel={columnsModel}
             />
             <Menu.Separator />
+          </>
+        )}
+        {isPinned ? (
+          <>
+            <Menu.Item value="unpin" onClick={handleUnpin}>
+              <LuPinOff />
+              <Text>Unpin column</Text>
+            </Menu.Item>
+            <Menu.Separator />
+          </>
+        ) : (
+          <>
+            {canPinLeft && (
+              <Menu.Item value="pin-left" onClick={handlePinLeft}>
+                <LuPin />
+                <Text>Pin to left</Text>
+              </Menu.Item>
+            )}
+            {canPinRight && (
+              <Menu.Item value="pin-right" onClick={handlePinRight}>
+                <LuPin />
+                <Text>Pin to right</Text>
+              </Menu.Item>
+            )}
+            {(canPinLeft || canPinRight) && <Menu.Separator />}
           </>
         )}
         {hasAvailableFields && (

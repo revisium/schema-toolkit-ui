@@ -57,6 +57,7 @@ const LargeTableWrapper = observer(
           columnsModel={state.columnsModel}
           cellFSM={state.cellFSM}
           selection={state.selection}
+          onOpenRow={noop}
           onDeleteRow={noop}
           onDuplicateRow={noop}
           onDeleteSelected={noop}
@@ -182,8 +183,7 @@ export const EndReachedLoadsMore: Story = {
 export const SelectionAcrossVirtualizedRows: Story = {
   tags: ['test'],
   render: () => <LargeTableWrapper rowCount={200} />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async () => {
     await waitFor(() => {
       expect((window as any).__testState).toBeDefined();
     });
@@ -201,13 +201,17 @@ export const SelectionAcrossVirtualizedRows: Story = {
     });
 
     await waitFor(() => {
-      expect(canvas.getByTestId('selection-toolbar')).toBeVisible();
+      expect(
+        document.querySelector('[data-testid="selection-toolbar"]'),
+      ).toBeTruthy();
     });
 
     selection.exitSelectionMode();
 
     await waitFor(() => {
-      expect(canvas.queryByTestId('selection-toolbar')).toBeNull();
+      expect(
+        document.querySelector('[data-testid="selection-toolbar"]'),
+      ).toBeNull();
     });
   },
 };

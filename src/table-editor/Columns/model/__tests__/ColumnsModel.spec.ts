@@ -384,6 +384,497 @@ describe('ColumnsModel', () => {
     });
   });
 
+  describe('pinning', () => {
+    beforeEach(() => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+        col({ field: 'e' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c', 'd', 'e']);
+    });
+
+    it('pinLeft moves column to end of pinned-left zone', () => {
+      model.pinLeft('b');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'b',
+        'a',
+        'c',
+        'd',
+        'e',
+      ]);
+      expect(model.getPinState('b')).toBe('left');
+    });
+
+    it('pinRight moves column to start of pinned-right zone', () => {
+      model.pinRight('d');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'b',
+        'c',
+        'e',
+        'd',
+      ]);
+      expect(model.getPinState('d')).toBe('right');
+    });
+
+    it('multiple pinLeft preserves order', () => {
+      model.pinLeft('a');
+      model.pinLeft('c');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'c',
+        'b',
+        'd',
+        'e',
+      ]);
+      expect(model.pinnedLeftCount).toBe(2);
+    });
+
+    it('multiple pinRight preserves order', () => {
+      model.pinRight('e');
+      model.pinRight('c');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'b',
+        'd',
+        'c',
+        'e',
+      ]);
+      expect(model.pinnedRightCount).toBe(2);
+    });
+
+    it('unpin from left moves to start of middle zone', () => {
+      model.pinLeft('a');
+      model.pinLeft('b');
+      model.unpin('a');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'b',
+        'a',
+        'c',
+        'd',
+        'e',
+      ]);
+      expect(model.getPinState('a')).toBeUndefined();
+    });
+
+    it('unpin from right moves to end of middle zone', () => {
+      model.pinRight('d');
+      model.pinRight('e');
+      model.unpin('e');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'b',
+        'c',
+        'e',
+        'd',
+      ]);
+      expect(model.getPinState('e')).toBeUndefined();
+    });
+
+    it('isPinned returns correct state', () => {
+      expect(model.isPinned('a')).toBe(false);
+      model.pinLeft('a');
+      expect(model.isPinned('a')).toBe(true);
+    });
+
+    it('canPinLeft returns false when already pinned left', () => {
+      model.pinLeft('a');
+      expect(model.canPinLeft('a')).toBe(false);
+      expect(model.canPinRight('a')).toBe(true);
+    });
+
+    it('canPinRight returns false when already pinned right', () => {
+      model.pinRight('a');
+      expect(model.canPinRight('a')).toBe(false);
+      expect(model.canPinLeft('a')).toBe(true);
+    });
+
+    it('canUnpin returns false for unpinned column', () => {
+      expect(model.canUnpin('a')).toBe(false);
+      model.pinLeft('a');
+      expect(model.canUnpin('a')).toBe(true);
+    });
+
+    it('hideColumn also unpins', () => {
+      model.pinLeft('a');
+      expect(model.isPinned('a')).toBe(true);
+      model.hideColumn('a');
+      expect(model.isPinned('a')).toBe(false);
+    });
+
+    it('resetToDefaults clears pins', () => {
+      model.pinLeft('a');
+      model.pinRight('e');
+      model.resetToDefaults();
+      expect(model.pinnedLeftCount).toBe(0);
+      expect(model.pinnedRightCount).toBe(0);
+    });
+
+    it('hideAll clears pins', () => {
+      model.pinLeft('a');
+      model.pinRight('e');
+      model.hideAll();
+      expect(model.pinnedLeftCount).toBe(0);
+      expect(model.pinnedRightCount).toBe(0);
+    });
+
+    it('showColumn inserts before pinned-right zone', () => {
+      model.hideColumn('c');
+      model.pinRight('e');
+      model.showColumn('c');
+      const fields = model.visibleColumns.map((c) => c.field);
+      const cIndex = fields.indexOf('c');
+      const eIndex = fields.indexOf('e');
+      expect(cIndex).toBeLessThan(eIndex);
+    });
+
+    it('showColumn inserts before pinned-right zone with multiple pins', () => {
+      model.hideColumn('c');
+      model.pinRight('d');
+      model.pinRight('e');
+      model.showColumn('c');
+      const fields = model.visibleColumns.map((c) => c.field);
+      const cIndex = fields.indexOf('c');
+      const dIndex = fields.indexOf('d');
+      expect(cIndex).toBeLessThan(dIndex);
+    });
+
+    it('addAll places columns before pinned-right zone', () => {
+      model.hideColumn('c');
+      model.pinRight('e');
+      model.addAll();
+      const fields = model.visibleColumns.map((c) => c.field);
+      const cIndex = fields.indexOf('c');
+      const eIndex = fields.indexOf('e');
+      expect(cIndex).toBeLessThan(eIndex);
+    });
+
+    it('pinLeft then pinRight re-pins to right', () => {
+      model.pinLeft('b');
+      model.pinRight('b');
+      expect(model.getPinState('b')).toBe('right');
+      expect(model.pinnedLeftCount).toBe(0);
+      expect(model.pinnedRightCount).toBe(1);
+    });
+
+    it('insertColumnBefore between two pinned-left auto-pins', () => {
+      model.pinLeft('a');
+      model.pinLeft('b');
+      model.hideColumn('d');
+      // [a, b, c, e] → insert d before b → between a(pinLeft) and b(pinLeft)
+      model.insertColumnBefore('b', 'd');
+      expect(model.getPinState('d')).toBe('left');
+      expect(model.pinnedLeftCount).toBe(3);
+    });
+
+    it('insertColumnAfter between two pinned-left auto-pins', () => {
+      model.pinLeft('a');
+      model.pinLeft('b');
+      model.hideColumn('d');
+      // [a, b, c, e] → insert d after a → between a(pinLeft) and b(pinLeft)
+      model.insertColumnAfter('a', 'd');
+      expect(model.getPinState('d')).toBe('left');
+      expect(model.pinnedLeftCount).toBe(3);
+    });
+
+    it('insertColumnBefore between two pinned-right auto-pins', () => {
+      model.pinRight('d');
+      model.pinRight('e');
+      model.hideColumn('c');
+      // [a, b, e, d] → insert c before d → between e(pinRight) and d(pinRight)
+      model.insertColumnBefore('d', 'c');
+      expect(model.getPinState('c')).toBe('right');
+      expect(model.pinnedRightCount).toBe(3);
+    });
+
+    it('insertColumnAfter between two pinned-right auto-pins', () => {
+      model.pinRight('d');
+      model.pinRight('e');
+      model.hideColumn('c');
+      // [a, b, e, d] → insert c after e → between e(pinRight) and d(pinRight)
+      model.insertColumnAfter('e', 'c');
+      expect(model.getPinState('c')).toBe('right');
+      expect(model.pinnedRightCount).toBe(3);
+    });
+
+    it('insertColumnAfter last pinned-left does not auto-pin', () => {
+      model.pinLeft('a');
+      model.pinLeft('b');
+      model.hideColumn('d');
+      // [a, b, c, e] → insert d after b → after pinLeft zone boundary
+      model.insertColumnAfter('b', 'd');
+      expect(model.getPinState('d')).toBeUndefined();
+      expect(model.pinnedLeftCount).toBe(2);
+    });
+
+    it('insertColumnAfter single pinned-left does not auto-pin', () => {
+      model.pinLeft('a');
+      model.hideColumn('d');
+      // [a, b, c, e] → insert d after a → after pinLeft zone boundary
+      model.insertColumnAfter('a', 'd');
+      expect(model.getPinState('d')).toBeUndefined();
+      expect(model.pinnedLeftCount).toBe(1);
+    });
+
+    it('insertColumnBefore first pinned-right does not auto-pin', () => {
+      model.pinRight('d');
+      model.pinRight('e');
+      model.hideColumn('c');
+      // [a, b, e, d] → insert c before e → before pinRight zone boundary
+      model.insertColumnBefore('e', 'c');
+      expect(model.getPinState('c')).toBeUndefined();
+      expect(model.pinnedRightCount).toBe(2);
+    });
+
+    it('insertColumnBefore single pinned-right does not auto-pin', () => {
+      model.pinRight('e');
+      model.hideColumn('d');
+      // [a, b, c, e] → insert d before e → before pinRight zone boundary
+      model.insertColumnBefore('e', 'd');
+      expect(model.getPinState('d')).toBeUndefined();
+      expect(model.pinnedRightCount).toBe(1);
+    });
+
+    it('insertColumnAfter last pinned-right does not auto-pin', () => {
+      model.pinRight('d');
+      model.pinRight('e');
+      model.hideColumn('c');
+      // [a, b, e, d] → insert c after d → after last pinRight (end of array)
+      model.insertColumnAfter('d', 'c');
+      expect(model.getPinState('c')).toBeUndefined();
+      expect(model.pinnedRightCount).toBe(2);
+    });
+
+    it('insertColumnBefore first pinned-left does not auto-pin', () => {
+      model.pinLeft('a');
+      model.pinLeft('b');
+      model.hideColumn('d');
+      // [a, b, c, e] → insert d before a → before first pinLeft
+      model.insertColumnBefore('a', 'd');
+      expect(model.getPinState('d')).toBeUndefined();
+      expect(model.pinnedLeftCount).toBe(2);
+    });
+
+    it('insertColumnBefore unpinned target does not auto-pin', () => {
+      model.pinLeft('a');
+      model.hideColumn('d');
+      model.insertColumnBefore('c', 'd');
+      expect(model.getPinState('d')).toBeUndefined();
+    });
+
+    it('insertColumnAfter unpinned target does not auto-pin', () => {
+      model.pinLeft('a');
+      model.pinRight('e');
+      model.hideColumn('d');
+      model.insertColumnAfter('c', 'd');
+      expect(model.getPinState('d')).toBeUndefined();
+    });
+  });
+
+  describe('pinning — zone-aware movement', () => {
+    beforeEach(() => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+        col({ field: 'e' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c', 'd', 'e']);
+      model.pinLeft('a');
+      model.pinRight('e');
+    });
+
+    it('canMoveLeft respects pinned-left boundary', () => {
+      expect(model.canMoveLeft('b')).toBe(false);
+      expect(model.canMoveLeft('c')).toBe(true);
+    });
+
+    it('canMoveRight respects pinned-right boundary', () => {
+      expect(model.canMoveRight('d')).toBe(false);
+      expect(model.canMoveRight('c')).toBe(true);
+    });
+
+    it('moveColumnLeft does not cross into left zone', () => {
+      model.moveColumnLeft('b');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+      ]);
+    });
+
+    it('moveColumnRight does not cross into right zone', () => {
+      model.moveColumnRight('d');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+      ]);
+    });
+
+    it('moveColumnToStart moves to start of zone', () => {
+      model.moveColumnToStart('d');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'd',
+        'b',
+        'c',
+        'e',
+      ]);
+    });
+
+    it('moveColumnToEnd moves to end of zone', () => {
+      model.moveColumnToEnd('b');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'c',
+        'd',
+        'b',
+        'e',
+      ]);
+    });
+
+    it('move within pinned-left zone works', () => {
+      model.pinLeft('b');
+      expect(model.canMoveLeft('b')).toBe(true);
+      model.moveColumnLeft('b');
+      expect(model.visibleColumns.map((c) => c.field)).toEqual([
+        'b',
+        'a',
+        'c',
+        'd',
+        'e',
+      ]);
+    });
+  });
+
+  describe('pinning — sticky offsets', () => {
+    beforeEach(() => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+        col({ field: 'e' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c', 'd', 'e']);
+    });
+
+    it('getColumnStickyLeft returns undefined for unpinned', () => {
+      expect(model.getColumnStickyLeft('a', 0)).toBeUndefined();
+    });
+
+    it('getColumnStickyLeft returns selectionWidth for first pinned-left', () => {
+      model.pinLeft('a');
+      expect(model.getColumnStickyLeft('a', 40)).toBe(40);
+      expect(model.getColumnStickyLeft('a', 0)).toBe(0);
+    });
+
+    it('getColumnStickyLeft cumulates widths', () => {
+      model.pinLeft('a');
+      model.setColumnWidth('a', 200);
+      model.pinLeft('b');
+      expect(model.getColumnStickyLeft('b', 40)).toBe(240);
+    });
+
+    it('getColumnStickyRight returns undefined for unpinned', () => {
+      expect(model.getColumnStickyRight('a')).toBeUndefined();
+    });
+
+    it('getColumnStickyRight returns 0 for last pinned-right', () => {
+      model.pinRight('e');
+      expect(model.getColumnStickyRight('e')).toBe(0);
+    });
+
+    it('getColumnStickyRight cumulates widths of columns after', () => {
+      model.pinRight('d');
+      model.pinRight('e');
+      model.setColumnWidth('d', 200);
+      expect(model.getColumnStickyRight('e')).toBe(200);
+    });
+
+    it('isStickyLeftBoundary is true for rightmost pinned-left', () => {
+      model.pinLeft('a');
+      model.pinLeft('b');
+      expect(model.isStickyLeftBoundary('a')).toBe(false);
+      expect(model.isStickyLeftBoundary('b')).toBe(true);
+    });
+
+    it('isStickyRightBoundary is true for leftmost pinned-right', () => {
+      model.pinRight('d');
+      model.pinRight('e');
+      expect(model.isStickyRightBoundary('e')).toBe(true);
+      expect(model.isStickyRightBoundary('d')).toBe(false);
+    });
+
+    it('resolveColumnWidth returns default for unset', () => {
+      expect(model.resolveColumnWidth('a')).toBe(150);
+    });
+
+    it('resolveColumnWidth returns set width', () => {
+      model.setColumnWidth('a', 300);
+      expect(model.resolveColumnWidth('a')).toBe(300);
+    });
+  });
+
+  describe('pinning — serialization round-trip', () => {
+    it('serialize includes pinned state', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.reorderColumns(['a', 'b']);
+      model.pinLeft('a');
+      const result = model.serializeToViewColumns();
+      expect(result[0]).toEqual({ field: 'data.a', pinned: 'left' });
+      expect(result[1]).toEqual({ field: 'data.b' });
+    });
+
+    it('apply restores pinned state', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'left' },
+        { field: 'data.b', pinned: 'right' },
+      ]);
+      expect(model.getPinState('a')).toBe('left');
+      expect(model.getPinState('b')).toBe('right');
+    });
+
+    it('round-trip preserves pinned state', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c']);
+      model.pinLeft('a');
+      model.pinRight('c');
+      model.setColumnWidth('b', 200);
+      const serialized = model.serializeToViewColumns();
+
+      const model2 = new ColumnsModel();
+      model2.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model2.applyViewColumns(serialized);
+      expect(model2.getPinState('a')).toBe('left');
+      expect(model2.getPinState('c')).toBe('right');
+      expect(model2.getColumnWidth('b')).toBe(200);
+      expect(model2.visibleColumns.map((c) => c.field)).toEqual([
+        'a',
+        'b',
+        'c',
+      ]);
+    });
+  });
+
   describe('onChange', () => {
     it('callback fires on changes', () => {
       const onChange = jest.fn();

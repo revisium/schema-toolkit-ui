@@ -16,6 +16,7 @@ export const TableRowComponent: React.FC<TableRowProps> = ({
   ...props
 }) => {
   const row = context?.rows[index];
+
   return (
     <tr
       {...props}

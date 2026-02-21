@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 import {
   obj,
   str,
@@ -39,10 +40,21 @@ const noop = () => {};
 export interface StoryWrapperProps {
   state: TableEditorStoryState;
   readonly?: boolean;
+  onOpenRow?: (rowId: string) => void;
+  onDeleteRow?: (rowId: string) => void;
+  onDuplicateRow?: (rowId: string) => void;
+  onDeleteSelected?: (ids: string[]) => void;
 }
 
 export const StoryWrapper = observer(
-  ({ state, readonly = false }: StoryWrapperProps) => {
+  ({
+    state,
+    readonly = false,
+    onOpenRow,
+    onDeleteRow,
+    onDuplicateRow,
+    onDeleteSelected,
+  }: StoryWrapperProps) => {
     const columns = state.core.columns.visibleColumns;
 
     return (
@@ -79,9 +91,10 @@ export const StoryWrapper = observer(
             selection={state.core.selection}
             sortModel={state.core.sorts}
             filterModel={state.core.filters}
-            onDeleteRow={readonly ? undefined : noop}
-            onDuplicateRow={readonly ? undefined : noop}
-            onDeleteSelected={readonly ? undefined : noop}
+            onOpenRow={onOpenRow}
+            onDeleteRow={readonly ? undefined : onDeleteRow}
+            onDuplicateRow={readonly ? undefined : onDuplicateRow}
+            onDeleteSelected={readonly ? undefined : onDeleteSelected}
           />
         </Box>
 
@@ -101,6 +114,11 @@ export const StoryWrapper = observer(
   },
 );
 
+const onOpenRow = fn().mockName('onOpenRow');
+const onDeleteRow = fn().mockName('onDeleteRow');
+const onDuplicateRow = fn().mockName('onDuplicateRow');
+const onDeleteSelected = fn().mockName('onDeleteSelected');
+
 const DefaultWrapper = observer(() => {
   const [state] = useState(() =>
     createTableEditorStoryState({
@@ -110,7 +128,15 @@ const DefaultWrapper = observer(() => {
     }),
   );
 
-  return <StoryWrapper state={state} />;
+  return (
+    <StoryWrapper
+      state={state}
+      onOpenRow={onOpenRow}
+      onDeleteRow={onDeleteRow}
+      onDuplicateRow={onDuplicateRow}
+      onDeleteSelected={onDeleteSelected}
+    />
+  );
 });
 
 const meta: Meta<typeof DefaultWrapper> = {
@@ -141,7 +167,15 @@ export const ManyColumns: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return (
+        <StoryWrapper
+          state={state}
+          onOpenRow={onOpenRow}
+          onDeleteRow={onDeleteRow}
+          onDuplicateRow={onDuplicateRow}
+          onDeleteSelected={onDeleteSelected}
+        />
+      );
     });
 
     return <Wrapper />;
@@ -159,7 +193,15 @@ export const EmptyTable: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return (
+        <StoryWrapper
+          state={state}
+          onOpenRow={onOpenRow}
+          onDeleteRow={onDeleteRow}
+          onDuplicateRow={onDuplicateRow}
+          onDeleteSelected={onDeleteSelected}
+        />
+      );
     });
 
     return <Wrapper />;
@@ -202,7 +244,15 @@ export const WithFormulas: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return (
+        <StoryWrapper
+          state={state}
+          onOpenRow={onOpenRow}
+          onDeleteRow={onDeleteRow}
+          onDuplicateRow={onDuplicateRow}
+          onDeleteSelected={onDeleteSelected}
+        />
+      );
     });
 
     return <Wrapper />;
@@ -228,7 +278,7 @@ export const Readonly: Story = {
         return s;
       });
 
-      return <StoryWrapper state={state} readonly />;
+      return <StoryWrapper state={state} readonly onOpenRow={onOpenRow} />;
     });
 
     return <Wrapper />;

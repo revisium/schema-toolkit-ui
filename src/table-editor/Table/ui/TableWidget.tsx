@@ -23,6 +23,7 @@ import type { CellContextActions } from './Cell/CellContextActionsContext.js';
 import { CellContextActionsContext } from './Cell/CellContextActionsContext.js';
 import { TableComponent } from './TableComponent.js';
 import { TableRowComponent } from './TableRowComponent.js';
+import { useScrollShadow } from './hooks/useScrollShadow.js';
 
 interface DeleteConfirmState {
   rowId?: string;
@@ -41,7 +42,9 @@ interface TableWidgetProps {
   sortModel?: SortModel;
   filterModel?: FilterModel;
   onSearchForeignKey?: SearchForeignKeySearchFn;
+  onOpenRow?: (rowId: string) => void;
   onDeleteSelected?: (ids: string[]) => void;
+  onDuplicateSelected?: (ids: string[]) => void;
   onDeleteRow?: (rowId: string) => void;
   onDuplicateRow?: (rowId: string) => void;
   onCopyPath?: (path: string) => void;
@@ -64,7 +67,9 @@ export const TableWidget = observer(
     sortModel,
     filterModel,
     onSearchForeignKey,
+    onOpenRow,
     onDeleteSelected,
+    onDuplicateSelected,
     onDeleteRow,
     onDuplicateRow,
     onCopyPath,
@@ -76,6 +81,8 @@ export const TableWidget = observer(
     const allRowIds = rows.map((r) => r.rowId);
     const [deleteConfirm, setDeleteConfirm] =
       useState<DeleteConfirmState | null>(null);
+
+    const { state: scrollShadow, setScrollerRef } = useScrollShadow();
 
     const handleSelectRow = useCallback(
       (rowId: string) => {
@@ -112,6 +119,10 @@ export const TableWidget = observer(
     }, []);
 
     const deleteCount = deleteConfirm?.batchIds?.length;
+
+    const canDeleteRow = Boolean(onDeleteRow || onDeleteSelected);
+    const canDuplicateRow = Boolean(onDuplicateRow);
+    const canSelect = canDeleteRow || canDuplicateRow;
 
     const contextActions = useMemo(
       (): CellContextActions => ({
@@ -212,19 +223,17 @@ export const TableWidget = observer(
       [cellFSM, rows, columnsModel],
     );
 
-    const canDeleteRow = Boolean(onDeleteRow || onDeleteSelected);
-    const canDuplicateRow = Boolean(onDuplicateRow);
-
     const itemContent = useCallback(
       (_index: number, row: RowVM) => (
         <DataRow
           row={row}
           columnsModel={columnsModel}
           showSelection={showSelection}
+          showLeftShadow={scrollShadow.showLeftShadow}
+          showRightShadow={scrollShadow.showRightShadow}
           onSearchForeignKey={onSearchForeignKey}
-          onSelectRow={
-            canDeleteRow || canDuplicateRow ? handleSelectRow : undefined
-          }
+          onOpenRow={onOpenRow}
+          onSelectRow={canSelect ? handleSelectRow : undefined}
           onDuplicateRow={canDuplicateRow ? onDuplicateRow : undefined}
           onDeleteRow={canDeleteRow ? handleDeleteRowRequest : undefined}
         />
@@ -232,7 +241,11 @@ export const TableWidget = observer(
       [
         columnsModel,
         showSelection,
+        scrollShadow.showLeftShadow,
+        scrollShadow.showRightShadow,
         onSearchForeignKey,
+        onOpenRow,
+        canSelect,
         canDeleteRow,
         canDuplicateRow,
         handleSelectRow,
@@ -249,17 +262,30 @@ export const TableWidget = observer(
           filterModel={filterModel}
           onCopyPath={onCopyPath}
           showSelection={showSelection}
+          showLeftShadow={scrollShadow.showLeftShadow}
+          showRightShadow={scrollShadow.showRightShadow}
         />
       ),
-      [columnsModel, sortModel, filterModel, onCopyPath, showSelection],
+      [
+        columnsModel,
+        sortModel,
+        filterModel,
+        onCopyPath,
+        showSelection,
+        scrollShadow.showLeftShadow,
+        scrollShadow.showRightShadow,
+      ],
     );
 
     const virtuosoContext = useMemo(
-      (): TableWidgetContext => ({ rows }),
+      (): TableWidgetContext => ({
+        rows,
+      }),
       [rows],
     );
 
-    const totalColumns = columnsModel.visibleColumns.length + 4;
+    const totalColumns =
+      columnsModel.visibleColumns.length + (showSelection ? 4 : 3);
 
     const LoadingMoreFooter = useCallback(
       () =>
@@ -313,6 +339,7 @@ export const TableWidget = observer(
                   width: 'max-content',
                   minWidth: '100%',
                   tableLayout: 'fixed',
+                  borderCollapse: 'collapse',
                 }}
               >
                 <thead>
@@ -344,11 +371,13 @@ export const TableWidget = observer(
               fixedHeaderContent={fixedHeaderContent}
               itemContent={itemContent}
               components={tableComponents}
+              scrollerRef={setScrollerRef}
             />
           )}
           <SelectionToolbar
             selection={selection}
             allRowIds={allRowIds}
+            onDuplicate={onDuplicateSelected}
             onDelete={onDeleteSelected ? handleBatchDeleteRequest : undefined}
           />
         </Box>

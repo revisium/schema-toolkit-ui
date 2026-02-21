@@ -21,6 +21,8 @@ import {
 
 ensureReactivityProvider();
 
+const noop = () => {};
+
 const READONLY_SCHEMA = obj({
   name: str({ readOnly: true }),
   age: num({ readOnly: true }),
@@ -63,7 +65,15 @@ const EditableE2EWrapper = observer(() => {
     };
   }, [state]);
 
-  return <StoryWrapper state={state} />;
+  return (
+    <StoryWrapper
+      state={state}
+      onOpenRow={noop}
+      onDeleteRow={noop}
+      onDuplicateRow={noop}
+      onDeleteSelected={noop}
+    />
+  );
 });
 
 const ReadonlyE2EWrapper = observer(() => {
@@ -225,10 +235,10 @@ export const ReadonlyWorkflow: Story = {
     expect(cellVM3.isReadOnly).toBe(true);
     expect(cellVM3.isEditable).toBe(false);
 
-    // 2. Verify no row action menus
-    expect(canvas.queryByTestId('row-menu-trigger-row-1')).toBeNull();
-    expect(canvas.queryByTestId('row-menu-trigger-row-2')).toBeNull();
-    expect(canvas.queryByTestId('row-menu-trigger-row-3')).toBeNull();
+    // 2. Verify no left zone menus (readonly has no action callbacks)
+    expect(canvas.queryByTestId('row-action-trigger-row-1')).toBeNull();
+    expect(canvas.queryByTestId('row-action-trigger-row-2')).toBeNull();
+    expect(canvas.queryByTestId('row-action-trigger-row-3')).toBeNull();
 
     // 3. Verify local badge behavior (canSave=false, add sort, revert visible, no save)
     expect(state.core.viewBadge.canSave).toBe(false);
@@ -432,7 +442,15 @@ const ManyColumnsE2EWrapper = observer(() => {
     };
   }, [state]);
 
-  return <StoryWrapper state={state} />;
+  return (
+    <StoryWrapper
+      state={state}
+      onOpenRow={noop}
+      onDeleteRow={noop}
+      onDuplicateRow={noop}
+      onDeleteSelected={noop}
+    />
+  );
 });
 
 export const FocusAfterAddColumn: Story = {
@@ -589,7 +607,13 @@ const BlurTestWrapper = observer(() => {
   return (
     <Box>
       <button data-testid="outside-button">Outside</button>
-      <StoryWrapper state={state} />
+      <StoryWrapper
+        state={state}
+        onOpenRow={noop}
+        onDeleteRow={noop}
+        onDuplicateRow={noop}
+        onDeleteSelected={noop}
+      />
     </Box>
   );
 });
