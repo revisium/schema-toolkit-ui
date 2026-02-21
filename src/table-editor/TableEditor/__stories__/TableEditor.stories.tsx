@@ -61,7 +61,13 @@ export const StoryWrapper = observer(
 
     return (
       <Box width="800px" height="500px" display="flex" flexDirection="column">
-        <Flex px={3} pt={2} mb="48px" alignItems="center" justifyContent="space-between">
+        <Flex
+          px={3}
+          pt={2}
+          mb="48px"
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <Breadcrumbs
             segments={[{ label: 'Database' }, { label: 'invoices' }]}
             highlightLast={false}
