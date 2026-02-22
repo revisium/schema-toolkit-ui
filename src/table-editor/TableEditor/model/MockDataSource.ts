@@ -108,7 +108,7 @@ export class MockDataSource implements ITableDataSource {
 
     const page = rows.slice(startIndex, startIndex + query.first);
     const hasNextPage = startIndex + query.first < rows.length;
-    const lastRow = page[page.length - 1];
+    const lastRow = page.at(-1);
     const endCursor = lastRow ? lastRow.rowId : null;
 
     return Promise.resolve({ rows: page, totalCount, hasNextPage, endCursor });

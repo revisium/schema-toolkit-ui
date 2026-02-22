@@ -86,7 +86,7 @@ export const ViewSettingsBadge = observer(
                     colorPalette="blue"
                     size="xs"
                     onClick={() => {
-                      model.save();
+                      void model.save();
                       model.setPopoverOpen(false);
                     }}
                     data-testid="view-settings-save"

@@ -62,7 +62,7 @@ export class TableEditorCore {
   private readonly _breadcrumbs: TableEditorBreadcrumb[];
   private readonly _callbacks: TableEditorCallbacks;
 
-  private _tableId: string;
+  private readonly _tableId: string;
   private _schema: JsonSchema | null = null;
   private _readonly = false;
   private _rows: RowVM[] = [];
@@ -70,6 +70,7 @@ export class TableEditorCore {
   private _isLoadingMore = false;
   private _hasNextPage = false;
   private _endCursor: string | null = null;
+  private _savedViewState: ViewState | null = null;
 
   constructor(dataSource: ITableDataSource, options: TableEditorOptions) {
     this._dataSource = dataSource;
@@ -369,12 +370,16 @@ export class TableEditorCore {
   }
 
   private _handleViewRevert(): void {
-    // ViewBadge already reverts currentSnapshot to saved snapshot.
-    // No additional action needed.
+    if (this._savedViewState) {
+      this.applyViewState(this._savedViewState);
+      void this._reloadRows();
+    }
   }
 
   private _saveViewSnapshot(): void {
-    this.viewBadge.saveSnapshot(this.getViewState());
+    const viewState = this.getViewState();
+    this._savedViewState = viewState;
+    this.viewBadge.saveSnapshot(viewState);
   }
 
   private _checkViewChanges(): void {
