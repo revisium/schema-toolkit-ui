@@ -362,10 +362,14 @@ export class TableEditorCore {
   }
 
   private async _handleViewSave(): Promise<void> {
-    const viewState = this.getViewState();
-    const result = await this._dataSource.saveView(viewState);
-    if (result.ok) {
-      this._saveViewSnapshot();
+    try {
+      const viewState = this.getViewState();
+      const result = await this._dataSource.saveView(viewState);
+      if (result.ok) {
+        this._saveViewSnapshot();
+      }
+    } catch {
+      // network/data-source error — badge stays visible
     }
   }
 

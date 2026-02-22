@@ -103,14 +103,14 @@ describe('ViewSettingsBadgeModel', () => {
       expect(model.hasChanges).toBe(false);
     });
 
-    it('hasChanges remains true if callback fails', async () => {
+    it('propagates callback rejection', async () => {
       const onSave = jest
         .fn<() => Promise<void>>()
         .mockRejectedValue(new Error('fail'));
       model.setOnSave(onSave);
       model.saveSnapshot({ a: 1 });
       model.checkForChanges({ a: 2 });
-      await model.save();
+      await expect(model.save()).rejects.toThrow('fail');
       expect(model.hasChanges).toBe(true);
     });
 
