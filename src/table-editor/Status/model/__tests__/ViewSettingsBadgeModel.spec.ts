@@ -110,7 +110,7 @@ describe('ViewSettingsBadgeModel', () => {
       model.setOnSave(onSave);
       model.saveSnapshot({ a: 1 });
       model.checkForChanges({ a: 2 });
-      await model.save().catch(() => {});
+      await model.save();
       expect(model.hasChanges).toBe(true);
     });
 

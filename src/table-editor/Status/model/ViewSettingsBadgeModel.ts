@@ -40,7 +40,11 @@ export class ViewSettingsBadgeModel {
 
   async save(): Promise<void> {
     if (this._onSave) {
-      await this._onSave();
+      try {
+        await this._onSave();
+      } catch {
+        // handled by the callback; prevent unhandled rejection from void call
+      }
     }
   }
 
