@@ -1,5 +1,4 @@
 import { makeAutoObservable, runInAction } from 'mobx';
-import type { JsonSchema } from '@revisium/schema-toolkit';
 import { createTableModel } from '@revisium/schema-toolkit';
 import { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import { FilterModel } from '../../Filters/model/FilterModel.js';
@@ -16,6 +15,7 @@ import type {
   RowDataItem,
   TableQuery,
 } from './ITableDataSource.js';
+import { SchemaContext } from './SchemaContext.js';
 
 export interface ViewState {
   columns: Array<{ field: string; width?: number }>;
@@ -36,6 +36,11 @@ export interface TableEditorCallbacks {
   onDuplicateRow?: (rowId: string) => void;
   onSearchForeignKey?: SearchForeignKeySearchFn;
   onCopyPath?: (path: string) => void;
+  onUploadFile?: (
+    fileId: string,
+    file: File,
+  ) => Promise<Record<string, unknown> | null>;
+  onOpenFile?: (url: string) => void;
 }
 
 export interface TableEditorOptions {
@@ -63,7 +68,7 @@ export class TableEditorCore {
   private readonly _callbacks: TableEditorCallbacks;
 
   private readonly _tableId: string;
-  private _schema: JsonSchema | null = null;
+  private readonly _schemaContext = new SchemaContext();
   private _readonly = false;
   private _rows: RowVM[] = [];
   private _isBootstrapping = true;
@@ -202,14 +207,14 @@ export class TableEditorCore {
     try {
       const meta = await this._dataSource.fetchMetadata();
       runInAction(() => {
-        this._schema = meta.schema;
+        this._schemaContext.init(meta.dataSchema, meta.refSchemas);
         this._readonly = meta.readonly;
         this.viewBadge.setCanSave(!meta.readonly);
       });
 
-      this.columns.init(meta.columns);
-      this.sorts.init(this.columns.sortableFields);
-      this.filters.init(this.columns.filterableFields);
+      this.columns.init(this._schemaContext.allColumns);
+      this.sorts.init(this._schemaContext.sortableFields);
+      this.filters.init(this._schemaContext.filterableFields);
 
       if (meta.viewState) {
         this.applyViewState(meta.viewState);
@@ -279,14 +284,20 @@ export class TableEditorCore {
   }
 
   private _createRowVMs(rawRows: RowDataItem[]): RowVM[] {
-    if (!this._schema) {
+    const dataSchema = this._schemaContext.dataSchema;
+    if (!dataSchema) {
       return [];
     }
     const tableModel = createTableModel({
       tableId: this._tableId,
-      schema: this._schema as Parameters<typeof createTableModel>[0]['schema'],
+      schema: dataSchema,
       rows: rawRows.map((r) => ({ rowId: r.rowId, data: r.data })),
+      refSchemas: this._schemaContext.fullRefSchemas,
     });
+    const systemValuesMap = new Map<string, Record<string, unknown>>();
+    for (const raw of rawRows) {
+      systemValuesMap.set(raw.rowId, this._buildSystemValues(raw));
+    }
     return tableModel.rows.map(
       (rowModel) =>
         new RowVM(
@@ -296,8 +307,16 @@ export class TableEditorCore {
           this.selection,
           (rowId, field, value, previousValue) =>
             this._commitCell(rowId, field, value, previousValue),
+          systemValuesMap.get(rowModel.rowId),
         ),
     );
+  }
+
+  private _buildSystemValues(rawRow: RowDataItem): Record<string, unknown> {
+    return {
+      ...rawRow.systemFields,
+      id: rawRow.rowId,
+    };
   }
 
   private async _commitCell(
@@ -317,6 +336,10 @@ export class TableEditorCore {
           const node = row.rowModel.get(field);
           if (node?.isPrimitive()) {
             node.setValue(previousValue);
+          } else if (node?.isObject()) {
+            node.setValue(previousValue as Record<string, unknown>, {
+              internal: true,
+            });
           }
         }
       });

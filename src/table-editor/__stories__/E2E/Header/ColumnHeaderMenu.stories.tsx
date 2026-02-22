@@ -5,12 +5,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import { obj, str, num, bool } from '@revisium/schema-toolkit';
-import {
-  col,
-  createTableStoryState,
-  FilterFieldType,
-  mockClipboard,
-} from '../../helpers.js';
+import { createTableStoryState, mockClipboard } from '../../helpers.js';
 import { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
 import { SortModel } from '../../../Sortings/model/SortModel.js';
 import { FilterModel } from '../../../Filters/model/FilterModel.js';
@@ -24,12 +19,6 @@ const TABLE_SCHEMA = obj({
   active: bool(),
 });
 
-const ALL_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-];
-
 const MOCK_ROWS = [
   { name: 'Alice', age: 30, active: true },
   { name: 'Bob', age: 25, active: false },
@@ -38,9 +27,9 @@ const MOCK_ROWS = [
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: TABLE_SCHEMA,
-      columns: ALL_COLUMNS,
+      dataSchema: TABLE_SCHEMA,
       rowsData: MOCK_ROWS,
+      visibleFields: ['id', 'name', 'age', 'active'],
       withSort: true,
       withFilter: true,
     }),
@@ -104,9 +93,10 @@ export const FullHeaderMenuWorkflow: Story = {
       filterModel: FilterModel;
     };
 
-    // Initial state: [name, age, active]
-    expect(columnsModel.visibleColumns).toHaveLength(3);
+    // Initial state: [id, name, age, active]
+    expect(columnsModel.visibleColumns).toHaveLength(4);
     expect(columnsModel.visibleColumns.map((c) => c.field)).toEqual([
+      'id',
       'name',
       'age',
       'active',
@@ -232,7 +222,7 @@ export const FullHeaderMenuWorkflow: Story = {
     }
 
     // Step 5: Move name right
-    // Columns before: [name, age, active] -> after: [age, name, active]
+    // Columns before: [id, name, age, active] -> after: [id, age, name, active]
     {
       const nameHeader = canvas.getByTestId('header-name');
       await userEvent.click(nameHeader);
@@ -260,6 +250,7 @@ export const FullHeaderMenuWorkflow: Story = {
 
       await waitFor(() => {
         expect(columnsModel.visibleColumns.map((c) => c.field)).toEqual([
+          'id',
           'age',
           'name',
           'active',
@@ -270,7 +261,7 @@ export const FullHeaderMenuWorkflow: Story = {
     }
 
     // Step 6: Hide active
-    // Columns before: [age, name, active] -> after: [age, name]
+    // Columns before: [id, age, name, active] -> after: [id, age, name]
     {
       const activeHeader = canvas.getByTestId('header-active');
       await userEvent.click(activeHeader);
@@ -284,7 +275,7 @@ export const FullHeaderMenuWorkflow: Story = {
       await userEvent.click(hideItem);
 
       await waitFor(() => {
-        expect(columnsModel.visibleColumns).toHaveLength(2);
+        expect(columnsModel.visibleColumns).toHaveLength(3);
         expect(
           columnsModel.visibleColumns.some((c) => c.field === 'active'),
         ).toBe(false);
@@ -294,7 +285,7 @@ export const FullHeaderMenuWorkflow: Story = {
     }
 
     // Step 7: Insert active before age
-    // Columns before: [age, name] -> after: [active, age, name]
+    // Columns before: [id, age, name] -> after: [id, active, age, name]
     {
       const ageHeader = canvas.getByTestId('header-age');
       await userEvent.click(ageHeader);
@@ -321,7 +312,7 @@ export const FullHeaderMenuWorkflow: Story = {
       await userEvent.click(activeItem);
 
       await waitFor(() => {
-        expect(columnsModel.visibleColumns).toHaveLength(3);
+        expect(columnsModel.visibleColumns).toHaveLength(4);
         const fields = columnsModel.visibleColumns.map((c) => c.field);
         const ageIndex = fields.indexOf('age');
         const activeIndex = fields.indexOf('active');
@@ -332,7 +323,7 @@ export const FullHeaderMenuWorkflow: Story = {
     }
 
     // Step 8: Hide-all from active header
-    // Columns before: [active, age, name] -> after: [active]
+    // Columns before: [id, active, age, name] -> after: [id] (hideAll keeps first column)
     {
       const activeHeader = canvas.getByTestId('header-active');
       await userEvent.click(activeHeader);
@@ -349,7 +340,7 @@ export const FullHeaderMenuWorkflow: Story = {
 
       await waitFor(() => {
         expect(columnsModel.visibleColumns).toHaveLength(1);
-        expect(columnsModel.visibleColumns[0]?.field).toBe('active');
+        expect(columnsModel.visibleColumns[0]?.field).toBe('id');
         expect(columnsModel.hasHiddenColumns).toBe(true);
       });
 
@@ -357,10 +348,10 @@ export const FullHeaderMenuWorkflow: Story = {
     }
 
     // Step 9: Verify last column hide/hide-all disabled
-    // Columns: [active] (only one)
+    // Columns: [id] (only one)
     {
-      const activeHeader = canvas.getByTestId('header-active');
-      await userEvent.click(activeHeader);
+      const idHeader = canvas.getByTestId('header-id');
+      await userEvent.click(idHeader);
 
       await waitFor(() => {
         const hideItem = document.querySelector(
@@ -393,8 +384,9 @@ export const PinColumnWorkflow: Story = {
       columnsModel: ColumnsModel;
     };
 
-    // Initial state: [name, age, active], none pinned
-    expect(columnsModel.visibleColumns).toHaveLength(3);
+    // Initial state: [id, name, age, active], none pinned
+    expect(columnsModel.visibleColumns).toHaveLength(4);
+    expect(columnsModel.isPinned('id')).toBe(false);
     expect(columnsModel.isPinned('name')).toBe(false);
     expect(columnsModel.isPinned('age')).toBe(false);
     expect(columnsModel.isPinned('active')).toBe(false);
@@ -473,11 +465,12 @@ export const PinColumnWorkflow: Story = {
       await dismissMenu();
     }
 
-    // Step 4: Verify column order after pins
+    // Step 4: Verify column order after pins (name pinned-left, active pinned-right)
     {
       await waitFor(() => {
         expect(columnsModel.visibleColumns.map((c) => c.field)).toEqual([
           'name',
+          'id',
           'age',
           'active',
         ]);

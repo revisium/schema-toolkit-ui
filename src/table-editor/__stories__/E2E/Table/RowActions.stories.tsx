@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent, fn } from 'storybook/test';
 import { obj, str, num } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
-import { col, createTableStoryState, FilterFieldType } from '../../helpers.js';
+import { createTableStoryState } from '../../helpers.js';
 import { SelectionModel } from '../../../Table/model/SelectionModel.js';
 import { TableWidget } from '../../../Table/ui/TableWidget.js';
 
@@ -15,11 +15,6 @@ const TABLE_SCHEMA = obj({
   name: str(),
   age: num(),
 });
-
-const ALL_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-];
 
 const MOCK_ROWS = [
   { name: 'Alice', age: 30 },
@@ -35,8 +30,7 @@ const mockDeleteSelected = fn();
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: TABLE_SCHEMA,
-      columns: ALL_COLUMNS,
+      dataSchema: TABLE_SCHEMA,
       rowsData: MOCK_ROWS,
     }),
   );

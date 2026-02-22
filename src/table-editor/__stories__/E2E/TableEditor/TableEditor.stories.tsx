@@ -12,9 +12,7 @@ import {
 import { StoryWrapper } from '../../../TableEditor/__stories__/TableEditor.stories.js';
 import {
   TABLE_SCHEMA,
-  TEST_COLUMNS,
   MOCK_ROWS_DATA,
-  MANY_COLUMNS,
   MANY_COLUMNS_SCHEMA,
   MANY_COLUMNS_ROWS,
 } from '../../../TableEditor/__stories__/tableEditorTestData.js';
@@ -31,8 +29,7 @@ const READONLY_SCHEMA = obj({
 
 function createEditableState(): TableEditorStoryState {
   return createTableEditorStoryState({
-    schema: TABLE_SCHEMA,
-    columns: TEST_COLUMNS,
+    dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS_DATA,
     callbacks: {
       onOpenRow: noop,
@@ -43,8 +40,7 @@ function createEditableState(): TableEditorStoryState {
 
 function createManyColumnsState(): TableEditorStoryState {
   return createTableEditorStoryState({
-    schema: MANY_COLUMNS_SCHEMA,
-    columns: MANY_COLUMNS,
+    dataSchema: MANY_COLUMNS_SCHEMA,
     rowsData: MANY_COLUMNS_ROWS,
     callbacks: {
       onOpenRow: noop,
@@ -55,8 +51,7 @@ function createManyColumnsState(): TableEditorStoryState {
 
 function createReadonlyState(): TableEditorStoryState {
   return createTableEditorStoryState({
-    schema: READONLY_SCHEMA,
-    columns: TEST_COLUMNS,
+    dataSchema: READONLY_SCHEMA,
     rowsData: MOCK_ROWS_DATA,
     readonly: true,
   });
@@ -181,8 +176,8 @@ export const EditableWorkflow: Story = {
       expect(canvas.getByTestId('view-settings-badge')).toBeVisible();
     });
 
-    // 5. Column visibility: hide age column → verify 2 columns
-    expect(state.core.columns.visibleColumns).toHaveLength(3);
+    // 5. Column visibility: hide age column → verify 3 columns
+    expect(state.core.columns.visibleColumns).toHaveLength(4);
 
     await waitFor(() => {
       expect(canvas.getByTestId('header-age')).toBeVisible();
@@ -200,7 +195,7 @@ export const EditableWorkflow: Story = {
     await userEvent.click(hideItem);
 
     await waitFor(() => {
-      expect(state.core.columns.visibleColumns).toHaveLength(2);
+      expect(state.core.columns.visibleColumns).toHaveLength(3);
       expect(
         state.core.columns.visibleColumns.some((c) => c.field === 'age'),
       ).toBe(false);
@@ -233,15 +228,16 @@ export const ReadonlyWorkflow: Story = {
 
     const row1 = state.core.rows[0];
     expect(row1).toBeDefined();
-    const cellVM = row1.getCellVM(TEST_COLUMNS[0]);
+    const visibleCols = state.core.columns.visibleColumns;
+    const cellVM = row1.getCellVM(visibleCols[0]!);
     expect(cellVM.isReadOnly).toBe(true);
     expect(cellVM.isEditable).toBe(false);
 
-    const cellVM2 = row1.getCellVM(TEST_COLUMNS[1]);
+    const cellVM2 = row1.getCellVM(visibleCols[1]!);
     expect(cellVM2.isReadOnly).toBe(true);
     expect(cellVM2.isEditable).toBe(false);
 
-    const cellVM3 = row1.getCellVM(TEST_COLUMNS[2]);
+    const cellVM3 = row1.getCellVM(visibleCols[2]!);
     expect(cellVM3.isReadOnly).toBe(true);
     expect(cellVM3.isEditable).toBe(false);
 
@@ -329,7 +325,7 @@ export const ReadonlyWorkflow: Story = {
     );
 
     // 7. Column visibility still works in readonly
-    expect(state.core.columns.visibleColumns).toHaveLength(3);
+    expect(state.core.columns.visibleColumns).toHaveLength(4);
 
     const ageHeader = canvas.getByTestId('header-age');
     await userEvent.click(ageHeader);
@@ -343,7 +339,7 @@ export const ReadonlyWorkflow: Story = {
     await userEvent.click(hideItem);
 
     await waitFor(() => {
-      expect(state.core.columns.visibleColumns).toHaveLength(2);
+      expect(state.core.columns.visibleColumns).toHaveLength(3);
       expect(
         state.core.columns.visibleColumns.some((c) => c.field === 'age'),
       ).toBe(false);
@@ -369,7 +365,10 @@ export const ReadonlyWorkflow: Story = {
     // Focus shows badge (readonly, not editing)
     const freshRow1 = state.core.rows[0];
     expect(freshRow1).toBeDefined();
-    const nameCellVM = freshRow1.getCellVM(TEST_COLUMNS[0]);
+    const nameColForFocus = state.core.columns.visibleColumns.find(
+      (c) => c.field === 'name',
+    )!;
+    const nameCellVM = freshRow1.getCellVM(nameColForFocus);
     nameCellVM.focus();
 
     await waitFor(() => {

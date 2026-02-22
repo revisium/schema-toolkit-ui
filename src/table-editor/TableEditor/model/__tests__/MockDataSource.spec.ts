@@ -1,6 +1,4 @@
 import { obj, str, num, bool } from '@revisium/schema-toolkit';
-import { FilterFieldType } from '../../../shared/field-types';
-import { testCol as col } from '../../../__tests__/helpers';
 import { MockDataSource } from '../MockDataSource';
 
 const TABLE_SCHEMA = obj({
@@ -8,12 +6,6 @@ const TABLE_SCHEMA = obj({
   age: num(),
   active: bool(),
 });
-
-const TEST_COLUMNS = [
-  col({ field: 'name' }),
-  col({ field: 'age', fieldType: FilterFieldType.Number }),
-  col({ field: 'active', fieldType: FilterFieldType.Boolean }),
-];
 
 function createDataSource(rowCount = 5) {
   const rows = Array.from({ length: rowCount }, (_, i) =>
@@ -24,8 +16,7 @@ function createDataSource(rowCount = 5) {
     }),
   );
   return new MockDataSource({
-    schema: TABLE_SCHEMA,
-    columns: TEST_COLUMNS,
+    dataSchema: TABLE_SCHEMA,
     rows,
   });
 }
@@ -39,11 +30,10 @@ describe('MockDataSource', () => {
   });
 
   describe('fetchMetadata', () => {
-    it('returns schema, columns, and defaults', async () => {
+    it('returns dataSchema and defaults', async () => {
       const ds = createDataSource();
       const meta = await ds.fetchMetadata();
-      expect(meta.schema).toBe(TABLE_SCHEMA);
-      expect(meta.columns).toBe(TEST_COLUMNS);
+      expect(meta.dataSchema).toBe(TABLE_SCHEMA);
       expect(meta.viewState).toBeNull();
       expect(meta.readonly).toBe(false);
     });
@@ -121,8 +111,7 @@ describe('MockDataSource', () => {
         }),
       ];
       const ds = new MockDataSource({
-        schema: TABLE_SCHEMA,
-        columns: TEST_COLUMNS,
+        dataSchema: TABLE_SCHEMA,
         rows,
       });
 
@@ -152,8 +141,7 @@ describe('MockDataSource', () => {
         MockDataSource.createRow('r3', { name: 'Bob', age: 25, active: true }),
       ];
       const ds = new MockDataSource({
-        schema: TABLE_SCHEMA,
-        columns: TEST_COLUMNS,
+        dataSchema: TABLE_SCHEMA,
         rows,
       });
 
@@ -186,8 +174,7 @@ describe('MockDataSource', () => {
         }),
       ];
       const ds = new MockDataSource({
-        schema: TABLE_SCHEMA,
-        columns: TEST_COLUMNS,
+        dataSchema: TABLE_SCHEMA,
         rows,
       });
 
@@ -229,8 +216,7 @@ describe('MockDataSource', () => {
 
     it('returns failure for configured fail patches', async () => {
       const ds = new MockDataSource({
-        schema: TABLE_SCHEMA,
-        columns: TEST_COLUMNS,
+        dataSchema: TABLE_SCHEMA,
         rows: [
           MockDataSource.createRow('r1', {
             name: 'Alice',

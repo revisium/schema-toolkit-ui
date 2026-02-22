@@ -238,9 +238,33 @@ All callbacks are optional and passed via `TableEditorOptions.callbacks`:
 | `onOpenRow` | `(rowId: string) => void` | Navigate to row detail view |
 | `onDuplicateRow` | `(rowId: string) => void` | Duplicate a row |
 | `onSearchForeignKey` | `SearchForeignKeySearchFn` | Foreign key search handler |
+| `onUploadFile` | `(fileId: string, file: File) => Promise<Record<string, unknown> \| null>` | Upload a file for a file field |
+| `onOpenFile` | `(url: string) => void` | Open/preview a file URL |
 | `onCopyPath` | `(path: string) => void` | Copy JSON path to clipboard |
 
 In read-only mode (`fetchMetadata` returns `readonly: true`), delete and duplicate actions are hidden automatically. Open row still works.
+
+#### File columns
+
+File fields (`$ref` to the File schema) are automatically resolved into:
+- A **parent file column** (`FilterFieldType.File`) that displays the `fileName` and supports inline editing of the file name
+- **Sub-field columns** (e.g., `avatar.status`, `avatar.url`) for each primitive property of the file object
+
+Sub-field columns are hidden by default but can be added via the "+" column button. File columns are excluded from filters and sorts.
+
+To enable file upload/preview in the table, pass `onUploadFile` and `onOpenFile` in `TableEditorCallbacks`. The file cell shows upload and preview buttons on hover when these callbacks are provided. File schemas must be passed through `fetchMetadata` as `refSchemas` in the `TableMetadata` return value:
+
+```tsx
+async fetchMetadata() {
+  return {
+    schema,
+    columns,
+    viewState,
+    readonly: false,
+    refSchemas: { [SystemSchemaIds.File]: fileSchema },
+  };
+}
+```
 
 #### View model API
 

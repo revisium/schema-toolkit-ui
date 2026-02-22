@@ -1,5 +1,4 @@
-import type { JsonSchema } from '@revisium/schema-toolkit';
-import type { ColumnSpec } from '../../Columns/model/types.js';
+import type { JsonObjectSchema, RefSchemas } from '@revisium/schema-toolkit';
 import type {
   CellPatch,
   CellPatchResult,
@@ -7,27 +6,28 @@ import type {
   FetchRowsResult,
   ITableDataSource,
   RowDataItem,
+  SystemFields,
   TableMetadata,
   TableQuery,
 } from './ITableDataSource.js';
 import type { ViewState } from './TableEditorCore.js';
 
 interface MockDataSourceParams {
-  schema: JsonSchema;
-  columns: ColumnSpec[];
+  dataSchema: JsonObjectSchema;
   rows: RowDataItem[];
   viewState?: ViewState | null;
   readonly?: boolean;
   failPatches?: Set<string>;
+  refSchemas?: RefSchemas;
 }
 
 export class MockDataSource implements ITableDataSource {
   private _allRows: RowDataItem[];
-  private readonly _schema: JsonSchema;
-  private readonly _columns: ColumnSpec[];
+  private readonly _dataSchema: JsonObjectSchema;
   private readonly _viewState: ViewState | null;
   private readonly _readonly: boolean;
   private readonly _failPatches: Set<string>;
+  private readonly _refSchemas: RefSchemas | undefined;
 
   readonly fetchMetadataLog: Array<true> = [];
   readonly fetchLog: TableQuery[] = [];
@@ -36,25 +36,33 @@ export class MockDataSource implements ITableDataSource {
   readonly saveViewLog: ViewState[] = [];
 
   constructor(params: MockDataSourceParams) {
-    this._schema = params.schema;
-    this._columns = params.columns;
+    this._dataSchema = params.dataSchema;
     this._allRows = [...params.rows];
     this._viewState = params.viewState ?? null;
     this._readonly = params.readonly ?? false;
     this._failPatches = params.failPatches ?? new Set();
+    this._refSchemas = params.refSchemas;
   }
 
-  static createRow(rowId: string, data: Record<string, unknown>): RowDataItem {
-    return { rowId, data: { ...data } };
+  static createRow(
+    rowId: string,
+    data: Record<string, unknown>,
+    systemFields?: SystemFields,
+  ): RowDataItem {
+    const row: RowDataItem = { rowId, data: { ...data } };
+    if (systemFields) {
+      row.systemFields = systemFields;
+    }
+    return row;
   }
 
   fetchMetadata(): Promise<TableMetadata> {
     this.fetchMetadataLog.push(true);
     return Promise.resolve({
-      schema: this._schema,
-      columns: this._columns,
+      dataSchema: this._dataSchema,
       viewState: this._viewState,
       readonly: this._readonly,
+      refSchemas: this._refSchemas,
     });
   }
 

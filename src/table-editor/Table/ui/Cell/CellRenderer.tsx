@@ -13,10 +13,20 @@ import { ReadonlyCell } from './ReadonlyCell.js';
 interface CellRendererProps {
   cell: CellVM;
   onSearchForeignKey?: SearchForeignKeySearchFn;
+  onUploadFile?: (
+    fileId: string,
+    file: File,
+  ) => Promise<Record<string, unknown> | null>;
+  onOpenFile?: (url: string) => void;
 }
 
 export const CellRenderer = observer(
-  ({ cell, onSearchForeignKey }: CellRendererProps) => {
+  ({
+    cell,
+    onSearchForeignKey,
+    onUploadFile,
+    onOpenFile,
+  }: CellRendererProps) => {
     switch (cell.column.fieldType) {
       case FilterFieldType.String:
         return <StringCell cell={cell} />;
@@ -29,7 +39,13 @@ export const CellRenderer = observer(
           <ForeignKeyCell cell={cell} onSearchForeignKey={onSearchForeignKey} />
         );
       case FilterFieldType.File:
-        return <FileCell cell={cell} />;
+        return (
+          <FileCell
+            cell={cell}
+            onUploadFile={onUploadFile}
+            onOpenFile={onOpenFile}
+          />
+        );
       case FilterFieldType.DateTime:
         return <DateTimeCell cell={cell} />;
       default:

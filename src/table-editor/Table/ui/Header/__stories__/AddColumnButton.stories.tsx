@@ -3,18 +3,54 @@ import { Box, Flex } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { ensureReactivityProvider } from '../../../../../lib/initReactivity.js';
-import { col, FilterFieldType } from '../../../../__stories__/helpers.js';
+import type { ColumnSpec } from '../../../../Columns/model/types.js';
+import { FilterFieldType } from '../../../../shared/field-types.js';
 import { ColumnsModel } from '../../../../Columns/model/ColumnsModel.js';
 import { AddColumnButton } from '../AddColumnButton.js';
 
 ensureReactivityProvider();
 
-const ALL_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-  col('email', FilterFieldType.String),
-  col('createdAt', FilterFieldType.DateTime, { isSystem: true }),
+const ALL_COLUMNS: ColumnSpec[] = [
+  {
+    field: 'name',
+    label: 'Name',
+    fieldType: FilterFieldType.String,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'age',
+    label: 'Age',
+    fieldType: FilterFieldType.Number,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'active',
+    label: 'Active',
+    fieldType: FilterFieldType.Boolean,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'email',
+    label: 'Email',
+    fieldType: FilterFieldType.String,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'createdAt',
+    label: 'createdAt',
+    fieldType: FilterFieldType.DateTime,
+    isSystem: true,
+    isDeprecated: false,
+    hasFormula: false,
+  },
 ];
 
 interface WrapperProps {

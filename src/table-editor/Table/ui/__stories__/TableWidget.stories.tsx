@@ -15,25 +15,13 @@ import {
 } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import type { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
-import {
-  col,
-  createTableStoryState,
-  FilterFieldType,
-} from '../../../__stories__/helpers.js';
+import { createTableStoryState } from '../../../__stories__/helpers.js';
 import { TableWidget } from '../TableWidget.js';
-import { TABLE_SCHEMA, TEST_COLUMNS, MOCK_ROWS_DATA } from './tableTestData.js';
+import { TABLE_SCHEMA, MOCK_ROWS_DATA } from './tableTestData.js';
 
 ensureReactivityProvider();
 
 const noop = () => {};
-
-const EXTENDED_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-  col('email', FilterFieldType.String),
-  col('score', FilterFieldType.Number),
-];
 
 const EXTENDED_SCHEMA = obj({
   name: str(),
@@ -51,20 +39,6 @@ const FORMULA_TABLE_SCHEMA = obj({
   label: strFormula('greeting + " (" + ageGroup + ")"'),
 });
 
-const FORMULA_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('greeting', FilterFieldType.String, {
-    label: 'Greeting',
-    hasFormula: true,
-  }),
-  col('ageGroup', FilterFieldType.String, {
-    label: 'Age Group',
-    hasFormula: true,
-  }),
-  col('label', FilterFieldType.String, { label: 'Label', hasFormula: true }),
-];
-
 const MIXED_FORMULA_SCHEMA = obj({
   item: str(),
   price: num(),
@@ -72,17 +46,6 @@ const MIXED_FORMULA_SCHEMA = obj({
   total: numFormula('price * quantity'),
   expensive: boolFormula('total > 100'),
 });
-
-const MIXED_FORMULA_COLUMNS = [
-  col('item', FilterFieldType.String, { label: 'Item' }),
-  col('price', FilterFieldType.Number, { label: 'Price' }),
-  col('quantity', FilterFieldType.Number, { label: 'Qty' }),
-  col('total', FilterFieldType.Number, { label: 'Total', hasFormula: true }),
-  col('expensive', FilterFieldType.Boolean, {
-    label: 'Expensive?',
-    hasFormula: true,
-  }),
-];
 
 interface DefaultWrapperProps {
   rowCount?: number;
@@ -102,8 +65,7 @@ const DefaultWrapper = observer(
   }: DefaultWrapperProps) => {
     const [state] = useState(() =>
       createTableStoryState({
-        schema: TABLE_SCHEMA,
-        columns: TEST_COLUMNS,
+        dataSchema: TABLE_SCHEMA,
         rowsData: showEmpty ? [] : MOCK_ROWS_DATA.slice(0, rowCount),
         withSort,
         withFilter,
@@ -158,8 +120,7 @@ export const SingleColumn: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() =>
         createTableStoryState({
-          schema: TABLE_SCHEMA,
-          columns: TEST_COLUMNS,
+          dataSchema: TABLE_SCHEMA,
           rowsData: MOCK_ROWS_DATA,
           visibleFields: ['name'],
         }),
@@ -186,13 +147,12 @@ export const WithHiddenColumns: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() =>
         createTableStoryState({
-          schema: EXTENDED_SCHEMA,
-          columns: EXTENDED_COLUMNS,
+          dataSchema: EXTENDED_SCHEMA,
           rowsData: [
             { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
             { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
           ],
-          visibleFields: ['name', 'age', 'active'],
+          visibleFields: ['id', 'name', 'age', 'active'],
           withSort: true,
           withFilter: true,
         }),
@@ -233,8 +193,7 @@ const ManyRowsWrapper = observer(
 
     const [state] = useState(() =>
       createTableStoryState({
-        schema: TABLE_SCHEMA,
-        columns: TEST_COLUMNS,
+        dataSchema: TABLE_SCHEMA,
         rowsData: allRowsData,
       }),
     );
@@ -288,8 +247,7 @@ export const InSelectionMode: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() => {
         const s = createTableStoryState({
-          schema: TABLE_SCHEMA,
-          columns: TEST_COLUMNS,
+          dataSchema: TABLE_SCHEMA,
           rowsData: MOCK_ROWS_DATA,
         });
         s.selection.toggle('row-1');
@@ -326,8 +284,7 @@ export const FormulaColumns: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() =>
         createTableStoryState({
-          schema: FORMULA_TABLE_SCHEMA,
-          columns: FORMULA_COLUMNS,
+          dataSchema: FORMULA_TABLE_SCHEMA,
           rowsData: [
             { name: 'Alice', age: 30 },
             { name: 'Bob', age: 25 },
@@ -357,8 +314,7 @@ export const MixedFormulaColumns: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() =>
         createTableStoryState({
-          schema: MIXED_FORMULA_SCHEMA,
-          columns: MIXED_FORMULA_COLUMNS,
+          dataSchema: MIXED_FORMULA_SCHEMA,
           rowsData: [
             { item: 'Laptop', price: 999, quantity: 2 },
             { item: 'Mouse', price: 25, quantity: 3 },
@@ -401,8 +357,7 @@ export const PinnedLeftColumn: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() => {
         const s = createTableStoryState({
-          schema: EXTENDED_SCHEMA,
-          columns: EXTENDED_COLUMNS,
+          dataSchema: EXTENDED_SCHEMA,
           rowsData: [
             { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
             { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
@@ -449,8 +404,7 @@ export const MultiplePinnedLeft: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() => {
         const s = createTableStoryState({
-          schema: EXTENDED_SCHEMA,
-          columns: EXTENDED_COLUMNS,
+          dataSchema: EXTENDED_SCHEMA,
           rowsData: [
             { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
             { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
@@ -491,8 +445,7 @@ export const PinnedLeftAndRight: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() => {
         const s = createTableStoryState({
-          schema: EXTENDED_SCHEMA,
-          columns: EXTENDED_COLUMNS,
+          dataSchema: EXTENDED_SCHEMA,
           rowsData: [
             { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
             { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
@@ -533,8 +486,7 @@ export const PinnedWithSelection: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() => {
         const s = createTableStoryState({
-          schema: EXTENDED_SCHEMA,
-          columns: EXTENDED_COLUMNS,
+          dataSchema: EXTENDED_SCHEMA,
           rowsData: [
             { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
             { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
@@ -593,8 +545,7 @@ export const InfiniteScroll: Story = {
 
       const [state] = useState(() =>
         createTableStoryState({
-          schema: TABLE_SCHEMA,
-          columns: TEST_COLUMNS,
+          dataSchema: TABLE_SCHEMA,
           rowsData: allRowsData,
         }),
       );

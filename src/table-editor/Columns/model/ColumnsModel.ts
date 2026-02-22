@@ -1,4 +1,5 @@
 import { makeAutoObservable, observable } from 'mobx';
+import { FilterFieldType } from '../../shared/field-types.js';
 import type { ColumnSpec, PinSide, ViewColumn } from './types.js';
 import { selectDefaultColumns } from './selectDefaultColumns.js';
 
@@ -57,11 +58,17 @@ export class ColumnsModel {
   }
 
   get sortableFields(): ColumnSpec[] {
-    return this._allColumns.filter((col) => !col.isDeprecated);
+    return this._operableFields;
   }
 
   get filterableFields(): ColumnSpec[] {
-    return this._allColumns.filter((col) => !col.isDeprecated);
+    return this._operableFields;
+  }
+
+  private get _operableFields(): ColumnSpec[] {
+    return this._allColumns.filter(
+      (col) => !col.isDeprecated && col.fieldType !== FilterFieldType.File,
+    );
   }
 
   get pinnedLeftCount(): number {
@@ -456,7 +463,12 @@ export class ColumnsModel {
       }
     }
 
-    this._visibleFields = fields;
+    if (fields.length === 0) {
+      const defaults = selectDefaultColumns(this._allColumns);
+      this._visibleFields = defaults.map((col) => col.field);
+    } else {
+      this._visibleFields = fields;
+    }
   }
 
   // --- Events ---

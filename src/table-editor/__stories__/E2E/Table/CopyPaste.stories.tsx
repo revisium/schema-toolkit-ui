@@ -6,16 +6,13 @@ import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { obj, str, num, strFormula } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
 import {
-  col,
   createTableStoryState,
-  FilterFieldType,
   mockClipboard,
   type TableStoryState,
 } from '../../helpers.js';
 import { TableWidget } from '../../../Table/ui/TableWidget.js';
 import {
   TABLE_SCHEMA,
-  TEST_COLUMNS,
   MOCK_ROWS_DATA,
 } from '../../../Table/ui/__stories__/tableTestData.js';
 
@@ -24,8 +21,7 @@ ensureReactivityProvider();
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: TABLE_SCHEMA,
-      columns: TEST_COLUMNS,
+      dataSchema: TABLE_SCHEMA,
       rowsData: MOCK_ROWS_DATA,
     }),
   );
@@ -57,25 +53,10 @@ const FORMULA_TABLE_SCHEMA = obj({
   label: strFormula('greeting + " (" + ageGroup + ")"'),
 });
 
-const FORMULA_TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('greeting', FilterFieldType.String, {
-    label: 'Greeting',
-    hasFormula: true,
-  }),
-  col('ageGroup', FilterFieldType.String, {
-    label: 'Age Group',
-    hasFormula: true,
-  }),
-  col('label', FilterFieldType.String, { label: 'Label', hasFormula: true }),
-];
-
 const CopyFormulaWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: FORMULA_TABLE_SCHEMA,
-      columns: FORMULA_TEST_COLUMNS,
+      dataSchema: FORMULA_TABLE_SCHEMA,
       rowsData: [{ name: 'Alice', age: 30 }],
     }),
   );

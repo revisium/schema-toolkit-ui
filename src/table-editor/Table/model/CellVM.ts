@@ -1,6 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import type { RowModel } from '@revisium/schema-toolkit';
 import type { ColumnSpec } from '../../Columns/model/types.js';
+import { FilterFieldType } from '../../shared/field-types.js';
 import type { CellFSM, EditTrigger, SelectionEdges } from './CellFSM.js';
 
 export type CellCommitCallback = (
@@ -16,6 +17,7 @@ export class CellVM {
   private readonly _rowId: string;
   private readonly _cellFSM: CellFSM;
   private readonly _onCommit: CellCommitCallback | null;
+  private readonly _systemValues: Record<string, unknown> | null;
 
   constructor(
     rowModel: RowModel,
@@ -23,12 +25,14 @@ export class CellVM {
     rowId: string,
     cellFSM: CellFSM,
     onCommit?: CellCommitCallback,
+    systemValues?: Record<string, unknown>,
   ) {
     this._rowModel = rowModel;
     this._column = column;
     this._rowId = rowId;
     this._cellFSM = cellFSM;
     this._onCommit = onCommit ?? null;
+    this._systemValues = systemValues ?? null;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -51,6 +55,9 @@ export class CellVM {
   }
 
   get value(): unknown {
+    if (this._systemValues) {
+      return this._systemValues[this._column.field];
+    }
     const node = this._getNode();
     if (!node) {
       return undefined;
@@ -76,12 +83,26 @@ export class CellVM {
       return `[${val.length}]`;
     }
     if (typeof val === 'object') {
+      const obj = val as Record<string, unknown>;
+      if (typeof obj.fileName === 'string' && obj.fileName) {
+        return obj.fileName;
+      }
       return '{...}';
     }
     return '';
   }
 
   get isReadOnly(): boolean {
+    if (this._systemValues) {
+      return true;
+    }
+    if (this._column.fieldType === FilterFieldType.File) {
+      const fileNameNode = this._getFileNameNode();
+      if (!fileNameNode || !fileNameNode.isPrimitive()) {
+        return true;
+      }
+      return fileNameNode.isReadOnly;
+    }
     const node = this._getNode();
     if (!node) {
       return true;
@@ -96,9 +117,43 @@ export class CellVM {
     return this._column.foreignKeyTableId;
   }
 
+  get fileData(): {
+    status: string;
+    fileId: string;
+    url: string;
+    fileName: string;
+    mimeType: string;
+    width: number;
+    height: number;
+  } | null {
+    if (this._column.fieldType !== FilterFieldType.File) {
+      return null;
+    }
+    const val = this.value;
+    if (!val || typeof val !== 'object' || Array.isArray(val)) {
+      return null;
+    }
+    const obj = val as Record<string, unknown>;
+    return {
+      status: (obj.status as string) ?? '',
+      fileId: (obj.fileId as string) ?? '',
+      url: (obj.url as string) ?? '',
+      fileName: (obj.fileName as string) ?? '',
+      mimeType: (obj.mimeType as string) ?? '',
+      width: (obj.width as number) ?? 0,
+      height: (obj.height as number) ?? 0,
+    };
+  }
+
   get isEditable(): boolean {
+    if (this._systemValues) {
+      return false;
+    }
     if (this.isReadOnly) {
       return false;
+    }
+    if (this._column.fieldType === FilterFieldType.File) {
+      return this._getFileNameNode() !== undefined;
     }
     const node = this._getNode();
     if (!node) {
@@ -178,6 +233,11 @@ export class CellVM {
   }
 
   commitEdit(newValue: unknown): void {
+    if (this._column.fieldType === FilterFieldType.File) {
+      this._commitFileNameEdit(newValue as string);
+      this._cellFSM.commit();
+      return;
+    }
     const node = this._getNode();
     const previousValue = node?.getPlainValue();
     if (node?.isPrimitive()) {
@@ -188,6 +248,14 @@ export class CellVM {
   }
 
   commitEditAndMoveDown(newValue?: unknown): void {
+    if (
+      this._column.fieldType === FilterFieldType.File &&
+      newValue !== undefined
+    ) {
+      this._commitFileNameEdit(newValue as string);
+      this._cellFSM.commitAndMoveDown();
+      return;
+    }
     let previousValue: unknown;
     if (newValue !== undefined) {
       const node = this._getNode();
@@ -209,6 +277,16 @@ export class CellVM {
 
   cancelEdit(): void {
     this._cellFSM.cancel();
+  }
+
+  commitFileUpload(result: Record<string, unknown>): void {
+    const node = this._getNode();
+    if (!node || !node.isObject()) {
+      return;
+    }
+    const previousValue = node.getPlainValue();
+    node.setValue(result, { internal: true });
+    this._onCommit?.(this._rowId, this._column.field, result, previousValue);
   }
 
   // --- Cell Operations ---
@@ -336,6 +414,25 @@ export class CellVM {
 
   private _getNode() {
     return this._rowModel.get(this._column.field);
+  }
+
+  private _getFileNameNode() {
+    return this._rowModel.get(`${this._column.field}.fileName`);
+  }
+
+  private _commitFileNameEdit(newFileName: string): void {
+    const fileNameNode = this._getFileNameNode();
+    if (!fileNameNode || !fileNameNode.isPrimitive()) {
+      return;
+    }
+    const objectNode = this._getNode();
+    if (!objectNode) {
+      return;
+    }
+    const previousValue = objectNode.getPlainValue();
+    fileNameNode.setValue(newFileName);
+    const newValue = objectNode.getPlainValue();
+    this._onCommit?.(this._rowId, this._column.field, newValue, previousValue);
   }
 
   private _applyPastedString(

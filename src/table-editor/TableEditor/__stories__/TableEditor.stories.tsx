@@ -13,9 +13,7 @@ import {
 } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../lib/initReactivity.js';
 import {
-  col,
   createTableEditorStoryState,
-  FilterFieldType,
   type TableEditorStoryState,
 } from '../../__stories__/helpers.js';
 import type {
@@ -25,11 +23,14 @@ import type {
 import { TableEditor } from '../ui/TableEditor.js';
 import {
   TABLE_SCHEMA,
-  TEST_COLUMNS,
   MOCK_ROWS_DATA,
-  MANY_COLUMNS,
   MANY_COLUMNS_SCHEMA,
   MANY_COLUMNS_ROWS,
+  FILE_TABLE_SCHEMA,
+  FILE_MOCK_ROWS_DATA,
+  FILE_REF_SCHEMAS,
+  SYSTEM_FIELDS_SCHEMA,
+  SYSTEM_FIELDS_ROWS,
 } from './tableEditorTestData.js';
 
 ensureReactivityProvider();
@@ -66,9 +67,8 @@ const defaultCallbacks: TableEditorCallbacks = {
 const DefaultWrapper = observer(() => {
   const [state] = useState(() =>
     createTableEditorStoryState({
-      schema: TABLE_SCHEMA,
-      columns: TEST_COLUMNS,
-      rowsData: MOCK_ROWS_DATA,
+      dataSchema: MANY_COLUMNS_SCHEMA,
+      rowsData: MANY_COLUMNS_ROWS,
       breadcrumbs: STORY_BREADCRUMBS,
       callbacks: defaultCallbacks,
     }),
@@ -94,33 +94,12 @@ type Story = StoryObj<typeof DefaultWrapper>;
 
 export const Default: Story = {};
 
-export const ManyColumns: Story = {
-  render: () => {
-    const Wrapper = observer(() => {
-      const [state] = useState(() =>
-        createTableEditorStoryState({
-          schema: MANY_COLUMNS_SCHEMA,
-          columns: MANY_COLUMNS,
-          rowsData: MANY_COLUMNS_ROWS,
-          breadcrumbs: STORY_BREADCRUMBS,
-          callbacks: defaultCallbacks,
-        }),
-      );
-
-      return <StoryWrapper state={state} />;
-    });
-
-    return <Wrapper />;
-  },
-};
-
 export const EmptyTable: Story = {
   render: () => {
     const Wrapper = observer(() => {
       const [state] = useState(() =>
         createTableEditorStoryState({
-          schema: TABLE_SCHEMA,
-          columns: TEST_COLUMNS,
+          dataSchema: TABLE_SCHEMA,
           rowsData: [],
           breadcrumbs: STORY_BREADCRUMBS,
           callbacks: defaultCallbacks,
@@ -142,17 +121,6 @@ const FORMULA_SCHEMA = obj({
   expensive: boolFormula('total > 100'),
 });
 
-const FORMULA_COLUMNS = [
-  col('item', FilterFieldType.String, { label: 'Item' }),
-  col('price', FilterFieldType.Number, { label: 'Price' }),
-  col('quantity', FilterFieldType.Number, { label: 'Qty' }),
-  col('total', FilterFieldType.Number, { label: 'Total', hasFormula: true }),
-  col('expensive', FilterFieldType.Boolean, {
-    label: 'Expensive?',
-    hasFormula: true,
-  }),
-];
-
 const FORMULA_ROWS = [
   { item: 'Laptop', price: 999, quantity: 2 },
   { item: 'Mouse', price: 25, quantity: 3 },
@@ -164,8 +132,7 @@ export const WithFormulas: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() =>
         createTableEditorStoryState({
-          schema: FORMULA_SCHEMA,
-          columns: FORMULA_COLUMNS,
+          dataSchema: FORMULA_SCHEMA,
           rowsData: FORMULA_ROWS,
           breadcrumbs: STORY_BREADCRUMBS,
           callbacks: defaultCallbacks,
@@ -190,12 +157,81 @@ export const Readonly: Story = {
     const Wrapper = observer(() => {
       const [state] = useState(() =>
         createTableEditorStoryState({
-          schema: READONLY_SCHEMA,
-          columns: TEST_COLUMNS,
+          dataSchema: READONLY_SCHEMA,
           rowsData: MOCK_ROWS_DATA,
           readonly: true,
           breadcrumbs: STORY_BREADCRUMBS,
           callbacks: { onOpenRow },
+        }),
+      );
+
+      return <StoryWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const fileCallbacks: TableEditorCallbacks = {
+  onBreadcrumbClick: noop,
+  onCreateRow: noop,
+  onOpenRow,
+  onDuplicateRow,
+  onUploadFile: async (_fileId: string, file: File) => {
+    await delay(500);
+    const isImage = file.type.startsWith('image/');
+    return {
+      status: 'uploaded',
+      fileId: _fileId,
+      url: `https://picsum.photos/${isImage ? '400/300' : '200'}`,
+      fileName: file.name,
+      mimeType: file.type,
+      extension: file.name.includes('.')
+        ? '.' + file.name.split('.').pop()
+        : '',
+      size: file.size,
+      width: isImage ? 400 : 0,
+      height: isImage ? 300 : 0,
+      hash: 'mock-hash-' + Date.now(),
+    };
+  },
+  onOpenFile: (url: string) => {
+    window.open(url, '_blank');
+  },
+};
+
+export const FileColumns: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableEditorStoryState({
+          dataSchema: FILE_TABLE_SCHEMA,
+          rowsData: FILE_MOCK_ROWS_DATA,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: fileCallbacks,
+          refSchemas: FILE_REF_SCHEMAS,
+        }),
+      );
+
+      return <StoryWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const WithSystemColumns: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableEditorStoryState({
+          dataSchema: SYSTEM_FIELDS_SCHEMA,
+          rowsData: [],
+          rows: SYSTEM_FIELDS_ROWS,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: defaultCallbacks,
         }),
       );
 

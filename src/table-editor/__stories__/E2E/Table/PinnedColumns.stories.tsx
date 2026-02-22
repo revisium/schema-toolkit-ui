@@ -6,7 +6,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within, waitFor, userEvent, fn } from 'storybook/test';
 import { obj, str, num, bool } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
-import { col, createTableStoryState, FilterFieldType } from '../../helpers.js';
+import { createTableStoryState } from '../../helpers.js';
 import { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
 import { TableWidget } from '../../../Table/ui/TableWidget.js';
 
@@ -19,14 +19,6 @@ const TABLE_SCHEMA = obj({
   email: str(),
   score: num(),
 });
-
-const ALL_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-  col('email', FilterFieldType.String),
-  col('score', FilterFieldType.Number),
-];
 
 const MOCK_ROWS = [
   { name: 'Alice', age: 30, active: true, email: 'alice@test.com', score: 95 },
@@ -45,14 +37,13 @@ const mockDeleteRow = fn();
 
 function createPinnedColumnsState() {
   const state = createTableStoryState({
-    schema: TABLE_SCHEMA,
-    columns: ALL_COLUMNS,
+    dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS,
   });
 
   runInAction(() => {
-    for (const col of ALL_COLUMNS) {
-      state.columnsModel.setColumnWidth(col.field, 200);
+    for (const c of state.columnsModel.visibleColumns) {
+      state.columnsModel.setColumnWidth(c.field, 200);
     }
   });
 
