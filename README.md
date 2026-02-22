@@ -141,9 +141,126 @@ const vm = new RowEditorVM(tableSchema, rowData, {
 <RowEditor vm={vm} />
 ```
 
+### Table editor
+
+`TableEditor` renders a full table UI with inline cell editing, filtering, sorting, search, column management, row selection, and view persistence. It takes a `TableEditorCore` view model and a few external callbacks.
+
+#### Data source
+
+Implement `ITableDataSource` to connect the table to your backend:
+
+```tsx
+import type { ITableDataSource } from '@revisium/schema-toolkit-ui';
+
+const dataSource: ITableDataSource = {
+  async fetchMetadata() {
+    // Return { schema, columns, viewState, readonly }
+  },
+  async fetchRows(query) {
+    // query: { where, orderBy, search, first, after }
+    // Return { rows, totalCount, hasNextPage, endCursor }
+  },
+  async patchCells(patches) {
+    // patches: [{ rowId, field, value }]
+    // Return [{ rowId, field, ok, error? }]
+  },
+  async deleteRows(rowIds) {
+    // Return { ok, error? }
+  },
+  async saveView(viewState) {
+    // Persist column/filter/sort/search settings
+    // Return { ok, error? }
+  },
+};
+```
+
+#### Creating the view model
+
+Breadcrumbs and callbacks are passed through the view model options (same pattern as `RowEditorVM`):
+
+```tsx
+import { TableEditorCore } from '@revisium/schema-toolkit-ui';
+import type { TableEditorBreadcrumb, TableEditorCallbacks } from '@revisium/schema-toolkit-ui';
+
+const breadcrumbs: TableEditorBreadcrumb[] = [
+  { label: 'Database' },
+  { label: 'invoices' },
+];
+
+const callbacks: TableEditorCallbacks = {
+  onBreadcrumbClick: (segment, index) => navigate('/tables'),
+  onCreateRow: () => createRow(),
+  onOpenRow: (rowId) => navigate(`/rows/${rowId}`),
+  onDuplicateRow: (rowId) => duplicateRow(rowId),
+  onSearchForeignKey: async (tableId, search) => { ... },
+  onCopyPath: (path) => navigator.clipboard.writeText(path),
+};
+
+const core = new TableEditorCore(dataSource, {
+  tableId: 'invoices',
+  pageSize: 50,           // optional, default 50
+  breadcrumbs,
+  callbacks,
+});
+```
+
+`TableEditorCore` bootstraps automatically (fetches metadata, applies saved view state, loads the first page of rows).
+
+#### Rendering
+
+The component takes only the view model. All callbacks and breadcrumbs come from the view model:
+
+```tsx
+import { TableEditor } from '@revisium/schema-toolkit-ui';
+
+<TableEditor viewModel={core} />
+```
+
+The component renders breadcrumbs with a "New row" button, a toolbar (search, filters, sorts), the virtualized table, and a status bar (row count, view settings badge) — all on a single header line.
+
+In read-only mode, the "New row" button is hidden automatically.
+
+#### Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `viewModel` | `TableEditorCore` | Required. The table view model |
+| `useWindowScroll` | `boolean` | Use window scroll instead of container scroll |
+
+#### Callbacks (`TableEditorCallbacks`)
+
+All callbacks are optional and passed via `TableEditorOptions.callbacks`:
+
+| Callback | Type | Description |
+|----------|------|-------------|
+| `onBreadcrumbClick` | `(segment, index) => void` | Navigate on breadcrumb click |
+| `onCreateRow` | `() => void` | Create a new row (shows "+" button) |
+| `onOpenRow` | `(rowId: string) => void` | Navigate to row detail view |
+| `onDuplicateRow` | `(rowId: string) => void` | Duplicate a row |
+| `onSearchForeignKey` | `SearchForeignKeySearchFn` | Foreign key search handler |
+| `onCopyPath` | `(path: string) => void` | Copy JSON path to clipboard |
+
+In read-only mode (`fetchMetadata` returns `readonly: true`), delete and duplicate actions are hidden automatically. Open row still works.
+
+#### View model API
+
+```tsx
+core.rows               // current RowVM[]
+core.isBootstrapping    // true during initial load
+core.isLoadingMore      // true during pagination
+core.readonly           // read-only flag from metadata
+core.tableId            // table identifier
+
+core.loadMore()         // load next page
+core.deleteRows(ids)    // delete rows by ID
+core.getViewState()     // serialize current view settings
+core.applyViewState(s)  // restore view settings
+core.dispose()          // cleanup
+```
+
 ### Cleanup
 
-Call `vm.dispose()` when the editor is unmounted.
+Call `vm.dispose()` (or `core.dispose()` for `TableEditorCore`) when the editor is unmounted.
 
 ## License
 

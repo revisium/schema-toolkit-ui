@@ -70,23 +70,52 @@ describe('ViewSettingsBadgeModel', () => {
   });
 
   describe('save', () => {
-    it('calls onSave callback', () => {
-      const onSave = jest.fn();
+    it('calls onSave callback', async () => {
+      const onSave = jest
+        .fn<() => Promise<void>>()
+        .mockResolvedValue(undefined);
       model.setOnSave(onSave);
-      model.save();
+      await model.save();
       expect(onSave).toHaveBeenCalledTimes(1);
     });
 
-    it('updates snapshot and clears hasChanges', () => {
+    it('does not update snapshot itself', async () => {
+      const onSave = jest
+        .fn<() => Promise<void>>()
+        .mockResolvedValue(undefined);
+      model.setOnSave(onSave);
       model.saveSnapshot({ a: 1 });
       model.checkForChanges({ a: 2 });
       expect(model.hasChanges).toBe(true);
-      model.save();
+      await model.save();
+      expect(model.hasChanges).toBe(true);
+    });
+
+    it('callback can update snapshot to clear hasChanges', async () => {
+      model.setOnSave(() => {
+        model.saveSnapshot({ a: 2 });
+        return Promise.resolve();
+      });
+      model.saveSnapshot({ a: 1 });
+      model.checkForChanges({ a: 2 });
+      expect(model.hasChanges).toBe(true);
+      await model.save();
       expect(model.hasChanges).toBe(false);
     });
 
-    it('noop without callback', () => {
-      expect(() => model.save()).not.toThrow();
+    it('propagates callback rejection', async () => {
+      const onSave = jest
+        .fn<() => Promise<void>>()
+        .mockRejectedValue(new Error('fail'));
+      model.setOnSave(onSave);
+      model.saveSnapshot({ a: 1 });
+      model.checkForChanges({ a: 2 });
+      await expect(model.save()).rejects.toThrow('fail');
+      expect(model.hasChanges).toBe(true);
+    });
+
+    it('noop without callback', async () => {
+      await expect(model.save()).resolves.toBeUndefined();
     });
   });
 

@@ -3,22 +3,32 @@ import type { RowModel } from '@revisium/schema-toolkit';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import type { CellFSM, EditTrigger, SelectionEdges } from './CellFSM.js';
 
+export type CellCommitCallback = (
+  rowId: string,
+  field: string,
+  value: unknown,
+  previousValue?: unknown,
+) => void;
+
 export class CellVM {
   private readonly _rowModel: RowModel;
   private readonly _column: ColumnSpec;
   private readonly _rowId: string;
   private readonly _cellFSM: CellFSM;
+  private readonly _onCommit: CellCommitCallback | null;
 
   constructor(
     rowModel: RowModel,
     column: ColumnSpec,
     rowId: string,
     cellFSM: CellFSM,
+    onCommit?: CellCommitCallback,
   ) {
     this._rowModel = rowModel;
     this._column = column;
     this._rowId = rowId;
     this._cellFSM = cellFSM;
+    this._onCommit = onCommit ?? null;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -169,20 +179,32 @@ export class CellVM {
 
   commitEdit(newValue: unknown): void {
     const node = this._getNode();
+    const previousValue = node?.getPlainValue();
     if (node?.isPrimitive()) {
       node.setValue(newValue);
     }
     this._cellFSM.commit();
+    this._onCommit?.(this._rowId, this._column.field, newValue, previousValue);
   }
 
   commitEditAndMoveDown(newValue?: unknown): void {
+    let previousValue: unknown;
     if (newValue !== undefined) {
       const node = this._getNode();
+      previousValue = node?.getPlainValue();
       if (node?.isPrimitive()) {
         node.setValue(newValue);
       }
     }
     this._cellFSM.commitAndMoveDown();
+    if (newValue !== undefined) {
+      this._onCommit?.(
+        this._rowId,
+        this._column.field,
+        newValue,
+        previousValue,
+      );
+    }
   }
 
   cancelEdit(): void {
@@ -196,7 +218,15 @@ export class CellVM {
     if (!node || !node.isPrimitive() || node.isReadOnly) {
       return;
     }
-    node.setValue(node.defaultValue);
+    const previousValue = node.getPlainValue();
+    const defaultValue = node.defaultValue;
+    node.setValue(defaultValue);
+    this._onCommit?.(
+      this._rowId,
+      this._column.field,
+      defaultValue,
+      previousValue,
+    );
   }
 
   async copyToClipboard(): Promise<void> {
@@ -224,13 +254,23 @@ export class CellVM {
     if (!node?.isPrimitive()) {
       return;
     }
-    const nodeType = typeof node.getPlainValue();
+    const previousValue = node.getPlainValue();
+    const nodeType = typeof previousValue;
     if (nodeType === 'string') {
       this._applyPastedString(node, text);
     } else if (nodeType === 'number') {
       this._applyPastedNumber(node, text);
     } else if (nodeType === 'boolean') {
       this._applyPastedBoolean(node, text);
+    }
+    const newValue = node.getPlainValue();
+    if (newValue !== previousValue) {
+      this._onCommit?.(
+        this._rowId,
+        this._column.field,
+        newValue,
+        previousValue,
+      );
     }
   }
 

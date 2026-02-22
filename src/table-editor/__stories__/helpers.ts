@@ -4,11 +4,15 @@ import type { ColumnSpec } from '../Columns/model/types.js';
 import { ColumnsModel } from '../Columns/model/ColumnsModel.js';
 import { SortModel } from '../Sortings/model/SortModel.js';
 import { FilterModel } from '../Filters/model/FilterModel.js';
-import { RowCountModel } from '../Status/model/RowCountModel.js';
 import { CellFSM } from '../Table/model/CellFSM.js';
 import { RowVM } from '../Table/model/RowVM.js';
 import { SelectionModel } from '../Table/model/SelectionModel.js';
-import { TableEditorCore } from '../TableEditor/model/TableEditorCore.js';
+import {
+  TableEditorCore,
+  type TableEditorCallbacks,
+  type TableEditorBreadcrumb,
+} from '../TableEditor/model/TableEditorCore.js';
+import { MockDataSource } from '../TableEditor/model/MockDataSource.js';
 import { FilterFieldType } from '../shared/field-types.js';
 
 export { FilterFieldType } from '../shared/field-types.js';
@@ -106,48 +110,36 @@ export function createTableStoryState(
 
 export interface TableEditorStoryState {
   core: TableEditorCore;
-  rows: RowVM[];
-  rowCount: RowCountModel;
+  dataSource: MockDataSource;
 }
 
 interface CreateTableEditorStoryStateParams {
   schema: JsonSchema;
   columns: ColumnSpec[];
   rowsData: Record<string, unknown>[];
+  readonly?: boolean;
+  breadcrumbs?: TableEditorBreadcrumb[];
+  callbacks?: TableEditorCallbacks;
 }
 
 export function createTableEditorStoryState(
   params: CreateTableEditorStoryStateParams,
 ): TableEditorStoryState {
-  const core = new TableEditorCore({
-    onFilter: () => {},
-    onSort: () => {},
-    onSearch: () => {},
-    onColumnsChange: () => {},
-  });
-  core.init(params.columns);
-
-  const tableModel = createTableModel({
-    tableId: 'test-table',
-    schema: params.schema as Parameters<typeof createTableModel>[0]['schema'],
-    rows: params.rowsData.map((data, i) => ({
-      rowId: `row-${i + 1}`,
-      data,
-    })),
-  });
-
-  const rows = tableModel.rows.map(
-    (rowModel) =>
-      new RowVM(rowModel, rowModel.rowId, core.cellFSM, core.selection),
+  const rows = params.rowsData.map((data, i) =>
+    MockDataSource.createRow(`row-${i + 1}`, data),
   );
-
-  core.initNavigationContext(rows.map((r) => r.rowId));
-
-  const rowCount = new RowCountModel();
-  rowCount.setTotalCount(rows.length);
-  rowCount.setBaseTotalCount(rows.length);
-
-  return { core, rows, rowCount };
+  const dataSource = new MockDataSource({
+    schema: params.schema,
+    columns: params.columns,
+    rows,
+    readonly: params.readonly,
+  });
+  const core = new TableEditorCore(dataSource, {
+    tableId: 'story-table',
+    breadcrumbs: params.breadcrumbs,
+    callbacks: params.callbacks,
+  });
+  return { core, dataSource };
 }
 
 export function mockClipboard(initialText = ''): {

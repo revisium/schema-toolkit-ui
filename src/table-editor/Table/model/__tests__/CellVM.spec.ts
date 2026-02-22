@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { FilterFieldType } from '../../../shared/field-types';
 import { testCol as col } from '../../../__tests__/helpers';
 import { CellFSM } from '../CellFSM';
@@ -436,6 +437,116 @@ describe('CellVM', () => {
       );
       cell.clearToDefault();
       expect(cell.value).toBeUndefined();
+    });
+  });
+
+  describe('onCommit callback', () => {
+    it('commitEdit fires onCommit with rowId, field, value, previousValue', () => {
+      const onCommit = jest.fn();
+      const node = createMockNode('Alice');
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+        onCommit,
+      );
+      cell.startEdit();
+      cell.commitEdit('Bob');
+      expect(onCommit).toHaveBeenCalledWith('row-1', 'name', 'Bob', 'Alice');
+    });
+
+    it('commitEditAndMoveDown fires onCommit with previousValue', () => {
+      const onCommit = jest.fn();
+      const node = createMockNode('Alice');
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      cellFSM.setNavigationContext(['name'], ['row-1', 'row-2']);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+        onCommit,
+      );
+      cell.startEdit();
+      cell.commitEditAndMoveDown('Bob');
+      expect(onCommit).toHaveBeenCalledWith('row-1', 'name', 'Bob', 'Alice');
+    });
+
+    it('commitEditAndMoveDown does not fire onCommit when value is undefined', () => {
+      const onCommit = jest.fn();
+      const node = createMockNode('Alice');
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      cellFSM.setNavigationContext(['name'], ['row-1', 'row-2']);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+        onCommit,
+      );
+      cell.startEdit();
+      cell.commitEditAndMoveDown();
+      expect(onCommit).not.toHaveBeenCalled();
+    });
+
+    it('clearToDefault fires onCommit with default and previous value', () => {
+      const onCommit = jest.fn();
+      const node = createMockNode('Hello', { defaultValue: '' });
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+        onCommit,
+      );
+      cell.clearToDefault();
+      expect(onCommit).toHaveBeenCalledWith('row-1', 'name', '', 'Hello');
+    });
+
+    it('applyPastedText fires onCommit with previousValue', () => {
+      const onCommit = jest.fn();
+      const node = createMockNode('Alice');
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+        onCommit,
+      );
+      cell.applyPastedText('Bob');
+      expect(onCommit).toHaveBeenCalledWith('row-1', 'name', 'Bob', 'Alice');
+    });
+
+    it('applyPastedText does not fire onCommit when value unchanged', () => {
+      const onCommit = jest.fn();
+      const node = createMockNode('Alice');
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+        onCommit,
+      );
+      cell.applyPastedText('Alice');
+      expect(onCommit).not.toHaveBeenCalled();
+    });
+
+    it('works without onCommit callback', () => {
+      const node = createMockNode('Alice');
+      const rowModel = createMockRowModelFromNodes([['name', node]]);
+      const cell = new CellVM(
+        rowModel as never,
+        col({ field: 'name' }),
+        'row-1',
+        cellFSM,
+      );
+      cell.startEdit();
+      expect(() => cell.commitEdit('Bob')).not.toThrow();
     });
   });
 });

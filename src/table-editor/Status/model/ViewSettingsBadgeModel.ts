@@ -5,7 +5,7 @@ export class ViewSettingsBadgeModel {
   private _currentSnapshot: string | null = null;
   private _canSave = false;
   private _isPopoverOpen = false;
-  private _onSave: (() => void) | null = null;
+  private _onSave: (() => Promise<void>) | null = null;
   private _onRevert: (() => void) | null = null;
 
   constructor() {
@@ -38,11 +38,10 @@ export class ViewSettingsBadgeModel {
     this._currentSnapshot = JSON.stringify(state);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     if (this._onSave) {
-      this._onSave();
+      await this._onSave();
     }
-    this._snapshot = this._currentSnapshot;
   }
 
   revert(): void {
@@ -60,7 +59,7 @@ export class ViewSettingsBadgeModel {
     this._isPopoverOpen = value;
   }
 
-  setOnSave(cb: (() => void) | null): void {
+  setOnSave(cb: (() => Promise<void>) | null): void {
     this._onSave = cb;
   }
 

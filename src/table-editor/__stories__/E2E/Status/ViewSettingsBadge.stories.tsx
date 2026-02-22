@@ -17,6 +17,10 @@ const E2EWrapper = observer(
     const [model] = useState(() => {
       const m = new ViewSettingsBadgeModel();
       m.setCanSave(canSave);
+      m.setOnSave(() => {
+        m.saveSnapshot({ columns: ['id', 'name'] });
+        return Promise.resolve();
+      });
       if (hasChanges) {
         m.saveSnapshot({ columns: ['id'] });
         m.checkForChanges({ columns: ['id', 'name'] });
