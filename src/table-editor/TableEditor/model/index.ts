@@ -1,5 +1,10 @@
 export { TableEditorCore } from './TableEditorCore.js';
-export type { ViewState, TableEditorOptions } from './TableEditorCore.js';
+export type {
+  ViewState,
+  TableEditorOptions,
+  TableEditorBreadcrumb,
+  TableEditorCallbacks,
+} from './TableEditorCore.js';
 export type {
   ITableDataSource,
   RowDataItem,

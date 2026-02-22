@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Flex, Spinner } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
@@ -12,20 +12,17 @@ import {
   boolFormula,
 } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../lib/initReactivity.js';
-import { Breadcrumbs } from '../../../components/Breadcrumbs/Breadcrumbs.js';
-import { PlusButton } from '../../../components/PlusButton/index.js';
 import {
   col,
   createTableEditorStoryState,
   FilterFieldType,
   type TableEditorStoryState,
 } from '../../__stories__/helpers.js';
-import { FilterWidget } from '../../Filters/ui/FilterWidget.js';
-import { SearchWidget } from '../../Search/ui/SearchWidget.js';
-import { SortingsWidget } from '../../Sortings/ui/SortingsWidget.js';
-import { RowCountWidget } from '../../Status/ui/RowCountWidget.js';
-import { ViewSettingsBadge } from '../../Status/ui/ViewSettingsBadge.js';
-import { TableWidget } from '../../Table/ui/TableWidget.js';
+import type {
+  TableEditorCallbacks,
+  TableEditorBreadcrumb,
+} from '../model/TableEditorCore.js';
+import { TableEditor } from '../ui/TableEditor.js';
 import {
   TABLE_SCHEMA,
   TEST_COLUMNS,
@@ -39,93 +36,32 @@ ensureReactivityProvider();
 
 const noop = () => {};
 
+const STORY_BREADCRUMBS: TableEditorBreadcrumb[] = [
+  { label: 'Database', dataTestId: 'breadcrumb-0' },
+  { label: 'invoices', dataTestId: 'breadcrumb-1' },
+];
+
 export interface StoryWrapperProps {
   state: TableEditorStoryState;
-  onOpenRow?: (rowId: string) => void;
-  onDuplicateRow?: (rowId: string) => void;
 }
 
-export const StoryWrapper = observer(
-  ({ state, onOpenRow, onDuplicateRow }: StoryWrapperProps) => {
-    const { core } = state;
-
-    if (core.isBootstrapping) {
-      return (
-        <Box
-          width="800px"
-          height="500px"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Spinner />
-        </Box>
-      );
-    }
-
-    const columns = core.columns.visibleColumns;
-    const isReadonly = core.readonly;
-
-    return (
-      <Box width="800px" height="500px" display="flex" flexDirection="column">
-        <Flex
-          px={3}
-          pt={2}
-          mb="48px"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Breadcrumbs
-            segments={[{ label: 'Database' }, { label: 'invoices' }]}
-            highlightLast={false}
-            onSegmentClick={noop}
-            action={
-              isReadonly ? undefined : (
-                <PlusButton tooltip="New row" onClick={noop} />
-              )
-            }
-          />
-          <Flex alignItems="center" gap="8px">
-            <SearchWidget model={core.search} />
-            <FilterWidget model={core.filters} availableFields={columns} />
-            <SortingsWidget
-              model={core.sorts}
-              availableFields={columns}
-              onChange={noop}
-            />
-          </Flex>
-        </Flex>
-
-        <Box flex={1}>
-          <TableWidget
-            rows={core.rows}
-            columnsModel={core.columns}
-            cellFSM={core.cellFSM}
-            selection={core.selection}
-            sortModel={core.sorts}
-            filterModel={core.filters}
-            isLoadingMore={core.isLoadingMore}
-            onEndReached={core.loadMore}
-            onOpenRow={onOpenRow}
-            onDeleteRow={isReadonly ? undefined : (id) => core.deleteRows([id])}
-            onDuplicateRow={isReadonly ? undefined : onDuplicateRow}
-            onDeleteSelected={
-              isReadonly ? undefined : (ids) => core.deleteRows(ids)
-            }
-          />
-        </Box>
-
-        <Flex px={3} py={2} alignItems="center" justifyContent="space-between">
-          <RowCountWidget model={core.rowCount} />
-          <ViewSettingsBadge model={core.viewBadge} />
-        </Flex>
-      </Box>
-    );
-  },
-);
+export const StoryWrapper = observer(({ state }: StoryWrapperProps) => {
+  return (
+    <Box width="800px" height="500px">
+      <TableEditor viewModel={state.core} />
+    </Box>
+  );
+});
 
 const onOpenRow = fn().mockName('onOpenRow');
 const onDuplicateRow = fn().mockName('onDuplicateRow');
+
+const defaultCallbacks: TableEditorCallbacks = {
+  onBreadcrumbClick: noop,
+  onCreateRow: noop,
+  onOpenRow,
+  onDuplicateRow,
+};
 
 const DefaultWrapper = observer(() => {
   const [state] = useState(() =>
@@ -133,16 +69,12 @@ const DefaultWrapper = observer(() => {
       schema: TABLE_SCHEMA,
       columns: TEST_COLUMNS,
       rowsData: MOCK_ROWS_DATA,
+      breadcrumbs: STORY_BREADCRUMBS,
+      callbacks: defaultCallbacks,
     }),
   );
 
-  return (
-    <StoryWrapper
-      state={state}
-      onOpenRow={onOpenRow}
-      onDuplicateRow={onDuplicateRow}
-    />
-  );
+  return <StoryWrapper state={state} />;
 });
 
 const meta: Meta<typeof DefaultWrapper> = {
@@ -170,16 +102,12 @@ export const ManyColumns: Story = {
           schema: MANY_COLUMNS_SCHEMA,
           columns: MANY_COLUMNS,
           rowsData: MANY_COLUMNS_ROWS,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: defaultCallbacks,
         }),
       );
 
-      return (
-        <StoryWrapper
-          state={state}
-          onOpenRow={onOpenRow}
-          onDuplicateRow={onDuplicateRow}
-        />
-      );
+      return <StoryWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -194,16 +122,12 @@ export const EmptyTable: Story = {
           schema: TABLE_SCHEMA,
           columns: TEST_COLUMNS,
           rowsData: [],
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: defaultCallbacks,
         }),
       );
 
-      return (
-        <StoryWrapper
-          state={state}
-          onOpenRow={onOpenRow}
-          onDuplicateRow={onDuplicateRow}
-        />
-      );
+      return <StoryWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -243,16 +167,12 @@ export const WithFormulas: Story = {
           schema: FORMULA_SCHEMA,
           columns: FORMULA_COLUMNS,
           rowsData: FORMULA_ROWS,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: defaultCallbacks,
         }),
       );
 
-      return (
-        <StoryWrapper
-          state={state}
-          onOpenRow={onOpenRow}
-          onDuplicateRow={onDuplicateRow}
-        />
-      );
+      return <StoryWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -274,10 +194,12 @@ export const Readonly: Story = {
           columns: TEST_COLUMNS,
           rowsData: MOCK_ROWS_DATA,
           readonly: true,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: { onOpenRow },
         }),
       );
 
-      return <StoryWrapper state={state} onOpenRow={onOpenRow} />;
+      return <StoryWrapper state={state} />;
     });
 
     return <Wrapper />;

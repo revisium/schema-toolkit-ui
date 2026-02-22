@@ -34,6 +34,10 @@ function createEditableState(): TableEditorStoryState {
     schema: TABLE_SCHEMA,
     columns: TEST_COLUMNS,
     rowsData: MOCK_ROWS_DATA,
+    callbacks: {
+      onOpenRow: noop,
+      onDuplicateRow: noop,
+    },
   });
 }
 
@@ -42,6 +46,10 @@ function createManyColumnsState(): TableEditorStoryState {
     schema: MANY_COLUMNS_SCHEMA,
     columns: MANY_COLUMNS,
     rowsData: MANY_COLUMNS_ROWS,
+    callbacks: {
+      onOpenRow: noop,
+      onDuplicateRow: noop,
+    },
   });
 }
 
@@ -64,7 +72,7 @@ const EditableE2EWrapper = observer(() => {
     };
   }, [state]);
 
-  return <StoryWrapper state={state} onOpenRow={noop} onDuplicateRow={noop} />;
+  return <StoryWrapper state={state} />;
 });
 
 const ReadonlyE2EWrapper = observer(() => {
@@ -466,7 +474,7 @@ const ManyColumnsE2EWrapper = observer(() => {
     };
   }, [state]);
 
-  return <StoryWrapper state={state} onOpenRow={noop} onDuplicateRow={noop} />;
+  return <StoryWrapper state={state} />;
 });
 
 export const FocusAfterAddColumn: Story = {
@@ -631,7 +639,7 @@ const BlurTestWrapper = observer(() => {
   return (
     <Box>
       <button data-testid="outside-button">Outside</button>
-      <StoryWrapper state={state} onOpenRow={noop} onDuplicateRow={noop} />
+      <StoryWrapper state={state} />
     </Box>
   );
 });

@@ -24,6 +24,10 @@ function createState(): TableEditorStoryState {
     schema: TABLE_SCHEMA,
     columns: TEST_COLUMNS,
     rowsData: MOCK_ROWS_DATA,
+    callbacks: {
+      onOpenRow: noop,
+      onDuplicateRow: noop,
+    },
   });
 }
 
@@ -37,7 +41,7 @@ const Wrapper = observer(() => {
     };
   }, [state]);
 
-  return <StoryWrapper state={state} onOpenRow={noop} onDuplicateRow={noop} />;
+  return <StoryWrapper state={state} />;
 });
 
 const meta: Meta<typeof Wrapper> = {

@@ -7,7 +7,11 @@ import { FilterModel } from '../Filters/model/FilterModel.js';
 import { CellFSM } from '../Table/model/CellFSM.js';
 import { RowVM } from '../Table/model/RowVM.js';
 import { SelectionModel } from '../Table/model/SelectionModel.js';
-import { TableEditorCore } from '../TableEditor/model/TableEditorCore.js';
+import {
+  TableEditorCore,
+  type TableEditorCallbacks,
+  type TableEditorBreadcrumb,
+} from '../TableEditor/model/TableEditorCore.js';
 import { MockDataSource } from '../TableEditor/model/MockDataSource.js';
 import { FilterFieldType } from '../shared/field-types.js';
 
@@ -114,6 +118,8 @@ interface CreateTableEditorStoryStateParams {
   columns: ColumnSpec[];
   rowsData: Record<string, unknown>[];
   readonly?: boolean;
+  breadcrumbs?: TableEditorBreadcrumb[];
+  callbacks?: TableEditorCallbacks;
 }
 
 export function createTableEditorStoryState(
@@ -128,7 +134,11 @@ export function createTableEditorStoryState(
     rows,
     readonly: params.readonly,
   });
-  const core = new TableEditorCore(dataSource, { tableId: 'story-table' });
+  const core = new TableEditorCore(dataSource, {
+    tableId: 'story-table',
+    breadcrumbs: params.breadcrumbs,
+    callbacks: params.callbacks,
+  });
   return { core, dataSource };
 }
 

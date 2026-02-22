@@ -10,6 +10,7 @@ import { ViewSettingsBadgeModel } from '../../Status/model/ViewSettingsBadgeMode
 import { CellFSM } from '../../Table/model/CellFSM.js';
 import { RowVM } from '../../Table/model/RowVM.js';
 import { SelectionModel } from '../../Table/model/SelectionModel.js';
+import type { SearchForeignKeySearchFn } from '../../../search-foreign-key/vm/SearchForeignKeyVM.js';
 import type {
   ITableDataSource,
   RowDataItem,
@@ -23,12 +24,25 @@ export interface ViewState {
   search: string;
 }
 
+export interface TableEditorBreadcrumb {
+  label: string;
+  dataTestId?: string;
+}
+
+export interface TableEditorCallbacks {
+  onBreadcrumbClick?: (segment: TableEditorBreadcrumb, index: number) => void;
+  onCreateRow?: () => void;
+  onOpenRow?: (rowId: string) => void;
+  onDuplicateRow?: (rowId: string) => void;
+  onSearchForeignKey?: SearchForeignKeySearchFn;
+  onCopyPath?: (path: string) => void;
+}
+
 export interface TableEditorOptions {
   tableId: string;
   pageSize?: number;
-  onOpenRow?: (rowId: string) => void;
-  onDuplicateRow?: (rowId: string) => void;
-  onNavigate?: (segment: string) => void;
+  breadcrumbs?: TableEditorBreadcrumb[];
+  callbacks?: TableEditorCallbacks;
 }
 
 const DEFAULT_PAGE_SIZE = 50;
@@ -45,6 +59,8 @@ export class TableEditorCore {
 
   private readonly _dataSource: ITableDataSource;
   private readonly _pageSize: number;
+  private readonly _breadcrumbs: TableEditorBreadcrumb[];
+  private readonly _callbacks: TableEditorCallbacks;
 
   private _tableId: string;
   private _schema: JsonSchema | null = null;
@@ -59,6 +75,8 @@ export class TableEditorCore {
     this._dataSource = dataSource;
     this._tableId = options.tableId;
     this._pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
+    this._breadcrumbs = options.breadcrumbs ?? [];
+    this._callbacks = options.callbacks ?? {};
 
     this.columns = new ColumnsModel();
     this.filters = new FilterModel();
@@ -100,6 +118,14 @@ export class TableEditorCore {
 
   get tableId(): string {
     return this._tableId;
+  }
+
+  get breadcrumbs(): TableEditorBreadcrumb[] {
+    return this._breadcrumbs;
+  }
+
+  get callbacks(): TableEditorCallbacks {
+    return this._callbacks;
   }
 
   getViewState(): ViewState {
