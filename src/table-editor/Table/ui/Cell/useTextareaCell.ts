@@ -10,6 +10,8 @@ interface TextareaCellState {
   appendCharValue: string | undefined;
   startEditing: (clientX?: number) => void;
   handleTypeChar: (char: string) => void;
+  handleCommit: (localValue: string) => void;
+  handleCommitEnter: (localValue: string) => void;
   handleCommitted: () => void;
   handleCancel: () => void;
   handleStartEditFromKeyboard: () => void;
@@ -73,6 +75,40 @@ export function useTextareaCell(cell: CellVM): TextareaCellState {
     cell.startEdit();
   }, [cell]);
 
+  const trimValue = useCallback((localValue: string) => {
+    let trimmed = localValue;
+    while (trimmed.endsWith('\n')) {
+      trimmed = trimmed.slice(0, -1);
+    }
+    return trimmed;
+  }, []);
+
+  const handleCommit = useCallback(
+    (localValue: string) => {
+      const trimmed = trimValue(localValue);
+      if (trimmed === cell.displayValue) {
+        cell.cancelEdit();
+      } else {
+        cell.commitEdit(trimmed);
+      }
+      handleCommitted();
+    },
+    [cell, handleCommitted, trimValue],
+  );
+
+  const handleCommitEnter = useCallback(
+    (localValue: string) => {
+      const trimmed = trimValue(localValue);
+      if (trimmed === cell.displayValue) {
+        cell.commitEditAndMoveDown();
+      } else {
+        cell.commitEditAndMoveDown(trimmed);
+      }
+      handleCommitted();
+    },
+    [cell, handleCommitted, trimValue],
+  );
+
   return {
     cellRef,
     textRef,
@@ -81,6 +117,8 @@ export function useTextareaCell(cell: CellVM): TextareaCellState {
     appendCharValue,
     startEditing,
     handleTypeChar,
+    handleCommit,
+    handleCommitEnter,
     handleCommitted,
     handleCancel,
     handleStartEditFromKeyboard,

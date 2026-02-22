@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { Box, Text } from '@chakra-ui/react';
-import { useCallback } from 'react';
 import type { CellVM } from '../../model/CellVM.js';
 import { CellTextareaEditor } from './CellTextareaEditor.js';
 import { CellWrapper } from './CellWrapper.js';
@@ -19,44 +18,11 @@ export const StringCell = observer(({ cell }: StringCellProps) => {
     appendCharValue,
     startEditing,
     handleTypeChar,
-    handleCommitted,
+    handleCommit,
+    handleCommitEnter,
     handleCancel,
     handleStartEditFromKeyboard,
   } = useTextareaCell(cell);
-
-  const trimValue = useCallback((localValue: string) => {
-    let trimmed = localValue;
-    while (trimmed.endsWith('\n')) {
-      trimmed = trimmed.slice(0, -1);
-    }
-    return trimmed;
-  }, []);
-
-  const handleCommit = useCallback(
-    (localValue: string) => {
-      const trimmed = trimValue(localValue);
-      if (trimmed !== cell.displayValue) {
-        cell.commitEdit(trimmed);
-      } else {
-        cell.cancelEdit();
-      }
-      handleCommitted();
-    },
-    [cell, handleCommitted, trimValue],
-  );
-
-  const handleCommitEnter = useCallback(
-    (localValue: string) => {
-      const trimmed = trimValue(localValue);
-      if (trimmed === cell.displayValue) {
-        cell.commitEditAndMoveDown();
-      } else {
-        cell.commitEditAndMoveDown(trimmed);
-      }
-      handleCommitted();
-    },
-    [cell, handleCommitted, trimValue],
-  );
 
   const editPosition = cell.isEditing ? getEditPosition() : null;
 

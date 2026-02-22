@@ -48,7 +48,8 @@ export const FileCell: FC<FileCellProps> = observer(
       appendCharValue,
       startEditing,
       handleTypeChar,
-      handleCommitted,
+      handleCommit,
+      handleCommitEnter,
       handleCancel,
       handleStartEditFromKeyboard,
     } = useTextareaCell(cell);
@@ -84,40 +85,6 @@ export const FileCell: FC<FileCellProps> = observer(
       e.stopPropagation();
       fileInputRef.current?.click();
     }, []);
-
-    const trimValue = useCallback((localValue: string) => {
-      let trimmed = localValue;
-      while (trimmed.endsWith('\n')) {
-        trimmed = trimmed.slice(0, -1);
-      }
-      return trimmed;
-    }, []);
-
-    const handleCommit = useCallback(
-      (localValue: string) => {
-        const trimmed = trimValue(localValue);
-        if (trimmed !== cell.displayValue) {
-          cell.commitEdit(trimmed);
-        } else {
-          cell.cancelEdit();
-        }
-        handleCommitted();
-      },
-      [cell, handleCommitted, trimValue],
-    );
-
-    const handleCommitEnter = useCallback(
-      (localValue: string) => {
-        const trimmed = trimValue(localValue);
-        if (trimmed === cell.displayValue) {
-          cell.commitEditAndMoveDown();
-        } else {
-          cell.commitEditAndMoveDown(trimmed);
-        }
-        handleCommitted();
-      },
-      [cell, handleCommitted, trimValue],
-    );
 
     const editPosition = isEditing ? getEditPosition() : null;
 

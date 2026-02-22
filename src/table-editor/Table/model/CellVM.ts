@@ -98,7 +98,7 @@ export class CellVM {
     }
     if (this._column.fieldType === FilterFieldType.File) {
       const fileNameNode = this._getFileNameNode();
-      if (!fileNameNode || !fileNameNode.isPrimitive()) {
+      if (!fileNameNode?.isPrimitive()) {
         return true;
       }
       return fileNameNode.isReadOnly;
@@ -281,7 +281,7 @@ export class CellVM {
 
   commitFileUpload(result: Record<string, unknown>): void {
     const node = this._getNode();
-    if (!node || !node.isObject()) {
+    if (!node?.isObject()) {
       return;
     }
     const previousValue = node.getPlainValue();
@@ -422,7 +422,7 @@ export class CellVM {
 
   private _commitFileNameEdit(newFileName: string): void {
     const fileNameNode = this._getFileNameNode();
-    if (!fileNameNode || !fileNameNode.isPrimitive()) {
+    if (!fileNameNode?.isPrimitive()) {
       return;
     }
     const objectNode = this._getNode();

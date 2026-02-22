@@ -152,7 +152,7 @@ export const WithHiddenColumns: Story = {
             { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
             { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
           ],
-          visibleFields: ['id', 'name', 'age', 'active'],
+          visibleFields: ['name', 'age', 'active'],
           withSort: true,
           withFilter: true,
         }),
