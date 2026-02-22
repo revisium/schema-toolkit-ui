@@ -1,17 +1,27 @@
-import type { JsonSchema } from '@revisium/schema-toolkit';
-import type { ColumnSpec } from '../../Columns/model/types.js';
+import type { JsonObjectSchema, RefSchemas } from '@revisium/schema-toolkit';
 import type { ViewState } from './TableEditorCore.js';
+
+export interface SystemFields {
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+  versionId?: string;
+  createdId?: string;
+  hash?: string;
+  schemaHash?: string;
+}
 
 export interface RowDataItem {
   rowId: string;
   data: Record<string, unknown>;
+  systemFields?: SystemFields;
 }
 
 export interface TableMetadata {
-  schema: JsonSchema;
-  columns: ColumnSpec[];
+  dataSchema: JsonObjectSchema;
   viewState: ViewState | null;
   readonly: boolean;
+  refSchemas?: RefSchemas;
 }
 
 export interface TableQuery {

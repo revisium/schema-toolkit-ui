@@ -8,6 +8,7 @@ export type {
 export type {
   ITableDataSource,
   RowDataItem,
+  SystemFields,
   TableMetadata,
   TableQuery,
   FetchRowsResult,
@@ -16,3 +17,4 @@ export type {
   DeleteRowsResult,
 } from './ITableDataSource.js';
 export { MockDataSource } from './MockDataSource.js';
+export { SchemaContext } from './SchemaContext.js';

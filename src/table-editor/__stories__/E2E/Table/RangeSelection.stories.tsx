@@ -12,7 +12,6 @@ import {
 import { TableWidget } from '../../../Table/ui/TableWidget.js';
 import {
   TABLE_SCHEMA,
-  TEST_COLUMNS,
   MOCK_ROWS_DATA,
 } from '../../../Table/ui/__stories__/tableTestData.js';
 
@@ -21,8 +20,7 @@ ensureReactivityProvider();
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: TABLE_SCHEMA,
-      columns: TEST_COLUMNS,
+      dataSchema: TABLE_SCHEMA,
       rowsData: MOCK_ROWS_DATA,
     }),
   );

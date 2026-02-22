@@ -3,16 +3,38 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { ensureReactivityProvider } from '../../../../../lib/initReactivity.js';
-import { col, FilterFieldType } from '../../../../__stories__/helpers.js';
+import type { ColumnSpec } from '../../../../Columns/model/types.js';
+import { FilterFieldType } from '../../../../shared/field-types.js';
 import { SortModel } from '../../../../Sortings/model/SortModel.js';
 import { SortIndicator } from '../SortIndicator.js';
 
 ensureReactivityProvider();
 
-const TEST_FIELDS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
+const TEST_FIELDS: ColumnSpec[] = [
+  {
+    field: 'name',
+    label: 'Name',
+    fieldType: FilterFieldType.String,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'age',
+    label: 'Age',
+    fieldType: FilterFieldType.Number,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'active',
+    label: 'Active',
+    fieldType: FilterFieldType.Boolean,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
 ];
 
 interface WrapperProps {

@@ -96,8 +96,14 @@ describe('extractColumns', () => {
     );
     const columns = extractColumns(root);
     expect(columns).toHaveLength(2);
-    expect(columns[0]).toMatchObject({ field: 'address.city', label: 'city' });
-    expect(columns[1]).toMatchObject({ field: 'address.zip', label: 'zip' });
+    expect(columns[0]).toMatchObject({
+      field: 'address.city',
+      label: 'address.city',
+    });
+    expect(columns[1]).toMatchObject({
+      field: 'address.zip',
+      label: 'address.zip',
+    });
   });
 
   it('array field is skipped', () => {
@@ -132,23 +138,74 @@ describe('extractColumns', () => {
     ]);
   });
 
-  it('file ref field', () => {
-    const root = parse(
-      obj({
-        avatar: ref(SystemSchemaIds.File),
-      }),
-    );
-    const columns = extractColumns(root);
-    expect(columns).toEqual([
-      {
+  describe('file ref field', () => {
+    it('produces parent File column and primitive sub-field columns', () => {
+      const root = parse(
+        obj({
+          avatar: ref(SystemSchemaIds.File),
+        }),
+      );
+      const columns = extractColumns(root);
+      const fields = columns.map((c) => c.field);
+
+      expect(columns[0]).toMatchObject({
         field: 'avatar',
         label: 'avatar',
         fieldType: FilterFieldType.File,
         isSystem: false,
-        isDeprecated: false,
-        hasFormula: false,
-      },
-    ]);
+      });
+
+      expect(fields).toContain('avatar.status');
+      expect(fields).toContain('avatar.fileId');
+      expect(fields).toContain('avatar.url');
+      expect(fields).toContain('avatar.fileName');
+      expect(fields).toContain('avatar.hash');
+      expect(fields).toContain('avatar.extension');
+      expect(fields).toContain('avatar.mimeType');
+      expect(fields).toContain('avatar.size');
+      expect(fields).toContain('avatar.width');
+      expect(fields).toContain('avatar.height');
+    });
+
+    it('sub-field columns have correct types', () => {
+      const root = parse(
+        obj({
+          avatar: ref(SystemSchemaIds.File),
+        }),
+      );
+      const columns = extractColumns(root);
+      const lookup = new Map(columns.map((c) => [c.field, c]));
+
+      expect(lookup.get('avatar.fileName')).toMatchObject({
+        fieldType: FilterFieldType.String,
+        label: 'avatar.fileName',
+      });
+      expect(lookup.get('avatar.size')).toMatchObject({
+        fieldType: FilterFieldType.Number,
+        label: 'avatar.size',
+      });
+      expect(lookup.get('avatar.width')).toMatchObject({
+        fieldType: FilterFieldType.Number,
+        label: 'avatar.width',
+      });
+      expect(lookup.get('avatar.height')).toMatchObject({
+        fieldType: FilterFieldType.Number,
+        label: 'avatar.height',
+      });
+    });
+
+    it('sub-fields are not system columns', () => {
+      const root = parse(
+        obj({
+          avatar: ref(SystemSchemaIds.File),
+        }),
+      );
+      const columns = extractColumns(root);
+      const subFields = columns.filter((c) => c.field.startsWith('avatar.'));
+      for (const col of subFields) {
+        expect(col.isSystem).toBe(false);
+      }
+    });
   });
 
   it('system field RowCreatedAt', () => {
@@ -242,13 +299,17 @@ describe('extractColumns', () => {
     );
     const columns = extractColumns(root);
     const fields = columns.map((c) => c.field);
-    expect(fields).toEqual([
-      'avatar',
-      SystemFieldId.Id,
-      'meta.title',
-      'name',
-      'score',
-    ]);
+
+    expect(fields[0]).toBe('avatar');
+    expect(fields).toContain('avatar.status');
+    expect(fields).toContain('avatar.fileName');
+    expect(fields).toContain(SystemFieldId.Id);
+    expect(fields).toContain('meta.title');
+    expect(fields).toContain('name');
+    expect(fields).toContain('score');
+
+    expect(fields).not.toContain('tags');
+
     expect(columns.find((c) => c.field === 'avatar')).toMatchObject({
       fieldType: FilterFieldType.File,
       isSystem: false,
@@ -268,6 +329,6 @@ describe('extractColumns', () => {
     );
     const columns = extractColumns(root);
     expect(columns).toHaveLength(1);
-    expect(columns[0]).toMatchObject({ field: 'a.b.c', label: 'c' });
+    expect(columns[0]).toMatchObject({ field: 'a.b.c', label: 'a.b.c' });
   });
 });

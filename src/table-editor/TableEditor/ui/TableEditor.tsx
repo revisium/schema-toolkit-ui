@@ -33,7 +33,6 @@ export const TableEditor: FC<TableEditorProps> = observer(
       );
     }
 
-    const columns = viewModel.columns.visibleColumns;
     const isReadonly = viewModel.readonly;
     const { breadcrumbs, callbacks } = viewModel;
 
@@ -64,10 +63,13 @@ export const TableEditor: FC<TableEditorProps> = observer(
           )}
           <Flex alignItems="center" gap="8px">
             <SearchWidget model={viewModel.search} />
-            <FilterWidget model={viewModel.filters} availableFields={columns} />
+            <FilterWidget
+              model={viewModel.filters}
+              availableFields={viewModel.columns.filterableFields}
+            />
             <SortingsWidget
               model={viewModel.sorts}
-              availableFields={columns}
+              availableFields={viewModel.columns.sortableFields}
               onChange={noop}
             />
           </Flex>
@@ -92,6 +94,8 @@ export const TableEditor: FC<TableEditorProps> = observer(
               isReadonly ? undefined : (ids) => viewModel.deleteRows(ids)
             }
             onSearchForeignKey={callbacks.onSearchForeignKey}
+            onUploadFile={callbacks.onUploadFile}
+            onOpenFile={callbacks.onOpenFile}
             onCopyPath={callbacks.onCopyPath}
             useWindowScroll={useWindowScroll}
           />

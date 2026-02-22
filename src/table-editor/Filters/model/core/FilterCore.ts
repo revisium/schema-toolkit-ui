@@ -168,9 +168,30 @@ export class FilterCore {
   }
 
   applySnapshot(serialized: string): void {
-    const hasFilters = this._serializer.applySnapshot(serialized);
+    let parsed: FilterGroup;
+    try {
+      parsed = JSON.parse(serialized) as FilterGroup;
+    } catch {
+      return;
+    }
+    const validFields = new Set(this._availableFields.map((f) => f.field));
+    const cleaned = FilterCore._stripInvalidConditions(parsed, validFields);
+    const hasFilters = this._serializer.applySnapshot(JSON.stringify(cleaned));
     this._committedHasFilters = hasFilters;
     this._notifyChange();
+  }
+
+  private static _stripInvalidConditions(
+    group: FilterGroup,
+    validFields: Set<string>,
+  ): FilterGroup {
+    return {
+      ...group,
+      conditions: group.conditions.filter((c) => validFields.has(c.field)),
+      groups: group.groups
+        .map((g) => FilterCore._stripInvalidConditions(g, validFields))
+        .filter((g) => g.conditions.length > 0 || g.groups.length > 0),
+    };
   }
 
   clearAll(): void {

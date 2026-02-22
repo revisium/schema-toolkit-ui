@@ -11,7 +11,6 @@ import {
 import { StoryWrapper } from '../../../TableEditor/__stories__/TableEditor.stories.js';
 import {
   TABLE_SCHEMA,
-  TEST_COLUMNS,
   MOCK_ROWS_DATA,
 } from '../../../TableEditor/__stories__/tableEditorTestData.js';
 import type { TableEditorBreadcrumb } from '../../../TableEditor/model/TableEditorCore.js';
@@ -30,8 +29,7 @@ const STORY_BREADCRUMBS: TableEditorBreadcrumb[] = [
 
 function createState(): TableEditorStoryState {
   return createTableEditorStoryState({
-    schema: TABLE_SCHEMA,
-    columns: TEST_COLUMNS,
+    dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS_DATA,
     breadcrumbs: STORY_BREADCRUMBS,
     callbacks: {
@@ -242,8 +240,7 @@ export const ReadonlyHidesMutationActions: Story = {
     const ReadonlyWrapper = observer(() => {
       const [state] = useState(() =>
         createTableEditorStoryState({
-          schema: TABLE_SCHEMA,
-          columns: TEST_COLUMNS,
+          dataSchema: TABLE_SCHEMA,
           rowsData: MOCK_ROWS_DATA,
           readonly: true,
           callbacks: { onOpenRow: mockOpenRow },

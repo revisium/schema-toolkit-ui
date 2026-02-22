@@ -3,7 +3,7 @@ import { Box, Flex } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { ensureReactivityProvider } from '../../../../../lib/initReactivity.js';
-import { col, FilterFieldType } from '../../../../__stories__/helpers.js';
+import { FilterFieldType } from '../../../../shared/field-types.js';
 import { ColumnsModel } from '../../../../Columns/model/ColumnsModel.js';
 import { SortModel } from '../../../../Sortings/model/SortModel.js';
 import { FilterModel } from '../../../../Filters/model/FilterModel.js';
@@ -13,11 +13,39 @@ ensureReactivityProvider();
 
 import type { ColumnSpec } from '../../../../Columns/model/types.js';
 
-const ALL_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('active', FilterFieldType.Boolean),
-  col('email', FilterFieldType.String),
+const ALL_COLUMNS: ColumnSpec[] = [
+  {
+    field: 'name',
+    label: 'Name',
+    fieldType: FilterFieldType.String,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'age',
+    label: 'Age',
+    fieldType: FilterFieldType.Number,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'active',
+    label: 'Active',
+    fieldType: FilterFieldType.Boolean,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
+  {
+    field: 'email',
+    label: 'Email',
+    fieldType: FilterFieldType.String,
+    isSystem: false,
+    isDeprecated: false,
+    hasFormula: false,
+  },
 ];
 
 interface WrapperProps {
@@ -108,10 +136,14 @@ export const WithSortAndFilter: Story = {
 export const DeprecatedColumn: Story = {
   args: {
     columns: [
-      col('oldField', FilterFieldType.String, {
+      {
+        field: 'oldField',
         label: 'Old Field',
+        fieldType: FilterFieldType.String,
+        isSystem: false,
         isDeprecated: true,
-      }),
+        hasFormula: false,
+      },
     ],
   },
 };
@@ -119,10 +151,14 @@ export const DeprecatedColumn: Story = {
 export const FormulaColumn: Story = {
   args: {
     columns: [
-      col('computed', FilterFieldType.String, {
+      {
+        field: 'computed',
         label: 'Computed',
+        fieldType: FilterFieldType.String,
+        isSystem: false,
+        isDeprecated: false,
         hasFormula: true,
-      }),
+      },
     ],
   },
 };

@@ -12,7 +12,7 @@ import {
   boolFormula,
 } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
-import { col, createTableStoryState, FilterFieldType } from '../../helpers.js';
+import { createTableStoryState } from '../../helpers.js';
 import { TableWidget } from '../../../Table/ui/TableWidget.js';
 
 ensureReactivityProvider();
@@ -25,20 +25,6 @@ const FORMULA_TABLE_SCHEMA = obj({
   label: strFormula('greeting + " (" + ageGroup + ")"'),
 });
 
-const FORMULA_TEST_COLUMNS = [
-  col('name', FilterFieldType.String),
-  col('age', FilterFieldType.Number),
-  col('greeting', FilterFieldType.String, {
-    label: 'Greeting',
-    hasFormula: true,
-  }),
-  col('ageGroup', FilterFieldType.String, {
-    label: 'Age Group',
-    hasFormula: true,
-  }),
-  col('label', FilterFieldType.String, { label: 'Label', hasFormula: true }),
-];
-
 const FORMULA_ROWS_DATA = [
   { name: 'Alice', age: 30 },
   { name: 'Bob', age: 25 },
@@ -48,8 +34,7 @@ const FORMULA_ROWS_DATA = [
 const FormulaStoryWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: FORMULA_TABLE_SCHEMA,
-      columns: FORMULA_TEST_COLUMNS,
+      dataSchema: FORMULA_TABLE_SCHEMA,
       rowsData: FORMULA_ROWS_DATA,
     }),
   );
@@ -74,17 +59,6 @@ const MIXED_FORMULA_SCHEMA = obj({
   expensive: boolFormula('total > 100'),
 });
 
-const MIXED_FORMULA_COLUMNS = [
-  col('item', FilterFieldType.String, { label: 'Item' }),
-  col('price', FilterFieldType.Number, { label: 'Price' }),
-  col('quantity', FilterFieldType.Number, { label: 'Qty' }),
-  col('total', FilterFieldType.Number, { label: 'Total', hasFormula: true }),
-  col('expensive', FilterFieldType.Boolean, {
-    label: 'Expensive?',
-    hasFormula: true,
-  }),
-];
-
 const MIXED_FORMULA_ROWS = [
   { item: 'Laptop', price: 999, quantity: 2 },
   { item: 'Mouse', price: 25, quantity: 3 },
@@ -94,8 +68,7 @@ const MIXED_FORMULA_ROWS = [
 const MixedFormulaWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: MIXED_FORMULA_SCHEMA,
-      columns: MIXED_FORMULA_COLUMNS,
+      dataSchema: MIXED_FORMULA_SCHEMA,
       rowsData: MIXED_FORMULA_ROWS,
     }),
   );

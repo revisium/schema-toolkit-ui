@@ -28,12 +28,18 @@ function collectColumns(
 ): void {
   for (const child of node.properties()) {
     const fieldPath = buildFieldPath(parentPath, child.name());
-    const column = resolveColumn(child, fieldPath);
+    const result = resolveColumn(child, fieldPath);
 
-    if (column === 'recurse') {
+    if (result === 'recurse') {
       collectColumns(child, fieldPath, columns);
-    } else if (column) {
-      columns.push(column);
+    } else if (result) {
+      if (Array.isArray(result)) {
+        for (const col of result) {
+          columns.push(col);
+        }
+      } else {
+        columns.push(result);
+      }
     }
   }
 }
@@ -45,14 +51,14 @@ function buildFieldPath(parentPath: string, fieldName: string): string {
 function resolveColumn(
   child: SchemaNode,
   fieldPath: string,
-): ColumnSpec | 'recurse' | null {
+): ColumnSpec | ColumnSpec[] | 'recurse' | null {
   if (child.isArray()) {
     return null;
   }
 
-  const refColumn = resolveRefColumn(child, fieldPath);
-  if (refColumn) {
-    return refColumn;
+  const refResult = resolveRefColumn(child, fieldPath);
+  if (refResult) {
+    return refResult;
   }
 
   if (child.isObject() && !child.isRef()) {
@@ -76,7 +82,7 @@ function resolveColumn(
 function resolveRefColumn(
   child: SchemaNode,
   fieldPath: string,
-): ColumnSpec | null {
+): ColumnSpec | ColumnSpec[] | null {
   const refValue = child.ref();
   if (!refValue) {
     return null;
@@ -96,10 +102,30 @@ function resolveRefColumn(
   }
 
   if (refValue === SystemSchemaIds.File) {
-    return createColumn(fieldPath, child, FilterFieldType.File);
+    return resolveFileRefColumns(child, fieldPath);
   }
 
   return null;
+}
+
+function resolveFileRefColumns(
+  child: SchemaNode,
+  fieldPath: string,
+): ColumnSpec[] {
+  const fileColumn = createColumn(fieldPath, child, FilterFieldType.File);
+  const result: ColumnSpec[] = [fileColumn];
+
+  if (child.isObject()) {
+    for (const subField of child.properties()) {
+      const subFieldPath = buildFieldPath(fieldPath, subField.name());
+      const fieldType = NODE_TYPE_TO_FIELD_TYPE[subField.nodeType()];
+      if (fieldType) {
+        result.push(createColumn(subFieldPath, subField, fieldType));
+      }
+    }
+  }
+
+  return result;
 }
 
 function createColumn(
@@ -109,7 +135,7 @@ function createColumn(
 ): ColumnSpec {
   return {
     field: fieldPath,
-    label: child.name(),
+    label: fieldPath,
     fieldType,
     isSystem: false,
     isDeprecated: child.metadata().deprecated ?? false,

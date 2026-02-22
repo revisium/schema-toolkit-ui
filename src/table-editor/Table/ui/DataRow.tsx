@@ -18,6 +18,11 @@ interface DataRowProps {
   showLeftShadow?: boolean;
   showRightShadow?: boolean;
   onSearchForeignKey?: SearchForeignKeySearchFn;
+  onUploadFile?: (
+    fileId: string,
+    file: File,
+  ) => Promise<Record<string, unknown> | null>;
+  onOpenFile?: (url: string) => void;
   onOpenRow?: (rowId: string) => void;
   onSelectRow?: (rowId: string) => void;
   onDuplicateRow?: (rowId: string) => void;
@@ -150,6 +155,8 @@ export const DataRow = observer(
     showLeftShadow,
     showRightShadow,
     onSearchForeignKey,
+    onUploadFile,
+    onOpenFile,
     onOpenRow,
     onSelectRow,
     onDuplicateRow,
@@ -225,12 +232,16 @@ export const DataRow = observer(
                   <CellRenderer
                     cell={cellVM}
                     onSearchForeignKey={onSearchForeignKey}
+                    onUploadFile={onUploadFile}
+                    onOpenFile={onOpenFile}
                   />
                 </Box>
               ) : (
                 <CellRenderer
                   cell={cellVM}
                   onSearchForeignKey={onSearchForeignKey}
+                  onUploadFile={onUploadFile}
+                  onOpenFile={onOpenFile}
                 />
               )}
               {showOverlay && (

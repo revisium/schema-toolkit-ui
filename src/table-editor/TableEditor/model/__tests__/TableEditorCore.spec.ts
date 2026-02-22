@@ -1,8 +1,16 @@
-import { FilterFieldType } from '../../../shared/field-types';
-import { testCol as col } from '../../../__tests__/helpers';
+import { jest } from '@jest/globals';
 import { MockDataSource } from '../MockDataSource';
 import { TableEditorCore } from '../TableEditorCore';
-import { obj, str, num, bool } from '@revisium/schema-toolkit';
+import type { TableEditorCallbacks } from '../TableEditorCore';
+import {
+  obj,
+  str,
+  num,
+  bool,
+  fileSchema,
+  SystemSchemaIds,
+} from '@revisium/schema-toolkit';
+import type { JsonObjectSchema, RefSchemas } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity';
 
 ensureReactivityProvider();
@@ -12,12 +20,6 @@ const TABLE_SCHEMA = obj({
   age: num(),
   active: bool(),
 });
-
-const TEST_COLUMNS = [
-  col({ field: 'name' }),
-  col({ field: 'age', fieldType: FilterFieldType.Number }),
-  col({ field: 'active', fieldType: FilterFieldType.Boolean }),
-];
 
 const MOCK_ROWS_DATA = [
   { name: 'Alice', age: 30, active: true },
@@ -34,8 +36,7 @@ function createDataSource(overrides?: {
   failPatches?: Set<string>;
 }) {
   return new MockDataSource({
-    schema: TABLE_SCHEMA,
-    columns: TEST_COLUMNS,
+    dataSchema: TABLE_SCHEMA,
     rows: createRows(MOCK_ROWS_DATA),
     ...overrides,
   });
@@ -206,7 +207,11 @@ describe('TableEditorCore', () => {
       const { core, dataSource } = await createCore();
       const row = core.rows[0];
       expect(row).toBeDefined();
-      const cellVM = row.getCellVM(TEST_COLUMNS[0]);
+      const nameCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'name',
+      );
+      expect(nameCol).toBeDefined();
+      const cellVM = row.getCellVM(nameCol!);
       cellVM.startEdit();
       cellVM.commitEdit('Updated');
       await flushMicrotasks();
@@ -222,7 +227,11 @@ describe('TableEditorCore', () => {
       });
       const row = core.rows[0];
       expect(row).toBeDefined();
-      const cellVM = row.getCellVM(TEST_COLUMNS[0]);
+      const nameCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'name',
+      );
+      expect(nameCol).toBeDefined();
+      const cellVM = row.getCellVM(nameCol!);
       cellVM.startEdit();
       cellVM.commitEdit('Updated');
       await flushMicrotasks();
@@ -306,8 +315,7 @@ describe('TableEditorCore', () => {
   describe('pagination', () => {
     it('loadMore appends rows when hasNextPage', async () => {
       const dataSource = new MockDataSource({
-        schema: TABLE_SCHEMA,
-        columns: TEST_COLUMNS,
+        dataSchema: TABLE_SCHEMA,
         rows: Array.from({ length: 5 }, (_, i) =>
           MockDataSource.createRow(`row-${i + 1}`, {
             name: `User ${i + 1}`,
@@ -334,6 +342,177 @@ describe('TableEditorCore', () => {
       const fetchCount = dataSource.fetchLog.length;
       await core.loadMore();
       expect(dataSource.fetchLog.length).toBe(fetchCount);
+    });
+  });
+
+  describe('file callbacks', () => {
+    const FILE_TABLE_SCHEMA = {
+      type: 'object',
+      properties: {
+        name: { type: 'string', default: '' },
+        avatar: { $ref: SystemSchemaIds.File },
+      },
+      additionalProperties: false,
+      required: ['name', 'avatar'],
+    } as unknown as JsonObjectSchema;
+
+    const FILE_REF_SCHEMAS: RefSchemas = {
+      [SystemSchemaIds.File]: fileSchema,
+    };
+
+    const FILE_ROW_DATA = {
+      name: 'Alice',
+      avatar: {
+        status: 'uploaded',
+        fileId: 'file-1',
+        url: 'https://example.com/img.png',
+        fileName: 'photo.png',
+        hash: 'abc',
+        extension: '.png',
+        mimeType: 'image/png',
+        size: 1024,
+        width: 200,
+        height: 200,
+      },
+    };
+
+    async function createFileCore(callbacks: TableEditorCallbacks = {}) {
+      const dataSource = new MockDataSource({
+        dataSchema: FILE_TABLE_SCHEMA,
+        rows: [MockDataSource.createRow('row-1', { ...FILE_ROW_DATA })],
+        refSchemas: FILE_REF_SCHEMAS,
+      });
+      const core = new TableEditorCore(dataSource, {
+        tableId: 'file-table',
+        callbacks,
+      });
+      await waitForBootstrap(core);
+      return { core, dataSource };
+    }
+
+    it('stores onUploadFile callback', async () => {
+      const onUploadFile = jest.fn();
+      const { core } = await createFileCore({ onUploadFile });
+      expect(core.callbacks.onUploadFile).toBeDefined();
+    });
+
+    it('stores onOpenFile callback', async () => {
+      const onOpenFile = jest.fn();
+      const { core } = await createFileCore({ onOpenFile });
+      expect(core.callbacks.onOpenFile).toBeDefined();
+    });
+
+    it('creates rows with refSchemas resolved', async () => {
+      const { core } = await createFileCore();
+      const row = core.rows[0];
+      expect(row).toBeDefined();
+      const avatarCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'avatar',
+      );
+      expect(avatarCol).toBeDefined();
+      const cellVM = row.getCellVM(avatarCol!);
+      expect(cellVM.fileData).not.toBeNull();
+      expect(cellVM.fileData?.fileName).toBe('photo.png');
+    });
+
+    it('file column cell is editable when not readonly', async () => {
+      const { core } = await createFileCore();
+      const row = core.rows[0];
+      const avatarCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'avatar',
+      )!;
+      const cellVM = row.getCellVM(avatarCol);
+      expect(cellVM.isEditable).toBe(true);
+      expect(cellVM.isReadOnly).toBe(false);
+    });
+
+    it('file column displayValue shows fileName', async () => {
+      const { core } = await createFileCore();
+      const row = core.rows[0];
+      const avatarCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'avatar',
+      )!;
+      const cellVM = row.getCellVM(avatarCol);
+      expect(cellVM.displayValue).toBe('photo.png');
+    });
+
+    it('commitEdit on file column updates fileName via patch', async () => {
+      const { core, dataSource } = await createFileCore();
+      const row = core.rows[0];
+      const avatarCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'avatar',
+      )!;
+      const cellVM = row.getCellVM(avatarCol);
+
+      cellVM.startEdit();
+      cellVM.commitEdit('renamed.png');
+      await flushMicrotasks();
+
+      expect(cellVM.displayValue).toBe('renamed.png');
+      expect(dataSource.patchLog).toHaveLength(1);
+      const patch = dataSource.patchLog[0][0];
+      expect(patch.rowId).toBe('row-1');
+      expect(patch.field).toBe('avatar');
+      expect((patch.value as Record<string, unknown>).fileName).toBe(
+        'renamed.png',
+      );
+    });
+
+    it('commitFileUpload updates cell value via patch', async () => {
+      const { core, dataSource } = await createFileCore();
+      const row = core.rows[0];
+      const avatarCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'avatar',
+      )!;
+      const cellVM = row.getCellVM(avatarCol);
+
+      const uploadResult = {
+        status: 'uploaded',
+        fileId: 'file-1',
+        url: 'https://example.com/new.jpg',
+        fileName: 'new-upload.jpg',
+        hash: 'newhash',
+        extension: '.jpg',
+        mimeType: 'image/jpeg',
+        size: 2048,
+        width: 400,
+        height: 300,
+      };
+
+      cellVM.commitFileUpload(uploadResult);
+      await flushMicrotasks();
+
+      expect(cellVM.fileData?.fileName).toBe('new-upload.jpg');
+      expect(cellVM.fileData?.url).toBe('https://example.com/new.jpg');
+      expect(dataSource.patchLog).toHaveLength(1);
+    });
+
+    it('table readonly flag is set from metadata', async () => {
+      const dataSource = new MockDataSource({
+        dataSchema: FILE_TABLE_SCHEMA,
+        rows: [MockDataSource.createRow('row-1', { ...FILE_ROW_DATA })],
+        refSchemas: FILE_REF_SCHEMAS,
+        readonly: true,
+      });
+      const core = new TableEditorCore(dataSource, {
+        tableId: 'file-table',
+      });
+      await waitForBootstrap(core);
+
+      expect(core.readonly).toBe(true);
+    });
+
+    it('file sub-field column accesses nested value', async () => {
+      const { core } = await createFileCore();
+      core.columns.showColumn('avatar.fileName');
+      const row = core.rows[0];
+      const fileNameCol = core.columns.visibleColumns.find(
+        (c) => c.field === 'avatar.fileName',
+      );
+      expect(fileNameCol).toBeDefined();
+      const cellVM = row.getCellVM(fileNameCol!);
+      expect(cellVM.value).toBe('photo.png');
+      expect(cellVM.displayValue).toBe('photo.png');
     });
   });
 });

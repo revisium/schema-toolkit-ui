@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { FilterFieldType } from '../../../shared/field-types';
 import { testCol as col } from '../../../__tests__/helpers';
 import { ColumnsModel } from '../ColumnsModel';
 
@@ -23,9 +24,10 @@ describe('ColumnsModel', () => {
         col({ field: 'c' }),
         col({ field: 'd' }),
         col({ field: 'e' }),
+        col({ field: 'f' }),
       ];
       model.init(columns);
-      expect(model.visibleColumns).toHaveLength(3);
+      expect(model.visibleColumns).toHaveLength(4);
     });
 
     it('builds lookup for field resolution', () => {
@@ -42,11 +44,12 @@ describe('ColumnsModel', () => {
         col({ field: 'b' }),
         col({ field: 'c' }),
         col({ field: 'd' }),
+        col({ field: 'e' }),
       ];
       model.init(columns);
-      expect(model.hiddenColumns.some((c) => c.field === 'd')).toBe(true);
-      model.showColumn('d');
-      expect(model.visibleColumns.some((c) => c.field === 'd')).toBe(true);
+      expect(model.hiddenColumns.some((c) => c.field === 'e')).toBe(true);
+      model.showColumn('e');
+      expect(model.visibleColumns.some((c) => c.field === 'e')).toBe(true);
     });
 
     it('hideColumn removes column from visible', () => {
@@ -179,6 +182,34 @@ describe('ColumnsModel', () => {
       expect(model.filterableFields).toHaveLength(1);
       expect(model.filterableFields[0]?.field).toBe('active');
     });
+
+    it('sortableFields excludes File columns', () => {
+      const columns = [
+        col({ field: 'name' }),
+        col({ field: 'avatar', fieldType: FilterFieldType.File }),
+        col({ field: 'avatar.fileName' }),
+        col({ field: 'avatar.size', fieldType: FilterFieldType.Number }),
+      ];
+      model.init(columns);
+      const sortable = model.sortableFields.map((c) => c.field);
+      expect(sortable).toContain('name');
+      expect(sortable).toContain('avatar.fileName');
+      expect(sortable).toContain('avatar.size');
+      expect(sortable).not.toContain('avatar');
+    });
+
+    it('filterableFields excludes File columns', () => {
+      const columns = [
+        col({ field: 'name' }),
+        col({ field: 'avatar', fieldType: FilterFieldType.File }),
+        col({ field: 'avatar.url' }),
+      ];
+      model.init(columns);
+      const filterable = model.filterableFields.map((c) => c.field);
+      expect(filterable).toContain('name');
+      expect(filterable).toContain('avatar.url');
+      expect(filterable).not.toContain('avatar');
+    });
   });
 
   describe('resetToDefaults', () => {
@@ -195,7 +226,7 @@ describe('ColumnsModel', () => {
       model.showColumn('e');
       model.setColumnWidth('a', 300);
       model.resetToDefaults();
-      expect(model.visibleColumns).toHaveLength(3);
+      expect(model.visibleColumns).toHaveLength(4);
       expect(model.getColumnWidth('a')).toBeUndefined();
     });
   });
@@ -363,12 +394,13 @@ describe('ColumnsModel', () => {
         col({ field: 'sys', isSystem: true }),
         col({ field: 'c' }),
         col({ field: 'd' }),
+        col({ field: 'e' }),
       ]);
       const available = model.availableFieldsToAdd;
       const fields = available.map((c) => c.field);
       expect(fields).not.toContain('a');
       expect(fields).not.toContain('sys');
-      expect(fields).toContain('d');
+      expect(fields).toContain('e');
     });
 
     it('availableSystemFieldsToAdd returns hidden system fields', () => {
@@ -883,9 +915,10 @@ describe('ColumnsModel', () => {
         col({ field: 'b' }),
         col({ field: 'c' }),
         col({ field: 'd' }),
+        col({ field: 'e' }),
       ]);
       model.setOnChange(onChange);
-      model.showColumn('d');
+      model.showColumn('e');
       expect(onChange).toHaveBeenCalled();
     });
 

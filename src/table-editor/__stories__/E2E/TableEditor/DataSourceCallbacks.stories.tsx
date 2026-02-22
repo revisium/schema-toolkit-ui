@@ -11,7 +11,6 @@ import {
 import { StoryWrapper } from '../../../TableEditor/__stories__/TableEditor.stories.js';
 import {
   TABLE_SCHEMA,
-  TEST_COLUMNS,
   MOCK_ROWS_DATA,
 } from '../../../TableEditor/__stories__/tableEditorTestData.js';
 
@@ -21,8 +20,7 @@ const noop = () => {};
 
 function createState(): TableEditorStoryState {
   return createTableEditorStoryState({
-    schema: TABLE_SCHEMA,
-    columns: TEST_COLUMNS,
+    dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS_DATA,
     callbacks: {
       onOpenRow: noop,

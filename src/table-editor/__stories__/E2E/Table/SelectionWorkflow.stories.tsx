@@ -9,7 +9,6 @@ import { SelectionModel } from '../../../Table/model/SelectionModel.js';
 import { TableWidget } from '../../../Table/ui/TableWidget.js';
 import {
   TABLE_SCHEMA,
-  TEST_COLUMNS,
   MOCK_ROWS_DATA,
 } from '../../../Table/ui/__stories__/tableTestData.js';
 
@@ -20,8 +19,7 @@ const noop = () => {};
 const StoryWrapper = observer(() => {
   const [state] = useState(() =>
     createTableStoryState({
-      schema: TABLE_SCHEMA,
-      columns: TEST_COLUMNS,
+      dataSchema: TABLE_SCHEMA,
       rowsData: MOCK_ROWS_DATA,
     }),
   );
@@ -80,9 +78,9 @@ export const SelectionWorkflow: Story = {
       expect(canvas.getByTestId('header-age')).toBeVisible();
       expect(canvas.getByTestId('header-active')).toBeVisible();
     });
-    expect(canvas.getByTestId('header-name')).toHaveTextContent('Name');
-    expect(canvas.getByTestId('header-age')).toHaveTextContent('Age');
-    expect(canvas.getByTestId('header-active')).toHaveTextContent('Active');
+    expect(canvas.getByTestId('header-name')).toHaveTextContent('name');
+    expect(canvas.getByTestId('header-age')).toHaveTextContent('age');
+    expect(canvas.getByTestId('header-active')).toHaveTextContent('active');
 
     // Smoke: rows
     await waitFor(() => {

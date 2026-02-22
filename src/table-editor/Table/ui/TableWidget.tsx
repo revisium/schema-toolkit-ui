@@ -42,6 +42,11 @@ interface TableWidgetProps {
   sortModel?: SortModel;
   filterModel?: FilterModel;
   onSearchForeignKey?: SearchForeignKeySearchFn;
+  onUploadFile?: (
+    fileId: string,
+    file: File,
+  ) => Promise<Record<string, unknown> | null>;
+  onOpenFile?: (url: string) => void;
   onOpenRow?: (rowId: string) => void;
   onDeleteSelected?: (ids: string[]) => void;
   onDuplicateSelected?: (ids: string[]) => void;
@@ -67,6 +72,8 @@ export const TableWidget = observer(
     sortModel,
     filterModel,
     onSearchForeignKey,
+    onUploadFile,
+    onOpenFile,
     onOpenRow,
     onDeleteSelected,
     onDuplicateSelected,
@@ -233,6 +240,8 @@ export const TableWidget = observer(
           showLeftShadow={scrollShadow.showLeftShadow}
           showRightShadow={scrollShadow.showRightShadow}
           onSearchForeignKey={onSearchForeignKey}
+          onUploadFile={onUploadFile}
+          onOpenFile={onOpenFile}
           onOpenRow={onOpenRow}
           onSelectRow={canSelect ? handleSelectRow : undefined}
           onDuplicateRow={canDuplicateRow ? onDuplicateRow : undefined}
@@ -245,6 +254,8 @@ export const TableWidget = observer(
         scrollShadow.showLeftShadow,
         scrollShadow.showRightShadow,
         onSearchForeignKey,
+        onUploadFile,
+        onOpenFile,
         onOpenRow,
         canSelect,
         canDeleteRow,
