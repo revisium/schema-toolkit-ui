@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import { Box, Flex, Spinner } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
@@ -41,23 +41,30 @@ const noop = () => {};
 
 export interface StoryWrapperProps {
   state: TableEditorStoryState;
-  readonly?: boolean;
   onOpenRow?: (rowId: string) => void;
-  onDeleteRow?: (rowId: string) => void;
   onDuplicateRow?: (rowId: string) => void;
-  onDeleteSelected?: (ids: string[]) => void;
 }
 
 export const StoryWrapper = observer(
-  ({
-    state,
-    readonly = false,
-    onOpenRow,
-    onDeleteRow,
-    onDuplicateRow,
-    onDeleteSelected,
-  }: StoryWrapperProps) => {
-    const columns = state.core.columns.visibleColumns;
+  ({ state, onOpenRow, onDuplicateRow }: StoryWrapperProps) => {
+    const { core } = state;
+
+    if (core.isBootstrapping) {
+      return (
+        <Box
+          width="800px"
+          height="500px"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <Spinner />
+        </Box>
+      );
+    }
+
+    const columns = core.columns.visibleColumns;
+    const isReadonly = core.readonly;
 
     return (
       <Box width="800px" height="500px" display="flex" flexDirection="column">
@@ -72,16 +79,17 @@ export const StoryWrapper = observer(
             segments={[{ label: 'Database' }, { label: 'invoices' }]}
             highlightLast={false}
             onSegmentClick={noop}
-            action={<PlusButton tooltip="New row" onClick={noop} />}
+            action={
+              isReadonly ? undefined : (
+                <PlusButton tooltip="New row" onClick={noop} />
+              )
+            }
           />
           <Flex alignItems="center" gap="8px">
-            <SearchWidget model={state.core.search} />
-            <FilterWidget
-              model={state.core.filters}
-              availableFields={columns}
-            />
+            <SearchWidget model={core.search} />
+            <FilterWidget model={core.filters} availableFields={columns} />
             <SortingsWidget
-              model={state.core.sorts}
+              model={core.sorts}
               availableFields={columns}
               onChange={noop}
             />
@@ -90,22 +98,26 @@ export const StoryWrapper = observer(
 
         <Box flex={1}>
           <TableWidget
-            rows={state.rows}
-            columnsModel={state.core.columns}
-            cellFSM={state.core.cellFSM}
-            selection={state.core.selection}
-            sortModel={state.core.sorts}
-            filterModel={state.core.filters}
+            rows={core.rows}
+            columnsModel={core.columns}
+            cellFSM={core.cellFSM}
+            selection={core.selection}
+            sortModel={core.sorts}
+            filterModel={core.filters}
+            isLoadingMore={core.isLoadingMore}
+            onEndReached={core.loadMore}
             onOpenRow={onOpenRow}
-            onDeleteRow={readonly ? undefined : onDeleteRow}
-            onDuplicateRow={readonly ? undefined : onDuplicateRow}
-            onDeleteSelected={readonly ? undefined : onDeleteSelected}
+            onDeleteRow={isReadonly ? undefined : (id) => core.deleteRows([id])}
+            onDuplicateRow={isReadonly ? undefined : onDuplicateRow}
+            onDeleteSelected={
+              isReadonly ? undefined : (ids) => core.deleteRows(ids)
+            }
           />
         </Box>
 
         <Flex px={3} py={2} alignItems="center" justifyContent="space-between">
-          <RowCountWidget model={state.rowCount} />
-          <ViewSettingsBadge model={state.core.viewBadge} />
+          <RowCountWidget model={core.rowCount} />
+          <ViewSettingsBadge model={core.viewBadge} />
         </Flex>
       </Box>
     );
@@ -113,9 +125,7 @@ export const StoryWrapper = observer(
 );
 
 const onOpenRow = fn().mockName('onOpenRow');
-const onDeleteRow = fn().mockName('onDeleteRow');
 const onDuplicateRow = fn().mockName('onDuplicateRow');
-const onDeleteSelected = fn().mockName('onDeleteSelected');
 
 const DefaultWrapper = observer(() => {
   const [state] = useState(() =>
@@ -130,9 +140,7 @@ const DefaultWrapper = observer(() => {
     <StoryWrapper
       state={state}
       onOpenRow={onOpenRow}
-      onDeleteRow={onDeleteRow}
       onDuplicateRow={onDuplicateRow}
-      onDeleteSelected={onDeleteSelected}
     />
   );
 });
@@ -169,9 +177,7 @@ export const ManyColumns: Story = {
         <StoryWrapper
           state={state}
           onOpenRow={onOpenRow}
-          onDeleteRow={onDeleteRow}
           onDuplicateRow={onDuplicateRow}
-          onDeleteSelected={onDeleteSelected}
         />
       );
     });
@@ -195,9 +201,7 @@ export const EmptyTable: Story = {
         <StoryWrapper
           state={state}
           onOpenRow={onOpenRow}
-          onDeleteRow={onDeleteRow}
           onDuplicateRow={onDuplicateRow}
-          onDeleteSelected={onDeleteSelected}
         />
       );
     });
@@ -246,9 +250,7 @@ export const WithFormulas: Story = {
         <StoryWrapper
           state={state}
           onOpenRow={onOpenRow}
-          onDeleteRow={onDeleteRow}
           onDuplicateRow={onDuplicateRow}
-          onDeleteSelected={onDeleteSelected}
         />
       );
     });
@@ -266,17 +268,16 @@ const READONLY_SCHEMA = obj({
 export const Readonly: Story = {
   render: () => {
     const Wrapper = observer(() => {
-      const [state] = useState(() => {
-        const s = createTableEditorStoryState({
+      const [state] = useState(() =>
+        createTableEditorStoryState({
           schema: READONLY_SCHEMA,
           columns: TEST_COLUMNS,
           rowsData: MOCK_ROWS_DATA,
-        });
-        s.core.viewBadge.setCanSave(false);
-        return s;
-      });
+          readonly: true,
+        }),
+      );
 
-      return <StoryWrapper state={state} readonly onOpenRow={onOpenRow} />;
+      return <StoryWrapper state={state} onOpenRow={onOpenRow} />;
     });
 
     return <Wrapper />;

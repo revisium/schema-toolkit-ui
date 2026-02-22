@@ -46,13 +46,12 @@ function createManyColumnsState(): TableEditorStoryState {
 }
 
 function createReadonlyState(): TableEditorStoryState {
-  const s = createTableEditorStoryState({
+  return createTableEditorStoryState({
     schema: READONLY_SCHEMA,
     columns: TEST_COLUMNS,
     rowsData: MOCK_ROWS_DATA,
+    readonly: true,
   });
-  s.core.viewBadge.setCanSave(false);
-  return s;
 }
 
 const EditableE2EWrapper = observer(() => {
@@ -65,15 +64,7 @@ const EditableE2EWrapper = observer(() => {
     };
   }, [state]);
 
-  return (
-    <StoryWrapper
-      state={state}
-      onOpenRow={noop}
-      onDeleteRow={noop}
-      onDuplicateRow={noop}
-      onDeleteSelected={noop}
-    />
-  );
+  return <StoryWrapper state={state} onOpenRow={noop} onDuplicateRow={noop} />;
 });
 
 const ReadonlyE2EWrapper = observer(() => {
@@ -86,7 +77,7 @@ const ReadonlyE2EWrapper = observer(() => {
     };
   }, [state]);
 
-  return <StoryWrapper state={state} readonly />;
+  return <StoryWrapper state={state} />;
 });
 
 const meta: Meta<typeof EditableE2EWrapper> = {
@@ -113,6 +104,10 @@ export const EditableWorkflow: Story = {
       expect((window as any).__testState).toBeDefined();
     });
     const state = (window as any).__testState as TableEditorStoryState;
+
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
 
     // 1. Filter workflow: open filter → add condition → verify
     const filterTrigger = canvas.getByTestId('filter-trigger');
@@ -217,6 +212,10 @@ export const ReadonlyWorkflow: Story = {
     });
     const state = (window as any).__testState as TableEditorStoryState;
 
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
+
     // 1. Verify cells are readonly and not editable
     await waitFor(() => {
       expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
@@ -224,7 +223,7 @@ export const ReadonlyWorkflow: Story = {
 
     expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Alice');
 
-    const row1 = state.rows[0];
+    const row1 = state.core.rows[0];
     expect(row1).toBeDefined();
     const cellVM = row1.getCellVM(TEST_COLUMNS[0]);
     expect(cellVM.isReadOnly).toBe(true);
@@ -342,8 +341,27 @@ export const ReadonlyWorkflow: Story = {
       ).toBe(false);
     });
 
-    // 8. Focus shows badge (readonly, not editing)
-    const nameCellVM = row1.getCellVM(TEST_COLUMNS[0]);
+    // 8. Clear search to restore all rows, then test focus
+    await userEvent.clear(searchInput);
+    await waitFor(
+      () => {
+        expect(state.core.search.debouncedQuery).toBe('');
+      },
+      { timeout: 1000 },
+    );
+
+    await waitFor(() => {
+      expect(state.core.rows).toHaveLength(MOCK_ROWS_DATA.length);
+    });
+
+    await waitFor(() => {
+      expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
+    });
+
+    // Focus shows badge (readonly, not editing)
+    const freshRow1 = state.core.rows[0];
+    expect(freshRow1).toBeDefined();
+    const nameCellVM = freshRow1.getCellVM(TEST_COLUMNS[0]);
     nameCellVM.focus();
 
     await waitFor(() => {
@@ -448,15 +466,7 @@ const ManyColumnsE2EWrapper = observer(() => {
     };
   }, [state]);
 
-  return (
-    <StoryWrapper
-      state={state}
-      onOpenRow={noop}
-      onDeleteRow={noop}
-      onDuplicateRow={noop}
-      onDeleteSelected={noop}
-    />
-  );
+  return <StoryWrapper state={state} onOpenRow={noop} onDuplicateRow={noop} />;
 });
 
 export const FocusAfterAddColumn: Story = {
@@ -468,6 +478,10 @@ export const FocusAfterAddColumn: Story = {
       expect((window as any).__testState).toBeDefined();
     });
     const state = (window as any).__testState as TableEditorStoryState;
+
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
 
     const nameCell = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(nameCell);
@@ -563,6 +577,10 @@ export const SelectionEdgesAfterColumnReorder: Story = {
     });
     const state = (window as any).__testState as TableEditorStoryState;
 
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
+
     state.core.columns.moveColumnToStart('active');
 
     await waitFor(() => {
@@ -613,13 +631,7 @@ const BlurTestWrapper = observer(() => {
   return (
     <Box>
       <button data-testid="outside-button">Outside</button>
-      <StoryWrapper
-        state={state}
-        onOpenRow={noop}
-        onDeleteRow={noop}
-        onDuplicateRow={noop}
-        onDeleteSelected={noop}
-      />
+      <StoryWrapper state={state} onOpenRow={noop} onDuplicateRow={noop} />
     </Box>
   );
 });
@@ -633,6 +645,10 @@ export const BlurOnClickOutside: Story = {
       expect((window as any).__testState).toBeDefined();
     });
     const state = (window as any).__testState as TableEditorStoryState;
+
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
 
     const nameCell = canvas.getByTestId('cell-row-1-name');
     await userEvent.click(nameCell);
