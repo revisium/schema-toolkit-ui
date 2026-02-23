@@ -149,8 +149,8 @@ export class CellVM {
       url: (obj.url as string) ?? '',
       fileName: (obj.fileName as string) ?? '',
       mimeType: (obj.mimeType as string) ?? '',
-      width: (obj.width as number) ?? 0,
-      height: (obj.height as number) ?? 0,
+      width: typeof obj.width === 'number' ? obj.width : 0,
+      height: typeof obj.height === 'number' ? obj.height : 0,
     };
   }
 
