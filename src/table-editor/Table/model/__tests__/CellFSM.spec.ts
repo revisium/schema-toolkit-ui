@@ -1016,43 +1016,56 @@ describe('CellFSM', () => {
     });
   });
 
-  describe('selection lookup performance', () => {
-    it('isCellInSelection uses O(1) index lookup, not indexOf', () => {
+  describe('selection lookup with index maps', () => {
+    it('isCellInSelection returns correct results for large grid', () => {
       const rows = Array.from({ length: 1000 }, (_, i) => `row-${i}`);
       const cols = Array.from({ length: 20 }, (_, i) => `col-${i}`);
       fsm.setNavigationContext(cols, rows);
 
-      fsm.focusCell({ rowId: 'row-0', field: 'col-0' });
-      fsm.selectTo({ rowId: 'row-999', field: 'col-19' });
+      fsm.focusCell({ rowId: 'row-10', field: 'col-5' });
+      fsm.selectTo({ rowId: 'row-500', field: 'col-15' });
 
-      const start = performance.now();
-      for (let r = 0; r < 50; r++) {
-        for (let c = 0; c < 20; c++) {
-          fsm.isCellInSelection(`row-${r}`, `col-${c}`);
-        }
-      }
-      const elapsed = performance.now() - start;
-
-      expect(elapsed).toBeLessThan(10);
+      expect(fsm.isCellInSelection('row-10', 'col-5')).toBe(true);
+      expect(fsm.isCellInSelection('row-250', 'col-10')).toBe(true);
+      expect(fsm.isCellInSelection('row-500', 'col-15')).toBe(true);
+      expect(fsm.isCellInSelection('row-9', 'col-5')).toBe(false);
+      expect(fsm.isCellInSelection('row-501', 'col-10')).toBe(false);
+      expect(fsm.isCellInSelection('row-250', 'col-4')).toBe(false);
+      expect(fsm.isCellInSelection('row-250', 'col-16')).toBe(false);
     });
 
-    it('getCellSelectionEdges uses O(1) index lookup, not indexOf', () => {
+    it('getCellSelectionEdges returns correct edges for large grid', () => {
       const rows = Array.from({ length: 1000 }, (_, i) => `row-${i}`);
       const cols = Array.from({ length: 20 }, (_, i) => `col-${i}`);
       fsm.setNavigationContext(cols, rows);
 
-      fsm.focusCell({ rowId: 'row-0', field: 'col-0' });
-      fsm.selectTo({ rowId: 'row-999', field: 'col-19' });
+      fsm.focusCell({ rowId: 'row-10', field: 'col-5' });
+      fsm.selectTo({ rowId: 'row-500', field: 'col-15' });
 
-      const start = performance.now();
-      for (let r = 0; r < 50; r++) {
-        for (let c = 0; c < 20; c++) {
-          fsm.getCellSelectionEdges(`row-${r}`, `col-${c}`);
-        }
-      }
-      const elapsed = performance.now() - start;
+      const topLeft = fsm.getCellSelectionEdges('row-10', 'col-5');
+      expect(topLeft).toEqual({ top: true, bottom: false, left: true, right: false });
 
-      expect(elapsed).toBeLessThan(10);
+      const bottomRight = fsm.getCellSelectionEdges('row-500', 'col-15');
+      expect(bottomRight).toEqual({ top: false, bottom: true, left: false, right: true });
+
+      const middle = fsm.getCellSelectionEdges('row-250', 'col-10');
+      expect(middle).toEqual({ top: false, bottom: false, left: false, right: false });
+
+      const outside = fsm.getCellSelectionEdges('row-9', 'col-5');
+      expect(outside).toBeNull();
+    });
+
+    it('index maps are populated after setNavigationContext', () => {
+      const rows = Array.from({ length: 1000 }, (_, i) => `row-${i}`);
+      const cols = Array.from({ length: 20 }, (_, i) => `col-${i}`);
+      fsm.setNavigationContext(cols, rows);
+
+      expect(fsm.columnIndexMap.size).toBe(20);
+      expect(fsm.rowIndexMap.size).toBe(1000);
+      expect(fsm.columnIndexMap.get('col-0')).toBe(0);
+      expect(fsm.columnIndexMap.get('col-19')).toBe(19);
+      expect(fsm.rowIndexMap.get('row-0')).toBe(0);
+      expect(fsm.rowIndexMap.get('row-999')).toBe(999);
     });
 
     it('selectedRange is a stable computed reference', () => {
