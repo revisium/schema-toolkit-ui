@@ -1,14 +1,29 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+export interface ShadowState {
+  left: boolean;
+  right: boolean;
+}
+
+const INITIAL_SHADOW: ShadowState = { left: false, right: false };
 
 export class ScrollShadowModel {
-  showLeftShadow = false;
-  showRightShadow = false;
-  private _element: HTMLElement | null = null;
+  private _left = false;
+  private _right = false;
   private _paused = false;
   private _dirty = false;
+  private _onChange: ((state: ShadowState) => void) | null = null;
 
-  setElement(el: HTMLElement | null): void {
-    this._element = el;
+  get showLeftShadow(): boolean {
+    return this._left;
+  }
+
+  get showRightShadow(): boolean {
+    return this._right;
+  }
+
+  setOnChange(cb: ((state: ShadowState) => void) | null): void {
+    this._onChange = cb;
   }
 
   pause(): void {
@@ -20,40 +35,39 @@ export class ScrollShadowModel {
     this._paused = false;
     if (this._dirty) {
       this._dirty = false;
-      this._applyCssVars();
+      this._notify();
     }
   }
 
   update(left: boolean, right: boolean): void {
-    this.showLeftShadow = left;
-    this.showRightShadow = right;
+    if (this._left === left && this._right === right) {
+      return;
+    }
+    this._left = left;
+    this._right = right;
     if (this._paused) {
       this._dirty = true;
       return;
     }
-    this._applyCssVars();
+    this._notify();
   }
 
   reset(): void {
-    this.showLeftShadow = false;
-    this.showRightShadow = false;
+    if (!this._left && !this._right) {
+      return;
+    }
+    this._left = false;
+    this._right = false;
     if (this._paused) {
       this._dirty = true;
       return;
     }
-    this._applyCssVars();
+    this._notify();
   }
 
-  private _applyCssVars(): void {
-    if (this._element) {
-      this._element.style.setProperty(
-        '--shadow-left-opacity',
-        this.showLeftShadow ? '1' : '0',
-      );
-      this._element.style.setProperty(
-        '--shadow-right-opacity',
-        this.showRightShadow ? '1' : '0',
-      );
+  private _notify(): void {
+    if (this._onChange) {
+      this._onChange({ left: this._left, right: this._right });
     }
   }
 }
@@ -68,7 +82,8 @@ function getScrollElement(target: ScrollTarget): HTMLElement | null {
 }
 
 export function useScrollShadow(): {
-  model: ScrollShadowModel;
+  shadowCssVars: Record<string, string>;
+  shadowModel: ScrollShadowModel;
   setScrollerRef: (el: ScrollTarget | null) => void;
 } {
   const modelRef = useRef<ScrollShadowModel | null>(null);
@@ -76,6 +91,21 @@ export function useScrollShadow(): {
     modelRef.current = new ScrollShadowModel();
   }
   const model = modelRef.current;
+
+  const [shadow, setShadow] = useState<ShadowState>(INITIAL_SHADOW);
+
+  model.setOnChange(setShadow);
+
+  useEffect(() => {
+    return () => {
+      model.setOnChange(null);
+    };
+  }, [model]);
+
+  const shadowCssVars: Record<string, string> = {
+    '--shadow-left-opacity': shadow.left ? '1' : '0',
+    '--shadow-right-opacity': shadow.right ? '1' : '0',
+  };
 
   const targetRef = useRef<ScrollTarget | null>(null);
   const rafRef = useRef<number>(0);
@@ -149,5 +179,5 @@ export function useScrollShadow(): {
     };
   }, [handleScroll]);
 
-  return { model, setScrollerRef };
+  return { shadowCssVars, shadowModel: model, setScrollerRef };
 }

@@ -1,68 +1,80 @@
-import { ScrollShadowModel } from '../useScrollShadow';
+import { ScrollShadowModel, ShadowState } from '../useScrollShadow';
 
 describe('ScrollShadowModel', () => {
   let model: ScrollShadowModel;
-  let element: HTMLDivElement;
+  let lastState: ShadowState | null;
+  let callCount: number;
 
   beforeEach(() => {
-    element = document.createElement('div');
     model = new ScrollShadowModel();
+    lastState = null;
+    callCount = 0;
+    model.setOnChange((state) => {
+      lastState = state;
+      callCount++;
+    });
   });
 
-  it('sets CSS variables on the element when updated', () => {
-    model.setElement(element);
+  it('notifies onChange when updated', () => {
     model.update(true, false);
-    expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('1');
-    expect(element.style.getPropertyValue('--shadow-right-opacity')).toBe('0');
+    expect(lastState).toEqual({ left: true, right: false });
+    expect(callCount).toBe(1);
   });
 
-  it('updates CSS variables when values change', () => {
-    model.setElement(element);
+  it('notifies onChange when values change', () => {
     model.update(false, true);
-    expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('0');
-    expect(element.style.getPropertyValue('--shadow-right-opacity')).toBe('1');
+    expect(lastState).toEqual({ left: false, right: true });
 
     model.update(true, true);
-    expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('1');
-    expect(element.style.getPropertyValue('--shadow-right-opacity')).toBe('1');
+    expect(lastState).toEqual({ left: true, right: true });
+    expect(callCount).toBe(2);
   });
 
-  it('resets CSS variables to 0', () => {
-    model.setElement(element);
+  it('does not notify when values are unchanged', () => {
+    model.update(true, false);
+    expect(callCount).toBe(1);
+
+    model.update(true, false);
+    expect(callCount).toBe(1);
+  });
+
+  it('resets to false and notifies', () => {
     model.update(true, true);
     model.reset();
-    expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('0');
-    expect(element.style.getPropertyValue('--shadow-right-opacity')).toBe('0');
+    expect(lastState).toEqual({ left: false, right: false });
+    expect(callCount).toBe(2);
   });
 
-  it('does not throw when element is null', () => {
+  it('reset does not notify when already false', () => {
+    model.reset();
+    expect(callCount).toBe(0);
+  });
+
+  it('does not throw when onChange is null', () => {
+    model.setOnChange(null);
     expect(() => model.update(true, true)).not.toThrow();
     expect(() => model.reset()).not.toThrow();
   });
 
-  it('exposes showLeftShadow and showRightShadow for non-CSS consumers', () => {
-    model.setElement(element);
+  it('exposes showLeftShadow and showRightShadow', () => {
     model.update(true, false);
     expect(model.showLeftShadow).toBe(true);
     expect(model.showRightShadow).toBe(false);
   });
 
   describe('pause/resume', () => {
-    it('skips CSS updates while paused', () => {
-      model.setElement(element);
+    it('skips notification while paused', () => {
       model.update(true, false);
-      expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('1');
+      expect(callCount).toBe(1);
 
       model.pause();
       model.update(false, true);
-      expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('1');
-      expect(element.style.getPropertyValue('--shadow-right-opacity')).toBe(
-        '0',
-      );
+      expect(callCount).toBe(1);
+      expect(model.showLeftShadow).toBe(false);
+      expect(model.showRightShadow).toBe(true);
     });
 
-    it('applies latest values on resume', () => {
-      model.setElement(element);
+    it('notifies with latest values on resume', () => {
       model.update(true, false);
 
       model.pause();
@@ -70,23 +82,18 @@ describe('ScrollShadowModel', () => {
       model.update(true, true);
       model.resume();
 
-      expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('1');
-      expect(element.style.getPropertyValue('--shadow-right-opacity')).toBe(
-        '1',
-      );
+      expect(lastState).toEqual({ left: true, right: true });
+      expect(callCount).toBe(2);
     });
 
-    it('does not apply stale values if no updates during pause', () => {
-      model.setElement(element);
+    it('does not notify on resume if no updates during pause', () => {
       model.update(true, false);
 
       model.pause();
       model.resume();
 
-      expect(element.style.getPropertyValue('--shadow-left-opacity')).toBe('1');
-      expect(element.style.getPropertyValue('--shadow-right-opacity')).toBe(
-        '0',
-      );
+      expect(callCount).toBe(1);
+      expect(lastState).toEqual({ left: true, right: false });
     });
   });
 });

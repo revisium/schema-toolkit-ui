@@ -90,26 +90,25 @@ export const TableWidget = observer(
     const [deleteConfirm, setDeleteConfirm] =
       useState<DeleteConfirmState | null>(null);
 
-    const { model: scrollShadow, setScrollerRef } = useScrollShadow();
+    const { shadowCssVars, shadowModel, setScrollerRef } = useScrollShadow();
 
     const isResizing = columnsModel.isResizing;
     useEffect(() => {
       if (isResizing) {
-        scrollShadow.pause();
+        shadowModel.pause();
       } else {
-        scrollShadow.resume();
+        shadowModel.resume();
       }
-    }, [isResizing, scrollShadow]);
+    }, [isResizing, shadowModel]);
 
     const wrapperRefCallback = useCallback(
       (el: HTMLDivElement | null) => {
         columnsModel.setWrapperElement(el);
-        scrollShadow.setElement(el);
         if (useWindowScrollProp) {
           setScrollerRef(el);
         }
       },
-      [columnsModel, scrollShadow, useWindowScrollProp, setScrollerRef],
+      [columnsModel, useWindowScrollProp, setScrollerRef],
     );
 
     const handleSelectRow = useCallback(
@@ -353,7 +352,12 @@ export const TableWidget = observer(
           overflowY={useWindowScrollProp ? 'clip' : undefined}
           data-testid="table-widget"
           onKeyDown={handleKeyDown}
-          style={columnsModel.columnWidthCssVars as React.CSSProperties}
+          style={
+            {
+              ...columnsModel.columnWidthCssVars,
+              ...shadowCssVars,
+            } as React.CSSProperties
+          }
         >
           {rows.length === 0 ? (
             <Box>

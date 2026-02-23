@@ -42,6 +42,7 @@ function createPinnedLeftState(): TableStoryState {
     for (const c of s.columnsModel.visibleColumns) {
       s.columnsModel.setColumnWidth(c.field, COLUMN_WIDTH);
     }
+    s.columnsModel.commitColumnWidth();
     s.columnsModel.pinLeft('name');
   });
   return s;
@@ -56,6 +57,7 @@ function createPinnedRightState(): TableStoryState {
     for (const c of s.columnsModel.visibleColumns) {
       s.columnsModel.setColumnWidth(c.field, COLUMN_WIDTH);
     }
+    s.columnsModel.commitColumnWidth();
     s.columnsModel.pinRight('score');
   });
   return s;
@@ -71,6 +73,7 @@ function createAddColumnOnlyState(): TableStoryState {
     for (const c of s.columnsModel.visibleColumns) {
       s.columnsModel.setColumnWidth(c.field, COLUMN_WIDTH);
     }
+    s.columnsModel.commitColumnWidth();
   });
   return s;
 }
@@ -346,6 +349,7 @@ export const WindowScrollShadowOnScroll: Story = {
       for (const c of state.core.columns.visibleColumns) {
         state.core.columns.setColumnWidth(c.field, COLUMN_WIDTH);
       }
+      state.core.columns.commitColumnWidth();
       state.core.columns.pinLeft('name');
     });
 
@@ -393,6 +397,7 @@ function createResizableAddColumnState(): TableStoryState {
     for (const c of s.columnsModel.visibleColumns) {
       s.columnsModel.setColumnWidth(c.field, NARROW_COLUMN_WIDTH);
     }
+    s.columnsModel.commitColumnWidth();
   });
   return s;
 }
@@ -448,6 +453,7 @@ export const AddColumnShadowAfterResize: Story = {
       for (const c of state.columnsModel.visibleColumns) {
         state.columnsModel.setColumnWidth(c.field, COLUMN_WIDTH);
       }
+      state.columnsModel.commitColumnWidth();
     });
 
     await waitFor(() => {
