@@ -1043,13 +1043,28 @@ describe('CellFSM', () => {
       fsm.selectTo({ rowId: 'row-500', field: 'col-15' });
 
       const topLeft = fsm.getCellSelectionEdges('row-10', 'col-5');
-      expect(topLeft).toEqual({ top: true, bottom: false, left: true, right: false });
+      expect(topLeft).toEqual({
+        top: true,
+        bottom: false,
+        left: true,
+        right: false,
+      });
 
       const bottomRight = fsm.getCellSelectionEdges('row-500', 'col-15');
-      expect(bottomRight).toEqual({ top: false, bottom: true, left: false, right: true });
+      expect(bottomRight).toEqual({
+        top: false,
+        bottom: true,
+        left: false,
+        right: true,
+      });
 
       const middle = fsm.getCellSelectionEdges('row-250', 'col-10');
-      expect(middle).toEqual({ top: false, bottom: false, left: false, right: false });
+      expect(middle).toEqual({
+        top: false,
+        bottom: false,
+        left: false,
+        right: false,
+      });
 
       const outside = fsm.getCellSelectionEdges('row-9', 'col-5');
       expect(outside).toBeNull();
