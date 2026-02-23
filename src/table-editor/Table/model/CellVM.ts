@@ -361,6 +361,10 @@ export class CellVM {
     }
   }
 
+  notifyReadonlyEditAttempt(): void {
+    this._cellFSM.notifyReadonlyEditAttempt();
+  }
+
   // --- Navigation ---
 
   blur(): void {

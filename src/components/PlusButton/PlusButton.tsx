@@ -23,6 +23,7 @@ export const PlusButton: React.FC<PlusButtonProps> = ({
       variant="ghost"
       color="gray.400"
       disabled={disabled}
+      focusRing="none"
       _hover={{ bg: 'gray.100', color: 'gray.600' }}
       onClick={onClick}
       data-testid={dataTestId}

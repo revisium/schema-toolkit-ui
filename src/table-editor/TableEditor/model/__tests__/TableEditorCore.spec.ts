@@ -122,43 +122,6 @@ describe('TableEditorCore', () => {
       expect(core2.sorts.sorts).toHaveLength(0);
     });
 
-    it('applyViewState restores filters', async () => {
-      const { core } = await createCore();
-      core.filters.addCondition();
-      const id = core.filters.rootGroup.conditions[0]?.id;
-      if (id) {
-        core.filters.updateCondition(id, { value: 'test' });
-      }
-      core.filters.apply();
-      const state = core.getViewState();
-      expect(state.filters).not.toBeNull();
-
-      const { core: core2 } = await createCore();
-      core2.applyViewState(state);
-      expect(core2.filters.hasActiveFilters).toBe(true);
-      expect(core2.filters.totalConditionCount).toBe(1);
-    });
-
-    it('applyViewState clears filters when state.filters is null', async () => {
-      const { core } = await createCore();
-      core.filters.addCondition();
-      const id = core.filters.rootGroup.conditions[0]?.id;
-      if (id) {
-        core.filters.updateCondition(id, { value: 'test' });
-      }
-      core.filters.apply();
-      expect(core.filters.hasActiveFilters).toBe(true);
-
-      core.applyViewState({
-        columns: core.columns.serializeToViewColumns(),
-        filters: null,
-        sorts: [],
-        search: '',
-      });
-      expect(core.filters.hasActiveFilters).toBe(false);
-      expect(core.filters.totalConditionCount).toBe(0);
-    });
-
     it('viewBadge detects changes after sort apply', async () => {
       const { core } = await createCore();
       expect(core.viewBadge.hasChanges).toBe(false);

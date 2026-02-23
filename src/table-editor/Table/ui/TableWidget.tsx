@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Box, Spinner, Text } from '@chakra-ui/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TableVirtuoso } from 'react-virtuoso';
 import type { RowVM } from '../model/RowVM.js';
 import type { CellFSM } from '../model/CellFSM.js';
@@ -90,7 +90,26 @@ export const TableWidget = observer(
     const [deleteConfirm, setDeleteConfirm] =
       useState<DeleteConfirmState | null>(null);
 
-    const { model: scrollShadow, setScrollerRef } = useScrollShadow();
+    const { shadowCssVars, shadowModel, setScrollerRef } = useScrollShadow();
+
+    const isResizing = columnsModel.isResizing;
+    useEffect(() => {
+      if (isResizing) {
+        shadowModel.pause();
+      } else {
+        shadowModel.resume();
+      }
+    }, [isResizing, shadowModel]);
+
+    const wrapperRefCallback = useCallback(
+      (el: HTMLDivElement | null) => {
+        columnsModel.setWrapperElement(el);
+        if (useWindowScrollProp) {
+          setScrollerRef(el);
+        }
+      },
+      [columnsModel, useWindowScrollProp, setScrollerRef],
+    );
 
     const handleSelectRow = useCallback(
       (rowId: string) => {
@@ -238,7 +257,6 @@ export const TableWidget = observer(
           row={row}
           columnsModel={columnsModel}
           showSelection={showSelection}
-          scrollShadow={scrollShadow}
           onSearchForeignKey={onSearchForeignKey}
           onUploadFile={onUploadFile}
           onOpenFile={onOpenFile}
@@ -251,7 +269,6 @@ export const TableWidget = observer(
       [
         columnsModel,
         showSelection,
-        scrollShadow,
         onSearchForeignKey,
         onUploadFile,
         onOpenFile,
@@ -273,17 +290,9 @@ export const TableWidget = observer(
           filterModel={filterModel}
           onCopyPath={onCopyPath}
           showSelection={showSelection}
-          scrollShadow={scrollShadow}
         />
       ),
-      [
-        columnsModel,
-        sortModel,
-        filterModel,
-        onCopyPath,
-        showSelection,
-        scrollShadow,
-      ],
+      [columnsModel, sortModel, filterModel, onCopyPath, showSelection],
     );
 
     const virtuosoContext = useMemo(
@@ -294,7 +303,7 @@ export const TableWidget = observer(
     );
 
     const totalColumns =
-      columnsModel.visibleColumns.length + (showSelection ? 4 : 3);
+      columnsModel.visibleColumns.length + (showSelection ? 2 : 1);
 
     const LoadingMoreFooter = useCallback(
       () =>
@@ -336,10 +345,19 @@ export const TableWidget = observer(
         value={cellFSM ? contextActions : null}
       >
         <Box
+          ref={wrapperRefCallback}
           position="relative"
           height={useWindowScrollProp ? undefined : '100%'}
+          overflowX="auto"
+          overflowY={useWindowScrollProp ? 'clip' : undefined}
           data-testid="table-widget"
           onKeyDown={handleKeyDown}
+          style={
+            {
+              ...columnsModel.columnWidthCssVars,
+              ...shadowCssVars,
+            } as React.CSSProperties
+          }
         >
           {rows.length === 0 ? (
             <Box>
@@ -381,7 +399,7 @@ export const TableWidget = observer(
               fixedHeaderContent={fixedHeaderContent}
               itemContent={itemContent}
               components={tableComponents}
-              scrollerRef={setScrollerRef}
+              scrollerRef={useWindowScrollProp ? undefined : setScrollerRef}
             />
           )}
           <SelectionToolbar

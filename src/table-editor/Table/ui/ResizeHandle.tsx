@@ -31,7 +31,7 @@ export const ResizeHandle = observer(
         e.preventDefault();
         e.stopPropagation();
 
-        const currentWidth = columnsModel.getColumnWidth(field) ?? 150;
+        const currentWidth = columnsModel.resolveColumnWidth(field);
         startXRef.current = e.clientX;
         startWidthRef.current = currentWidth;
         setIsResizing(true);

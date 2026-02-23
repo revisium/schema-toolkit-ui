@@ -6,6 +6,7 @@ import type { ColumnSpec } from '../../../Columns/model/types.js';
 import type { ColumnsModel } from '../../../Columns/model/ColumnsModel.js';
 import type { FilterModel } from '../../../Filters/model/FilterModel.js';
 import type { SortModel } from '../../../Sortings/model/SortModel.js';
+import { CELL_BORDER_COLOR, BOTTOM_BORDER_SHADOW } from '../borderConstants.js';
 import { ResizeHandle } from '../ResizeHandle.js';
 import { SortIndicator } from './SortIndicator.js';
 import { PinIndicator } from './PinIndicator.js';
@@ -15,14 +16,15 @@ import { getFieldTypeIcon } from './getFieldTypeIcon.js';
 
 export interface StickyPosition {
   side: 'left' | 'right';
-  offset: number;
+  offsetCss: string;
   isBoundary: boolean;
 }
 
-function buildHeaderShadowCss(
-  position: StickyPosition,
-  showShadow: boolean,
-): SystemStyleObject {
+function buildHeaderShadowCss(position: StickyPosition): SystemStyleObject {
+  const cssVar =
+    position.side === 'left'
+      ? 'var(--shadow-left-opacity, 0)'
+      : 'var(--shadow-right-opacity, 0)';
   return {
     '&::after': {
       content: '""',
@@ -32,7 +34,7 @@ function buildHeaderShadowCss(
       width: '8px',
       pointerEvents: 'none',
       transition: 'opacity 0.15s',
-      opacity: showShadow ? 1 : 0,
+      opacity: cssVar,
       ...(position.side === 'left'
         ? {
             right: '-8px',
@@ -46,16 +48,14 @@ function buildHeaderShadowCss(
   };
 }
 
-const BOTTOM_BORDER_SHADOW = 'inset 0 -1px 0 0 var(--chakra-colors-gray-100)';
-
 function getHeaderBoxShadow(stickyPosition?: StickyPosition): string {
   if (!stickyPosition) {
     return BOTTOM_BORDER_SHADOW;
   }
   const stickyBorder =
     stickyPosition.side === 'left'
-      ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
-      : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
+      ? `inset -1px 0 0 0 ${CELL_BORDER_COLOR}`
+      : `inset 1px 0 0 0 ${CELL_BORDER_COLOR}`;
   return `${BOTTOM_BORDER_SHADOW}, ${stickyBorder}`;
 }
 
@@ -66,8 +66,6 @@ interface ColumnHeaderProps {
   filterModel?: FilterModel;
   onCopyPath?: (path: string) => void;
   stickyPosition?: StickyPosition;
-  showLeftShadow?: boolean;
-  showRightShadow?: boolean;
 }
 
 export const ColumnHeader = observer(
@@ -78,32 +76,22 @@ export const ColumnHeader = observer(
     filterModel,
     onCopyPath,
     stickyPosition,
-    showLeftShadow,
-    showRightShadow,
   }: ColumnHeaderProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const width = columnsModel.getColumnWidth(column.field);
-
-    const w = width ? `${width}px` : '150px';
+    const w = columnsModel.columnWidthCssVar(column.field);
 
     const isSticky = Boolean(stickyPosition);
-    const showShadow = stickyPosition?.isBoundary
-      ? (stickyPosition.side === 'left' && Boolean(showLeftShadow)) ||
-        (stickyPosition.side === 'right' && Boolean(showRightShadow))
-      : false;
 
     return (
       <Box
         as="th"
         position={isSticky ? 'sticky' : 'relative'}
         left={
-          stickyPosition?.side === 'left'
-            ? `${stickyPosition.offset}px`
-            : undefined
+          stickyPosition?.side === 'left' ? stickyPosition.offsetCss : undefined
         }
         right={
           stickyPosition?.side === 'right'
-            ? `${stickyPosition.offset}px`
+            ? stickyPosition.offsetCss
             : undefined
         }
         zIndex={isSticky ? 2 : undefined}
@@ -118,7 +106,7 @@ export const ColumnHeader = observer(
         p={0}
         css={
           stickyPosition?.isBoundary
-            ? buildHeaderShadowCss(stickyPosition, showShadow)
+            ? buildHeaderShadowCss(stickyPosition)
             : undefined
         }
       >

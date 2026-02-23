@@ -1,6 +1,7 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { createTableModel } from '@revisium/schema-toolkit';
 import { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
+import type { ViewColumn } from '../../Columns/model/types.js';
 import { FilterModel } from '../../Filters/model/FilterModel.js';
 import { SearchModel } from '../../Search/model/SearchModel.js';
 import { SortModel } from '../../Sortings/model/SortModel.js';
@@ -18,7 +19,7 @@ import type {
 import { SchemaContext } from './SchemaContext.js';
 
 export interface ViewState {
-  columns: Array<{ field: string; width?: number }>;
+  columns: ViewColumn[];
   filters: string | null;
   sorts: Array<{ field: string; direction: string }>;
   search: string;
@@ -46,6 +47,7 @@ export interface TableEditorCallbacks {
     params: UploadFileParams,
   ) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
+  onReadonlyEditAttempt?: () => void;
 }
 
 export interface TableEditorOptions {
@@ -105,6 +107,9 @@ export class TableEditorCore {
     this.sorts.setOnApply((_sorts) => this._handleSortApply());
     this.viewBadge.setOnSave(() => this._handleViewSave());
     this.viewBadge.setOnRevert(() => this._handleViewRevert());
+    this.cellFSM.setOnReadonlyEditAttempt(
+      this._callbacks.onReadonlyEditAttempt ?? null,
+    );
 
     makeAutoObservable(this, {}, { autoBind: true });
 
@@ -142,23 +147,15 @@ export class TableEditorCore {
   getViewState(): ViewState {
     return {
       columns: this.columns.serializeToViewColumns(),
-      filters: this.filters.hasActiveFilters
-        ? JSON.stringify(this.filters.serializeRootGroup())
-        : null,
+      filters: null,
       sorts: this.sorts.serializeToViewSorts(),
-      search: this.search.debouncedQuery,
+      search: '',
     };
   }
 
   applyViewState(state: ViewState): void {
     this.columns.applyViewColumns(state.columns);
     this.sorts.applyViewSorts(state.sorts);
-    if (state.filters) {
-      this.filters.applySnapshot(state.filters);
-    } else {
-      this.filters.clearAll();
-    }
-    this.search.setQuery(state.search);
   }
 
   async loadMore(): Promise<void> {
@@ -367,12 +364,11 @@ export class TableEditorCore {
   }
 
   private _handleFilterChange(): void {
-    this._checkViewChanges();
+    // filters are ephemeral — not persisted in view settings
   }
 
   private _handleFilterApply(): void {
     void this._reloadRows();
-    this._checkViewChanges();
   }
 
   private _handleSortChange(): void {
@@ -386,7 +382,6 @@ export class TableEditorCore {
 
   private _handleSearch(_query: string): void {
     void this._reloadRows();
-    this._checkViewChanges();
   }
 
   private async _handleViewSave(): Promise<void> {

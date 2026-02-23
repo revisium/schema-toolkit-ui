@@ -154,7 +154,7 @@ import type { ITableDataSource } from '@revisium/schema-toolkit-ui';
 
 const dataSource: ITableDataSource = {
   async fetchMetadata() {
-    // Return { schema, columns, viewState, readonly }
+    // Return { schema, columns, viewState, readonly, refSchemas? }
   },
   async fetchRows(query) {
     // query: { where, orderBy, search, first, after }
@@ -168,7 +168,7 @@ const dataSource: ITableDataSource = {
     // Return { ok, error? }
   },
   async saveView(viewState) {
-    // Persist column/filter/sort/search settings
+    // Persist column order, widths, pins, and sort settings
     // Return { ok, error? }
   },
 };
@@ -241,6 +241,7 @@ All callbacks are optional and passed via `TableEditorOptions.callbacks`:
 | `onUploadFile` | `(params: { rowId: string; fileId: string; file: File }) => Promise<Record<string, unknown> \| null>` | Upload a file for a file field |
 | `onOpenFile` | `(url: string) => void` | Open/preview a file URL |
 | `onCopyPath` | `(path: string) => void` | Copy JSON path to clipboard |
+| `onReadonlyEditAttempt` | `() => void` | Called when the user tries to edit a read-only cell (double-click, Enter, typing). Use this to show a toast/notification. Throttled internally (2 s). |
 
 In read-only mode (`fetchMetadata` returns `readonly: true`), delete and duplicate actions are hidden automatically. Open row still works.
 

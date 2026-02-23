@@ -6,7 +6,7 @@ import { CellContextMenu } from './CellContextMenu.js';
 import { useDeferredMenuEdit } from './useDeferredMenuEdit.js';
 import {
   FOCUS_RING_RESET,
-  buildSelectionBorderStyle,
+  buildSelectionBoxShadow,
   stateStyles,
   getCellState,
   isPrintableKey,
@@ -45,6 +45,14 @@ function handleEditableKeys(
   onDelete?: () => void,
 ): void {
   if (cell.isReadOnly) {
+    if (
+      e.key === 'Enter' ||
+      e.key === 'Delete' ||
+      e.key === 'Backspace' ||
+      isPrintableKey(e)
+    ) {
+      cell.notifyReadonlyEditAttempt();
+    }
     return;
   }
   const hasRange = cell.hasRangeSelection;
@@ -140,11 +148,13 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
 
     const handleDoubleClick = useCallback(
       (e: React.MouseEvent) => {
-        if (state !== 'readonly' && state !== 'readonlyFocused') {
-          onDoubleClick?.(e.clientX);
+        if (state === 'readonly' || state === 'readonlyFocused') {
+          cell.notifyReadonlyEditAttempt();
+          return;
         }
+        onDoubleClick?.(e.clientX);
       },
-      [state, onDoubleClick],
+      [state, cell, onDoubleClick],
     );
 
     const handleKeyDown = useCallback(
@@ -204,9 +214,9 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       ],
     );
 
-    const afterStyle = selectionEdges
-      ? buildSelectionBorderStyle(selectionEdges)
-      : undefined;
+    const selectionShadow = selectionEdges
+      ? buildSelectionBoxShadow(selectionEdges)
+      : null;
 
     const needsFocus =
       state === 'focused' ||
@@ -274,7 +284,6 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
         borderColor: 'blue.400',
         borderRadius: '1px',
         pointerEvents: 'none',
-        zIndex: 3,
       };
       extraStyles._focus = FOCUS_RING_RESET;
       extraStyles._focusVisible = FOCUS_RING_RESET;
@@ -288,7 +297,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
             height="40px"
             px="8px"
             position="relative"
-            overflow={selectionEdges ? 'visible' : 'hidden'}
+            overflow="hidden"
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onMouseEnter={handleMouseEnter}
@@ -301,7 +310,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
             data-testid={`cell-${cell.rowId}-${cell.field}`}
             {...stateStyles[state]}
             {...extraStyles}
-            _after={afterStyle}
+            boxShadow={selectionShadow || undefined}
           >
             <Box
               display="flex"
@@ -313,24 +322,6 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
             >
               {children}
             </Box>
-            {state === 'readonlyFocused' && (
-              <Box
-                position="absolute"
-                top="1px"
-                right="4px"
-                fontSize="9px"
-                lineHeight="1"
-                color="gray.500"
-                bg="gray.100"
-                px="3px"
-                py="1px"
-                borderRadius="2px"
-                userSelect="none"
-                pointerEvents="none"
-              >
-                readonly
-              </Box>
-            )}
           </Box>
         </Menu.ContextTrigger>
         <CellContextMenu

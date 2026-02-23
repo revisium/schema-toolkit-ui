@@ -102,7 +102,7 @@ CellFSM supports multi-cell range selection via `anchorCell` + `focusedCell`. A 
 
 - Selected cells render with `selected` visual state (blue background)
 - The anchor cell shows a focused border (`_before`) over the selection
-- Range borders are drawn via `_after` pseudo-element using `buildSelectionBorderStyle()` — shows a blue border around the outer edges of the selection
+- Range borders are drawn via inset `boxShadow` using `buildSelectionBoxShadow()` — shows a blue border around the outer edges of the selection, contained within cell bounds
 
 ### Clearing a Range
 
@@ -287,7 +287,7 @@ Each cell creates a CellVM that delegates state to CellFSM:
 
 Wraps all cell types. Responsibilities:
 - Renders visual state (display/focused/editing/readonly/readonlyFocused/selected) via `_before` pseudo-element and `stateStyles`
-- Renders range selection borders via `_after` pseudo-element (`buildSelectionBorderStyle`)
+- Renders range selection borders via inset `boxShadow` (`buildSelectionBoxShadow`)
 - Handles click → focus, shift+click → selectTo
 - Handles mouse drag (mousedown → dragStart, mouseenter → dragExtend)
 - Handles double-click → onDoubleClick callback

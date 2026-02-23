@@ -161,7 +161,6 @@ export const ReadonlyCellWorkflow: Story = {
     await waitFor(() => {
       expect(greetingCell).toHaveAttribute('tabindex', '0');
     });
-    expect(greetingCell).toHaveTextContent('readonly');
 
     await userEvent.keyboard('{Enter}');
     await waitFor(() => {
@@ -191,8 +190,6 @@ export const ReadonlyCellWorkflow: Story = {
     await waitFor(() => {
       expect(totalCell).toHaveAttribute('tabindex', '0');
     });
-    expect(totalCell).toHaveTextContent('readonly');
-
     await userEvent.keyboard('{Enter}');
     expect(
       document.querySelector('[data-testid="number-cell-input"]'),
@@ -243,8 +240,6 @@ export const ReadonlyCellWorkflow: Story = {
     await waitFor(() => {
       expect(expensiveCell).toHaveAttribute('tabindex', '0');
     });
-    expect(expensiveCell).toHaveTextContent('readonly');
-
     await userEvent.dblClick(expensiveCell);
     await waitFor(() => {
       expect(

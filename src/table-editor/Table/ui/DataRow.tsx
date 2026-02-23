@@ -4,7 +4,12 @@ import type { SystemStyleObject } from '@chakra-ui/react';
 import type { RowVM } from '../model/RowVM.js';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import type { SearchForeignKeySearchFn } from '../../../search-foreign-key/index.js';
-import type { ScrollShadowModel } from './hooks/useScrollShadow.js';
+import {
+  CELL_BORDER_COLOR,
+  BOTTOM_BORDER_SHADOW,
+  buildAddColumnShadowCss,
+  adjustRightOffsetCss,
+} from './borderConstants.js';
 import { CellRenderer } from './Cell/CellRenderer.js';
 import { RowActionOverlay } from './RowActionOverlay.js';
 import { SelectionCheckboxCell } from './SelectionCheckboxCell.js';
@@ -16,7 +21,6 @@ interface DataRowProps {
   row: RowVM;
   columnsModel: ColumnsModel;
   showSelection: boolean;
-  scrollShadow?: ScrollShadowModel;
   onSearchForeignKey?: SearchForeignKeySearchFn;
   onUploadFile?: (params: {
     rowId: string;
@@ -30,10 +34,11 @@ interface DataRowProps {
   onDeleteRow?: (rowId: string) => void;
 }
 
-function buildShadowCss(
-  side: 'left' | 'right',
-  showShadow: boolean,
-): SystemStyleObject {
+function buildShadowCss(side: 'left' | 'right'): SystemStyleObject {
+  const cssVar =
+    side === 'left'
+      ? 'var(--shadow-left-opacity, 0)'
+      : 'var(--shadow-right-opacity, 0)';
   return {
     '&::after': {
       content: '""',
@@ -43,7 +48,7 @@ function buildShadowCss(
       width: '8px',
       pointerEvents: 'none',
       transition: 'opacity 0.15s',
-      opacity: showShadow ? 1 : 0,
+      opacity: cssVar,
       ...(side === 'left'
         ? {
             right: '-8px',
@@ -60,7 +65,6 @@ function buildShadowCss(
 function buildCellCss(
   isBoundary: boolean,
   boundarySide: 'left' | 'right',
-  showShadow: boolean,
   hasRowActions: boolean,
   isFirstColumn: boolean,
 ): SystemStyleObject | undefined {
@@ -80,7 +84,7 @@ function buildCellCss(
   if (isBoundary) {
     return {
       ...hoverCss,
-      ...buildShadowCss(boundarySide, showShadow),
+      ...buildShadowCss(boundarySide),
     };
   }
 
@@ -95,9 +99,8 @@ interface StickyColumnProps {
   isSticky: boolean;
   isBoundary: boolean;
   boundarySide: 'left' | 'right';
-  showShadow: boolean;
-  leftOffset?: number;
-  rightOffset?: number;
+  leftCss?: string;
+  rightCss?: string;
   colWidth?: string;
 }
 
@@ -106,36 +109,32 @@ function computeStickyProps(
   columnsModel: ColumnsModel,
   selectionWidth: number,
   addColOffset: number,
-  showLeftShadow: boolean | undefined,
-  showRightShadow: boolean | undefined,
 ): StickyColumnProps {
-  const leftOffset = columnsModel.getColumnStickyLeft(
+  const leftCss = columnsModel.getColumnStickyLeftCss(
     col.field,
     selectionWidth,
   );
-  const rightBase = columnsModel.getColumnStickyRight(col.field);
-  const isStickyLeft = leftOffset !== undefined;
-  const isStickyRight = rightBase !== undefined;
+  const rightCss = columnsModel.getColumnStickyRightCss(col.field);
+  const isStickyLeft = leftCss !== undefined;
+  const isStickyRight = rightCss !== undefined;
   const isSticky = isStickyLeft || isStickyRight;
   const isLeftBoundary = columnsModel.isStickyLeftBoundary(col.field);
   const isRightBoundary = columnsModel.isStickyRightBoundary(col.field);
+
+  const finalRightCss =
+    isStickyRight && rightCss !== undefined
+      ? adjustRightOffsetCss(rightCss, addColOffset)
+      : rightCss;
 
   return {
     isSticky,
     isBoundary: isLeftBoundary || isRightBoundary,
     boundarySide: isStickyLeft ? 'left' : 'right',
-    showShadow:
-      (isLeftBoundary && Boolean(showLeftShadow)) ||
-      (isRightBoundary && Boolean(showRightShadow)),
-    leftOffset: isStickyLeft ? leftOffset : undefined,
-    rightOffset: isStickyRight ? rightBase + addColOffset : undefined,
-    colWidth: isSticky
-      ? `${columnsModel.resolveColumnWidth(col.field)}px`
-      : undefined,
+    leftCss: isStickyLeft ? leftCss : undefined,
+    rightCss: isStickyRight ? finalRightCss : undefined,
+    colWidth: isSticky ? columnsModel.columnWidthCssVar(col.field) : undefined,
   };
 }
-
-const BOTTOM_BORDER_SHADOW = 'inset 0 -1px 0 0 var(--chakra-colors-gray-100)';
 
 function getCellBoxShadow(isSticky: boolean, side: 'left' | 'right'): string {
   if (!isSticky) {
@@ -143,8 +142,8 @@ function getCellBoxShadow(isSticky: boolean, side: 'left' | 'right'): string {
   }
   const stickyBorder =
     side === 'left'
-      ? 'inset -1px 0 0 0 var(--chakra-colors-gray-100)'
-      : 'inset 1px 0 0 0 var(--chakra-colors-gray-100)';
+      ? `inset -1px 0 0 0 ${CELL_BORDER_COLOR}`
+      : `inset 1px 0 0 0 ${CELL_BORDER_COLOR}`;
   return `${BOTTOM_BORDER_SHADOW}, ${stickyBorder}`;
 }
 
@@ -153,7 +152,6 @@ export const DataRow = observer(
     row,
     columnsModel,
     showSelection,
-    scrollShadow,
     onSearchForeignKey,
     onUploadFile,
     onOpenFile,
@@ -190,8 +188,6 @@ export const DataRow = observer(
             columnsModel,
             selectionWidth,
             addColOffset,
-            scrollShadow?.showLeftShadow,
-            scrollShadow?.showRightShadow,
           );
 
           return (
@@ -203,26 +199,17 @@ export const DataRow = observer(
               maxWidth={sticky.isSticky ? sticky.colWidth : '0'}
               overflow={sticky.isBoundary ? 'visible' : 'hidden'}
               borderRight={sticky.isSticky ? undefined : '1px solid'}
-              borderColor={sticky.isSticky ? undefined : 'gray.100'}
+              borderColor={sticky.isSticky ? undefined : CELL_BORDER_COLOR}
               p={0}
               position={sticky.isSticky ? 'sticky' : 'relative'}
-              left={
-                sticky.leftOffset !== undefined
-                  ? `${sticky.leftOffset}px`
-                  : undefined
-              }
-              right={
-                sticky.rightOffset !== undefined
-                  ? `${sticky.rightOffset}px`
-                  : undefined
-              }
+              left={sticky.leftCss}
+              right={sticky.rightCss}
               zIndex={sticky.isSticky ? 1 : undefined}
               bg={sticky.isSticky ? 'white' : undefined}
               boxShadow={getCellBoxShadow(sticky.isSticky, sticky.boundarySide)}
               css={buildCellCss(
                 sticky.isBoundary,
                 sticky.boundarySide,
-                sticky.showShadow,
                 hasRowActions,
                 isFirstColumn,
               )}
@@ -256,20 +243,25 @@ export const DataRow = observer(
             </Box>
           );
         })}
-        <Box as="td" width="100%" p={0} boxShadow={BOTTOM_BORDER_SHADOW} />
-        {addColumnStickyRight && (
+        {addColumnStickyRight ? (
           <Box
             as="td"
-            width={`${ADD_COLUMN_BUTTON_WIDTH}px`}
+            width="100%"
             minWidth={`${ADD_COLUMN_BUTTON_WIDTH}px`}
-            maxWidth={`${ADD_COLUMN_BUTTON_WIDTH}px`}
             p={0}
             position="sticky"
             right={0}
             zIndex={1}
             bg="white"
-            boxShadow={`${BOTTOM_BORDER_SHADOW}, inset 1px 0 0 0 var(--chakra-colors-gray-100)`}
+            boxShadow={BOTTOM_BORDER_SHADOW}
+            css={
+              columnsModel.pinnedRightCount === 0
+                ? buildAddColumnShadowCss()
+                : undefined
+            }
           />
+        ) : (
+          <Box as="td" width="100%" p={0} boxShadow={BOTTOM_BORDER_SHADOW} />
         )}
       </>
     );

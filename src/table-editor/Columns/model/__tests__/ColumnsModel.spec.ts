@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { autorun } from 'mobx';
 import { FilterFieldType } from '../../../shared/field-types';
 import { testCol as col } from '../../../__tests__/helpers';
 import { ColumnsModel } from '../ColumnsModel';
@@ -905,6 +906,221 @@ describe('ColumnsModel', () => {
         'c',
       ]);
     });
+
+    it('serialize pinned-left with width', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.reorderColumns(['a', 'b']);
+      model.pinLeft('a');
+      model.setColumnWidth('a', 250);
+      const result = model.serializeToViewColumns();
+      expect(result[0]).toEqual({
+        field: 'data.a',
+        pinned: 'left',
+        width: 250,
+      });
+    });
+
+    it('serialize pinned-right with width', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.reorderColumns(['a', 'b']);
+      model.pinRight('b');
+      model.setColumnWidth('b', 300);
+      const result = model.serializeToViewColumns();
+      expect(result[1]).toEqual({
+        field: 'data.b',
+        pinned: 'right',
+        width: 300,
+      });
+    });
+
+    it('serialize pinned-right without width', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.reorderColumns(['a', 'b']);
+      model.pinRight('b');
+      const result = model.serializeToViewColumns();
+      expect(result[1]).toEqual({ field: 'data.b', pinned: 'right' });
+    });
+
+    it('apply restores pinned-left with width', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'left', width: 250 },
+        { field: 'data.b' },
+      ]);
+      expect(model.getPinState('a')).toBe('left');
+      expect(model.getColumnWidth('a')).toBe(250);
+    });
+
+    it('apply restores pinned-right with width', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.applyViewColumns([
+        { field: 'data.a' },
+        { field: 'data.b', pinned: 'right', width: 300 },
+      ]);
+      expect(model.getPinState('b')).toBe('right');
+      expect(model.getColumnWidth('b')).toBe(300);
+    });
+
+    it('apply restores pinned without width (uses default)', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'left' },
+        { field: 'data.b' },
+      ]);
+      expect(model.getPinState('a')).toBe('left');
+      expect(model.getColumnWidth('a')).toBeUndefined();
+      expect(model.resolveColumnWidth('a')).toBe(150);
+    });
+
+    it('round-trip preserves all pin+width combinations', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c', 'd']);
+      model.pinLeft('a');
+      model.setColumnWidth('a', 200);
+      model.setColumnWidth('c', 180);
+      model.pinRight('d');
+
+      const serialized = model.serializeToViewColumns();
+      expect(serialized).toEqual([
+        { field: 'data.a', pinned: 'left', width: 200 },
+        { field: 'data.b' },
+        { field: 'data.c', width: 180 },
+        { field: 'data.d', pinned: 'right' },
+      ]);
+
+      const model2 = new ColumnsModel();
+      model2.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+      ]);
+      model2.applyViewColumns(serialized);
+      expect(model2.getPinState('a')).toBe('left');
+      expect(model2.getColumnWidth('a')).toBe(200);
+      expect(model2.getPinState('b')).toBeUndefined();
+      expect(model2.getColumnWidth('b')).toBeUndefined();
+      expect(model2.getPinState('c')).toBeUndefined();
+      expect(model2.getColumnWidth('c')).toBe(180);
+      expect(model2.getPinState('d')).toBe('right');
+      expect(model2.getColumnWidth('d')).toBeUndefined();
+    });
+  });
+
+  describe('pinning — zone order validation', () => {
+    it('valid zone order: left, none, right', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'left' },
+        { field: 'data.b' },
+        { field: 'data.c', pinned: 'right' },
+      ]);
+      expect(model.getPinState('a')).toBe('left');
+      expect(model.getPinState('b')).toBeUndefined();
+      expect(model.getPinState('c')).toBe('right');
+    });
+
+    it('valid zone order: all left', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'left' },
+        { field: 'data.b', pinned: 'left' },
+      ]);
+      expect(model.getPinState('a')).toBe('left');
+      expect(model.getPinState('b')).toBe('left');
+    });
+
+    it('valid zone order: all right', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'right' },
+        { field: 'data.b', pinned: 'right' },
+      ]);
+      expect(model.getPinState('a')).toBe('right');
+      expect(model.getPinState('b')).toBe('right');
+    });
+
+    it('valid zone order: all none', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.applyViewColumns([{ field: 'data.a' }, { field: 'data.b' }]);
+      expect(model.getPinState('a')).toBeUndefined();
+      expect(model.getPinState('b')).toBeUndefined();
+    });
+
+    it('invalid: right before left — ignores all pinned', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'right' },
+        { field: 'data.b', pinned: 'left' },
+        { field: 'data.c' },
+      ]);
+      expect(model.getPinState('a')).toBeUndefined();
+      expect(model.getPinState('b')).toBeUndefined();
+      expect(model.getPinState('c')).toBeUndefined();
+    });
+
+    it('invalid: left after none — ignores all pinned', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'left' },
+        { field: 'data.b' },
+        { field: 'data.c', pinned: 'left' },
+      ]);
+      expect(model.getPinState('a')).toBeUndefined();
+      expect(model.getPinState('b')).toBeUndefined();
+      expect(model.getPinState('c')).toBeUndefined();
+    });
+
+    it('invalid: none after right — ignores all pinned', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'right' },
+        { field: 'data.b' },
+        { field: 'data.c' },
+      ]);
+      expect(model.getPinState('a')).toBeUndefined();
+      expect(model.getPinState('b')).toBeUndefined();
+      expect(model.getPinState('c')).toBeUndefined();
+    });
+
+    it('invalid zone order preserves widths and field order', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.applyViewColumns([
+        { field: 'data.a', pinned: 'right', width: 200 },
+        { field: 'data.b', pinned: 'left', width: 300 },
+        { field: 'data.c' },
+      ]);
+      expect(model.getPinState('a')).toBeUndefined();
+      expect(model.getPinState('b')).toBeUndefined();
+      expect(model.getColumnWidth('a')).toBe(200);
+      expect(model.getColumnWidth('b')).toBe(300);
+      expect(model.visibleColumns.map((c) => c.field)).toEqual(['a', 'b', 'c']);
+    });
   });
 
   describe('resize performance', () => {
@@ -940,6 +1156,276 @@ describe('ColumnsModel', () => {
 
       expect(model.getColumnWidth('a')).toBe(250);
       expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('sticky offset does not re-trigger autorun on setColumnWidth', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c']);
+      model.pinLeft('a');
+      model.pinLeft('b');
+
+      const spy = jest.fn();
+      const dispose = autorun(() => {
+        model.getColumnStickyLeft('b', 0);
+        spy();
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      model.setColumnWidth('a', 200);
+      model.setColumnWidth('a', 250);
+      model.setColumnWidth('a', 300);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      dispose();
+    });
+
+    it('sticky right offset does not re-trigger autorun on setColumnWidth', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c', 'd']);
+      model.pinRight('b');
+      model.pinRight('c');
+
+      const spy = jest.fn();
+      const dispose = autorun(() => {
+        model.getColumnStickyRight('c');
+        spy();
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      model.setColumnWidth('b', 200);
+      model.setColumnWidth('b', 250);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      dispose();
+    });
+
+    it('resolveColumnWidth for sticky col does not re-trigger autorun on setColumnWidth', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.reorderColumns(['a', 'b']);
+      model.pinLeft('a');
+
+      const spy = jest.fn();
+      const dispose = autorun(() => {
+        model.resolveColumnWidth('a');
+        spy();
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      model.setColumnWidth('a', 200);
+      model.setColumnWidth('a', 250);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      dispose();
+    });
+
+    it('isResizing is false initially', () => {
+      model.init([col({ field: 'a' })]);
+      expect(model.isResizing).toBe(false);
+    });
+
+    it('isResizing is true after setColumnWidth', () => {
+      model.init([col({ field: 'a' })]);
+      model.setColumnWidth('a', 200);
+      expect(model.isResizing).toBe(true);
+    });
+
+    it('isResizing is false after commitColumnWidth', () => {
+      model.init([col({ field: 'a' })]);
+      model.setColumnWidth('a', 200);
+      model.commitColumnWidth();
+      expect(model.isResizing).toBe(false);
+    });
+
+    it('columnWidthCssVars does not re-trigger autorun during resize drag', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+
+      model.setColumnWidth('a', 100);
+
+      const spy = jest.fn();
+      const dispose = autorun(() => {
+        void model.columnWidthCssVars;
+        spy();
+      });
+
+      expect(spy).toHaveBeenCalledTimes(1);
+
+      model.setColumnWidth('a', 200);
+      model.setColumnWidth('a', 250);
+      model.setColumnWidth('a', 300);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      dispose();
+    });
+
+    it('columnWidthCssVars updates after commitColumnWidth', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+
+      model.setColumnWidth('a', 200);
+      model.setColumnWidth('a', 300);
+      model.commitColumnWidth();
+
+      expect(model.columnWidthCssVars['--cw-a']).toBe('300px');
+    });
+
+    it('getWidthCssVarsDuringResize returns live values during drag', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+
+      model.setColumnWidth('a', 200);
+      const vars = model.getWidthCssVarsDuringResize();
+      expect(vars['--cw-a']).toBe('200px');
+      expect(vars['--cw-b']).toBe('150px');
+
+      model.setColumnWidth('a', 300);
+      const vars2 = model.getWidthCssVarsDuringResize();
+      expect(vars2['--cw-a']).toBe('300px');
+    });
+  });
+
+  describe('columnWidthCssVar', () => {
+    it('returns var with default width for regular field', () => {
+      model.init([col({ field: 'name' })]);
+      expect(model.columnWidthCssVar('name')).toBe('var(--cw-name, 150px)');
+    });
+
+    it('returns var with id default width for id field', () => {
+      model.init([col({ field: 'id' })]);
+      expect(model.columnWidthCssVar('id')).toBe('var(--cw-id, 240px)');
+    });
+  });
+
+  describe('columnWidthCssVars', () => {
+    it('returns CSS vars for all visible fields with defaults', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      const vars = model.columnWidthCssVars;
+      expect(vars['--cw-a']).toBe('150px');
+      expect(vars['--cw-b']).toBe('150px');
+    });
+
+    it('returns custom width when set', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.setColumnWidth('a', 200);
+      const vars = model.columnWidthCssVars;
+      expect(vars['--cw-a']).toBe('200px');
+      expect(vars['--cw-b']).toBe('150px');
+    });
+
+    it('returns id default for id column', () => {
+      model.init([col({ field: 'id' }), col({ field: 'a' })]);
+      const vars = model.columnWidthCssVars;
+      expect(vars['--cw-id']).toBe('240px');
+    });
+
+    it('does not include hidden fields', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.hideColumn('b');
+      const vars = model.columnWidthCssVars;
+      expect(vars['--cw-a']).toBeDefined();
+      expect(vars['--cw-b']).toBeUndefined();
+    });
+  });
+
+  describe('getColumnStickyLeftCss', () => {
+    it('returns undefined for non-pinned column', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      expect(model.getColumnStickyLeftCss('a', 0)).toBeUndefined();
+    });
+
+    it('returns 0px for first left-pinned column without selection', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.pinLeft('a');
+      expect(model.getColumnStickyLeftCss('a', 0)).toBe('0px');
+    });
+
+    it('returns selection width for first left-pinned column with selection', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.pinLeft('a');
+      expect(model.getColumnStickyLeftCss('a', 40)).toBe('40px');
+    });
+
+    it('returns css var offset for second left-pinned column', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.pinLeft('a');
+      model.pinLeft('b');
+      expect(model.getColumnStickyLeftCss('b', 0)).toBe('var(--cw-a, 150px)');
+    });
+
+    it('returns calc with selection and multiple pinned columns', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+      ]);
+      model.pinLeft('a');
+      model.pinLeft('b');
+      expect(model.getColumnStickyLeftCss('b', 40)).toBe(
+        'calc(40px + var(--cw-a, 150px))',
+      );
+    });
+  });
+
+  describe('getColumnStickyRightCss', () => {
+    it('returns undefined for non-pinned column', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      expect(model.getColumnStickyRightCss('a')).toBeUndefined();
+    });
+
+    it('returns 0px for last right-pinned column', () => {
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.pinRight('b');
+      expect(model.getColumnStickyRightCss('b')).toBe('0px');
+    });
+
+    it('returns css var offset for non-last right-pinned column', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+      ]);
+      model.pinRight('c');
+      model.pinRight('d');
+      // pinRight inserts at start of right zone:
+      // pinRight('c'): [a, b, d, c]   (c = right)
+      // pinRight('d'): [a, b, d, c]   (d = right, c = right)
+      // Right zone order: d, c. d has c after it.
+      expect(model.getColumnStickyRightCss('d')).toBe('var(--cw-c, 150px)');
+    });
+
+    it('returns calc for right-pinned column with multiple after it', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'c' }),
+        col({ field: 'd' }),
+        col({ field: 'e' }),
+      ]);
+      model.reorderColumns(['a', 'b', 'c', 'd', 'e']);
+      model.pinRight('c');
+      model.pinRight('d');
+      model.pinRight('e');
+      // pinRight('c'): [a, b, d, e, c]  (c = right)
+      // pinRight('d'): [a, b, e, d, c]  (d, c = right)
+      // pinRight('e'): [a, b, e, d, c]  (e, d, c = right)
+      // Right zone order: e, d, c. e has d and c after it.
+      expect(model.getColumnStickyRightCss('e')).toBe(
+        'calc(var(--cw-d, 150px) + var(--cw-c, 150px))',
+      );
     });
   });
 
