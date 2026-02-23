@@ -206,6 +206,48 @@ export function generateManyRows(count: number): Record<string, unknown>[] {
   return rows;
 }
 
+export const FK_TABLE_SCHEMA = {
+  type: 'object',
+  properties: {
+    name: { type: 'string', default: '' },
+    price: { type: 'number', default: 0 },
+    categoryId: { type: 'string', default: '', foreignKey: 'categories' },
+  },
+  additionalProperties: false,
+  required: ['name', 'price', 'categoryId'],
+} as unknown as JsonObjectSchema;
+
+export const FK_MOCK_ROWS_DATA = [
+  { name: 'Laptop', price: 999, categoryId: 'electronics' },
+  { name: 'Desk Chair', price: 350, categoryId: 'furniture' },
+  { name: 'Headphones', price: 150, categoryId: 'electronics' },
+  { name: 'Notebook', price: 5, categoryId: '' },
+  { name: 'Monitor', price: 450, categoryId: 'electronics' },
+];
+
+const FK_CATEGORY_IDS = [
+  'electronics',
+  'furniture',
+  'clothing',
+  'books',
+  'sports',
+  'toys',
+  'food',
+];
+
+export const mockSearchForeignKey = async (
+  _tableId: string,
+  search: string,
+): Promise<{ ids: string[]; hasMore: boolean }> => {
+  await new Promise((r) => setTimeout(r, 200));
+  const filtered = search
+    ? FK_CATEGORY_IDS.filter((id) =>
+        id.toLowerCase().includes(search.toLowerCase()),
+      )
+    : FK_CATEGORY_IDS;
+  return { ids: filtered, hasMore: false };
+};
+
 export const SYSTEM_FIELDS_SCHEMA = obj({
   name: str(),
   age: num(),

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box } from '@chakra-ui/react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
@@ -29,6 +29,9 @@ import {
   FILE_TABLE_SCHEMA,
   FILE_MOCK_ROWS_DATA,
   FILE_REF_SCHEMAS,
+  FK_TABLE_SCHEMA,
+  FK_MOCK_ROWS_DATA,
+  mockSearchForeignKey,
   SYSTEM_FIELDS_SCHEMA,
   SYSTEM_FIELDS_ROWS,
   generateManyRows,
@@ -52,6 +55,59 @@ export const StoryWrapper = observer(({ state }: StoryWrapperProps) => {
     </Box>
   );
 });
+
+const AdminLayoutWrapper = observer(
+  ({ state }: { state: TableEditorStoryState }) => {
+    return (
+      <Flex minHeight="100vh">
+        <Flex
+          borderRight="1px solid"
+          borderRightColor="gray.200"
+          flexDirection="column"
+          padding="16px"
+          width="288px"
+          minWidth="288px"
+          flexShrink={0}
+          height="100vh"
+          top={0}
+          position="sticky"
+          bg="white"
+        >
+          <Text fontWeight="bold" fontSize="sm" mb={4}>
+            Sidebar
+          </Text>
+          <Flex flexDirection="column" gap={2}>
+            {['Project A', 'Project B', 'Project C'].map((name) => (
+              <Box
+                key={name}
+                px={3}
+                py={2}
+                borderRadius="md"
+                fontSize="sm"
+                color="gray.600"
+                cursor="pointer"
+                _hover={{ bg: 'gray.50' }}
+              >
+                {name}
+              </Box>
+            ))}
+          </Flex>
+        </Flex>
+        <Flex alignItems="center" flex={1} flexDirection="column" width="100%">
+          <Flex
+            flex={1}
+            flexDirection="column"
+            maxWidth="900px"
+            padding="0 1rem 0 1rem"
+            width="100%"
+          >
+            <TableEditor viewModel={state.core} useWindowScroll />
+          </Flex>
+        </Flex>
+      </Flex>
+    );
+  },
+);
 
 function spyOnDataSource(
   ds: import('../model/MockDataSource.js').MockDataSource,
@@ -110,20 +166,14 @@ const DefaultWrapper = observer(() => {
     return s;
   });
 
-  return <StoryWrapper state={state} />;
+  return <AdminLayoutWrapper state={state} />;
 });
 
 const meta: Meta<typeof DefaultWrapper> = {
   component: DefaultWrapper as any,
   title: 'TableEditor/TableEditor',
   excludeStories: ['StoryWrapper'],
-  decorators: [
-    (Story) => (
-      <Box p={4}>
-        <Story />
-      </Box>
-    ),
-  ],
+  parameters: { layout: 'fullscreen' },
 };
 export default meta;
 type Story = StoryObj<typeof DefaultWrapper>;
@@ -142,7 +192,7 @@ export const EmptyTable: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return <AdminLayoutWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -175,7 +225,7 @@ export const WithFormulas: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return <AdminLayoutWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -201,7 +251,7 @@ export const Readonly: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return <AdminLayoutWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -256,7 +306,31 @@ export const FileColumns: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return <AdminLayoutWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
+const fkCallbacks: TableEditorCallbacks = {
+  ...defaultCallbacks,
+  onSearchForeignKey: mockSearchForeignKey,
+};
+
+export const ForeignKeyColumns: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableEditorStoryState({
+          dataSchema: FK_TABLE_SCHEMA,
+          rowsData: FK_MOCK_ROWS_DATA,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: fkCallbacks,
+        }),
+      );
+
+      return <AdminLayoutWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -276,7 +350,7 @@ export const WithSystemColumns: Story = {
         }),
       );
 
-      return <StoryWrapper state={state} />;
+      return <AdminLayoutWrapper state={state} />;
     });
 
     return <Wrapper />;
@@ -297,7 +371,7 @@ export const ManyRows: Story = {
         return s;
       });
 
-      return <StoryWrapper state={state} />;
+      return <AdminLayoutWrapper state={state} />;
     });
 
     return <Wrapper />;

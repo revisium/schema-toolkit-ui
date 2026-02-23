@@ -47,7 +47,6 @@ export const ForeignKeyCell = observer(
               textOverflow="ellipsis"
               overflow="hidden"
               fontWeight="300"
-              color="blue.500"
               flex={1}
               minWidth={0}
             >

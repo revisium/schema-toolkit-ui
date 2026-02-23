@@ -14,8 +14,8 @@ export const ReadonlyCell = observer(({ cell }: ReadonlyCellProps) => {
         whiteSpace="nowrap"
         textOverflow="ellipsis"
         overflow="hidden"
-        fontWeight="300"
-        color="gray.400"
+        fontSize="14px"
+        color="text/primary"
       >
         {cell.displayValue}
       </Text>

@@ -1015,4 +1015,124 @@ describe('CellFSM', () => {
       expect(hasSelectionValues).toEqual([false]);
     });
   });
+
+  describe('selection lookup performance', () => {
+    it('isCellInSelection uses O(1) index lookup, not indexOf', () => {
+      const rows = Array.from({ length: 1000 }, (_, i) => `row-${i}`);
+      const cols = Array.from({ length: 20 }, (_, i) => `col-${i}`);
+      fsm.setNavigationContext(cols, rows);
+
+      fsm.focusCell({ rowId: 'row-0', field: 'col-0' });
+      fsm.selectTo({ rowId: 'row-999', field: 'col-19' });
+
+      const start = performance.now();
+      for (let r = 0; r < 50; r++) {
+        for (let c = 0; c < 20; c++) {
+          fsm.isCellInSelection(`row-${r}`, `col-${c}`);
+        }
+      }
+      const elapsed = performance.now() - start;
+
+      expect(elapsed).toBeLessThan(10);
+    });
+
+    it('getCellSelectionEdges uses O(1) index lookup, not indexOf', () => {
+      const rows = Array.from({ length: 1000 }, (_, i) => `row-${i}`);
+      const cols = Array.from({ length: 20 }, (_, i) => `col-${i}`);
+      fsm.setNavigationContext(cols, rows);
+
+      fsm.focusCell({ rowId: 'row-0', field: 'col-0' });
+      fsm.selectTo({ rowId: 'row-999', field: 'col-19' });
+
+      const start = performance.now();
+      for (let r = 0; r < 50; r++) {
+        for (let c = 0; c < 20; c++) {
+          fsm.getCellSelectionEdges(`row-${r}`, `col-${c}`);
+        }
+      }
+      const elapsed = performance.now() - start;
+
+      expect(elapsed).toBeLessThan(10);
+    });
+
+    it('selectedRange is a stable computed reference', () => {
+      fsm.focusCell({ rowId: 'row-1', field: 'name' });
+      fsm.selectTo({ rowId: 'row-3', field: 'email' });
+
+      let rangeCallCount = 0;
+      let lastRange: unknown = undefined;
+      const dispose = autorun(() => {
+        lastRange = fsm.selectedRange;
+        rangeCallCount++;
+      });
+
+      expect(rangeCallCount).toBe(1);
+      expect(lastRange).toEqual({
+        startCol: 0,
+        endCol: 2,
+        startRow: 0,
+        endRow: 2,
+      });
+
+      fsm.dragExtend({ rowId: 'row-3', field: 'email' });
+
+      expect(rangeCallCount).toBe(1);
+
+      dispose();
+    });
+
+    it('isCellInSelection autorun count is stable during drag extend', () => {
+      fsm.setNavigationContext(
+        ['name', 'age', 'email'],
+        ['row-1', 'row-2', 'row-3', 'row-4', 'row-5'],
+      );
+
+      fsm.focusCell({ rowId: 'row-1', field: 'name' });
+      fsm.selectTo({ rowId: 'row-2', field: 'age' });
+
+      let callCount = 0;
+      const dispose = autorun(() => {
+        fsm.isCellInSelection('row-3', 'name');
+        callCount++;
+      });
+
+      callCount = 0;
+
+      fsm.dragExtend({ rowId: 'row-3', field: 'email' });
+      fsm.dragExtend({ rowId: 'row-4', field: 'email' });
+      fsm.dragExtend({ rowId: 'row-5', field: 'email' });
+
+      expect(callCount).toBeLessThanOrEqual(3);
+
+      dispose();
+    });
+
+    it('columnIndexMap and rowIndexMap provide O(1) position lookup', () => {
+      const rows = Array.from({ length: 1000 }, (_, i) => `row-${i}`);
+      const cols = Array.from({ length: 20 }, (_, i) => `col-${i}`);
+      fsm.setNavigationContext(cols, rows);
+
+      expect(fsm.columnIndexMap.get('col-0')).toBe(0);
+      expect(fsm.columnIndexMap.get('col-19')).toBe(19);
+      expect(fsm.rowIndexMap.get('row-0')).toBe(0);
+      expect(fsm.rowIndexMap.get('row-999')).toBe(999);
+    });
+
+    it('index maps update after setNavigationContext', () => {
+      fsm.setNavigationContext(['a', 'b'], ['r1', 'r2']);
+      expect(fsm.columnIndexMap.get('a')).toBe(0);
+      expect(fsm.rowIndexMap.get('r1')).toBe(0);
+
+      fsm.setNavigationContext(['b', 'a'], ['r2', 'r1']);
+      expect(fsm.columnIndexMap.get('a')).toBe(1);
+      expect(fsm.rowIndexMap.get('r1')).toBe(1);
+    });
+
+    it('index maps update after updateNavigationContext', () => {
+      fsm.updateNavigationContext(['x', 'y', 'z'], ['r1', 'r2']);
+      expect(fsm.columnIndexMap.get('x')).toBe(0);
+      expect(fsm.columnIndexMap.get('z')).toBe(2);
+      expect(fsm.rowIndexMap.get('r2')).toBe(1);
+    });
+  });
 });

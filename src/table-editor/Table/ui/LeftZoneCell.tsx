@@ -1,5 +1,6 @@
 import { FC, useState } from 'react';
 import { Box, Checkbox, Flex, Icon, Menu, Portal } from '@chakra-ui/react';
+import { CELL_BORDER_COLOR } from './borderConstants.js';
 import { LuChevronDown } from 'react-icons/lu';
 import { PiSidebarSimpleBold } from 'react-icons/pi';
 import { RowActionMenuItems } from './RowActionMenuItems.js';
@@ -79,7 +80,7 @@ const SplitButton: FC<{
               minWidth="16px"
               cursor="pointer"
               borderLeft={onOpen ? '1px solid' : undefined}
-              borderColor="gray.200"
+              borderColor={CELL_BORDER_COLOR}
               _hover={{ bg: 'gray.100' }}
               data-testid={`left-zone-trigger-${rowId}`}
             >
@@ -139,7 +140,7 @@ export const LeftZoneCell: FC<LeftZoneCellProps> = ({
         minWidth="40px"
         maxWidth="40px"
         borderRight="1px solid"
-        borderColor="gray.100"
+        borderColor={CELL_BORDER_COLOR}
         p={0}
       >
         <Flex alignItems="center" justifyContent="center" height="100%">
@@ -164,7 +165,7 @@ export const LeftZoneCell: FC<LeftZoneCellProps> = ({
       minWidth="40px"
       maxWidth="40px"
       borderRight="1px solid"
-      borderColor="gray.100"
+      borderColor={CELL_BORDER_COLOR}
       p={0}
     >
       <Flex alignItems="center" justifyContent="center" height="100%">

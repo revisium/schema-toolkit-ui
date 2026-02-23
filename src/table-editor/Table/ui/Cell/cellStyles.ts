@@ -1,5 +1,6 @@
 import type { CellVM } from '../../model/CellVM.js';
 import type { SelectionEdges } from '../../model/CellFSM.js';
+import { BOTTOM_BORDER_SHADOW } from '../borderConstants.js';
 
 export type CellState =
   | 'display'
@@ -14,24 +15,23 @@ export const FOCUS_RING_RESET = {
   boxShadow: 'none',
 };
 
-export const RANGE_BORDER_COLOR = 'blue.400';
+export const SELECTION_BORDER_COLOR = '#3b82f6';
 
-export function buildSelectionBorderStyle(edges: SelectionEdges): object {
-  return {
-    content: '""',
-    position: 'absolute',
-    top: edges.top ? '-1px' : 0,
-    bottom: edges.bottom ? '-1px' : 0,
-    left: edges.left ? '-1px' : 0,
-    right: edges.right ? '-1px' : 0,
-    borderTop: edges.top ? '2px solid' : 'none',
-    borderBottom: edges.bottom ? '2px solid' : 'none',
-    borderLeft: edges.left ? '2px solid' : 'none',
-    borderRight: edges.right ? '2px solid' : 'none',
-    borderColor: RANGE_BORDER_COLOR,
-    pointerEvents: 'none',
-    zIndex: 2,
-  };
+export function buildSelectionBoxShadow(edges: SelectionEdges): string | null {
+  const shadows: string[] = [];
+  if (edges.top) {
+    shadows.push(`inset 0 2px 0 0 ${SELECTION_BORDER_COLOR}`);
+  }
+  if (edges.bottom) {
+    shadows.push(`inset 0 -2px 0 0 ${SELECTION_BORDER_COLOR}`);
+  }
+  if (edges.left) {
+    shadows.push(`inset 2px 0 0 0 ${SELECTION_BORDER_COLOR}`);
+  }
+  if (edges.right) {
+    shadows.push(`inset -2px 0 0 0 ${SELECTION_BORDER_COLOR}`);
+  }
+  return shadows.length > 0 ? shadows.join(', ') : null;
 }
 
 export const stateStyles: Record<CellState, object> = {
@@ -39,6 +39,7 @@ export const stateStyles: Record<CellState, object> = {
     cursor: 'cell',
     _hover: {
       bg: 'gray.50',
+      boxShadow: BOTTOM_BORDER_SHADOW,
     },
   },
   focused: {
@@ -73,11 +74,14 @@ export const stateStyles: Record<CellState, object> = {
     _focusVisible: FOCUS_RING_RESET,
   },
   readonly: {
-    cursor: 'default',
-    color: 'gray.500',
+    cursor: 'cell',
+    _hover: {
+      bg: 'gray.50',
+      boxShadow: BOTTOM_BORDER_SHADOW,
+    },
   },
   readonlyFocused: {
-    cursor: 'default',
+    cursor: 'cell',
     bg: 'gray.50',
     _before: {
       content: '""',

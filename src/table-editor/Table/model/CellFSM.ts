@@ -1,7 +1,6 @@
-import { makeAutoObservable } from 'mobx';
+import { computed, makeAutoObservable } from 'mobx';
 import { ObservableFSM } from '../../../lib/fsm/index.js';
 import {
-  cellPosition,
   createConfig,
   type CellAddress,
   type CellEvent,
@@ -20,12 +19,63 @@ export type {
   SelectionEdges,
 } from './cellFSMConfig.js';
 
+const READONLY_TOAST_THROTTLE_MS = 2000;
+
+function buildIndexMap(arr: string[]): Map<string, number> {
+  const map = new Map<string, number>();
+  arr.forEach((value, i) => {
+    map.set(value, i);
+  });
+  return map;
+}
+
+function selectedRangeEquals(
+  a: SelectedRange | null,
+  b: SelectedRange | null,
+): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  return (
+    a.startCol === b.startCol &&
+    a.endCol === b.endCol &&
+    a.startRow === b.startRow &&
+    a.endRow === b.endRow
+  );
+}
+
 export class CellFSM {
   private readonly _fsm: ObservableFSM<CellState, CellEvent, CellFSMContext>;
+  private _onReadonlyEditAttempt: (() => void) | null = null;
+  private _lastReadonlyToastAt = 0;
+  private _columnIndexMap: Map<string, number> = new Map();
+  private _rowIndexMap: Map<string, number> = new Map();
 
   constructor() {
     this._fsm = new ObservableFSM(createConfig());
-    makeAutoObservable(this, {}, { autoBind: true });
+    makeAutoObservable(
+      this,
+      {
+        selectedRange: computed({ equals: selectedRangeEquals }),
+      },
+      { autoBind: true },
+    );
+  }
+
+  setOnReadonlyEditAttempt(cb: (() => void) | null): void {
+    this._onReadonlyEditAttempt = cb;
+  }
+
+  notifyReadonlyEditAttempt(): void {
+    const now = Date.now();
+    if (now - this._lastReadonlyToastAt < READONLY_TOAST_THROTTLE_MS) {
+      return;
+    }
+    this._lastReadonlyToastAt = now;
+    this._onReadonlyEditAttempt?.();
   }
 
   get state(): CellState {
@@ -56,8 +106,16 @@ export class CellFSM {
     return this._fsm.context.navigationVersion;
   }
 
+  get columnIndexMap(): Map<string, number> {
+    return this._columnIndexMap;
+  }
+
+  get rowIndexMap(): Map<string, number> {
+    return this._rowIndexMap;
+  }
+
   get hasSelection(): boolean {
-    return this.getSelectedRange() !== null;
+    return this.selectedRange !== null;
   }
 
   isCellFocused(rowId: string, field: string): boolean {
@@ -81,61 +139,50 @@ export class CellFSM {
   }
 
   isCellInSelection(rowId: string, field: string): boolean {
-    const range = this.getSelectedRange();
+    const range = this.selectedRange;
     if (!range) {
       return false;
     }
-    const pos = this._getCellPosition(rowId, field);
-    if (!pos) {
+    const colIndex = this._columnIndexMap.get(field);
+    const rowIndex = this._rowIndexMap.get(rowId);
+    if (colIndex === undefined || rowIndex === undefined) {
       return false;
     }
     return (
-      pos.colIndex >= range.startCol &&
-      pos.colIndex <= range.endCol &&
-      pos.rowIndex >= range.startRow &&
-      pos.rowIndex <= range.endRow
+      colIndex >= range.startCol &&
+      colIndex <= range.endCol &&
+      rowIndex >= range.startRow &&
+      rowIndex <= range.endRow
     );
   }
 
   getCellSelectionEdges(rowId: string, field: string): SelectionEdges | null {
-    const range = this.getSelectedRange();
+    const range = this.selectedRange;
     if (!range) {
       return null;
     }
-    const pos = this._getCellPosition(rowId, field);
-    if (!pos) {
+    const colIndex = this._columnIndexMap.get(field);
+    const rowIndex = this._rowIndexMap.get(rowId);
+    if (colIndex === undefined || rowIndex === undefined) {
       return null;
     }
     if (
-      pos.colIndex < range.startCol ||
-      pos.colIndex > range.endCol ||
-      pos.rowIndex < range.startRow ||
-      pos.rowIndex > range.endRow
+      colIndex < range.startCol ||
+      colIndex > range.endCol ||
+      rowIndex < range.startRow ||
+      rowIndex > range.endRow
     ) {
       return null;
     }
     return {
-      top: pos.rowIndex === range.startRow,
-      bottom: pos.rowIndex === range.endRow,
-      left: pos.colIndex === range.startCol,
-      right: pos.colIndex === range.endCol,
+      top: rowIndex === range.startRow,
+      bottom: rowIndex === range.endRow,
+      left: colIndex === range.startCol,
+      right: colIndex === range.endCol,
     };
   }
 
-  private _getCellPosition(
-    rowId: string,
-    field: string,
-  ): { colIndex: number; rowIndex: number } | null {
-    const ctx = this._fsm.context;
-    const colIndex = ctx.columns.indexOf(field);
-    const rowIndex = ctx.rowIds.indexOf(rowId);
-    if (colIndex === -1 || rowIndex === -1) {
-      return null;
-    }
-    return { colIndex, rowIndex };
-  }
-
-  getSelectedRange(): SelectedRange | null {
+  get selectedRange(): SelectedRange | null {
     const ctx = this._fsm.context;
     if (!ctx.anchorCell || !ctx.focusedCell) {
       return null;
@@ -146,21 +193,34 @@ export class CellFSM {
     ) {
       return null;
     }
-    const anchorPos = cellPosition(ctx, ctx.anchorCell);
-    const focusPos = cellPosition(ctx, ctx.focusedCell);
-    if (!anchorPos || !focusPos) {
+    const anchorCol = this._columnIndexMap.get(ctx.anchorCell.field);
+    const anchorRow = this._rowIndexMap.get(ctx.anchorCell.rowId);
+    const focusCol = this._columnIndexMap.get(ctx.focusedCell.field);
+    const focusRow = this._rowIndexMap.get(ctx.focusedCell.rowId);
+    if (
+      anchorCol === undefined ||
+      anchorRow === undefined ||
+      focusCol === undefined ||
+      focusRow === undefined
+    ) {
       return null;
     }
     return {
-      startCol: Math.min(anchorPos.colIndex, focusPos.colIndex),
-      endCol: Math.max(anchorPos.colIndex, focusPos.colIndex),
-      startRow: Math.min(anchorPos.rowIndex, focusPos.rowIndex),
-      endRow: Math.max(anchorPos.rowIndex, focusPos.rowIndex),
+      startCol: Math.min(anchorCol, focusCol),
+      endCol: Math.max(anchorCol, focusCol),
+      startRow: Math.min(anchorRow, focusRow),
+      endRow: Math.max(anchorRow, focusRow),
     };
+  }
+
+  getSelectedRange(): SelectedRange | null {
+    return this.selectedRange;
   }
 
   setNavigationContext(columns: string[], rowIds: string[]): void {
     Object.assign(this._fsm.context, { columns, rowIds });
+    this._columnIndexMap = buildIndexMap(columns);
+    this._rowIndexMap = buildIndexMap(rowIds);
   }
 
   updateNavigationContext(columns: string[], rowIds: string[]): void {
@@ -170,13 +230,16 @@ export class CellFSM {
     ctx.columns = columns;
     ctx.rowIds = rowIds;
     ctx.navigationVersion++;
+    this._columnIndexMap = buildIndexMap(columns);
+    this._rowIndexMap = buildIndexMap(rowIds);
 
     if (!focused) {
       return;
     }
 
     const stillValid =
-      columns.includes(focused.field) && rowIds.includes(focused.rowId);
+      this._columnIndexMap.has(focused.field) &&
+      this._rowIndexMap.has(focused.rowId);
 
     if (stillValid) {
       ctx.anchorCell = null;

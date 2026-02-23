@@ -37,13 +37,24 @@ export const TableEditor: FC<TableEditorProps> = observer(
     const { breadcrumbs, callbacks } = viewModel;
 
     return (
-      <Box display="flex" flexDirection="column" height="100%">
+      <Box
+        display="flex"
+        flexDirection="column"
+        height={useWindowScroll ? undefined : '100%'}
+        flex={useWindowScroll ? 1 : undefined}
+      >
         <Flex
           px={3}
-          pt={2}
-          mb="48px"
+          pt="32px"
+          pb="48px"
           alignItems="center"
           justifyContent="space-between"
+          {...(useWindowScroll && {
+            position: 'sticky' as const,
+            top: 0,
+            zIndex: 3,
+            bg: 'white',
+          })}
         >
           {breadcrumbs.length > 0 && (
             <Breadcrumbs
@@ -101,7 +112,17 @@ export const TableEditor: FC<TableEditorProps> = observer(
           />
         </Box>
 
-        <Flex px={3} py={2} justifyContent="space-between">
+        <Flex
+          px={3}
+          py={2}
+          justifyContent="space-between"
+          {...(useWindowScroll && {
+            position: 'sticky' as const,
+            bottom: 0,
+            bg: 'white',
+            zIndex: 3,
+          })}
+        >
           <RowCountWidget model={viewModel.rowCount} />
           <ViewSettingsBadge model={viewModel.viewBadge} />
         </Flex>

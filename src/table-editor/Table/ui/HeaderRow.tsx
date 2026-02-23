@@ -3,14 +3,17 @@ import { Box } from '@chakra-ui/react';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import type { FilterModel } from '../../Filters/model/FilterModel.js';
 import type { SortModel } from '../../Sortings/model/SortModel.js';
-import type { ScrollShadowModel } from './hooks/useScrollShadow.js';
+import {
+  BOTTOM_BORDER_SHADOW,
+  buildAddColumnShadowCss,
+  adjustRightOffsetCss,
+} from './borderConstants.js';
 import { ColumnHeader } from './Header/ColumnHeader.js';
 import type { StickyPosition } from './Header/ColumnHeader.js';
 import { AddColumnButton } from './Header/AddColumnButton.js';
 
 const SELECTION_COLUMN_WIDTH = 40;
 const ADD_COLUMN_BUTTON_WIDTH = 40;
-const BOTTOM_BORDER_SHADOW = 'inset 0 -1px 0 0 var(--chakra-colors-gray-100)';
 
 interface HeaderRowProps {
   columnsModel: ColumnsModel;
@@ -18,7 +21,6 @@ interface HeaderRowProps {
   filterModel?: FilterModel;
   onCopyPath?: (path: string) => void;
   showSelection?: boolean;
-  scrollShadow?: ScrollShadowModel;
 }
 
 export const HeaderRow = observer(
@@ -28,7 +30,6 @@ export const HeaderRow = observer(
     filterModel,
     onCopyPath,
     showSelection,
-    scrollShadow,
   }: HeaderRowProps) => {
     const selectionWidth = showSelection ? SELECTION_COLUMN_WIDTH : 0;
     const addColumnStickyRight = columnsModel.hasHiddenColumns;
@@ -65,29 +66,37 @@ export const HeaderRow = observer(
               filterModel={filterModel}
               onCopyPath={onCopyPath}
               stickyPosition={stickyPosition}
-              showLeftShadow={scrollShadow?.showLeftShadow}
-              showRightShadow={scrollShadow?.showRightShadow}
             />
           );
         })}
-        <Box
-          as="th"
-          width="100%"
-          bg="white"
-          p={0}
-          boxShadow={BOTTOM_BORDER_SHADOW}
-        />
-        <Box
-          as="th"
-          bg="white"
-          p={0}
-          position={addColumnStickyRight ? 'sticky' : undefined}
-          right={addColumnStickyRight ? 0 : undefined}
-          zIndex={addColumnStickyRight ? 2 : undefined}
-          boxShadow={BOTTOM_BORDER_SHADOW}
-        >
-          <AddColumnButton columnsModel={columnsModel} />
-        </Box>
+        {addColumnStickyRight ? (
+          <Box
+            as="th"
+            width="100%"
+            minWidth={`${ADD_COLUMN_BUTTON_WIDTH}px`}
+            bg="white"
+            p={0}
+            position="sticky"
+            right={0}
+            zIndex={2}
+            boxShadow={BOTTOM_BORDER_SHADOW}
+            css={
+              columnsModel.pinnedRightCount === 0
+                ? buildAddColumnShadowCss()
+                : undefined
+            }
+          >
+            <AddColumnButton columnsModel={columnsModel} />
+          </Box>
+        ) : (
+          <Box
+            as="th"
+            width="100%"
+            bg="white"
+            p={0}
+            boxShadow={BOTTOM_BORDER_SHADOW}
+          />
+        )}
       </Box>
     );
   },
@@ -99,21 +108,21 @@ function getStickyPosition(
   selectionWidth: number,
   addColumnStickyRight: boolean,
 ): StickyPosition | undefined {
-  const leftOffset = columnsModel.getColumnStickyLeft(field, selectionWidth);
-  if (leftOffset !== undefined) {
+  const leftCss = columnsModel.getColumnStickyLeftCss(field, selectionWidth);
+  if (leftCss !== undefined) {
     return {
       side: 'left',
-      offset: leftOffset,
+      offsetCss: leftCss,
       isBoundary: columnsModel.isStickyLeftBoundary(field),
     };
   }
 
-  const rightBase = columnsModel.getColumnStickyRight(field);
-  if (rightBase !== undefined) {
+  const rightCss = columnsModel.getColumnStickyRightCss(field);
+  if (rightCss !== undefined) {
     const addColOffset = addColumnStickyRight ? ADD_COLUMN_BUTTON_WIDTH : 0;
     return {
       side: 'right',
-      offset: rightBase + addColOffset,
+      offsetCss: adjustRightOffsetCss(rightCss, addColOffset),
       isBoundary: columnsModel.isStickyRightBoundary(field),
     };
   }

@@ -32,6 +32,7 @@ export const AddColumnButton = observer(
               variant="ghost"
               color="gray.400"
               _hover={{ bg: 'gray.100', color: 'gray.600' }}
+              focusRing="none"
               data-testid="add-column-button"
             >
               <PiPlus />

@@ -1,9 +1,39 @@
-import { makeAutoObservable, observable } from 'mobx';
+import { makeAutoObservable, observable, untracked } from 'mobx';
 import { FilterFieldType } from '../../shared/field-types.js';
 import type { ColumnSpec, PinSide, ViewColumn } from './types.js';
 import { selectDefaultColumns } from './selectDefaultColumns.js';
 
 const DEFAULT_COLUMN_WIDTH = 150;
+const DEFAULT_ID_COLUMN_WIDTH = 240;
+
+function isValidPinZoneOrder(
+  fields: string[],
+  pins: Map<string, PinSide>,
+): boolean {
+  let zone: 'left' | 'none' | 'right' = 'left';
+  for (const field of fields) {
+    const pin = pins.get(field);
+    if (zone === 'left') {
+      if (pin === 'right') {
+        zone = 'right';
+      } else if (pin === undefined) {
+        zone = 'none';
+      }
+    } else if (zone === 'none') {
+      if (pin === 'left') {
+        return false;
+      }
+      if (pin === 'right') {
+        zone = 'right';
+      }
+    } else {
+      if (pin !== 'right') {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 export class ColumnsModel {
   private _allColumns: ColumnSpec[] = [];
@@ -11,6 +41,8 @@ export class ColumnsModel {
   private readonly _columnWidths = observable.map<string, number>();
   private readonly _pinnedColumns = observable.map<string, PinSide>();
   private _onChange: (() => void) | null = null;
+  private _isResizing = false;
+  private _wrapperElement: HTMLElement | null = null;
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
@@ -264,11 +296,24 @@ export class ColumnsModel {
 
   // --- Width ---
 
+  get isResizing(): boolean {
+    return this._isResizing;
+  }
+
+  setWrapperElement(el: HTMLElement | null): void {
+    this._wrapperElement = el;
+  }
+
   setColumnWidth(field: string, width: number): void {
+    this._isResizing = true;
     this._columnWidths.set(field, width);
+    if (this._wrapperElement) {
+      this._wrapperElement.style.setProperty(`--cw-${field}`, `${width}px`);
+    }
   }
 
   commitColumnWidth(): void {
+    this._isResizing = false;
     this._notifyChange();
   }
 
@@ -277,7 +322,22 @@ export class ColumnsModel {
   }
 
   resolveColumnWidth(field: string): number {
-    return this._columnWidths.get(field) ?? DEFAULT_COLUMN_WIDTH;
+    return this._resolveWidthUntracked(field);
+  }
+
+  get columnWidthCssVars(): Record<string, string> {
+    if (this._isResizing) {
+      return this._buildCssVarsUntracked();
+    }
+    return this._buildCssVarsTracked();
+  }
+
+  getWidthCssVarsDuringResize(): Record<string, string> {
+    return this._buildCssVarsUntracked();
+  }
+
+  columnWidthCssVar(field: string): string {
+    return `var(--cw-${field}, ${field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH}px)`;
   }
 
   // --- Pinning ---
@@ -368,7 +428,7 @@ export class ColumnsModel {
         break;
       }
       if (this._pinnedColumns.get(f) === 'left') {
-        offset += this.resolveColumnWidth(f);
+        offset += this._resolveWidthUntracked(f);
       }
     }
     return offset;
@@ -386,10 +446,62 @@ export class ColumnsModel {
         continue;
       }
       if (found && this._pinnedColumns.get(f) === 'right') {
-        offset += this.resolveColumnWidth(f);
+        offset += this._resolveWidthUntracked(f);
       }
     }
     return offset;
+  }
+
+  getColumnStickyLeftCss(
+    field: string,
+    selectionWidth: number,
+  ): string | undefined {
+    if (this._pinnedColumns.get(field) !== 'left') {
+      return undefined;
+    }
+    const parts: string[] = [];
+    if (selectionWidth > 0) {
+      parts.push(`${selectionWidth}px`);
+    }
+    for (const f of this._visibleFields) {
+      if (f === field) {
+        break;
+      }
+      if (this._pinnedColumns.get(f) === 'left') {
+        parts.push(this.columnWidthCssVar(f));
+      }
+    }
+    if (parts.length === 0) {
+      return '0px';
+    }
+    if (parts.length === 1) {
+      return parts[0];
+    }
+    return `calc(${parts.join(' + ')})`;
+  }
+
+  getColumnStickyRightCss(field: string): string | undefined {
+    if (this._pinnedColumns.get(field) !== 'right') {
+      return undefined;
+    }
+    const parts: string[] = [];
+    let found = false;
+    for (const f of this._visibleFields) {
+      if (f === field) {
+        found = true;
+        continue;
+      }
+      if (found && this._pinnedColumns.get(f) === 'right') {
+        parts.push(this.columnWidthCssVar(f));
+      }
+    }
+    if (parts.length === 0) {
+      return '0px';
+    }
+    if (parts.length === 1) {
+      return parts[0];
+    }
+    return `calc(${parts.join(' + ')})`;
   }
 
   isStickyLeftBoundary(field: string): boolean {
@@ -450,19 +562,32 @@ export class ColumnsModel {
   applyViewColumns(viewColumns: ViewColumn[]): void {
     const lookup = this._columnLookup;
     const fields: string[] = [];
-    this._columnWidths.clear();
-    this._pinnedColumns.clear();
+    const widths = new Map<string, number>();
+    const pins = new Map<string, PinSide>();
 
     for (const vc of viewColumns) {
       const field = this._fromViewField(vc.field);
       if (lookup.has(field)) {
         fields.push(field);
         if (vc.width !== undefined) {
-          this._columnWidths.set(field, vc.width);
+          widths.set(field, vc.width);
         }
         if (vc.pinned !== undefined) {
-          this._pinnedColumns.set(field, vc.pinned);
+          pins.set(field, vc.pinned);
         }
+      }
+    }
+
+    this._columnWidths.clear();
+    this._pinnedColumns.clear();
+
+    for (const [field, width] of widths) {
+      this._columnWidths.set(field, width);
+    }
+
+    if (isValidPinZoneOrder(fields, pins)) {
+      for (const [field, side] of pins) {
+        this._pinnedColumns.set(field, side);
       }
     }
 
@@ -576,6 +701,38 @@ export class ColumnsModel {
       return viewField.slice(5);
     }
     return viewField;
+  }
+
+  private _resolveWidthUntracked(field: string): number {
+    return untracked(
+      () =>
+        this._columnWidths.get(field) ??
+        (field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH),
+    );
+  }
+
+  private _buildCssVarsTracked(): Record<string, string> {
+    const vars: Record<string, string> = {};
+    for (const field of this._visibleFields) {
+      const width =
+        this._columnWidths.get(field) ??
+        (field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH);
+      vars[`--cw-${field}`] = `${width}px`;
+    }
+    return vars;
+  }
+
+  private _buildCssVarsUntracked(): Record<string, string> {
+    return untracked(() => {
+      const vars: Record<string, string> = {};
+      for (const field of this._visibleFields) {
+        const width =
+          this._columnWidths.get(field) ??
+          (field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH);
+        vars[`--cw-${field}`] = `${width}px`;
+      }
+      return vars;
+    });
   }
 
   private _notifyChange(): void {
