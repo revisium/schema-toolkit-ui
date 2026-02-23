@@ -123,13 +123,32 @@ interface CreateTableEditorStoryStateParams {
   refSchemas?: RefSchemas;
 }
 
+function generateMockSystemFields(index: number): SystemFields {
+  const base = new Date('2025-11-01T00:00:00Z');
+  const created = new Date(base.getTime() + index * 86400000);
+  const updated = new Date(created.getTime() + 30 * 86400000);
+  return {
+    createdAt: created.toISOString(),
+    updatedAt: updated.toISOString(),
+    versionId: `v-mock-${String(index + 1).padStart(3, '0')}`,
+    createdId: `user-${index + 1}`,
+    publishedAt: updated.toISOString(),
+    hash: `hash-${(index + 1).toString(16).padStart(8, '0')}`,
+    schemaHash: `schema-hash-001`,
+  };
+}
+
 export function createTableEditorStoryState(
   params: CreateTableEditorStoryStateParams,
 ): TableEditorStoryState {
   const rows =
     params.rows ??
     params.rowsData.map((data, i) =>
-      MockDataSource.createRow(`row-${i + 1}`, data),
+      MockDataSource.createRow(
+        `row-${i + 1}`,
+        data,
+        generateMockSystemFields(i),
+      ),
     );
   const dataSource = new MockDataSource({
     dataSchema: params.dataSchema,

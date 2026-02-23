@@ -1,3 +1,4 @@
+import { autorun } from 'mobx';
 import { CellFSM } from '../CellFSM';
 
 describe('CellFSM', () => {
@@ -959,6 +960,59 @@ describe('CellFSM', () => {
           right: true,
         });
       });
+    });
+  });
+
+  describe('selection reactivity performance', () => {
+    it('hasSelection autorun does not re-fire when drag-extending within existing selection', () => {
+      const hasSelectionValues: boolean[] = [];
+      autorun(() => {
+        hasSelectionValues.push(fsm.hasSelection);
+      });
+
+      expect(hasSelectionValues).toEqual([false]);
+
+      fsm.focusCell({ rowId: 'row-1', field: 'name' });
+      fsm.selectTo({ rowId: 'row-2', field: 'age' });
+
+      expect(hasSelectionValues).toEqual([false, true]);
+
+      fsm.dragExtend({ rowId: 'row-3', field: 'email' });
+      fsm.dragExtend({ rowId: 'row-2', field: 'name' });
+      fsm.dragExtend({ rowId: 'row-1', field: 'email' });
+
+      expect(hasSelectionValues).toEqual([false, true]);
+    });
+
+    it('hasSelection transitions from true to false on focus', () => {
+      const hasSelectionValues: boolean[] = [];
+      autorun(() => {
+        hasSelectionValues.push(fsm.hasSelection);
+      });
+
+      fsm.focusCell({ rowId: 'row-1', field: 'name' });
+      fsm.selectTo({ rowId: 'row-2', field: 'age' });
+
+      expect(hasSelectionValues).toEqual([false, true]);
+
+      fsm.focusCell({ rowId: 'row-1', field: 'name' });
+
+      expect(hasSelectionValues).toEqual([false, true, false]);
+    });
+
+    it('focusedCell changes do not invalidate hasSelection when it stays false', () => {
+      const hasSelectionValues: boolean[] = [];
+      autorun(() => {
+        hasSelectionValues.push(fsm.hasSelection);
+      });
+
+      expect(hasSelectionValues).toEqual([false]);
+
+      fsm.focusCell({ rowId: 'row-1', field: 'name' });
+      fsm.focusCell({ rowId: 'row-2', field: 'age' });
+      fsm.focusCell({ rowId: 'row-3', field: 'email' });
+
+      expect(hasSelectionValues).toEqual([false]);
     });
   });
 });

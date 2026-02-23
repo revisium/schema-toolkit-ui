@@ -94,7 +94,7 @@ export const TableEditor: FC<TableEditorProps> = observer(
               isReadonly ? undefined : (ids) => viewModel.deleteRows(ids)
             }
             onSearchForeignKey={callbacks.onSearchForeignKey}
-            onUploadFile={callbacks.onUploadFile}
+            onUploadFile={isReadonly ? undefined : callbacks.onUploadFile}
             onOpenFile={callbacks.onOpenFile}
             onCopyPath={callbacks.onCopyPath}
             useWindowScroll={useWindowScroll}

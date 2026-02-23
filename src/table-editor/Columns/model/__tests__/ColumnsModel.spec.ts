@@ -907,6 +907,42 @@ describe('ColumnsModel', () => {
     });
   });
 
+  describe('resize performance', () => {
+    it('setColumnWidth does not fire onChange', () => {
+      const onChange = jest.fn();
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.setOnChange(onChange);
+
+      model.setColumnWidth('a', 100);
+      model.setColumnWidth('a', 150);
+      model.setColumnWidth('a', 200);
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('commitColumnWidth fires onChange', () => {
+      const onChange = jest.fn();
+      model.init([col({ field: 'a' }), col({ field: 'b' })]);
+      model.setOnChange(onChange);
+
+      model.setColumnWidth('a', 200);
+      model.commitColumnWidth();
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('setColumnWidth updates width without notification', () => {
+      const onChange = jest.fn();
+      model.init([col({ field: 'a' })]);
+      model.setOnChange(onChange);
+
+      model.setColumnWidth('a', 250);
+
+      expect(model.getColumnWidth('a')).toBe(250);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+  });
+
   describe('onChange', () => {
     it('callback fires on changes', () => {
       const onChange = jest.fn();

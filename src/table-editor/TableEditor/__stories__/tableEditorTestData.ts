@@ -153,6 +153,59 @@ export const FILE_MOCK_ROWS_DATA = [
   },
 ];
 
+const FIRST_NAMES = [
+  'Alice',
+  'Bob',
+  'Charlie',
+  'Diana',
+  'Eve',
+  'Frank',
+  'Grace',
+  'Henry',
+  'Ivy',
+  'Jack',
+  'Karen',
+  'Leo',
+  'Mia',
+  'Noah',
+  'Olivia',
+  'Paul',
+  'Quinn',
+  'Ruby',
+  'Sam',
+  'Tina',
+];
+
+const CITIES = [
+  'New York',
+  'London',
+  'Tokyo',
+  'Paris',
+  'Berlin',
+  'Sydney',
+  'Toronto',
+  'Seoul',
+  'Dubai',
+  'Rome',
+];
+
+export function generateManyRows(count: number): Record<string, unknown>[] {
+  const rows: Record<string, unknown>[] = [];
+  for (let i = 0; i < count; i++) {
+    const name = FIRST_NAMES[i % FIRST_NAMES.length] ?? 'User';
+    const city = CITIES[i % CITIES.length] ?? 'Unknown';
+    rows.push({
+      name: `${name} ${i + 1}`,
+      age: 20 + (i % 50),
+      active: i % 3 !== 0,
+      email: `${name.toLowerCase()}${i + 1}@example.com`,
+      score: 50 + (i % 51),
+      city,
+    });
+  }
+  return rows;
+}
+
 export const SYSTEM_FIELDS_SCHEMA = obj({
   name: str(),
   age: num(),

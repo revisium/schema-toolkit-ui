@@ -1,3 +1,4 @@
+import { makeAutoObservable } from 'mobx';
 import { ObservableFSM } from '../../../lib/fsm/index.js';
 import {
   cellPosition,
@@ -24,6 +25,7 @@ export class CellFSM {
 
   constructor() {
     this._fsm = new ObservableFSM(createConfig());
+    makeAutoObservable(this, {}, { autoBind: true });
   }
 
   get state(): CellState {

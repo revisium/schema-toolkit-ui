@@ -266,6 +266,9 @@ export class ColumnsModel {
 
   setColumnWidth(field: string, width: number): void {
     this._columnWidths.set(field, width);
+  }
+
+  commitColumnWidth(): void {
     this._notifyChange();
   }
 

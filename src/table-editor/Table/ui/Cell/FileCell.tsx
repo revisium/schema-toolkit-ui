@@ -11,10 +11,11 @@ import { useTextareaCell } from './useTextareaCell.js';
 
 interface FileCellProps {
   cell: CellVM;
-  onUploadFile?: (
-    fileId: string,
-    file: File,
-  ) => Promise<Record<string, unknown> | null>;
+  onUploadFile?: (params: {
+    rowId: string;
+    fileId: string;
+    file: File;
+  }) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
 }
 
@@ -62,7 +63,11 @@ export const FileCell: FC<FileCellProps> = observer(
         }
         event.target.value = '';
         try {
-          const result = await onUploadFile?.(fileId, file);
+          const result = await onUploadFile?.({
+            rowId: cell.rowId,
+            fileId,
+            file,
+          });
           if (result) {
             cell.commitFileUpload(result);
           }

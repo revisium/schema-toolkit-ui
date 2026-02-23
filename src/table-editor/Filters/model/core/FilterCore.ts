@@ -174,6 +174,14 @@ export class FilterCore {
     } catch {
       return;
     }
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      !Array.isArray(parsed.conditions) ||
+      !Array.isArray(parsed.groups)
+    ) {
+      return;
+    }
     const validFields = new Set(this._availableFields.map((f) => f.field));
     const cleaned = FilterCore._stripInvalidConditions(parsed, validFields);
     const hasFilters = this._serializer.applySnapshot(JSON.stringify(cleaned));

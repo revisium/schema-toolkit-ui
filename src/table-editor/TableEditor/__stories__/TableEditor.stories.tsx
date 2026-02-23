@@ -31,11 +31,10 @@ import {
   FILE_REF_SCHEMAS,
   SYSTEM_FIELDS_SCHEMA,
   SYSTEM_FIELDS_ROWS,
+  generateManyRows,
 } from './tableEditorTestData.js';
 
 ensureReactivityProvider();
-
-const noop = () => {};
 
 const STORY_BREADCRUMBS: TableEditorBreadcrumb[] = [
   { label: 'Database', dataTestId: 'breadcrumb-0' },
@@ -54,25 +53,62 @@ export const StoryWrapper = observer(({ state }: StoryWrapperProps) => {
   );
 });
 
-const onOpenRow = fn().mockName('onOpenRow');
-const onDuplicateRow = fn().mockName('onDuplicateRow');
+function spyOnDataSource(
+  ds: import('../model/MockDataSource.js').MockDataSource,
+) {
+  const fetchMetadataSpy = fn().mockName('dataSource.fetchMetadata');
+  const fetchRowsSpy = fn().mockName('dataSource.fetchRows');
+  const patchCellsSpy = fn().mockName('dataSource.patchCells');
+  const deleteRowsSpy = fn().mockName('dataSource.deleteRows');
+  const saveViewSpy = fn().mockName('dataSource.saveView');
+
+  const origFetchMetadata = ds.fetchMetadata.bind(ds);
+  const origFetchRows = ds.fetchRows.bind(ds);
+  const origPatchCells = ds.patchCells.bind(ds);
+  const origDeleteRows = ds.deleteRows.bind(ds);
+  const origSaveView = ds.saveView.bind(ds);
+
+  ds.fetchMetadata = (...args: Parameters<typeof ds.fetchMetadata>) => {
+    fetchMetadataSpy(...args);
+    return origFetchMetadata(...args);
+  };
+  ds.fetchRows = (...args: Parameters<typeof ds.fetchRows>) => {
+    fetchRowsSpy(...args);
+    return origFetchRows(...args);
+  };
+  ds.patchCells = (...args: Parameters<typeof ds.patchCells>) => {
+    patchCellsSpy(...args);
+    return origPatchCells(...args);
+  };
+  ds.deleteRows = (...args: Parameters<typeof ds.deleteRows>) => {
+    deleteRowsSpy(...args);
+    return origDeleteRows(...args);
+  };
+  ds.saveView = (...args: Parameters<typeof ds.saveView>) => {
+    saveViewSpy(...args);
+    return origSaveView(...args);
+  };
+}
 
 const defaultCallbacks: TableEditorCallbacks = {
-  onBreadcrumbClick: noop,
-  onCreateRow: noop,
-  onOpenRow,
-  onDuplicateRow,
+  onBreadcrumbClick: fn().mockName('onBreadcrumbClick'),
+  onCreateRow: fn().mockName('onCreateRow'),
+  onOpenRow: fn().mockName('onOpenRow'),
+  onDuplicateRow: fn().mockName('onDuplicateRow'),
+  onCopyPath: fn().mockName('onCopyPath'),
 };
 
 const DefaultWrapper = observer(() => {
-  const [state] = useState(() =>
-    createTableEditorStoryState({
+  const [state] = useState(() => {
+    const s = createTableEditorStoryState({
       dataSchema: MANY_COLUMNS_SCHEMA,
       rowsData: MANY_COLUMNS_ROWS,
       breadcrumbs: STORY_BREADCRUMBS,
       callbacks: defaultCallbacks,
-    }),
-  );
+    });
+    spyOnDataSource(s.dataSource);
+    return s;
+  });
 
   return <StoryWrapper state={state} />;
 });
@@ -161,7 +197,7 @@ export const Readonly: Story = {
           rowsData: MOCK_ROWS_DATA,
           readonly: true,
           breadcrumbs: STORY_BREADCRUMBS,
-          callbacks: { onOpenRow },
+          callbacks: { onOpenRow: fn().mockName('onOpenRow') },
         }),
       );
 
@@ -174,17 +210,21 @@ export const Readonly: Story = {
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const onUploadFileSpy = fn().mockName('onUploadFile');
+const onOpenFileSpy = fn().mockName('onOpenFile');
+
 const fileCallbacks: TableEditorCallbacks = {
-  onBreadcrumbClick: noop,
-  onCreateRow: noop,
-  onOpenRow,
-  onDuplicateRow,
-  onUploadFile: async (_fileId: string, file: File) => {
+  onBreadcrumbClick: fn().mockName('onBreadcrumbClick'),
+  onCreateRow: fn().mockName('onCreateRow'),
+  onOpenRow: fn().mockName('onOpenRow'),
+  onDuplicateRow: fn().mockName('onDuplicateRow'),
+  onUploadFile: async ({ rowId, fileId, file }) => {
+    onUploadFileSpy({ rowId, fileId, fileName: file.name });
     await delay(500);
     const isImage = file.type.startsWith('image/');
     return {
       status: 'uploaded',
-      fileId: _fileId,
+      fileId,
       url: `https://picsum.photos/${isImage ? '400/300' : '200'}`,
       fileName: file.name,
       mimeType: file.type,
@@ -198,6 +238,7 @@ const fileCallbacks: TableEditorCallbacks = {
     };
   },
   onOpenFile: (url: string) => {
+    onOpenFileSpy(url);
     window.open(url, '_blank');
   },
 };
@@ -234,6 +275,27 @@ export const WithSystemColumns: Story = {
           callbacks: defaultCallbacks,
         }),
       );
+
+      return <StoryWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const ManyRows: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() => {
+        const s = createTableEditorStoryState({
+          dataSchema: MANY_COLUMNS_SCHEMA,
+          rowsData: generateManyRows(1000),
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: defaultCallbacks,
+        });
+        spyOnDataSource(s.dataSource);
+        return s;
+      });
 
       return <StoryWrapper state={state} />;
     });

@@ -3,6 +3,7 @@ import { Box } from '@chakra-ui/react';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import type { FilterModel } from '../../Filters/model/FilterModel.js';
 import type { SortModel } from '../../Sortings/model/SortModel.js';
+import type { ScrollShadowModel } from './hooks/useScrollShadow.js';
 import { ColumnHeader } from './Header/ColumnHeader.js';
 import type { StickyPosition } from './Header/ColumnHeader.js';
 import { AddColumnButton } from './Header/AddColumnButton.js';
@@ -17,8 +18,7 @@ interface HeaderRowProps {
   filterModel?: FilterModel;
   onCopyPath?: (path: string) => void;
   showSelection?: boolean;
-  showLeftShadow?: boolean;
-  showRightShadow?: boolean;
+  scrollShadow?: ScrollShadowModel;
 }
 
 export const HeaderRow = observer(
@@ -28,8 +28,7 @@ export const HeaderRow = observer(
     filterModel,
     onCopyPath,
     showSelection,
-    showLeftShadow,
-    showRightShadow,
+    scrollShadow,
   }: HeaderRowProps) => {
     const selectionWidth = showSelection ? SELECTION_COLUMN_WIDTH : 0;
     const addColumnStickyRight = columnsModel.hasHiddenColumns;
@@ -66,8 +65,8 @@ export const HeaderRow = observer(
               filterModel={filterModel}
               onCopyPath={onCopyPath}
               stickyPosition={stickyPosition}
-              showLeftShadow={showLeftShadow}
-              showRightShadow={showRightShadow}
+              showLeftShadow={scrollShadow?.showLeftShadow}
+              showRightShadow={scrollShadow?.showRightShadow}
             />
           );
         })}

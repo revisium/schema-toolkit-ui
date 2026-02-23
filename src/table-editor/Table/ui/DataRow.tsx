@@ -4,6 +4,7 @@ import type { SystemStyleObject } from '@chakra-ui/react';
 import type { RowVM } from '../model/RowVM.js';
 import type { ColumnsModel } from '../../Columns/model/ColumnsModel.js';
 import type { SearchForeignKeySearchFn } from '../../../search-foreign-key/index.js';
+import type { ScrollShadowModel } from './hooks/useScrollShadow.js';
 import { CellRenderer } from './Cell/CellRenderer.js';
 import { RowActionOverlay } from './RowActionOverlay.js';
 import { SelectionCheckboxCell } from './SelectionCheckboxCell.js';
@@ -15,13 +16,13 @@ interface DataRowProps {
   row: RowVM;
   columnsModel: ColumnsModel;
   showSelection: boolean;
-  showLeftShadow?: boolean;
-  showRightShadow?: boolean;
+  scrollShadow?: ScrollShadowModel;
   onSearchForeignKey?: SearchForeignKeySearchFn;
-  onUploadFile?: (
-    fileId: string,
-    file: File,
-  ) => Promise<Record<string, unknown> | null>;
+  onUploadFile?: (params: {
+    rowId: string;
+    fileId: string;
+    file: File;
+  }) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
   onOpenRow?: (rowId: string) => void;
   onSelectRow?: (rowId: string) => void;
@@ -152,8 +153,7 @@ export const DataRow = observer(
     row,
     columnsModel,
     showSelection,
-    showLeftShadow,
-    showRightShadow,
+    scrollShadow,
     onSearchForeignKey,
     onUploadFile,
     onOpenFile,
@@ -190,8 +190,8 @@ export const DataRow = observer(
             columnsModel,
             selectionWidth,
             addColOffset,
-            showLeftShadow,
-            showRightShadow,
+            scrollShadow?.showLeftShadow,
+            scrollShadow?.showRightShadow,
           );
 
           return (

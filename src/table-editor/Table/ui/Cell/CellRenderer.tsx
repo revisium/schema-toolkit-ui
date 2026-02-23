@@ -13,10 +13,11 @@ import { ReadonlyCell } from './ReadonlyCell.js';
 interface CellRendererProps {
   cell: CellVM;
   onSearchForeignKey?: SearchForeignKeySearchFn;
-  onUploadFile?: (
-    fileId: string,
-    file: File,
-  ) => Promise<Record<string, unknown> | null>;
+  onUploadFile?: (params: {
+    rowId: string;
+    fileId: string;
+    file: File;
+  }) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
 }
 

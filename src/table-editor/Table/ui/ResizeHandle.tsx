@@ -53,6 +53,7 @@ export const ResizeHandle = observer(
 
         const cleanup = () => {
           cancelAnimationFrame(rafRef.current);
+          columnsModel.commitColumnWidth();
           setIsResizing(false);
           document.body.style.cursor = '';
           document.body.style.userSelect = '';

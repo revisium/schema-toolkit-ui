@@ -1,4 +1,4 @@
-import { makeAutoObservable } from 'mobx';
+import { comparer, computed, makeAutoObservable } from 'mobx';
 import type { RowModel } from '@revisium/schema-toolkit';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import { FilterFieldType } from '../../shared/field-types.js';
@@ -33,7 +33,13 @@ export class CellVM {
     this._cellFSM = cellFSM;
     this._onCommit = onCommit ?? null;
     this._systemValues = systemValues ?? null;
-    makeAutoObservable(this, {}, { autoBind: true });
+    makeAutoObservable(
+      this,
+      {
+        selectionEdges: computed({ equals: comparer.structural }),
+      },
+      { autoBind: true },
+    );
   }
 
   // --- Data Getters ---
@@ -86,6 +92,9 @@ export class CellVM {
       const obj = val as Record<string, unknown>;
       if (typeof obj.fileName === 'string' && obj.fileName) {
         return obj.fileName;
+      }
+      if (this._column.fieldType === FilterFieldType.File) {
+        return '';
       }
       return '{...}';
     }
@@ -140,8 +149,8 @@ export class CellVM {
       url: (obj.url as string) ?? '',
       fileName: (obj.fileName as string) ?? '',
       mimeType: (obj.mimeType as string) ?? '',
-      width: (obj.width as number) ?? 0,
-      height: (obj.height as number) ?? 0,
+      width: typeof obj.width === 'number' ? obj.width : 0,
+      height: typeof obj.height === 'number' ? obj.height : 0,
     };
   }
 

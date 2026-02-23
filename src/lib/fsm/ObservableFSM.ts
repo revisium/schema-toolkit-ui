@@ -1,4 +1,4 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, observable } from 'mobx';
 
 import type { ObservableFSMConfig, TransitionMap } from './types';
 import { resolveTransition } from './resolveTransition';
@@ -20,12 +20,18 @@ export class ObservableFSM<
 
   constructor(config: ObservableFSMConfig<TState, TEvent, TContext>) {
     this._state = config.initial;
-    this._context = { ...config.context };
+    this._context = observable.object({ ...config.context }, undefined, {
+      deep: false,
+    });
     this._transitions = config.transitions;
     this._onTransition = config.onTransition;
     this._onUnhandledEvent = config.onUnhandledEvent;
 
-    makeAutoObservable(this, {}, { autoBind: true });
+    makeAutoObservable<this, '_context'>(
+      this,
+      { _context: false },
+      { autoBind: true },
+    );
   }
 
   get state(): TState {
