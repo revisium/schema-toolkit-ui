@@ -11,12 +11,12 @@ const refSchemas = {
 };
 
 const mockCallbacks: RowEditorCallbacks = {
-  onUploadFile: async (_fileId: string, file: File) => {
+  onUploadFile: async ({ fileId, file }) => {
     await delay(500);
     const isImage = file.type.startsWith('image/');
     return {
       status: 'uploaded',
-      fileId: _fileId,
+      fileId,
       url: `https://picsum.photos/${isImage ? '400/300' : '200'}`,
       fileName: file.name,
       mimeType: file.type,

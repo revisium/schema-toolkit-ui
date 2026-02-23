@@ -4,6 +4,7 @@ export type {
   TableEditorOptions,
   TableEditorBreadcrumb,
   TableEditorCallbacks,
+  UploadFileParams,
 } from './TableEditorCore.js';
 export type {
   ITableDataSource,

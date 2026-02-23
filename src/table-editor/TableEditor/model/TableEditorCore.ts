@@ -29,6 +29,12 @@ export interface TableEditorBreadcrumb {
   dataTestId?: string;
 }
 
+export interface UploadFileParams {
+  rowId: string;
+  fileId: string;
+  file: File;
+}
+
 export interface TableEditorCallbacks {
   onBreadcrumbClick?: (segment: TableEditorBreadcrumb, index: number) => void;
   onCreateRow?: () => void;
@@ -37,8 +43,7 @@ export interface TableEditorCallbacks {
   onSearchForeignKey?: SearchForeignKeySearchFn;
   onCopyPath?: (path: string) => void;
   onUploadFile?: (
-    fileId: string,
-    file: File,
+    params: UploadFileParams,
   ) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
 }

@@ -1,16 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { makeAutoObservable, runInAction } from 'mobx';
 
-export interface ScrollShadowState {
-  showLeftShadow: boolean;
-  showRightShadow: boolean;
+export class ScrollShadowModel {
+  showLeftShadow = false;
+  showRightShadow = false;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  update(left: boolean, right: boolean): void {
+    this.showLeftShadow = left;
+    this.showRightShadow = right;
+  }
+
+  reset(): void {
+    this.showLeftShadow = false;
+    this.showRightShadow = false;
+  }
 }
 
 type ScrollTarget = HTMLElement | Window;
-
-const INITIAL_STATE: ScrollShadowState = {
-  showLeftShadow: false,
-  showRightShadow: false,
-};
 
 function getScrollElement(target: ScrollTarget): HTMLElement | null {
   if (target instanceof HTMLElement) {
@@ -20,10 +30,15 @@ function getScrollElement(target: ScrollTarget): HTMLElement | null {
 }
 
 export function useScrollShadow(): {
-  state: ScrollShadowState;
+  model: ScrollShadowModel;
   setScrollerRef: (el: ScrollTarget | null) => void;
 } {
-  const [state, setState] = useState<ScrollShadowState>(INITIAL_STATE);
+  const modelRef = useRef<ScrollShadowModel | null>(null);
+  if (!modelRef.current) {
+    modelRef.current = new ScrollShadowModel();
+  }
+  const model = modelRef.current;
+
   const targetRef = useRef<ScrollTarget | null>(null);
   const rafRef = useRef<number>(0);
 
@@ -38,11 +53,10 @@ export function useScrollShadow(): {
     }
     const scrollLeft = el.scrollLeft;
     const maxScroll = el.scrollWidth - el.clientWidth;
-    setState({
-      showLeftShadow: scrollLeft > 0,
-      showRightShadow: maxScroll > 1 && scrollLeft < maxScroll - 1,
+    runInAction(() => {
+      model.update(scrollLeft > 0, maxScroll > 1 && scrollLeft < maxScroll - 1);
     });
-  }, []);
+  }, [model]);
 
   const handleScroll = useCallback(() => {
     if (rafRef.current) {
@@ -63,10 +77,12 @@ export function useScrollShadow(): {
         rafRef.current = requestAnimationFrame(update);
       } else {
         targetRef.current = null;
-        setState(INITIAL_STATE);
+        runInAction(() => {
+          model.reset();
+        });
       }
     },
-    [handleScroll, update],
+    [handleScroll, update, model],
   );
 
   useEffect(() => {
@@ -81,5 +97,5 @@ export function useScrollShadow(): {
     };
   }, [handleScroll]);
 
-  return { state, setScrollerRef };
+  return { model, setScrollerRef };
 }

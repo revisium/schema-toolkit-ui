@@ -390,6 +390,81 @@ describe('ObservableFSM', () => {
     });
   });
 
+  describe('per-field context tracking', () => {
+    it('changing one context field does not trigger autorun observing another field', () => {
+      type TwoFieldState = 'a' | 'b';
+      type TwoFieldEvent = 'SET_X' | 'SET_Y';
+      type TwoFieldCtx = { x: number; y: number };
+
+      const fsm = new ObservableFSM<TwoFieldState, TwoFieldEvent, TwoFieldCtx>({
+        initial: 'a',
+        context: { x: 0, y: 0 },
+        transitions: {
+          a: {
+            SET_X: (ctx) => ({
+              target: 'a',
+              context: { ...ctx, x: ctx.x + 1 },
+            }),
+            SET_Y: (ctx) => ({
+              target: 'a',
+              context: { ...ctx, y: ctx.y + 1 },
+            }),
+          },
+          b: {},
+        },
+      });
+
+      const yValues: number[] = [];
+      autorun(() => {
+        yValues.push(fsm.context.y);
+      });
+
+      expect(yValues).toEqual([0]);
+
+      fsm.dispatch('SET_X');
+      fsm.dispatch('SET_X');
+      fsm.dispatch('SET_X');
+
+      expect(fsm.context.x).toBe(3);
+      expect(yValues).toEqual([0]);
+    });
+
+    it('autorun fires when observed field changes', () => {
+      type TwoFieldState = 'a' | 'b';
+      type TwoFieldEvent = 'SET_X' | 'SET_Y';
+      type TwoFieldCtx = { x: number; y: number };
+
+      const fsm = new ObservableFSM<TwoFieldState, TwoFieldEvent, TwoFieldCtx>({
+        initial: 'a',
+        context: { x: 0, y: 0 },
+        transitions: {
+          a: {
+            SET_X: (ctx) => ({
+              target: 'a',
+              context: { ...ctx, x: ctx.x + 1 },
+            }),
+            SET_Y: (ctx) => ({
+              target: 'a',
+              context: { ...ctx, y: ctx.y + 1 },
+            }),
+          },
+          b: {},
+        },
+      });
+
+      const xValues: number[] = [];
+      autorun(() => {
+        xValues.push(fsm.context.x);
+      });
+
+      fsm.dispatch('SET_X');
+      fsm.dispatch('SET_Y');
+      fsm.dispatch('SET_X');
+
+      expect(xValues).toEqual([0, 1, 2]);
+    });
+  });
+
   describe('edge cases', () => {
     it('handles self-transitions', () => {
       const onTransition = jest.fn();

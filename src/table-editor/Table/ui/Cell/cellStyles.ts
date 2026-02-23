@@ -98,10 +98,8 @@ export const stateStyles: Record<CellState, object> = {
 };
 
 export function getCellState(cell: CellVM): CellState {
-  const hasRange = cell.hasRangeSelection;
-
   if (cell.isReadOnly) {
-    if (cell.isFocused && !hasRange) {
+    if (cell.isFocused && !cell.isInSelection) {
       return 'readonlyFocused';
     }
     if (cell.isInSelection) {
@@ -112,7 +110,7 @@ export function getCellState(cell: CellVM): CellState {
   if (cell.isEditing) {
     return 'editing';
   }
-  if (cell.isFocused && !hasRange) {
+  if (cell.isFocused && !cell.isInSelection) {
     return 'focused';
   }
   if (cell.isInSelection) {

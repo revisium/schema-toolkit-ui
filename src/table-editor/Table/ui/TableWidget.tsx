@@ -42,10 +42,11 @@ interface TableWidgetProps {
   sortModel?: SortModel;
   filterModel?: FilterModel;
   onSearchForeignKey?: SearchForeignKeySearchFn;
-  onUploadFile?: (
-    fileId: string,
-    file: File,
-  ) => Promise<Record<string, unknown> | null>;
+  onUploadFile?: (params: {
+    rowId: string;
+    fileId: string;
+    file: File;
+  }) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
   onOpenRow?: (rowId: string) => void;
   onDeleteSelected?: (ids: string[]) => void;
@@ -89,7 +90,7 @@ export const TableWidget = observer(
     const [deleteConfirm, setDeleteConfirm] =
       useState<DeleteConfirmState | null>(null);
 
-    const { state: scrollShadow, setScrollerRef } = useScrollShadow();
+    const { model: scrollShadow, setScrollerRef } = useScrollShadow();
 
     const handleSelectRow = useCallback(
       (rowId: string) => {
@@ -237,8 +238,7 @@ export const TableWidget = observer(
           row={row}
           columnsModel={columnsModel}
           showSelection={showSelection}
-          showLeftShadow={scrollShadow.showLeftShadow}
-          showRightShadow={scrollShadow.showRightShadow}
+          scrollShadow={scrollShadow}
           onSearchForeignKey={onSearchForeignKey}
           onUploadFile={onUploadFile}
           onOpenFile={onOpenFile}
@@ -251,8 +251,7 @@ export const TableWidget = observer(
       [
         columnsModel,
         showSelection,
-        scrollShadow.showLeftShadow,
-        scrollShadow.showRightShadow,
+        scrollShadow,
         onSearchForeignKey,
         onUploadFile,
         onOpenFile,
@@ -274,8 +273,7 @@ export const TableWidget = observer(
           filterModel={filterModel}
           onCopyPath={onCopyPath}
           showSelection={showSelection}
-          showLeftShadow={scrollShadow.showLeftShadow}
-          showRightShadow={scrollShadow.showRightShadow}
+          scrollShadow={scrollShadow}
         />
       ),
       [
@@ -284,8 +282,7 @@ export const TableWidget = observer(
         filterModel,
         onCopyPath,
         showSelection,
-        scrollShadow.showLeftShadow,
-        scrollShadow.showRightShadow,
+        scrollShadow,
       ],
     );
 

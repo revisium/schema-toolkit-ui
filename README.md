@@ -97,7 +97,7 @@ const vm = new RowEditorVM(tableSchema, existingRowData, {
   refSchemas: { ... },
   callbacks: {
     onSearchForeignKey: async (tableId, search) => { ... },
-    onUploadFile: async (fileId, file) => { ... },
+    onUploadFile: async ({ rowId, fileId, file }) => { ... },
     onOpenFile: (url) => window.open(url, '_blank', 'noopener,noreferrer'),
     onNavigateToForeignKey: (tableId, rowId) => { ... },
   },
@@ -238,7 +238,7 @@ All callbacks are optional and passed via `TableEditorOptions.callbacks`:
 | `onOpenRow` | `(rowId: string) => void` | Navigate to row detail view |
 | `onDuplicateRow` | `(rowId: string) => void` | Duplicate a row |
 | `onSearchForeignKey` | `SearchForeignKeySearchFn` | Foreign key search handler |
-| `onUploadFile` | `(fileId: string, file: File) => Promise<Record<string, unknown> \| null>` | Upload a file for a file field |
+| `onUploadFile` | `(params: { rowId: string; fileId: string; file: File }) => Promise<Record<string, unknown> \| null>` | Upload a file for a file field |
 | `onOpenFile` | `(url: string) => void` | Open/preview a file URL |
 | `onCopyPath` | `(path: string) => void` | Copy JSON path to clipboard |
 

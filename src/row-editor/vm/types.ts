@@ -32,10 +32,11 @@ export interface RowEditorCallbacks {
     tableId: string,
     search: string,
   ) => Promise<ForeignKeySearchResult>;
-  onUploadFile?: (
-    fileId: string,
-    file: File,
-  ) => Promise<Record<string, unknown> | null>;
+  onUploadFile?: (params: {
+    rowId: string;
+    fileId: string;
+    file: File;
+  }) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
   onNavigateToForeignKey?: (tableId: string, rowId: string) => void;
   onOpenTableSearch?: (tableId: string) => Promise<string | null>;
@@ -44,6 +45,7 @@ export interface RowEditorCallbacks {
 
 export interface EditorContext {
   readonly isReadOnly: boolean;
+  readonly rowId: string;
   readonly callbacks: RowEditorCallbacks | null;
 }
 

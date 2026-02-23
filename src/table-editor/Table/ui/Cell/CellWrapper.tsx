@@ -75,7 +75,7 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
     const deferredEdit = useDeferredMenuEdit(onStartEdit ?? onDoubleClick);
     const state = getCellState(cell);
     const selectionEdges = cell.selectionEdges;
-    const isAnchorInRange = cell.isAnchor && cell.hasRangeSelection;
+    const isAnchorInRange = cell.isAnchor && cell.isInSelection;
     const navVersion = cell.navigationVersion;
 
     useEffect(() => {

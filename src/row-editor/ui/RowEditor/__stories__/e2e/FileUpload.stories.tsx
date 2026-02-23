@@ -44,12 +44,10 @@ export const UploadFileUpdatesTree: Story = {
   args: { onSave: fn(), onChange: fn(), onCancel: fn() },
   render: (args) => {
     const callbacks: RowEditorCallbacks = {
-      onUploadFile: (
-        _fileId: string,
-      ): Promise<Record<string, unknown> | null> => {
+      onUploadFile: ({ fileId }): Promise<Record<string, unknown> | null> => {
         return Promise.resolve({
           status: 'uploaded',
-          fileId: _fileId,
+          fileId,
           url: 'https://example.com/avatar.png',
           fileName: 'avatar.png',
           mimeType: 'image/png',
@@ -156,7 +154,7 @@ export const FileFieldInitialState: Story = {
       }}
       refSchemas={refSchemas}
       callbacks={{
-        onUploadFile: () => Promise.resolve(null),
+        onUploadFile: (_params) => Promise.resolve(null),
       }}
     />
   ),
