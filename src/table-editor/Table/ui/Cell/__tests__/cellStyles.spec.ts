@@ -1,4 +1,5 @@
-import { buildSelectionBoxShadow, SELECTION_BORDER_COLOR } from '../cellStyles';
+import { buildSelectionBoxShadow } from '../cellCss';
+import { SELECTION_BORDER_COLOR } from '../cellStyles';
 
 describe('buildSelectionBoxShadow', () => {
   it('returns null when no edges are active', () => {
