@@ -7,7 +7,7 @@ const DEFAULT_COLUMN_WIDTH = 150;
 const DEFAULT_ID_COLUMN_WIDTH = 240;
 
 function fieldToCssVar(field: string): string {
-  return `--cw-${field.replace(/\./g, '-')}`;
+  return `--cw-${field.replaceAll('.', '-')}`;
 }
 
 function isValidPinZoneOrder(

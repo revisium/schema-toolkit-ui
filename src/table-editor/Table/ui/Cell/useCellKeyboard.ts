@@ -99,6 +99,13 @@ export function useCellKeyboard(
       if (isMod && e.key === 'v') {
         return;
       }
+      const arrowActions: Record<string, [() => void, () => void]> = {
+        ArrowUp: [cell.shiftMoveUp, cell.moveUp],
+        ArrowDown: [cell.shiftMoveDown, cell.moveDown],
+        ArrowLeft: [cell.shiftMoveLeft, cell.moveLeft],
+        ArrowRight: [cell.shiftMoveRight, cell.moveRight],
+      };
+      const arrow = arrowActions[e.key];
       if (e.key === 'Escape') {
         e.preventDefault();
         if (cell.hasRangeSelection) {
@@ -106,14 +113,8 @@ export function useCellKeyboard(
         } else {
           cell.blur();
         }
-      } else if (e.key === 'ArrowUp') {
-        handleArrowKey(cell, e, cell.shiftMoveUp, cell.moveUp);
-      } else if (e.key === 'ArrowDown') {
-        handleArrowKey(cell, e, cell.shiftMoveDown, cell.moveDown);
-      } else if (e.key === 'ArrowLeft') {
-        handleArrowKey(cell, e, cell.shiftMoveLeft, cell.moveLeft);
-      } else if (e.key === 'ArrowRight') {
-        handleArrowKey(cell, e, cell.shiftMoveRight, cell.moveRight);
+      } else if (arrow) {
+        handleArrowKey(cell, e, arrow[0], arrow[1]);
       } else if (e.key === 'Tab') {
         e.preventDefault();
         cell.handleTab(e.shiftKey);

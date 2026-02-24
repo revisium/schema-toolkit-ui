@@ -7,7 +7,7 @@ interface PendingContextMenu {
   clientY: number;
 }
 
-export let pendingContextMenu: PendingContextMenu | null = null;
+let pendingContextMenu: PendingContextMenu | null = null;
 
 export function clearPendingContextMenu(): PendingContextMenu | null {
   const pending = pendingContextMenu;
