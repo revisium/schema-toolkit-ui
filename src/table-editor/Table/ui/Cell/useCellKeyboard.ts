@@ -37,6 +37,7 @@ function handleEditableKeys(
       e.key === 'Backspace' ||
       isPrintableKey(e)
     ) {
+      e.preventDefault();
       cell.notifyReadonlyEditAttempt();
     }
     return;
