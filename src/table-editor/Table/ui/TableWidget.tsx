@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Box, Spinner, Text } from '@chakra-ui/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TableVirtuoso } from 'react-virtuoso';
 import type { RowVM } from '../model/RowVM.js';
 import type { CellFSM } from '../model/CellFSM.js';
@@ -101,25 +101,25 @@ export const TableWidget = observer(
       }
     }, [isResizing, shadowModel]);
 
-    const wrapperElRef = useRef<HTMLDivElement | null>(null);
+    const [wrapperEl, setWrapperEl] = useState<HTMLDivElement | null>(null);
 
     const wrapperRefCallback = useCallback(
       (el: HTMLDivElement | null) => {
-        wrapperElRef.current = el;
+        setWrapperEl(el);
         columnsModel.setWrapperElement(el);
       },
       [columnsModel],
     );
 
     useEffect(() => {
-      if (!useWindowScrollProp || !wrapperElRef.current) {
+      if (!useWindowScrollProp || !wrapperEl) {
         return;
       }
-      setScrollerRef(wrapperElRef.current);
+      setScrollerRef(wrapperEl);
       return () => {
         setScrollerRef(null);
       };
-    }, [useWindowScrollProp, setScrollerRef]);
+    }, [useWindowScrollProp, wrapperEl, setScrollerRef]);
 
     const handleSelectRow = useCallback(
       (rowId: string) => {
