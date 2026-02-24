@@ -6,6 +6,10 @@ import { selectDefaultColumns } from './selectDefaultColumns.js';
 const DEFAULT_COLUMN_WIDTH = 150;
 const DEFAULT_ID_COLUMN_WIDTH = 240;
 
+function fieldToCssVar(field: string): string {
+  return `--cw-${field.replace(/\./g, '-')}`;
+}
+
 function isValidPinZoneOrder(
   fields: string[],
   pins: Map<string, PinSide>,
@@ -308,7 +312,10 @@ export class ColumnsModel {
     this._isResizing = true;
     this._columnWidths.set(field, width);
     if (this._wrapperElement) {
-      this._wrapperElement.style.setProperty(`--cw-${field}`, `${width}px`);
+      this._wrapperElement.style.setProperty(
+        fieldToCssVar(field),
+        `${width}px`,
+      );
     }
   }
 
@@ -337,7 +344,7 @@ export class ColumnsModel {
   }
 
   columnWidthCssVar(field: string): string {
-    return `var(--cw-${field}, ${field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH}px)`;
+    return `var(${fieldToCssVar(field)}, ${field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH}px)`;
   }
 
   // --- Pinning ---
@@ -717,7 +724,7 @@ export class ColumnsModel {
       const width =
         this._columnWidths.get(field) ??
         (field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH);
-      vars[`--cw-${field}`] = `${width}px`;
+      vars[fieldToCssVar(field)] = `${width}px`;
     }
     return vars;
   }
@@ -729,7 +736,7 @@ export class ColumnsModel {
         const width =
           this._columnWidths.get(field) ??
           (field === 'id' ? DEFAULT_ID_COLUMN_WIDTH : DEFAULT_COLUMN_WIDTH);
-        vars[`--cw-${field}`] = `${width}px`;
+        vars[fieldToCssVar(field)] = `${width}px`;
       }
       return vars;
     });

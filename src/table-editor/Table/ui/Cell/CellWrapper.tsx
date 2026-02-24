@@ -1,16 +1,29 @@
-import { Box, Menu } from '@chakra-ui/react';
+import { Menu } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
-import { FC, PropsWithChildren, useCallback, useEffect, useRef } from 'react';
+import {
+  type CSSProperties,
+  FC,
+  PropsWithChildren,
+  useCallback,
+  useRef,
+} from 'react';
 import type { CellVM } from '../../model/CellVM.js';
 import { CellContextMenu } from './CellContextMenu.js';
-import { useDeferredMenuEdit } from './useDeferredMenuEdit.js';
 import {
-  FOCUS_RING_RESET,
   buildSelectionBoxShadow,
-  stateStyles,
-  getCellState,
-  isPrintableKey,
-} from './cellStyles.js';
+  CLS_ANCHOR,
+  ensureCellStyles,
+  INNER_STYLE,
+  STATE_CLASS,
+} from './cellCss.js';
+import { getCellState } from './cellStyles.js';
+import {
+  useCellContextMenu,
+  setPendingContextMenu,
+} from './useCellContextMenu.js';
+import { useCellFocus } from './useCellFocus.js';
+import { useCellKeyboard } from './useCellKeyboard.js';
+import { useDeferredMenuEdit } from './useDeferredMenuEdit.js';
 
 interface CellWrapperProps extends PropsWithChildren {
   cell: CellVM;
@@ -20,90 +33,127 @@ interface CellWrapperProps extends PropsWithChildren {
   onDelete?: () => void;
 }
 
-function handleArrowKey(
-  cell: CellVM,
-  e: React.KeyboardEvent,
-  shiftAction: () => void,
-  moveAction: () => void,
-): void {
-  e.preventDefault();
-  if (e.shiftKey) {
-    shiftAction();
-  } else if (cell.hasRangeSelection) {
-    cell.focus();
-  } else {
-    moveAction();
-  }
+// ───────────────── Context menu (lazy) ─────────────────
+
+interface LazyMenuProps {
+  cell: CellVM;
+  cellRef: React.RefObject<HTMLDivElement | null>;
+  anchorRect: DOMRect | null;
+  onClose: () => void;
+  onEditPointerDown: () => void;
 }
 
-function handleEditableKeys(
-  cell: CellVM,
-  e: React.KeyboardEvent,
-  onStartEdit?: () => void,
-  onDoubleClick?: (clientX?: number) => void,
-  onTypeChar?: (char: string) => void,
-  onDelete?: () => void,
-): void {
-  if (cell.isReadOnly) {
-    if (
-      e.key === 'Enter' ||
-      e.key === 'Delete' ||
-      e.key === 'Backspace' ||
-      isPrintableKey(e)
-    ) {
-      cell.notifyReadonlyEditAttempt();
-    }
-    return;
-  }
-  const hasRange = cell.hasRangeSelection;
-  if (!hasRange && e.key === 'Enter') {
-    e.preventDefault();
-    if (onStartEdit) {
-      onStartEdit();
-    } else if (onDoubleClick) {
-      onDoubleClick();
-    }
-  } else if (
-    !hasRange &&
-    (e.key === 'Delete' || e.key === 'Backspace') &&
-    onDelete
-  ) {
-    e.preventDefault();
-    onDelete();
-  } else if (isPrintableKey(e) && onTypeChar) {
-    e.preventDefault();
-    onTypeChar(e.key);
-  }
-}
+const LazyContextMenu: FC<LazyMenuProps> = observer(
+  ({ cell, cellRef, anchorRect, onClose, onEditPointerDown }) => {
+    const handleOpenChange = useCallback(
+      (details: { open: boolean }) => {
+        if (!details.open) {
+          onClose();
+        }
+      },
+      [onClose],
+    );
+
+    const handleInteractOutside = useCallback((e: Event) => {
+      const ce = e as CustomEvent<{ originalEvent?: PointerEvent }>;
+      const originalEvent = ce.detail?.originalEvent;
+      if (!originalEvent || originalEvent.button !== 2) {
+        return;
+      }
+      const target = originalEvent.target as HTMLElement | null;
+      const targetCell = target?.closest(
+        '[data-testid^="cell-"]',
+      ) as HTMLElement | null;
+      if (targetCell) {
+        setPendingContextMenu({
+          target: targetCell,
+          clientX: originalEvent.clientX,
+          clientY: originalEvent.clientY,
+        });
+      }
+    }, []);
+
+    const getAnchorRect = useCallback(() => {
+      return anchorRect ?? (cellRef.current?.getBoundingClientRect() || null);
+    }, [anchorRect, cellRef]);
+
+    return (
+      <Menu.Root
+        open
+        onOpenChange={handleOpenChange}
+        onInteractOutside={handleInteractOutside}
+        positioning={{
+          placement: 'bottom-start',
+          getAnchorRect,
+        }}
+      >
+        <CellContextMenu cell={cell} onEditPointerDown={onEditPointerDown} />
+      </Menu.Root>
+    );
+  },
+);
+
+// ───────────────── Main component ─────────────────
 
 export const CellWrapper: FC<CellWrapperProps> = observer(
   ({ cell, children, onDoubleClick, onStartEdit, onTypeChar, onDelete }) => {
+    ensureCellStyles();
+
     const cellRef = useRef<HTMLDivElement>(null);
-    const menuOpenRef = useRef(false);
-    const deferredEdit = useDeferredMenuEdit(onStartEdit ?? onDoubleClick);
     const state = getCellState(cell);
     const selectionEdges = cell.selectionEdges;
     const isAnchorInRange = cell.isAnchor && cell.isInSelection;
     const navVersion = cell.navigationVersion;
 
-    useEffect(() => {
-      if (!cellRef.current) {
-        return;
-      }
-      if (
-        state === 'focused' ||
-        state === 'readonlyFocused' ||
-        isAnchorInRange
-      ) {
-        cellRef.current.focus();
-      } else if (
-        state === 'display' ||
-        state === 'readonly' ||
-        state === 'selected'
-      ) {
-        cellRef.current.blur();
-      }
-    }, [state, isAnchorInRange, navVersion]);
+    const isActive =
+      state === 'focused' ||
+      state === 'editing' ||
+      state === 'readonlyFocused' ||
+      isAnchorInRange;
+
+    const editFn = onStartEdit ?? onDoubleClick;
+    const deferredEdit = useDeferredMenuEdit(editFn);
+
+    const {
+      menuAnchor,
+      menuOpen,
+      openContextMenuAt,
+      handleMenuClose,
+      menuCloseRef,
+    } = useCellContextMenu(cell, cellRef, deferredEdit);
+
+    useCellFocus(cellRef, state, isAnchorInRange, navVersion);
+
+    const { handleKeyDown, handleDoubleClick } = useCellKeyboard(
+      cell,
+      state,
+      isAnchorInRange,
+      menuOpen,
+      menuCloseRef,
+      { onStartEdit, onDoubleClick, onTypeChar, onDelete },
+    );
+
+    const handleMouseDown = useCallback(
+      (e: React.MouseEvent) => {
+        if (
+          e.detail === 2 &&
+          state !== 'readonly' &&
+          state !== 'readonlyFocused'
+        ) {
+          e.preventDefault();
+        }
+        if (e.button === 2) {
+          openContextMenuAt(e.clientX, e.clientY);
+          return;
+        }
+        if (!e.shiftKey && e.button === 0 && state !== 'editing') {
+          e.preventDefault();
+          cell.dragStart();
+          cellRef.current?.focus();
+        }
+      },
+      [state, cell, openContextMenuAt],
+    );
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
@@ -119,24 +169,6 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       [state, cell],
     );
 
-    const handleMouseDown = useCallback(
-      (e: React.MouseEvent) => {
-        if (
-          e.detail === 2 &&
-          state !== 'readonly' &&
-          state !== 'readonlyFocused'
-        ) {
-          e.preventDefault();
-        }
-        if (!e.shiftKey && e.button === 0 && state !== 'editing') {
-          e.preventDefault();
-          cell.dragStart();
-          cellRef.current?.focus();
-        }
-      },
-      [state, cell],
-    );
-
     const handleMouseEnter = useCallback(
       (e: React.MouseEvent) => {
         if (e.buttons === 1) {
@@ -146,90 +178,12 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
       [cell],
     );
 
-    const handleDoubleClick = useCallback(
-      (e: React.MouseEvent) => {
-        if (state === 'readonly' || state === 'readonlyFocused') {
-          cell.notifyReadonlyEditAttempt();
-          return;
-        }
-        onDoubleClick?.(e.clientX);
-      },
-      [state, cell, onDoubleClick],
-    );
-
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent) => {
-        const canHandle =
-          state === 'focused' || state === 'readonlyFocused' || isAnchorInRange;
-        if (!canHandle) {
-          return;
-        }
-
-        const isMod = e.ctrlKey || e.metaKey;
-        if (isMod && e.key === 'c' && !cell.hasRangeSelection) {
-          e.preventDefault();
-          void cell.copyToClipboard();
-          return;
-        }
-        if (isMod && e.key === 'v') {
-          return;
-        }
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          if (cell.hasRangeSelection) {
-            cell.focus();
-          } else {
-            cell.blur();
-          }
-        } else if (e.key === 'ArrowUp') {
-          handleArrowKey(cell, e, cell.shiftMoveUp, cell.moveUp);
-        } else if (e.key === 'ArrowDown') {
-          handleArrowKey(cell, e, cell.shiftMoveDown, cell.moveDown);
-        } else if (e.key === 'ArrowLeft') {
-          handleArrowKey(cell, e, cell.shiftMoveLeft, cell.moveLeft);
-        } else if (e.key === 'ArrowRight') {
-          handleArrowKey(cell, e, cell.shiftMoveRight, cell.moveRight);
-        } else if (e.key === 'Tab') {
-          e.preventDefault();
-          cell.handleTab(e.shiftKey);
-        } else {
-          handleEditableKeys(
-            cell,
-            e,
-            onStartEdit,
-            onDoubleClick,
-            onTypeChar,
-            onDelete,
-          );
-        }
-      },
-      [
-        state,
-        cell,
-        isAnchorInRange,
-        onStartEdit,
-        onDoubleClick,
-        onTypeChar,
-        onDelete,
-      ],
-    );
-
-    const selectionShadow = selectionEdges
-      ? buildSelectionBoxShadow(selectionEdges)
-      : null;
-
-    const needsFocus =
-      state === 'focused' ||
-      state === 'editing' ||
-      state === 'readonlyFocused' ||
-      isAnchorInRange;
-
     const handleBlur = useCallback(
       (e: React.FocusEvent) => {
         if (!cell.isFocused || cell.isEditing) {
           return;
         }
-        if (menuOpenRef.current) {
+        if (menuOpen) {
           return;
         }
         const related = e.relatedTarget as HTMLElement | null;
@@ -238,97 +192,54 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
         }
         cell.blur();
       },
-      [cell],
+      [cell, menuOpen],
     );
 
-    const handleContextMenu = useCallback(() => {
-      if (!cell.isFocused && !cell.isInSelection) {
-        cell.focus();
-      }
-    }, [cell]);
+    const selectionShadow = selectionEdges
+      ? buildSelectionBoxShadow(selectionEdges)
+      : null;
 
-    const handleMenuOpenChange = useCallback(
-      (details: { open: boolean }) => {
-        menuOpenRef.current = details.open;
-        if (details.open) {
-          return;
-        }
-        if (deferredEdit.triggerIfRequested()) {
-          return;
-        }
-        if (cell.isEditing) {
-          return;
-        }
-        if (cell.isAnchor || (cell.isFocused && !cell.hasRangeSelection)) {
-          cellRef.current?.focus();
-        } else {
-          const table = cellRef.current?.closest(
-            '[data-testid="table-widget"]',
-          );
-          const anchor = table?.querySelector<HTMLElement>(
-            '[data-testid^="cell-"][tabindex="0"]',
-          );
-          anchor?.focus();
-        }
-      },
-      [cell, deferredEdit],
-    );
-
-    const extraStyles: Record<string, unknown> = {};
+    let className = STATE_CLASS[state];
     if (isAnchorInRange) {
-      extraStyles._before = {
-        content: '""',
-        position: 'absolute',
-        inset: '1px',
-        border: '2px solid',
-        borderColor: 'blue.400',
-        borderRadius: '1px',
-        pointerEvents: 'none',
-      };
-      extraStyles._focus = FOCUS_RING_RESET;
-      extraStyles._focusVisible = FOCUS_RING_RESET;
+      className += ` ${CLS_ANCHOR}`;
     }
 
+    const cellStyle = selectionShadow
+      ? ({ '--cw-shadow': selectionShadow } as CSSProperties)
+      : undefined;
+
     return (
-      <Menu.Root onOpenChange={handleMenuOpenChange}>
-        <Menu.ContextTrigger asChild>
-          <Box
-            ref={cellRef}
-            height="40px"
-            px="8px"
-            position="relative"
-            overflow="hidden"
-            onClick={handleClick}
-            onMouseDown={handleMouseDown}
-            onMouseEnter={handleMouseEnter}
-            onDoubleClick={handleDoubleClick}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-            onContextMenu={handleContextMenu}
-            tabIndex={needsFocus ? 0 : -1}
-            userSelect={state === 'selected' ? 'none' : undefined}
-            data-testid={`cell-${cell.rowId}-${cell.field}`}
-            {...stateStyles[state]}
-            {...extraStyles}
-            boxShadow={selectionShadow || undefined}
-          >
-            <Box
-              display="flex"
-              alignItems="center"
-              height="100%"
-              width="100%"
-              minWidth={0}
-              overflow="hidden"
-            >
-              {children}
-            </Box>
-          </Box>
-        </Menu.ContextTrigger>
-        <CellContextMenu
-          cell={cell}
-          onEditPointerDown={deferredEdit.requestEdit}
-        />
-      </Menu.Root>
+      <>
+        <div
+          ref={cellRef}
+          className={className}
+          style={cellStyle}
+          tabIndex={isActive ? 0 : -1}
+          onClick={handleClick}
+          onMouseDown={handleMouseDown}
+          onMouseEnter={handleMouseEnter}
+          onDoubleClick={isActive ? handleDoubleClick : undefined}
+          onKeyDown={isActive ? handleKeyDown : undefined}
+          onBlur={isActive ? handleBlur : undefined}
+          onContextMenu={preventContextMenu}
+          data-testid={`cell-${cell.rowId}-${cell.field}`}
+        >
+          <div style={INNER_STYLE}>{children}</div>
+        </div>
+        {menuOpen && (
+          <LazyContextMenu
+            cell={cell}
+            cellRef={cellRef}
+            anchorRect={menuAnchor}
+            onClose={handleMenuClose}
+            onEditPointerDown={deferredEdit.requestEdit}
+          />
+        )}
+      </>
     );
   },
 );
+
+function preventContextMenu(e: React.MouseEvent): void {
+  e.preventDefault();
+}

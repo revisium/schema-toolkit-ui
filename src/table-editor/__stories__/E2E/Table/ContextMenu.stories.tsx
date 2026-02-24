@@ -224,3 +224,58 @@ export const FullContextMenuWorkflow: Story = {
     await userEvent.keyboard('{Escape}');
   },
 };
+
+export const RightClickTransferBetweenCells: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const { cellFSM } = (window as any).__testState as {
+      cellFSM: CellFSM;
+    };
+
+    // Focus cell A and open context menu
+    const cellA = canvas.getByTestId('cell-row-1-name');
+    await userEvent.click(cellA);
+    await waitFor(() => {
+      expect(cellA).toHaveAttribute('tabindex', '0');
+    });
+
+    await userEvent.pointer({ keys: '[MouseRight]', target: cellA });
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-value="copy-value"]')).toBeTruthy();
+    });
+
+    // Right-click cell B while menu on cell A is open
+    const cellB = canvas.getByTestId('cell-row-2-age');
+    await userEvent.pointer({ keys: '[MouseRight]', target: cellB });
+
+    // Menu should now be open on cell B
+    await waitFor(() => {
+      const el = document.querySelector('[data-value="copy-value"]');
+      expect(el).toBeTruthy();
+      expect(el).toBeVisible();
+    });
+
+    // Cell B should be focused
+    await waitFor(() => {
+      expect(cellFSM.isCellFocused('row-2', 'age')).toBe(true);
+    });
+
+    // Close and verify
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-value="copy-value"]')).toBeNull();
+    });
+
+    expect(cellB).toHaveAttribute('tabindex', '0');
+    expect(document.activeElement).toBe(cellB);
+
+    await userEvent.keyboard('{Escape}');
+  },
+};
