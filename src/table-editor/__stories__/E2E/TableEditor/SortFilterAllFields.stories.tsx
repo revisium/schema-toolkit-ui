@@ -65,9 +65,9 @@ export const SortDropdownShowsAllFields: Story = {
 
     const visibleFields = state.core.columns.visibleColumns.map((c) => c.field);
     expect(visibleFields).toHaveLength(4);
-    expect(visibleFields).not.toContain('age');
-    expect(visibleFields).not.toContain('active');
-    expect(visibleFields).not.toContain('score');
+    expect(visibleFields).not.toContain('data.age');
+    expect(visibleFields).not.toContain('data.active');
+    expect(visibleFields).not.toContain('data.score');
 
     const sortTrigger = canvas.getByTestId('sort-trigger');
     await userEvent.click(sortTrigger);

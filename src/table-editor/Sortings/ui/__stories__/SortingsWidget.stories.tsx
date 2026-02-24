@@ -12,7 +12,7 @@ import { SystemFieldId } from '../../../shared/system-fields.js';
 
 export const TEST_COLUMNS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
@@ -20,7 +20,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
@@ -28,7 +28,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
@@ -97,7 +97,7 @@ export const WithOneSort: Story = {
   args: {
     onChange: fn().mockName('onChange'),
     setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
+      m.addSort('data.name', 'asc');
     },
   },
 };
@@ -106,8 +106,8 @@ export const WithMultipleSorts: Story = {
   args: {
     onChange: fn().mockName('onChange'),
     setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-      m.addSort('age', 'desc');
+      m.addSort('data.name', 'asc');
+      m.addSort('data.age', 'desc');
     },
   },
 };

@@ -15,7 +15,7 @@ import type { ColumnSpec } from '../../../../Columns/model/types.js';
 
 const ALL_COLUMNS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
@@ -23,7 +23,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
@@ -31,7 +31,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
@@ -39,7 +39,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'email',
+    field: 'data.email',
     label: 'Email',
     fieldType: FilterFieldType.String,
     isSystem: false,
@@ -126,7 +126,7 @@ export const WithSortModel: Story = {
 };
 
 export const WithSortActive: Story = {
-  args: { withSort: true, sortField: 'name', sortDirection: 'asc' },
+  args: { withSort: true, sortField: 'data.name', sortDirection: 'asc' },
 };
 
 export const WithSortAndFilter: Story = {
@@ -137,7 +137,7 @@ export const DeprecatedColumn: Story = {
   args: {
     columns: [
       {
-        field: 'oldField',
+        field: 'data.oldField',
         label: 'Old Field',
         fieldType: FilterFieldType.String,
         isSystem: false,
@@ -152,7 +152,7 @@ export const FormulaColumn: Story = {
   args: {
     columns: [
       {
-        field: 'computed',
+        field: 'data.computed',
         label: 'Computed',
         fieldType: FilterFieldType.String,
         isSystem: false,

@@ -122,7 +122,7 @@ export const SingleColumn: Story = {
         createTableStoryState({
           dataSchema: TABLE_SCHEMA,
           rowsData: MOCK_ROWS_DATA,
-          visibleFields: ['name'],
+          visibleFields: ['data.name'],
         }),
       );
 
@@ -152,7 +152,7 @@ export const WithHiddenColumns: Story = {
             { name: 'Alice', age: 30, active: true, email: 'a@b.c', score: 95 },
             { name: 'Bob', age: 25, active: false, email: 'b@c.d', score: 80 },
           ],
-          visibleFields: ['name', 'age', 'active'],
+          visibleFields: ['data.name', 'data.age', 'data.active'],
           withSort: true,
           withFilter: true,
         }),
@@ -373,10 +373,16 @@ export const PinnedLeftColumn: Story = {
         runInAction(() => {
           setAllColumnWidths(
             s.columnsModel,
-            ['name', 'age', 'active', 'email', 'score'],
+            [
+              'data.name',
+              'data.age',
+              'data.active',
+              'data.email',
+              'data.score',
+            ],
             PINNED_COLUMN_WIDTH,
           );
-          s.columnsModel.pinLeft('name');
+          s.columnsModel.pinLeft('data.name');
         });
         return s;
       });
@@ -413,11 +419,17 @@ export const MultiplePinnedLeft: Story = {
         runInAction(() => {
           setAllColumnWidths(
             s.columnsModel,
-            ['name', 'age', 'active', 'email', 'score'],
+            [
+              'data.name',
+              'data.age',
+              'data.active',
+              'data.email',
+              'data.score',
+            ],
             PINNED_COLUMN_WIDTH,
           );
-          s.columnsModel.pinLeft('name');
-          s.columnsModel.pinLeft('age');
+          s.columnsModel.pinLeft('data.name');
+          s.columnsModel.pinLeft('data.age');
         });
         return s;
       });
@@ -454,11 +466,17 @@ export const PinnedLeftAndRight: Story = {
         runInAction(() => {
           setAllColumnWidths(
             s.columnsModel,
-            ['name', 'age', 'active', 'email', 'score'],
+            [
+              'data.name',
+              'data.age',
+              'data.active',
+              'data.email',
+              'data.score',
+            ],
             PINNED_COLUMN_WIDTH,
           );
-          s.columnsModel.pinLeft('name');
-          s.columnsModel.pinRight('score');
+          s.columnsModel.pinLeft('data.name');
+          s.columnsModel.pinRight('data.score');
         });
         return s;
       });
@@ -502,11 +520,17 @@ export const PinnedWithSelection: Story = {
         runInAction(() => {
           setAllColumnWidths(
             s.columnsModel,
-            ['name', 'age', 'active', 'email', 'score'],
+            [
+              'data.name',
+              'data.age',
+              'data.active',
+              'data.email',
+              'data.score',
+            ],
             PINNED_COLUMN_WIDTH,
           );
-          s.columnsModel.pinLeft('name');
-          s.columnsModel.pinRight('score');
+          s.columnsModel.pinLeft('data.name');
+          s.columnsModel.pinRight('data.score');
         });
         s.selection.toggle('row-1');
         return s;

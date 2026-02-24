@@ -6,6 +6,7 @@ import type { JsonSchema, RowModel } from '@revisium/schema-toolkit';
 import { createTableModel } from '@revisium/schema-toolkit';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import { wrapDataSchema } from '../../../TableEditor/model/SchemaContext.js';
 import type { SearchForeignKeySearchFn } from '../../../../search-foreign-key/index.js';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
 import { FilterFieldType } from '../../../shared/field-types.js';
@@ -19,7 +20,7 @@ ensureReactivityProvider();
 function createColumn(field: string, fieldType: FilterFieldType): ColumnSpec {
   return {
     field,
-    label: field,
+    label: field.replace(/^data\./, ''),
     fieldType,
     isSystem: false,
     isDeprecated: false,
@@ -53,25 +54,33 @@ const MultiReadonlyWrapper = observer(() => {
     const cellFSM = new CellFSM();
     const tableModel = createTableModel({
       tableId: 'cell-test',
-      schema: schema as any,
+      schema: wrapDataSchema(schema) as any,
       rows: [
         {
           rowId: 'row-1',
           data: {
-            greeting: 'Hello, World',
-            total: 1998,
-            expensive: true,
-            name: 'Hello',
+            data: {
+              greeting: 'Hello, World',
+              total: 1998,
+              expensive: true,
+              name: 'Hello',
+            },
           },
         },
       ],
     });
     const rowModel = tableModel.rows[0] as RowModel;
 
-    const greetingColumn = createColumn('greeting', FilterFieldType.String);
-    const totalColumn = createColumn('total', FilterFieldType.Number);
-    const expensiveColumn = createColumn('expensive', FilterFieldType.Boolean);
-    const nameColumn = createColumn('name', FilterFieldType.String);
+    const greetingColumn = createColumn(
+      'data.greeting',
+      FilterFieldType.String,
+    );
+    const totalColumn = createColumn('data.total', FilterFieldType.Number);
+    const expensiveColumn = createColumn(
+      'data.expensive',
+      FilterFieldType.Boolean,
+    );
+    const nameColumn = createColumn('data.name', FilterFieldType.String);
 
     const greetingCell = new CellVM(rowModel, greetingColumn, 'row-1', cellFSM);
     const totalCell = new CellVM(rowModel, totalColumn, 'row-1', cellFSM);
@@ -84,7 +93,7 @@ const MultiReadonlyWrapper = observer(() => {
     const nameCell = new CellVM(rowModel, nameColumn, 'row-1', cellFSM);
 
     cellFSM.setNavigationContext(
-      ['greeting', 'total', 'expensive', 'name'],
+      ['data.greeting', 'data.total', 'data.expensive', 'data.name'],
       ['row-1'],
     );
 
@@ -152,7 +161,7 @@ export const ReadonlyCellWorkflow: Story = {
     const canvas = within(canvasElement);
 
     // --- Readonly string cell interactions ---
-    const greetingCell = canvas.getByTestId('cell-row-1-greeting');
+    const greetingCell = canvas.getByTestId('cell-row-1-data.greeting');
 
     expect(greetingCell).toHaveTextContent('Hello, World');
     expect(greetingCell).toHaveAttribute('tabindex', '-1');
@@ -182,7 +191,7 @@ export const ReadonlyCellWorkflow: Story = {
     });
 
     // --- Readonly number cell interactions ---
-    const totalCell = canvas.getByTestId('cell-row-1-total');
+    const totalCell = canvas.getByTestId('cell-row-1-data.total');
 
     expect(totalCell).toHaveTextContent('1998');
 
@@ -206,7 +215,7 @@ export const ReadonlyCellWorkflow: Story = {
     });
 
     // --- Copy/paste interactions (regular string cell) ---
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
 
     const clipboard = mockClipboard();
 
@@ -232,7 +241,7 @@ export const ReadonlyCellWorkflow: Story = {
     });
 
     // --- Readonly boolean cell interactions ---
-    const expensiveCell = canvas.getByTestId('cell-row-1-expensive');
+    const expensiveCell = canvas.getByTestId('cell-row-1-data.expensive');
 
     expect(expensiveCell).toHaveTextContent('true');
 

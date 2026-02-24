@@ -27,7 +27,7 @@ const StoryWrapper = observer(() => {
     createTableStoryState({
       dataSchema: TABLE_SCHEMA,
       rowsData: MOCK_ROWS,
-      visibleFields: ['id', 'name', 'age'],
+      visibleFields: ['id', 'data.name', 'data.age'],
     }),
   );
 
@@ -85,7 +85,7 @@ export const AddColumnWorkflow: Story = {
 
       const activeItem = await waitFor(() => {
         const el = document.querySelector(
-          '[data-value="active"]',
+          '[data-value="data.active"]',
         ) as HTMLElement;
         expect(el).toBeTruthy();
         return el;
@@ -96,7 +96,7 @@ export const AddColumnWorkflow: Story = {
       await waitFor(() => {
         expect(columnsModel.visibleColumns).toHaveLength(4);
         expect(
-          columnsModel.visibleColumns.some((c) => c.field === 'active'),
+          columnsModel.visibleColumns.some((c) => c.field === 'data.active'),
         ).toBe(true);
       });
     }
@@ -120,7 +120,7 @@ export const AddColumnWorkflow: Story = {
       await waitFor(() => {
         expect(columnsModel.hasHiddenColumns).toBe(false);
         expect(
-          columnsModel.visibleColumns.some((c) => c.field === 'email'),
+          columnsModel.visibleColumns.some((c) => c.field === 'data.email'),
         ).toBe(true);
       });
     }

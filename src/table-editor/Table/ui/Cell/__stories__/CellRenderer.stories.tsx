@@ -12,7 +12,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const StringCell: Story = {
   args: {
-    field: 'name',
+    field: 'data.name',
     fieldType: FilterFieldType.String,
     schema: createSchema({ name: 'string' }),
     initialData: { name: 'Hello World' },
@@ -21,7 +21,7 @@ export const StringCell: Story = {
 
 export const NumberCell: Story = {
   args: {
-    field: 'age',
+    field: 'data.age',
     fieldType: FilterFieldType.Number,
     schema: createSchema({ age: 'number' }),
     initialData: { age: 42 },
@@ -30,7 +30,7 @@ export const NumberCell: Story = {
 
 export const BooleanTrue: Story = {
   args: {
-    field: 'active',
+    field: 'data.active',
     fieldType: FilterFieldType.Boolean,
     schema: createSchema({ active: 'boolean' }),
     initialData: { active: true },
@@ -39,7 +39,7 @@ export const BooleanTrue: Story = {
 
 export const BooleanFalse: Story = {
   args: {
-    field: 'active',
+    field: 'data.active',
     fieldType: FilterFieldType.Boolean,
     schema: createSchema({ active: 'boolean' }),
     initialData: { active: false },
@@ -48,7 +48,7 @@ export const BooleanFalse: Story = {
 
 export const EmptyString: Story = {
   args: {
-    field: 'name',
+    field: 'data.name',
     fieldType: FilterFieldType.String,
     schema: createSchema({ name: 'string' }),
     initialData: { name: '' },
@@ -57,7 +57,7 @@ export const EmptyString: Story = {
 
 export const LongText: Story = {
   args: {
-    field: 'name',
+    field: 'data.name',
     fieldType: FilterFieldType.String,
     schema: createSchema({ name: 'string' }),
     initialData: {
@@ -68,7 +68,7 @@ export const LongText: Story = {
 
 export const NegativeNumber: Story = {
   args: {
-    field: 'age',
+    field: 'data.age',
     fieldType: FilterFieldType.Number,
     schema: createSchema({ age: 'number' }),
     initialData: { age: -42 },
@@ -77,7 +77,7 @@ export const NegativeNumber: Story = {
 
 export const DecimalNumber: Story = {
   args: {
-    field: 'age',
+    field: 'data.age',
     fieldType: FilterFieldType.Number,
     schema: createSchema({ age: 'number' }),
     initialData: { age: 3.14159 },

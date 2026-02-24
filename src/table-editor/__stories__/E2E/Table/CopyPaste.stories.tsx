@@ -94,7 +94,7 @@ export const CopyPasteWorkflow: Story = {
 
     const clipboard = mockClipboard();
 
-    const nameCell1 = canvas.getByTestId('cell-row-1-name');
+    const nameCell1 = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCell1);
     await waitFor(() => {
       expect(nameCell1).toHaveAttribute('tabindex', '0');
@@ -102,7 +102,7 @@ export const CopyPasteWorkflow: Story = {
     await userEvent.keyboard('{Control>}c{/Control}');
     expect(clipboard.getText()).toBe('Alice');
 
-    const nameCell2 = canvas.getByTestId('cell-row-2-name');
+    const nameCell2 = canvas.getByTestId('cell-row-2-data.name');
     await userEvent.click(nameCell2);
     await waitFor(() => {
       expect(nameCell2).toHaveAttribute('tabindex', '0');
@@ -112,7 +112,7 @@ export const CopyPasteWorkflow: Story = {
       expect(nameCell2).toHaveTextContent('Alice');
     });
 
-    const ageCell1 = canvas.getByTestId('cell-row-1-age');
+    const ageCell1 = canvas.getByTestId('cell-row-1-data.age');
     await userEvent.click(ageCell1);
     await waitFor(() => {
       expect(ageCell1).toHaveAttribute('tabindex', '0');
@@ -120,7 +120,7 @@ export const CopyPasteWorkflow: Story = {
     await userEvent.keyboard('{Control>}c{/Control}');
     expect(clipboard.getText()).toBe('30');
 
-    const ageCell3 = canvas.getByTestId('cell-row-3-age');
+    const ageCell3 = canvas.getByTestId('cell-row-3-data.age');
     await userEvent.click(ageCell3);
     await waitFor(() => {
       expect(ageCell3).toHaveAttribute('tabindex', '0');
@@ -137,7 +137,7 @@ export const CopyPasteWorkflow: Story = {
     });
 
     clipboard.setText('NewName');
-    const nameCell1Again = canvas.getByTestId('cell-row-1-name');
+    const nameCell1Again = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCell1Again);
     await waitFor(() => {
       expect(nameCell1Again).toHaveAttribute('tabindex', '0');
@@ -146,7 +146,9 @@ export const CopyPasteWorkflow: Story = {
     await waitFor(() => {
       expect(nameCell1Again).toHaveTextContent('NewName');
     });
-    expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Alice');
+    expect(canvas.getByTestId('cell-row-2-data.name')).toHaveTextContent(
+      'Alice',
+    );
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
@@ -163,7 +165,7 @@ export const CopyFromFormulaCell: Story = {
 
     const clipboard = mockClipboard();
 
-    const greetingCell = canvas.getByTestId('cell-row-1-greeting');
+    const greetingCell = canvas.getByTestId('cell-row-1-data.greeting');
     await waitFor(() => {
       expect(greetingCell).toHaveTextContent('Hello, Alice');
     });
@@ -179,7 +181,7 @@ export const CopyFromFormulaCell: Story = {
       expect(greetingCell).toHaveTextContent('Hello, Alice');
     });
 
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCell);
     await waitFor(() => {
       expect(nameCell).toHaveAttribute('tabindex', '0');
@@ -209,9 +211,9 @@ export const MultiCellPaste: Story = {
     // --- multi-line TSV paste from single cell ---
     mockClipboard('X\t99\nY\t88\nZ\t77');
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -222,35 +224,39 @@ export const MultiCellPaste: Story = {
     await userEvent.keyboard('{Control>}v{/Control}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('X');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('X');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('99');
+      expect(canvas.getByTestId('cell-row-1-data.age')).toHaveTextContent('99');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Y');
+      expect(canvas.getByTestId('cell-row-2-data.name')).toHaveTextContent('Y');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-age')).toHaveTextContent('88');
+      expect(canvas.getByTestId('cell-row-2-data.age')).toHaveTextContent('88');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Z');
+      expect(canvas.getByTestId('cell-row-3-data.name')).toHaveTextContent('Z');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('77');
+      expect(canvas.getByTestId('cell-row-3-data.age')).toHaveTextContent('77');
     });
 
-    expect(canvas.getByTestId('cell-row-1-active')).toHaveTextContent('true');
-    expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent('Diana');
+    expect(canvas.getByTestId('cell-row-1-data.active')).toHaveTextContent(
+      'true',
+    );
+    expect(canvas.getByTestId('cell-row-4-data.name')).toHaveTextContent(
+      'Diana',
+    );
 
     // --- quoted TSV paste (Excel format with newlines inside quotes) ---
     mockClipboard(
       '"Laptop4 wer we\nsdf sdf sdf sdf sd "\t991\t3\nMouse2\t25\t3',
     );
 
-    await userEvent.click(canvas.getByTestId('cell-row-4-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-4-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-4-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-4-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -259,36 +265,40 @@ export const MultiCellPaste: Story = {
     await userEvent.keyboard('{Control>}v{/Control}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-4-data.name')).toHaveTextContent(
         'Laptop4 wer we sdf sdf sdf sdf sd',
       );
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-4-age')).toHaveTextContent('991');
+      expect(canvas.getByTestId('cell-row-4-data.age')).toHaveTextContent(
+        '991',
+      );
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-5-name')).toHaveTextContent('Mouse2');
+      expect(canvas.getByTestId('cell-row-5-data.name')).toHaveTextContent(
+        'Mouse2',
+      );
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-5-age')).toHaveTextContent('25');
+      expect(canvas.getByTestId('cell-row-5-data.age')).toHaveTextContent('25');
     });
 
     // --- copy range after column reorder ---
     const clipboard = mockClipboard();
 
-    state.columnsModel.moveColumnToStart('active');
+    state.columnsModel.moveColumnToStart('data.active');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('header-active')).toBeVisible();
+      expect(canvas.getByTestId('header-data.active')).toBeVisible();
     });
 
-    const activeCell = canvas.getByTestId('cell-row-1-active');
+    const activeCell = canvas.getByTestId('cell-row-1-data.active');
     await userEvent.click(activeCell);
     await waitFor(() => {
       expect(activeCell).toHaveAttribute('tabindex', '0');
     });
 
-    cellFSM.selectTo({ rowId: 'row-2', field: 'name' });
+    cellFSM.selectTo({ rowId: 'row-2', field: 'data.name' });
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
@@ -303,7 +313,7 @@ export const MultiCellPaste: Story = {
     // --- paste overflow beyond table bounds ---
     mockClipboard('A\t11\nB\t22\nC\t33\nD\t44\nE\t55\nF\t66\nG\t77');
 
-    const cell4 = canvas.getByTestId('cell-row-4-name');
+    const cell4 = canvas.getByTestId('cell-row-4-data.name');
     await userEvent.click(cell4);
     await waitFor(() => {
       expect(cell4).toHaveAttribute('tabindex', '0');
@@ -312,20 +322,20 @@ export const MultiCellPaste: Story = {
     await userEvent.keyboard('{Control>}v{/Control}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-4-name')).toHaveTextContent('A');
+      expect(canvas.getByTestId('cell-row-4-data.name')).toHaveTextContent('A');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-4-age')).toHaveTextContent('11');
+      expect(canvas.getByTestId('cell-row-4-data.age')).toHaveTextContent('11');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-5-name')).toHaveTextContent('B');
+      expect(canvas.getByTestId('cell-row-5-data.name')).toHaveTextContent('B');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-5-age')).toHaveTextContent('22');
+      expect(canvas.getByTestId('cell-row-5-data.age')).toHaveTextContent('22');
     });
 
-    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Z');
-    expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('77');
+    expect(canvas.getByTestId('cell-row-3-data.name')).toHaveTextContent('Z');
+    expect(canvas.getByTestId('cell-row-3-data.age')).toHaveTextContent('77');
 
     await userEvent.keyboard('{Escape}');
   },

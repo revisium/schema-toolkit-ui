@@ -54,7 +54,7 @@ export const EnterMoveDown: Story = {
 
     // --- Changed values (string column) ---
 
-    const nameCell1 = canvas.getByTestId('cell-row-1-name');
+    const nameCell1 = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.dblClick(nameCell1);
     const nameInput = await waitFor(() => {
       const el = document.querySelector(
@@ -86,7 +86,9 @@ export const EnterMoveDown: Story = {
     await userEvent.keyboard('{Enter}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Bob2');
+      expect(canvas.getByTestId('cell-row-2-data.name')).toHaveTextContent(
+        'Bob2',
+      );
     });
     const nameInput3 = await waitFor(() => {
       const el = document.querySelector(
@@ -106,7 +108,7 @@ export const EnterMoveDown: Story = {
 
     // --- Changed values (number column) ---
 
-    const ageCell1 = canvas.getByTestId('cell-row-1-age');
+    const ageCell1 = canvas.getByTestId('cell-row-1-data.age');
     await userEvent.click(ageCell1);
     await userEvent.dblClick(ageCell1);
     const ageInput = await waitFor(() => {
@@ -142,7 +144,7 @@ export const EnterMoveDown: Story = {
 
     // --- Last row (no row below) ---
 
-    const nameCell5 = canvas.getByTestId('cell-row-5-name');
+    const nameCell5 = canvas.getByTestId('cell-row-5-data.name');
     await userEvent.click(nameCell5);
     await userEvent.dblClick(nameCell5);
     const lastInput = await waitFor(() => {
@@ -235,7 +237,7 @@ export const EnterMoveDown: Story = {
 
     // --- Unchanged values (number column) ---
 
-    const ageCell3 = canvas.getByTestId('cell-row-3-age');
+    const ageCell3 = canvas.getByTestId('cell-row-3-data.age');
     await userEvent.click(ageCell3);
     await userEvent.dblClick(ageCell3);
     const unchangedAgeInput3 = await waitFor(() => {

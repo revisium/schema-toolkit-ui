@@ -1,3 +1,4 @@
+import { stripDataFieldPrefix } from '../../../TableEditor/model/SchemaContext.js';
 import { FilterFieldType } from '../../../shared/field-types.js';
 import { SYSTEM_FIELD_IDS } from '../../../shared/system-field-ids.js';
 import { operatorRequiresValue, FilterOperator } from './operators.js';
@@ -74,9 +75,10 @@ function buildConditionClause(
         },
       };
     }
+    const path = stripDataFieldPrefix(condition.field);
     return {
       data: {
-        path: condition.field,
+        path,
         search: condition.value,
         searchLanguage: condition.searchLanguage || 'simple',
         searchType: condition.searchType || 'plain',
@@ -94,9 +96,10 @@ function buildConditionClause(
     return { [condition.field]: opClause };
   }
 
+  const path = stripDataFieldPrefix(condition.field);
   return {
     data: {
-      path: condition.field,
+      path,
       ...opClause,
     },
   };

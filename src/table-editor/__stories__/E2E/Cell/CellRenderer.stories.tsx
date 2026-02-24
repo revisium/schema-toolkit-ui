@@ -6,6 +6,7 @@ import type { JsonSchema, RowModel } from '@revisium/schema-toolkit';
 import { createTableModel } from '@revisium/schema-toolkit';
 import { expect, within, waitFor, userEvent } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import { wrapDataSchema } from '../../../TableEditor/model/SchemaContext.js';
 import type { SearchForeignKeySearchFn } from '../../../../search-foreign-key/index.js';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
 import { FilterFieldType } from '../../../shared/field-types.js';
@@ -18,7 +19,7 @@ ensureReactivityProvider();
 function createColumn(field: string, fieldType: FilterFieldType): ColumnSpec {
   return {
     field,
-    label: field,
+    label: field.replace(/^data\./, ''),
     fieldType,
     isSystem: false,
     isDeprecated: false,
@@ -51,22 +52,28 @@ const MultiCellWrapper = observer(() => {
     const cellFSM = new CellFSM();
     const tableModel = createTableModel({
       tableId: 'cell-test',
-      schema: schema as any,
+      schema: wrapDataSchema(schema) as any,
       rows: [
-        { rowId: 'row-1', data: { name: 'Hello', age: 42, active: true } },
+        {
+          rowId: 'row-1',
+          data: { data: { name: 'Hello', age: 42, active: true } },
+        },
       ],
     });
     const rowModel = tableModel.rows[0] as RowModel;
 
-    const nameColumn = createColumn('name', FilterFieldType.String);
-    const ageColumn = createColumn('age', FilterFieldType.Number);
-    const activeColumn = createColumn('active', FilterFieldType.Boolean);
+    const nameColumn = createColumn('data.name', FilterFieldType.String);
+    const ageColumn = createColumn('data.age', FilterFieldType.Number);
+    const activeColumn = createColumn('data.active', FilterFieldType.Boolean);
 
     const nameCell = new CellVM(rowModel, nameColumn, 'row-1', cellFSM);
     const ageCell = new CellVM(rowModel, ageColumn, 'row-1', cellFSM);
     const activeCell = new CellVM(rowModel, activeColumn, 'row-1', cellFSM);
 
-    cellFSM.setNavigationContext(['name', 'age', 'active'], ['row-1']);
+    cellFSM.setNavigationContext(
+      ['data.name', 'data.age', 'data.active'],
+      ['row-1'],
+    );
 
     return { nameCell, ageCell, activeCell };
   });
@@ -120,7 +127,7 @@ export const CellRendererWorkflow: Story = {
     const canvas = within(canvasElement);
 
     // --- String cell interactions ---
-    const stringCell = canvas.getByTestId('cell-row-1-name');
+    const stringCell = canvas.getByTestId('cell-row-1-data.name');
 
     await userEvent.click(stringCell);
     await waitFor(() => {
@@ -145,7 +152,7 @@ export const CellRendererWorkflow: Story = {
     await userEvent.type(input, 'New Value');
     input.blur();
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
         'New Value',
       );
     });
@@ -171,7 +178,7 @@ export const CellRendererWorkflow: Story = {
         document.querySelector('[data-testid="string-cell-input"]'),
       ).toBeNull();
     });
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
+    expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
       'New Value',
     );
 
@@ -191,7 +198,7 @@ export const CellRendererWorkflow: Story = {
     expect(input3.value).toBe('X');
     input3.blur();
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('X');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('X');
     });
 
     await waitFor(() => {
@@ -210,7 +217,7 @@ export const CellRendererWorkflow: Story = {
     expect(input4.value).toBe('1');
     input4.blur();
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('1');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('1');
     });
 
     await waitFor(() => {
@@ -219,7 +226,7 @@ export const CellRendererWorkflow: Story = {
 
     await userEvent.keyboard('{Delete}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('');
     });
 
     await userEvent.keyboard('{Escape}');
@@ -228,7 +235,7 @@ export const CellRendererWorkflow: Story = {
     });
 
     // --- Boolean cell interactions ---
-    const booleanCell = canvas.getByTestId('cell-row-1-active');
+    const booleanCell = canvas.getByTestId('cell-row-1-data.active');
 
     expect(booleanCell).toHaveTextContent('true');
 
@@ -247,13 +254,13 @@ export const CellRendererWorkflow: Story = {
     await userEvent.click(falseOption);
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-active')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.active')).toHaveTextContent(
         'false',
       );
     });
 
     // --- Number cell interactions ---
-    const numberCell = canvas.getByTestId('cell-row-1-age');
+    const numberCell = canvas.getByTestId('cell-row-1-data.age');
 
     expect(numberCell).toHaveTextContent('42');
 
@@ -272,7 +279,7 @@ export const CellRendererWorkflow: Story = {
     await userEvent.keyboard('{Enter}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('99');
+      expect(canvas.getByTestId('cell-row-1-data.age')).toHaveTextContent('99');
     });
   },
 };

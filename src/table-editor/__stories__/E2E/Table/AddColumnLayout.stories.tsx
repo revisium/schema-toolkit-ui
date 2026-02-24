@@ -32,7 +32,7 @@ function createNarrowColumnsState(): TableStoryState {
   const s = createTableStoryState({
     dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS,
-    visibleFields: ['name', 'age', 'active'],
+    visibleFields: ['data.name', 'data.age', 'data.active'],
   });
   runInAction(() => {
     for (const col of s.columnsModel.visibleColumns) {
@@ -46,7 +46,7 @@ function createWideColumnsState(): TableStoryState {
   const s = createTableStoryState({
     dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS,
-    visibleFields: ['name', 'age', 'active'],
+    visibleFields: ['data.name', 'data.age', 'data.active'],
   });
   runInAction(() => {
     for (const col of s.columnsModel.visibleColumns) {

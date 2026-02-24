@@ -1,4 +1,4 @@
-import type { JsonObjectSchema, RefSchemas } from '@revisium/schema-toolkit';
+import type { JsonSchema, RefSchemas } from '@revisium/schema-toolkit';
 import type {
   CellPatch,
   CellPatchResult,
@@ -13,7 +13,7 @@ import type {
 import type { ViewState } from './TableEditorCore.js';
 
 interface MockDataSourceParams {
-  dataSchema: JsonObjectSchema;
+  dataSchema: JsonSchema;
   rows: RowDataItem[];
   viewState?: ViewState | null;
   readonly?: boolean;
@@ -23,7 +23,7 @@ interface MockDataSourceParams {
 
 export class MockDataSource implements ITableDataSource {
   private _allRows: RowDataItem[];
-  private readonly _dataSchema: JsonObjectSchema;
+  private readonly _dataSchema: JsonSchema;
   private readonly _viewState: ViewState | null;
   private readonly _readonly: boolean;
   private readonly _failPatches: Set<string>;
@@ -46,10 +46,14 @@ export class MockDataSource implements ITableDataSource {
 
   static createRow(
     rowId: string,
-    data: Record<string, unknown>,
+    data: unknown,
     systemFields?: SystemFields,
   ): RowDataItem {
-    const row: RowDataItem = { rowId, data: { ...data } };
+    const clonedData =
+      data && typeof data === 'object' && !Array.isArray(data)
+        ? { ...(data as Record<string, unknown>) }
+        : data;
+    const row: RowDataItem = { rowId, data: clonedData };
     if (systemFields) {
       row.systemFields = systemFields;
     }
@@ -73,23 +77,31 @@ export class MockDataSource implements ITableDataSource {
 
     if (query.search) {
       const lower = query.search.toLowerCase();
-      rows = rows.filter((row) =>
-        Object.values(row.data).some(
-          (val) => typeof val === 'string' && val.toLowerCase().includes(lower),
-        ),
-      );
+      rows = rows.filter((row) => {
+        const data = row.data;
+        if (data && typeof data === 'object') {
+          return Object.values(data).some(
+            (val) =>
+              typeof val === 'string' && val.toLowerCase().includes(lower),
+          );
+        }
+        if (typeof data === 'string') {
+          return data.toLowerCase().includes(lower);
+        }
+        return false;
+      });
     }
 
     if (query.orderBy.length > 0) {
       const firstOrder = query.orderBy[0];
       if (firstOrder) {
-        const field = firstOrder.field.startsWith('data.')
-          ? firstOrder.field.slice(5)
-          : firstOrder.field;
+        const field = firstOrder.field;
         const dir = firstOrder.direction === 'desc' ? -1 : 1;
         rows.sort((a, b) => {
-          const aVal = a.data[field];
-          const bVal = b.data[field];
+          const aData = a.data as Record<string, unknown> | null;
+          const bData = b.data as Record<string, unknown> | null;
+          const aVal = aData?.[field];
+          const bVal = bData?.[field];
           if (aVal === bVal) {
             return 0;
           }
@@ -137,8 +149,8 @@ export class MockDataSource implements ITableDataSource {
       }
 
       const row = this._allRows.find((r) => r.rowId === patch.rowId);
-      if (row) {
-        row.data[patch.field] = patch.value;
+      if (row && row.data && typeof row.data === 'object') {
+        (row.data as Record<string, unknown>)[patch.field] = patch.value;
       }
 
       return { rowId: patch.rowId, field: patch.field, ok: true as const };

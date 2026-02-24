@@ -696,17 +696,10 @@ export class ColumnsModel {
   }
 
   private _toViewField(field: string): string {
-    const col = this._columnLookup.get(field);
-    if (col?.isSystem) {
-      return field;
-    }
-    return `data.${field}`;
+    return field;
   }
 
   private _fromViewField(viewField: string): string {
-    if (viewField.startsWith('data.')) {
-      return viewField.slice(5);
-    }
     return viewField;
   }
 

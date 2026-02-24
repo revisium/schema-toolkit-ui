@@ -165,7 +165,7 @@ export const EditableWorkflow: Story = {
     );
 
     // 4. View settings change: add sort + apply → verify viewBadge.hasChanges
-    state.core.sorts.addSort('age', 'asc');
+    state.core.sorts.addSort('data.age', 'asc');
     state.core.sorts.apply();
 
     await waitFor(() => {
@@ -180,10 +180,10 @@ export const EditableWorkflow: Story = {
     expect(state.core.columns.visibleColumns).toHaveLength(4);
 
     await waitFor(() => {
-      expect(canvas.getByTestId('header-age')).toBeVisible();
+      expect(canvas.getByTestId('header-data.age')).toBeVisible();
     });
 
-    const ageHeader = canvas.getByTestId('header-age');
+    const ageHeader = canvas.getByTestId('header-data.age');
     await userEvent.click(ageHeader);
 
     const hideItem = await waitFor(() => {
@@ -197,7 +197,7 @@ export const EditableWorkflow: Story = {
     await waitFor(() => {
       expect(state.core.columns.visibleColumns).toHaveLength(3);
       expect(
-        state.core.columns.visibleColumns.some((c) => c.field === 'age'),
+        state.core.columns.visibleColumns.some((c) => c.field === 'data.age'),
       ).toBe(false);
     });
   },
@@ -221,10 +221,12 @@ export const ReadonlyWorkflow: Story = {
 
     // 1. Verify cells are readonly and not editable
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
+      expect(canvas.getByTestId('cell-row-1-data.name')).toBeVisible();
     });
 
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Alice');
+    expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
+      'Alice',
+    );
 
     const row1 = state.core.rows[0];
     expect(row1).toBeDefined();
@@ -249,7 +251,7 @@ export const ReadonlyWorkflow: Story = {
     // 3. Verify local badge behavior (canSave=false, add sort, revert visible, no save)
     expect(state.core.viewBadge.canSave).toBe(false);
 
-    state.core.sorts.addSort('age', 'asc');
+    state.core.sorts.addSort('data.age', 'asc');
     state.core.sorts.apply();
 
     await waitFor(() => {
@@ -327,7 +329,7 @@ export const ReadonlyWorkflow: Story = {
     // 7. Column visibility still works in readonly
     expect(state.core.columns.visibleColumns).toHaveLength(4);
 
-    const ageHeader = canvas.getByTestId('header-age');
+    const ageHeader = canvas.getByTestId('header-data.age');
     await userEvent.click(ageHeader);
 
     const hideItem = await waitFor(() => {
@@ -341,7 +343,7 @@ export const ReadonlyWorkflow: Story = {
     await waitFor(() => {
       expect(state.core.columns.visibleColumns).toHaveLength(3);
       expect(
-        state.core.columns.visibleColumns.some((c) => c.field === 'age'),
+        state.core.columns.visibleColumns.some((c) => c.field === 'data.age'),
       ).toBe(false);
     });
 
@@ -359,14 +361,14 @@ export const ReadonlyWorkflow: Story = {
     });
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
+      expect(canvas.getByTestId('cell-row-1-data.name')).toBeVisible();
     });
 
     // Focus shows badge (readonly, not editing)
     const freshRow1 = state.core.rows[0];
     expect(freshRow1).toBeDefined();
     const nameColForFocus = state.core.columns.visibleColumns.find(
-      (c) => c.field === 'name',
+      (c) => c.field === 'data.name',
     )!;
     const nameCellVM = freshRow1.getCellVM(nameColForFocus);
     nameCellVM.focus();
@@ -381,7 +383,7 @@ export const ReadonlyWorkflow: Story = {
     nameCellVM.blur();
 
     // 9. Single cell context menu (edit/paste/clear disabled, copy-value/copy-path enabled)
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCell);
     await waitFor(() => {
       expect(nameCell).toHaveAttribute('tabindex', '0');
@@ -429,7 +431,7 @@ export const ReadonlyWorkflow: Story = {
       expect(nameCell).toHaveAttribute('tabindex', '0');
     });
 
-    state.core.cellFSM.selectTo({ rowId: 'row-2', field: 'name' });
+    state.core.cellFSM.selectTo({ rowId: 'row-2', field: 'data.name' });
     await waitFor(() => {
       expect(state.core.cellFSM.hasSelection).toBe(true);
     });
@@ -490,14 +492,14 @@ export const FocusAfterAddColumn: Story = {
       expect(state.core.isBootstrapping).toBe(false);
     });
 
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCell);
 
     await waitFor(() => {
       expect(state.core.cellFSM.state).toBe('focused');
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'name',
+        field: 'data.name',
       });
     });
 
@@ -507,7 +509,7 @@ export const FocusAfterAddColumn: Story = {
     await waitFor(() => {
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-2',
-        field: 'name',
+        field: 'data.name',
       });
     });
 
@@ -515,7 +517,7 @@ export const FocusAfterAddColumn: Story = {
     await waitFor(() => {
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'name',
+        field: 'data.name',
       });
     });
 
@@ -523,7 +525,9 @@ export const FocusAfterAddColumn: Story = {
     await userEvent.click(addBtn);
 
     const menuItem = await waitFor(() => {
-      const el = document.querySelector('[data-value="age"]') as HTMLElement;
+      const el = document.querySelector(
+        '[data-value="data.age"]',
+      ) as HTMLElement;
       expect(el).toBeTruthy();
       return el;
     });
@@ -531,18 +535,18 @@ export const FocusAfterAddColumn: Story = {
 
     await waitFor(() => {
       expect(
-        state.core.columns.visibleColumns.some((c) => c.field === 'age'),
+        state.core.columns.visibleColumns.some((c) => c.field === 'data.age'),
       ).toBe(true);
     });
 
-    const nameCellAfter = canvas.getByTestId('cell-row-1-name');
+    const nameCellAfter = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCellAfter);
 
     await waitFor(() => {
       expect(state.core.cellFSM.state).toBe('focused');
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'name',
+        field: 'data.name',
       });
       expect(document.activeElement).toBe(nameCellAfter);
     });
@@ -551,18 +555,18 @@ export const FocusAfterAddColumn: Story = {
     await waitFor(() => {
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-2',
-        field: 'name',
+        field: 'data.name',
       });
     });
 
-    const row2NameCell = canvas.getByTestId('cell-row-2-name');
+    const row2NameCell = canvas.getByTestId('cell-row-2-data.name');
     expect(document.activeElement).toBe(row2NameCell);
 
     await userEvent.keyboard('{ArrowUp}');
     await waitFor(() => {
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'name',
+        field: 'data.name',
       });
     });
 
@@ -588,20 +592,20 @@ export const SelectionEdgesAfterColumnReorder: Story = {
       expect(state.core.isBootstrapping).toBe(false);
     });
 
-    state.core.columns.moveColumnToStart('active');
+    state.core.columns.moveColumnToStart('data.active');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('header-active')).toBeVisible();
+      expect(canvas.getByTestId('header-data.active')).toBeVisible();
     });
 
-    const activeCell = canvas.getByTestId('cell-row-1-active');
+    const activeCell = canvas.getByTestId('cell-row-1-data.active');
     await userEvent.click(activeCell);
 
     await waitFor(() => {
       expect(state.core.cellFSM.state).toBe('focused');
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'active',
+        field: 'data.active',
       });
     });
 
@@ -613,10 +617,14 @@ export const SelectionEdgesAfterColumnReorder: Story = {
       expect(state.core.cellFSM.hasSelection).toBe(true);
     });
 
-    expect(state.core.cellFSM.isCellInSelection('row-1', 'name')).toBe(true);
-    expect(state.core.cellFSM.isCellInSelection('row-2', 'name')).toBe(true);
+    expect(state.core.cellFSM.isCellInSelection('row-1', 'data.name')).toBe(
+      true,
+    );
+    expect(state.core.cellFSM.isCellInSelection('row-2', 'data.name')).toBe(
+      true,
+    );
 
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     const style = window.getComputedStyle(nameCell);
     expect(style.backgroundColor).not.toBe('rgb(255, 255, 255)');
     expect(style.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
@@ -657,14 +665,14 @@ export const BlurOnClickOutside: Story = {
       expect(state.core.isBootstrapping).toBe(false);
     });
 
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCell);
 
     await waitFor(() => {
       expect(state.core.cellFSM.state).toBe('focused');
       expect(state.core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'name',
+        field: 'data.name',
       });
     });
 

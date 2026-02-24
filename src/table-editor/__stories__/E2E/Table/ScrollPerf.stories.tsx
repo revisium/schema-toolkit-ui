@@ -23,7 +23,7 @@ const TABLE_SCHEMA = obj({
 });
 
 const ROW_COUNT = 200;
-const COLS = ['name', 'age', 'active', 'email'];
+const COLS = ['data.name', 'data.age', 'data.active', 'data.email'];
 
 function generateRows(count: number): Record<string, unknown>[] {
   const rows: Record<string, unknown>[] = [];

@@ -1,4 +1,4 @@
-import type { JsonObjectSchema, RefSchemas } from '@revisium/schema-toolkit';
+import type { JsonSchema, RefSchemas } from '@revisium/schema-toolkit';
 import type { ViewState } from './TableEditorCore.js';
 
 export interface SystemFields {
@@ -13,12 +13,12 @@ export interface SystemFields {
 
 export interface RowDataItem {
   rowId: string;
-  data: Record<string, unknown>;
+  data: unknown;
   systemFields?: SystemFields;
 }
 
 export interface TableMetadata {
-  dataSchema: JsonObjectSchema;
+  dataSchema: JsonSchema;
   viewState: ViewState | null;
   readonly: boolean;
   refSchemas?: RefSchemas;

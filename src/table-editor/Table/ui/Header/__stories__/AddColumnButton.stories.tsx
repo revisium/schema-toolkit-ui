@@ -12,7 +12,7 @@ ensureReactivityProvider();
 
 const ALL_COLUMNS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
@@ -20,7 +20,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
@@ -28,7 +28,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
@@ -36,7 +36,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'email',
+    field: 'data.email',
     label: 'Email',
     fieldType: FilterFieldType.String,
     isSystem: false,

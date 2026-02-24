@@ -10,7 +10,7 @@ import { FilterWidget } from '../FilterWidget.js';
 
 export const TEST_COLUMNS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
@@ -18,7 +18,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
@@ -26,7 +26,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
@@ -50,7 +50,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'address.city.name',
+    field: 'data.address.city.name',
     label: 'address.city.name',
     fieldType: FilterFieldType.String,
     isSystem: false,
@@ -58,7 +58,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'metadata.nested.sub.value',
+    field: 'data.metadata.nested.sub.value',
     label: 'metadata.nested.sub.value',
     fieldType: FilterFieldType.String,
     isSystem: false,
@@ -66,7 +66,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     hasFormula: false,
   },
   {
-    field: 'stats.monthly.revenue',
+    field: 'data.stats.monthly.revenue',
     label: 'stats.monthly.revenue',
     fieldType: FilterFieldType.Number,
     isSystem: false,
@@ -166,9 +166,9 @@ export const WithNestedFieldPath: Story = {
   args: {
     onApply: fn().mockName('onApply'),
     setup: (m: FilterModel) => {
-      m.addConditionForField('metadata.nested.sub.value');
-      m.addConditionForField('stats.monthly.revenue');
-      m.addConditionForField('address.city.name');
+      m.addConditionForField('data.metadata.nested.sub.value');
+      m.addConditionForField('data.stats.monthly.revenue');
+      m.addConditionForField('data.address.city.name');
     },
   },
 };
