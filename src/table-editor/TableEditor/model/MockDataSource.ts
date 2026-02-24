@@ -149,7 +149,12 @@ export class MockDataSource implements ITableDataSource {
       }
 
       const row = this._allRows.find((r) => r.rowId === patch.rowId);
-      if (row && row.data && typeof row.data === 'object') {
+      if (
+        row &&
+        row.data &&
+        typeof row.data === 'object' &&
+        !Array.isArray(row.data)
+      ) {
         (row.data as Record<string, unknown>)[patch.field] = patch.value;
       }
 

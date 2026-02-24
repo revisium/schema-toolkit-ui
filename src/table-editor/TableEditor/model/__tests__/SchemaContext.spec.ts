@@ -230,7 +230,7 @@ describe('SchemaContext', () => {
 
       sortModel.addSort('data', 'asc');
       expect(sortModel.sorts).toHaveLength(1);
-      expect(sortModel.sorts[0]?.field).toBe('data');
+      expect(sortModel.sorts[0]).toEqual({ field: 'data', direction: 'asc' });
 
       sortModel.dispose();
     });
