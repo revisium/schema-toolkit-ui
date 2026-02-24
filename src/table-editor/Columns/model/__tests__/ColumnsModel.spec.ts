@@ -1291,6 +1291,25 @@ describe('ColumnsModel', () => {
       const vars2 = model.getWidthCssVarsDuringResize();
       expect(vars2['--cw-a']).toBe('300px');
     });
+
+    it('setColumnWidth uses escaped CSS var for dotted field on wrapper element', () => {
+      const el = document.createElement('div');
+      model.init([col({ field: 'avatar.status' })]);
+      model.setWrapperElement(el);
+
+      model.setColumnWidth('avatar.status', 200);
+
+      expect(el.style.getPropertyValue('--cw-avatar-status')).toBe('200px');
+    });
+
+    it('getWidthCssVarsDuringResize escapes dots in field names', () => {
+      model.init([col({ field: 'avatar' }), col({ field: 'avatar.status' })]);
+
+      model.setColumnWidth('avatar.status', 200);
+      const vars = model.getWidthCssVarsDuringResize();
+      expect(vars['--cw-avatar']).toBe('150px');
+      expect(vars['--cw-avatar-status']).toBe('200px');
+    });
   });
 
   describe('columnWidthCssVar', () => {
@@ -1302,6 +1321,13 @@ describe('ColumnsModel', () => {
     it('returns var with id default width for id field', () => {
       model.init([col({ field: 'id' })]);
       expect(model.columnWidthCssVar('id')).toBe('var(--cw-id, 240px)');
+    });
+
+    it('escapes dots in field name for CSS var', () => {
+      model.init([col({ field: 'avatar.status' })]);
+      expect(model.columnWidthCssVar('avatar.status')).toBe(
+        'var(--cw-avatar-status, 150px)',
+      );
     });
   });
 
@@ -1333,6 +1359,13 @@ describe('ColumnsModel', () => {
       const vars = model.columnWidthCssVars;
       expect(vars['--cw-a']).toBeDefined();
       expect(vars['--cw-b']).toBeUndefined();
+    });
+
+    it('escapes dots in field names for CSS var keys', () => {
+      model.init([col({ field: 'avatar' }), col({ field: 'avatar.status' })]);
+      const vars = model.columnWidthCssVars;
+      expect(vars['--cw-avatar']).toBe('150px');
+      expect(vars['--cw-avatar-status']).toBe('150px');
     });
   });
 
@@ -1375,6 +1408,19 @@ describe('ColumnsModel', () => {
       model.pinLeft('b');
       expect(model.getColumnStickyLeftCss('b', 40)).toBe(
         'calc(40px + var(--cw-a, 150px))',
+      );
+    });
+
+    it('escapes dots in pinned dotted field name', () => {
+      model.init([
+        col({ field: 'avatar.status' }),
+        col({ field: 'avatar.url' }),
+        col({ field: 'c' }),
+      ]);
+      model.pinLeft('avatar.status');
+      model.pinLeft('avatar.url');
+      expect(model.getColumnStickyLeftCss('avatar.url', 0)).toBe(
+        'var(--cw-avatar-status, 150px)',
       );
     });
   });

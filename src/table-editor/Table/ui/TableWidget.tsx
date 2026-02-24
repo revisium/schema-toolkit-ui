@@ -101,15 +101,25 @@ export const TableWidget = observer(
       }
     }, [isResizing, shadowModel]);
 
+    const [wrapperEl, setWrapperEl] = useState<HTMLDivElement | null>(null);
+
     const wrapperRefCallback = useCallback(
       (el: HTMLDivElement | null) => {
+        setWrapperEl(el);
         columnsModel.setWrapperElement(el);
-        if (useWindowScrollProp) {
-          setScrollerRef(el);
-        }
       },
-      [columnsModel, useWindowScrollProp, setScrollerRef],
+      [columnsModel],
     );
+
+    useEffect(() => {
+      if (!useWindowScrollProp || !wrapperEl) {
+        return;
+      }
+      setScrollerRef(wrapperEl);
+      return () => {
+        setScrollerRef(null);
+      };
+    }, [useWindowScrollProp, wrapperEl, setScrollerRef]);
 
     const handleSelectRow = useCallback(
       (rowId: string) => {
