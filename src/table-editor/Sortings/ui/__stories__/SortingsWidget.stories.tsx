@@ -12,28 +12,31 @@ import { SystemFieldId } from '../../../shared/system-fields.js';
 
 export const TEST_COLUMNS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'createdAt',
@@ -43,6 +46,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     systemFieldId: SystemFieldId.CreatedAt,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
 ];
 
@@ -97,7 +101,7 @@ export const WithOneSort: Story = {
   args: {
     onChange: fn().mockName('onChange'),
     setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
+      m.addSort('data.name', 'asc');
     },
   },
 };
@@ -106,8 +110,8 @@ export const WithMultipleSorts: Story = {
   args: {
     onChange: fn().mockName('onChange'),
     setup: (m: SortModel) => {
-      m.addSort('name', 'asc');
-      m.addSort('age', 'desc');
+      m.addSort('data.name', 'asc');
+      m.addSort('data.age', 'desc');
     },
   },
 };

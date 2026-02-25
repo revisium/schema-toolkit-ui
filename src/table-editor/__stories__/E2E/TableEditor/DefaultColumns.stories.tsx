@@ -73,14 +73,14 @@ export const DefaultColumnSelection: Story = {
     const visibleFields = state.core.columns.visibleColumns.map((c) => c.field);
     expect(visibleFields).toHaveLength(4);
     expect(visibleFields[0]).toBe('id');
-    expect(visibleFields).toContain('name');
-    expect(visibleFields).toContain('email');
-    expect(visibleFields).toContain('city');
+    expect(visibleFields).toContain('data.name');
+    expect(visibleFields).toContain('data.email');
+    expect(visibleFields).toContain('data.city');
 
     // 2. Verify non-semantic fields are hidden
-    expect(visibleFields).not.toContain('age');
-    expect(visibleFields).not.toContain('active');
-    expect(visibleFields).not.toContain('score');
+    expect(visibleFields).not.toContain('data.age');
+    expect(visibleFields).not.toContain('data.active');
+    expect(visibleFields).not.toContain('data.score');
 
     // 3. Verify id column header is rendered in DOM
     await waitFor(() => {
@@ -95,18 +95,24 @@ export const DefaultColumnSelection: Story = {
     expect(canvas.getByTestId('cell-row-2-id')).toHaveTextContent('row-2');
 
     // 5. Verify data columns display values
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Alice');
-    expect(canvas.getByTestId('cell-row-1-email')).toHaveTextContent(
+    expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
+      'Alice',
+    );
+    expect(canvas.getByTestId('cell-row-1-data.email')).toHaveTextContent(
       'alice@example.com',
     );
-    expect(canvas.getByTestId('cell-row-1-city')).toHaveTextContent('New York');
+    expect(canvas.getByTestId('cell-row-1-data.city')).toHaveTextContent(
+      'New York',
+    );
 
     // 6. Add hidden column via + button and verify expansion works
     const addBtn = canvas.getByTestId('add-column-button');
     await userEvent.click(addBtn);
 
     const ageItem = await waitFor(() => {
-      const el = document.querySelector('[data-value="age"]') as HTMLElement;
+      const el = document.querySelector(
+        '[data-value="data.age"]',
+      ) as HTMLElement;
       expect(el).toBeTruthy();
       return el;
     });
@@ -114,7 +120,7 @@ export const DefaultColumnSelection: Story = {
 
     await waitFor(() => {
       expect(
-        state.core.columns.visibleColumns.some((c) => c.field === 'age'),
+        state.core.columns.visibleColumns.some((c) => c.field === 'data.age'),
       ).toBe(true);
     });
 

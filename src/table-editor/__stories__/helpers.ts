@@ -1,4 +1,4 @@
-import type { JsonObjectSchema, RefSchemas } from '@revisium/schema-toolkit';
+import type { JsonSchema, RefSchemas } from '@revisium/schema-toolkit';
 import { createTableModel } from '@revisium/schema-toolkit';
 import { ColumnsModel } from '../Columns/model/ColumnsModel.js';
 import { SortModel } from '../Sortings/model/SortModel.js';
@@ -16,7 +16,11 @@ import type {
   RowDataItem,
   SystemFields,
 } from '../TableEditor/model/ITableDataSource.js';
-import { SchemaContext } from '../TableEditor/model/SchemaContext.js';
+import {
+  DATA_FIELD,
+  wrapDataSchema,
+  SchemaContext,
+} from '../TableEditor/model/SchemaContext.js';
 
 export { FilterFieldType } from '../shared/field-types.js';
 
@@ -30,8 +34,8 @@ export interface TableStoryState {
 }
 
 interface CreateTableStoryStateParams {
-  dataSchema: JsonObjectSchema;
-  rowsData: Record<string, unknown>[];
+  dataSchema: JsonSchema;
+  rowsData: unknown[];
   visibleFields?: string[];
   withSort?: boolean;
   withFilter?: boolean;
@@ -44,7 +48,12 @@ export function createTableStoryState(
   const schemaContext = new SchemaContext();
   schemaContext.init(params.dataSchema, params.refSchemas);
 
-  const schemaFieldOrder = Object.keys(params.dataSchema.properties ?? {});
+  const schemaFieldOrder =
+    'properties' in params.dataSchema && params.dataSchema.properties
+      ? Object.keys(
+          params.dataSchema.properties as Record<string, unknown>,
+        ).map((k) => `${DATA_FIELD}.${k}`)
+      : [DATA_FIELD];
   const dataColumns = schemaContext.allColumns
     .filter((c) => !c.isSystem)
     .sort((a, b) => {
@@ -64,12 +73,13 @@ export function createTableStoryState(
   const selection = new SelectionModel();
   const cellFSM = new CellFSM();
 
+  const wrappedSchema = wrapDataSchema(params.dataSchema);
   const tableModel = createTableModel({
     tableId: 'test-table',
-    schema: params.dataSchema,
+    schema: wrappedSchema,
     rows: params.rowsData.map((data, i) => ({
       rowId: `row-${i + 1}`,
-      data,
+      data: { data },
     })),
     refSchemas: schemaContext.fullRefSchemas,
   });
@@ -114,8 +124,8 @@ export interface TableEditorStoryState {
 }
 
 interface CreateTableEditorStoryStateParams {
-  dataSchema: JsonObjectSchema;
-  rowsData: Record<string, unknown>[];
+  dataSchema: JsonSchema;
+  rowsData: unknown[];
   rows?: RowDataItem[];
   readonly?: boolean;
   breadcrumbs?: TableEditorBreadcrumb[];
@@ -143,10 +153,10 @@ export function createTableEditorStoryState(
 ): TableEditorStoryState {
   const rows =
     params.rows ??
-    params.rowsData.map((data, i) =>
+    params.rowsData.map((rowData, i) =>
       MockDataSource.createRow(
         `row-${i + 1}`,
-        data,
+        rowData,
         generateMockSystemFields(i),
       ),
     );

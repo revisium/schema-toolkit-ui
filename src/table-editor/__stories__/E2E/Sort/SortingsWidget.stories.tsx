@@ -156,7 +156,7 @@ export const FullSortWorkflow: Story = {
     await userEvent.click(ageItem!);
     await waitFor(() => {
       expect(model().sorts).toHaveLength(1);
-      expect(model().sorts[0]?.field).toBe('age');
+      expect(model().sorts[0]?.field).toBe('data.age');
       expect(model().sorts[0]?.direction).toBe('desc');
     });
 

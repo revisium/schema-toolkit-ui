@@ -206,12 +206,10 @@ export class SortModel {
   }
 
   serializeToViewSorts(): ViewSort[] {
-    const lookup = this._fieldLookup;
-    return this.sorts.map((sort) => {
-      const col = lookup.get(sort.field);
-      const viewField = col?.isSystem ? sort.field : `data.${sort.field}`;
-      return { field: viewField, direction: sort.direction };
-    });
+    return this.sorts.map((sort) => ({
+      field: sort.field,
+      direction: sort.direction,
+    }));
   }
 
   applyViewSorts(viewSorts: ViewSort[]): void {
@@ -219,10 +217,9 @@ export class SortModel {
     const sorts: SortItemValue[] = [];
 
     for (const vs of viewSorts) {
-      const field = vs.field.startsWith('data.') ? vs.field.slice(5) : vs.field;
       const direction = vs.direction === 'desc' ? 'desc' : 'asc';
-      if (lookup.has(field)) {
-        sorts.push({ field, direction });
+      if (lookup.has(vs.field)) {
+        sorts.push({ field: vs.field, direction });
       }
     }
 

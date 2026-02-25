@@ -70,20 +70,20 @@ describe('SortModel', () => {
     expect(available).toContain('id');
   });
 
-  it('serializeToViewSorts with data. prefix', () => {
+  it('serializeToViewSorts returns fields as-is', () => {
     model.addSort('name');
     model.addSort('id', 'desc');
     const result = model.serializeToViewSorts();
     expect(result).toEqual([
-      { field: 'data.name', direction: 'asc' },
+      { field: 'name', direction: 'asc' },
       { field: 'id', direction: 'desc' },
     ]);
   });
 
   it('applyViewSorts restores sorts', () => {
     model.applyViewSorts([
-      { field: 'data.age', direction: 'desc' },
-      { field: 'data.unknown', direction: 'asc' },
+      { field: 'age', direction: 'desc' },
+      { field: 'unknown', direction: 'asc' },
     ]);
     expect(model.sorts).toHaveLength(1);
     expect(model.sorts[0]).toEqual({ field: 'age', direction: 'desc' });
@@ -101,7 +101,7 @@ describe('SortModel', () => {
   it('applyViewSorts fires onChange', () => {
     const onChange = jest.fn();
     model.setOnChange(onChange);
-    model.applyViewSorts([{ field: 'data.name', direction: 'asc' }]);
+    model.applyViewSorts([{ field: 'name', direction: 'asc' }]);
     expect(onChange).toHaveBeenCalled();
   });
 
@@ -189,7 +189,7 @@ describe('SortModel', () => {
     });
 
     it('applyViewSorts sets committed state', () => {
-      model.applyViewSorts([{ field: 'data.name', direction: 'asc' }]);
+      model.applyViewSorts([{ field: 'name', direction: 'asc' }]);
       expect(model.hasPendingChanges).toBe(false);
       expect(model.sorts).toHaveLength(1);
     });

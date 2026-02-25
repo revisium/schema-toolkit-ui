@@ -141,7 +141,7 @@ export const ScrollAndRender: Story = {
 
     expect(canvas.queryByTestId('row-row-500')).toBeNull();
 
-    const row1 = canvas.getByTestId('cell-row-1-name');
+    const row1 = canvas.getByTestId('cell-row-1-data.name');
     expect(row1).toHaveTextContent('User 1');
   },
 };
@@ -215,13 +215,13 @@ export const CellEditingOnVisibleRow: Story = {
     const state = (window as any).__testState as TableStoryState;
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toBeVisible();
+      expect(canvas.getByTestId('cell-row-1-data.name')).toBeVisible();
     });
 
-    state.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+    state.cellFSM.focusCell({ rowId: 'row-1', field: 'data.name' });
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );

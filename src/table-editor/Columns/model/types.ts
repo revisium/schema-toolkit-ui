@@ -9,6 +9,7 @@ export interface ColumnSpec {
   systemFieldId?: SystemFieldId;
   isDeprecated: boolean;
   hasFormula: boolean;
+  isSortable: boolean;
   foreignKeyTableId?: string;
 }
 

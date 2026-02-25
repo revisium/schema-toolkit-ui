@@ -52,13 +52,13 @@ export const CellInteractions: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const cellName = canvas.getByTestId('cell-row-1-name');
+    const cellName = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(cellName);
     await waitFor(() => {
       expect(cellName).toHaveAttribute('tabindex', '0');
     });
 
-    const cellRow2 = canvas.getByTestId('cell-row-2-name');
+    const cellRow2 = canvas.getByTestId('cell-row-2-data.name');
     await userEvent.click(cellRow2);
     await waitFor(() => {
       expect(cellRow2).toHaveAttribute('tabindex', '0');
@@ -66,36 +66,36 @@ export const CellInteractions: Story = {
     });
 
     await userEvent.keyboard('{ArrowDown}');
-    const cellRow3 = canvas.getByTestId('cell-row-3-name');
+    const cellRow3 = canvas.getByTestId('cell-row-3-data.name');
     await waitFor(() => {
       expect(cellRow3).toHaveAttribute('tabindex', '0');
       expect(cellRow2).toHaveAttribute('tabindex', '-1');
     });
 
     await userEvent.keyboard('{ArrowRight}');
-    const cellRow3Age = canvas.getByTestId('cell-row-3-age');
+    const cellRow3Age = canvas.getByTestId('cell-row-3-data.age');
     await waitFor(() => {
       expect(cellRow3Age).toHaveAttribute('tabindex', '0');
       expect(cellRow3).toHaveAttribute('tabindex', '-1');
     });
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{ArrowUp}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -103,28 +103,28 @@ export const CellInteractions: Story = {
 
     await userEvent.keyboard('{Tab}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.age')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{Tab}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-active')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.active')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{Tab}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-2-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
-    await userEvent.dblClick(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
+    await userEvent.dblClick(canvas.getByTestId('cell-row-1-data.name'));
     const input = await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="string-cell-input"]',
@@ -136,20 +136,20 @@ export const CellInteractions: Story = {
     await userEvent.type(input, 'Updated');
     input.blur();
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
         'Updated',
       );
     });
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.age')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
-    await userEvent.dblClick(canvas.getByTestId('cell-row-1-age'));
+    await userEvent.dblClick(canvas.getByTestId('cell-row-1-data.age'));
     const numInput = await waitFor(() => {
       const el = document.querySelector(
         '[data-testid="number-cell-input"]',
@@ -161,12 +161,12 @@ export const CellInteractions: Story = {
     await userEvent.type(numInput, '77');
     await userEvent.keyboard('{Enter}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('77');
+      expect(canvas.getByTestId('cell-row-1-data.age')).toHaveTextContent('77');
     });
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -182,11 +182,11 @@ export const CellInteractions: Story = {
     expect(charInput.value).toBe('X');
     charInput.blur();
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('X');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('X');
     });
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -202,23 +202,23 @@ export const CellInteractions: Story = {
     expect(digitInput.value).toBe('1');
     digitInput.blur();
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('1');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('1');
     });
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{Delete}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('');
     });
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '-1',
       );

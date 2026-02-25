@@ -112,7 +112,7 @@ export const PinViaHeaderMenu: Story = {
 
     // Step 1: Pin 'name' to left via header menu
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const pinLeftItem = await waitFor(() => {
@@ -126,13 +126,13 @@ export const PinViaHeaderMenu: Story = {
       await userEvent.click(pinLeftItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(true);
-        expect(columnsModel.getPinState('name')).toBe('left');
+        expect(columnsModel.isPinned('data.name')).toBe(true);
+        expect(columnsModel.getPinState('data.name')).toBe('left');
       });
 
       await waitFor(() => {
         const indicator = document.querySelector(
-          '[data-testid="pin-indicator-name"]',
+          '[data-testid="pin-indicator-data.name"]',
         );
         expect(indicator).toBeTruthy();
       });
@@ -142,7 +142,7 @@ export const PinViaHeaderMenu: Story = {
 
     // Step 2: Pin 'score' to right via header menu
     {
-      const scoreHeader = canvas.getByTestId('header-score');
+      const scoreHeader = canvas.getByTestId('header-data.score');
       await userEvent.click(scoreHeader);
 
       const pinRightItem = await waitFor(() => {
@@ -156,13 +156,13 @@ export const PinViaHeaderMenu: Story = {
       await userEvent.click(pinRightItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('score')).toBe(true);
-        expect(columnsModel.getPinState('score')).toBe('right');
+        expect(columnsModel.isPinned('data.score')).toBe(true);
+        expect(columnsModel.getPinState('data.score')).toBe('right');
       });
 
       await waitFor(() => {
         const indicator = document.querySelector(
-          '[data-testid="pin-indicator-score"]',
+          '[data-testid="pin-indicator-data.score"]',
         );
         expect(indicator).toBeTruthy();
       });
@@ -172,7 +172,7 @@ export const PinViaHeaderMenu: Story = {
 
     // Step 3: Unpin 'name' via header menu -- verify "Unpin column" shown
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const unpinItem = await waitFor(() => {
@@ -191,12 +191,12 @@ export const PinViaHeaderMenu: Story = {
       await userEvent.click(unpinItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(false);
+        expect(columnsModel.isPinned('data.name')).toBe(false);
       });
 
       await waitFor(() => {
         const indicator = document.querySelector(
-          '[data-testid="pin-indicator-name"]',
+          '[data-testid="pin-indicator-data.name"]',
         );
         expect(indicator).toBeNull();
       });
@@ -206,7 +206,7 @@ export const PinViaHeaderMenu: Story = {
 
     // Step 4: Open header menu on unpinned column -- verify both pin options visible
     {
-      const ageHeader = canvas.getByTestId('header-age');
+      const ageHeader = canvas.getByTestId('header-data.age');
       await userEvent.click(ageHeader);
 
       await waitFor(() => {
@@ -238,7 +238,7 @@ export const PinAndHideColumn: Story = {
 
     // Pin 'name' to left
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const pinLeftItem = await waitFor(() => {
@@ -252,7 +252,7 @@ export const PinAndHideColumn: Story = {
       await userEvent.click(pinLeftItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(true);
+        expect(columnsModel.isPinned('data.name')).toBe(true);
       });
 
       await dismissMenu();
@@ -260,7 +260,7 @@ export const PinAndHideColumn: Story = {
 
     // Hide 'name' via header menu
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const hideItem = await waitFor(() => {
@@ -272,9 +272,9 @@ export const PinAndHideColumn: Story = {
       await userEvent.click(hideItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(false);
+        expect(columnsModel.isPinned('data.name')).toBe(false);
         expect(
-          columnsModel.visibleColumns.some((c) => c.field === 'name'),
+          columnsModel.visibleColumns.some((c) => c.field === 'data.name'),
         ).toBe(false);
       });
 
@@ -296,7 +296,7 @@ export const PinAndMoveRestrictions: Story = {
 
     // Pin 'name' to left
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const pinLeftItem = await waitFor(() => {
@@ -310,8 +310,8 @@ export const PinAndMoveRestrictions: Story = {
       await userEvent.click(pinLeftItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(true);
-        expect(columnsModel.getPinState('name')).toBe('left');
+        expect(columnsModel.isPinned('data.name')).toBe(true);
+        expect(columnsModel.getPinState('data.name')).toBe('left');
       });
 
       await dismissMenu();
@@ -319,7 +319,7 @@ export const PinAndMoveRestrictions: Story = {
 
     // Pin 'score' to right
     {
-      const scoreHeader = canvas.getByTestId('header-score');
+      const scoreHeader = canvas.getByTestId('header-data.score');
       await userEvent.click(scoreHeader);
 
       const pinRightItem = await waitFor(() => {
@@ -333,8 +333,8 @@ export const PinAndMoveRestrictions: Story = {
       await userEvent.click(pinRightItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('score')).toBe(true);
-        expect(columnsModel.getPinState('score')).toBe('right');
+        expect(columnsModel.isPinned('data.score')).toBe(true);
+        expect(columnsModel.getPinState('data.score')).toBe('right');
       });
 
       await dismissMenu();
@@ -344,10 +344,10 @@ export const PinAndMoveRestrictions: Story = {
     // 'age' is the first unpinned column -- canMoveLeft should be false
     {
       await waitFor(() => {
-        expect(columnsModel.canMoveLeft('age')).toBe(false);
+        expect(columnsModel.canMoveLeft('data.age')).toBe(false);
       });
 
-      const ageHeader = canvas.getByTestId('header-age');
+      const ageHeader = canvas.getByTestId('header-data.age');
       await userEvent.click(ageHeader);
 
       const moveSubmenuTrigger = await waitFor(() => {
@@ -372,10 +372,10 @@ export const PinAndMoveRestrictions: Story = {
     // 'email' is the last unpinned column -- canMoveRight should be false
     {
       await waitFor(() => {
-        expect(columnsModel.canMoveRight('email')).toBe(false);
+        expect(columnsModel.canMoveRight('data.email')).toBe(false);
       });
 
-      const emailHeader = canvas.getByTestId('header-email');
+      const emailHeader = canvas.getByTestId('header-data.email');
       await userEvent.click(emailHeader);
 
       const moveSubmenuTrigger = await waitFor(() => {
@@ -412,7 +412,7 @@ export const PinAndCellEditing: Story = {
 
     // Pin 'name' to left
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const pinLeftItem = await waitFor(() => {
@@ -426,15 +426,15 @@ export const PinAndCellEditing: Story = {
       await userEvent.click(pinLeftItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(true);
+        expect(columnsModel.isPinned('data.name')).toBe(true);
       });
 
       await dismissMenu();
     }
 
-    // Double-click on cell-row-1-name to enter editing mode
+    // Double-click on cell-row-1-data.name to enter editing mode
     {
-      const nameCell = canvas.getByTestId('cell-row-1-name');
+      const nameCell = canvas.getByTestId('cell-row-1-data.name');
       await userEvent.dblClick(nameCell);
 
       const input = await waitFor(() => {
@@ -450,7 +450,7 @@ export const PinAndCellEditing: Story = {
       input.blur();
 
       await waitFor(() => {
-        expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
+        expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
           'Updated Alice',
         );
       });
@@ -473,7 +473,7 @@ export const SplitButtonOnPinnedColumn: Story = {
 
     // Pin 'name' to left
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const pinLeftItem = await waitFor(() => {
@@ -487,7 +487,7 @@ export const SplitButtonOnPinnedColumn: Story = {
       await userEvent.click(pinLeftItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(true);
+        expect(columnsModel.isPinned('data.name')).toBe(true);
       });
 
       await dismissMenu();
@@ -557,7 +557,7 @@ export const StickyPositionAfterScroll: Story = {
 
     // Hide 'email' so + button appears
     {
-      const emailHeader = canvas.getByTestId('header-email');
+      const emailHeader = canvas.getByTestId('header-data.email');
       await userEvent.click(emailHeader);
 
       const hideItem = await waitFor(() => {
@@ -575,7 +575,7 @@ export const StickyPositionAfterScroll: Story = {
 
     // Pin 'score' to right
     {
-      const scoreHeader = canvas.getByTestId('header-score');
+      const scoreHeader = canvas.getByTestId('header-data.score');
       await userEvent.click(scoreHeader);
 
       const pinRightItem = await waitFor(() => {
@@ -588,14 +588,14 @@ export const StickyPositionAfterScroll: Story = {
 
       await userEvent.click(pinRightItem);
       await waitFor(() => {
-        expect(columnsModel.isPinned('score')).toBe(true);
+        expect(columnsModel.isPinned('data.score')).toBe(true);
       });
       await dismissMenu();
     }
 
     // Pin 'name' to left
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const pinLeftItem = await waitFor(() => {
@@ -608,7 +608,7 @@ export const StickyPositionAfterScroll: Story = {
 
       await userEvent.click(pinLeftItem);
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(true);
+        expect(columnsModel.isPinned('data.name')).toBe(true);
       });
       await dismissMenu();
     }
@@ -622,15 +622,15 @@ export const StickyPositionAfterScroll: Story = {
     });
 
     // Capture positions BEFORE scroll
-    const scoreHeaderTh = canvas.getByTestId('header-score').closest('th');
-    const nameHeaderTh = canvas.getByTestId('header-name').closest('th');
+    const scoreHeaderTh = canvas.getByTestId('header-data.score').closest('th');
+    const nameHeaderTh = canvas.getByTestId('header-data.name').closest('th');
     const addBtn = canvas.getByTestId('add-column-button');
     const addBtnTh = addBtn.closest('th');
     const scoreCells = canvasElement.querySelectorAll(
-      '[data-testid^="cell-"][data-testid$="-score"]',
+      '[data-testid^="cell-"][data-testid$="-data.score"]',
     );
     const nameCells = canvasElement.querySelectorAll(
-      '[data-testid^="cell-"][data-testid$="-name"]',
+      '[data-testid^="cell-"][data-testid$="-data.name"]',
     );
 
     // Find addColumn <td> cells in data rows — the last <td> in each <tr> within tbody

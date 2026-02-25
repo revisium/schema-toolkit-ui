@@ -12,28 +12,31 @@ ensureReactivityProvider();
 
 const TEST_FIELDS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
 ];
 
@@ -77,36 +80,39 @@ export default meta;
 type Story = StoryObj<typeof Wrapper>;
 
 export const NoSort: Story = {
-  args: { sorts: [], displayField: 'name' },
+  args: { sorts: [], displayField: 'data.name' },
 };
 
 export const AscendingSort: Story = {
-  args: { sorts: [{ field: 'name', direction: 'asc' }], displayField: 'name' },
+  args: {
+    sorts: [{ field: 'data.name', direction: 'asc' }],
+    displayField: 'data.name',
+  },
 };
 
 export const DescendingSort: Story = {
   args: {
-    sorts: [{ field: 'name', direction: 'desc' }],
-    displayField: 'name',
+    sorts: [{ field: 'data.name', direction: 'desc' }],
+    displayField: 'data.name',
   },
 };
 
 export const MultiSortFirst: Story = {
   args: {
     sorts: [
-      { field: 'name', direction: 'asc' },
-      { field: 'age', direction: 'desc' },
+      { field: 'data.name', direction: 'asc' },
+      { field: 'data.age', direction: 'desc' },
     ],
-    displayField: 'name',
+    displayField: 'data.name',
   },
 };
 
 export const MultiSortSecond: Story = {
   args: {
     sorts: [
-      { field: 'name', direction: 'asc' },
-      { field: 'age', direction: 'desc' },
+      { field: 'data.name', direction: 'asc' },
+      { field: 'data.age', direction: 'desc' },
     ],
-    displayField: 'age',
+    displayField: 'data.age',
   },
 };

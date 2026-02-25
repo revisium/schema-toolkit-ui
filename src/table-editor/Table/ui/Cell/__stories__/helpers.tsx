@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import type { JsonSchema, RowModel } from '@revisium/schema-toolkit';
 import { createTableModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../../../lib/initReactivity.js';
+import { wrapDataSchema } from '../../../../TableEditor/model/SchemaContext.js';
 import { FilterFieldType } from '../../../../shared/field-types.js';
 import type { SearchForeignKeySearchFn } from '../../../../../search-foreign-key/index.js';
 import type { ColumnSpec } from '../../../../Columns/model/types.js';
@@ -61,11 +62,12 @@ function createColumn(
 ): ColumnSpec {
   return {
     field,
-    label: field,
+    label: field.replace(/^data\./, ''),
     fieldType,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
     ...options,
   };
 }
@@ -99,8 +101,8 @@ export const StoryWrapper = observer(
       const cellFSM = new CellFSM();
       const tableModel = createTableModel({
         tableId: 'cell-test',
-        schema: schema as any,
-        rows: [{ rowId: 'row-1', data: initialData }],
+        schema: wrapDataSchema(schema) as any,
+        rows: [{ rowId: 'row-1', data: { data: initialData } }],
       });
       const rowModel = tableModel.rows[0] as RowModel;
       const column = createColumn(field, fieldType, { foreignKeyTableId });

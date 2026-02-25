@@ -11,6 +11,7 @@ import {
 import type { JsonSchema } from '@revisium/schema-toolkit';
 import { expect, within, waitFor, userEvent, fn } from 'storybook/test';
 import { ensureReactivityProvider } from '../../../../lib/initReactivity.js';
+import { wrapDataSchema } from '../../../TableEditor/model/SchemaContext.js';
 import type { ColumnSpec } from '../../../Columns/model/types.js';
 import { FilterFieldType } from '../../../shared/field-types.js';
 import { CellFSM } from '../../../Table/model/CellFSM.js';
@@ -26,11 +27,12 @@ function createColumn(
 ): ColumnSpec {
   return {
     field,
-    label: field,
+    label: field.replace(/^data\./, ''),
     fieldType,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: fieldType !== FilterFieldType.File,
     ...overrides,
   };
 }
@@ -64,19 +66,21 @@ function createFileCellState(
   const cellFSM = new CellFSM();
   const tableModel = createTableModel({
     tableId: 'file-test',
-    schema: FILE_SCHEMA as any,
-    rows: [{ rowId: 'row-1', data: { name: 'Alice', avatar: fileData } }],
+    schema: wrapDataSchema(FILE_SCHEMA) as any,
+    rows: [
+      { rowId: 'row-1', data: { data: { name: 'Alice', avatar: fileData } } },
+    ],
     refSchemas: REF_SCHEMAS,
   });
   const rowModel = tableModel.rows[0] as RowModel;
 
-  const nameColumn = createColumn('name', FilterFieldType.String);
-  const avatarColumn = createColumn('avatar', FilterFieldType.File);
+  const nameColumn = createColumn('data.name', FilterFieldType.String);
+  const avatarColumn = createColumn('data.avatar', FilterFieldType.File);
 
   const nameCell = new CellVM(rowModel, nameColumn, 'row-1', cellFSM);
   const fileCell = new CellVM(rowModel, avatarColumn, 'row-1', cellFSM);
 
-  cellFSM.setNavigationContext(['name', 'avatar'], ['row-1']);
+  cellFSM.setNavigationContext(['data.name', 'data.avatar'], ['row-1']);
 
   return { cellFSM, fileCell, nameCell };
 }
@@ -179,7 +183,7 @@ export const DisplaysFileName: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const fileCell = canvas.getByTestId('cell-row-1-avatar');
+    const fileCell = canvas.getByTestId('cell-row-1-data.avatar');
     await waitFor(() => {
       expect(fileCell).toHaveTextContent('avatar.png');
     });
@@ -192,7 +196,7 @@ export const EditFileName: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const fileCell = canvas.getByTestId('cell-row-1-avatar');
+    const fileCell = canvas.getByTestId('cell-row-1-data.avatar');
     await waitFor(() => {
       expect(fileCell).toHaveTextContent('avatar.png');
     });
@@ -214,7 +218,7 @@ export const EditFileName: Story = {
     input.blur();
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-avatar')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.avatar')).toHaveTextContent(
         'new-avatar.png',
       );
     });
@@ -227,7 +231,7 @@ export const EditFileNameViaEnter: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const fileCell = canvas.getByTestId('cell-row-1-avatar');
+    const fileCell = canvas.getByTestId('cell-row-1-data.avatar');
     await userEvent.click(fileCell);
 
     await waitFor(() => {
@@ -249,7 +253,7 @@ export const EditFileNameViaEnter: Story = {
     await userEvent.keyboard('{Enter}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-avatar')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.avatar')).toHaveTextContent(
         'renamed.png',
       );
     });
@@ -262,7 +266,7 @@ export const EditFileNameCancel: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const fileCell = canvas.getByTestId('cell-row-1-avatar');
+    const fileCell = canvas.getByTestId('cell-row-1-data.avatar');
     await userEvent.dblClick(fileCell);
 
     const input = await waitFor(() => {
@@ -283,7 +287,7 @@ export const EditFileNameCancel: Story = {
       ).toBeNull();
     });
 
-    expect(canvas.getByTestId('cell-row-1-avatar')).toHaveTextContent(
+    expect(canvas.getByTestId('cell-row-1-data.avatar')).toHaveTextContent(
       'avatar.png',
     );
   },
@@ -303,7 +307,7 @@ export const OpenFileCallback: Story = {
     await userEvent.hover(row!);
 
     const openBtn = await waitFor(() => {
-      const el = canvas.getByTestId('cell-file-open-row-1-avatar');
+      const el = canvas.getByTestId('cell-file-open-row-1-data.avatar');
       expect(el).toBeTruthy();
       return el;
     });
@@ -328,7 +332,9 @@ export const ReadyFileShowsUploadButton: Story = {
     await userEvent.hover(row!);
 
     await waitFor(() => {
-      const uploadBtn = canvas.getByTestId('cell-file-upload-row-1-avatar');
+      const uploadBtn = canvas.getByTestId(
+        'cell-file-upload-row-1-data.avatar',
+      );
       expect(uploadBtn).toBeTruthy();
     });
   },
@@ -340,7 +346,7 @@ export const TypeCharOpensEdit: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const fileCell = canvas.getByTestId('cell-row-1-avatar');
+    const fileCell = canvas.getByTestId('cell-row-1-data.avatar');
     await userEvent.click(fileCell);
 
     await waitFor(() => {
@@ -361,7 +367,9 @@ export const TypeCharOpensEdit: Story = {
     input.blur();
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-avatar')).toHaveTextContent('X');
+      expect(canvas.getByTestId('cell-row-1-data.avatar')).toHaveTextContent(
+        'X',
+      );
     });
   },
 };

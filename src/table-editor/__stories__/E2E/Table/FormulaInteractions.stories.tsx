@@ -105,7 +105,7 @@ export const FormulaColumnsInteractions: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const greetingCell = canvas.getByTestId('cell-row-1-greeting');
+    const greetingCell = canvas.getByTestId('cell-row-1-data.greeting');
     await waitFor(() => {
       expect(greetingCell).toHaveTextContent('Hello, Alice');
     });
@@ -126,14 +126,14 @@ export const FormulaColumnsInteractions: Story = {
     expect(greetingCell).toHaveAttribute('tabindex', '0');
 
     await userEvent.keyboard('{ArrowRight}');
-    const ageGroupCell = canvas.getByTestId('cell-row-1-ageGroup');
+    const ageGroupCell = canvas.getByTestId('cell-row-1-data.ageGroup');
     await waitFor(() => {
       expect(ageGroupCell).toHaveAttribute('tabindex', '0');
       expect(greetingCell).toHaveAttribute('tabindex', '-1');
     });
 
     await userEvent.keyboard('{ArrowRight}');
-    const labelCell = canvas.getByTestId('cell-row-1-label');
+    const labelCell = canvas.getByTestId('cell-row-1-data.label');
     await waitFor(() => {
       expect(labelCell).toHaveAttribute('tabindex', '0');
     });
@@ -147,11 +147,11 @@ export const FormulaColumnsInteractions: Story = {
       expect(greetingCell).toHaveAttribute('tabindex', '0');
     });
     await userEvent.keyboard('{ArrowLeft}');
-    const ageCell = canvas.getByTestId('cell-row-1-age');
+    const ageCell = canvas.getByTestId('cell-row-1-data.age');
     await waitFor(() => {
       expect(ageCell).toHaveAttribute('tabindex', '0');
     });
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(() => {
       expect(nameCell).toHaveAttribute('tabindex', '0');
@@ -169,12 +169,12 @@ export const FormulaColumnsInteractions: Story = {
     nameInput.blur();
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-greeting')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.greeting')).toHaveTextContent(
         'Hello, Zoe',
       );
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-label')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.label')).toHaveTextContent(
         'Hello, Zoe (Senior)',
       );
     });
@@ -196,12 +196,12 @@ export const FormulaColumnsInteractions: Story = {
     await userEvent.keyboard('{Enter}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-ageGroup')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.ageGroup')).toHaveTextContent(
         'Junior',
       );
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-label')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.label')).toHaveTextContent(
         'Hello, Zoe (Junior)',
       );
     });
@@ -219,12 +219,12 @@ export const MixedFormulaInteractions: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const priceCell = canvas.getByTestId('cell-row-1-price');
-    const qtyCell = canvas.getByTestId('cell-row-1-quantity');
+    const priceCell = canvas.getByTestId('cell-row-1-data.price');
+    const qtyCell = canvas.getByTestId('cell-row-1-data.quantity');
     expect(priceCell).toHaveTextContent('999');
     expect(qtyCell).toHaveTextContent('2');
 
-    const totalCell = canvas.getByTestId('cell-row-1-total');
+    const totalCell = canvas.getByTestId('cell-row-1-data.total');
     expect(totalCell).toHaveTextContent('1998');
     await userEvent.click(totalCell);
     await waitFor(() => {
@@ -240,7 +240,7 @@ export const MixedFormulaInteractions: Story = {
     ).toBeNull();
 
     await userEvent.keyboard('{ArrowRight}');
-    const expensiveCell = canvas.getByTestId('cell-row-1-expensive');
+    const expensiveCell = canvas.getByTestId('cell-row-1-data.expensive');
     await waitFor(() => {
       expect(expensiveCell).toHaveAttribute('tabindex', '0');
     });
@@ -252,21 +252,21 @@ export const MixedFormulaInteractions: Story = {
     ).toBeNull();
 
     await userEvent.keyboard('{ArrowDown}');
-    const expensiveCell2 = canvas.getByTestId('cell-row-2-expensive');
+    const expensiveCell2 = canvas.getByTestId('cell-row-2-data.expensive');
     await waitFor(() => {
       expect(expensiveCell2).toHaveAttribute('tabindex', '0');
     });
     expect(expensiveCell2).toHaveTextContent('false');
 
     await userEvent.keyboard('{ArrowLeft}');
-    const totalCell2 = canvas.getByTestId('cell-row-2-total');
+    const totalCell2 = canvas.getByTestId('cell-row-2-data.total');
     await waitFor(() => {
       expect(totalCell2).toHaveAttribute('tabindex', '0');
     });
     expect(totalCell2).toHaveTextContent('75');
 
     await userEvent.keyboard('{ArrowLeft}');
-    const qtyCell2 = canvas.getByTestId('cell-row-2-quantity');
+    const qtyCell2 = canvas.getByTestId('cell-row-2-data.quantity');
     await waitFor(() => {
       expect(qtyCell2).toHaveAttribute('tabindex', '0');
     });
@@ -285,7 +285,7 @@ export const MixedFormulaInteractions: Story = {
       expect(qtyCell2).toHaveTextContent('10');
     });
 
-    const priceCell2 = canvas.getByTestId('cell-row-2-price');
+    const priceCell2 = canvas.getByTestId('cell-row-2-data.price');
     await userEvent.click(priceCell2);
     await waitFor(() => {
       expect(priceCell2).toHaveAttribute('tabindex', '0');
@@ -307,38 +307,40 @@ export const MixedFormulaInteractions: Story = {
     });
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-total')).toHaveTextContent('500');
+      expect(canvas.getByTestId('cell-row-2-data.total')).toHaveTextContent(
+        '500',
+      );
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-expensive')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-2-data.expensive')).toHaveTextContent(
         'true',
       );
     });
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-quantity'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.quantity'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-quantity')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.quantity')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{Tab}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-total')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.total')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{Tab}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-expensive')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.expensive')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
     await userEvent.keyboard('{Tab}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-item')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-2-data.item')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -346,7 +348,7 @@ export const MixedFormulaInteractions: Story = {
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-item')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-2-data.item')).toHaveAttribute(
         'tabindex',
         '-1',
       );

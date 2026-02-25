@@ -73,7 +73,7 @@ export const CellEditCallsPatchCells: Story = {
     const initialPatchCount = dataSource.patchLog.length;
 
     // Double-click cell to enter edit mode
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.dblClick(nameCell);
 
     const input = await waitFor(() => {
@@ -91,7 +91,7 @@ export const CellEditCallsPatchCells: Story = {
 
     // Verify cell shows new value
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
         'Updated',
       );
     });
@@ -167,7 +167,7 @@ export const DeleteRowCallsDeleteRows: Story = {
       expect(state.core.rows.length).toBe(initialRowCount - 1);
     });
 
-    expect(canvas.queryByTestId('cell-row-1-name')).toBeNull();
+    expect(canvas.queryByTestId('cell-row-1-data.name')).toBeNull();
   },
 };
 
@@ -189,7 +189,7 @@ export const SaveViewCallsSaveView: Story = {
     const initialSaveCount = dataSource.saveViewLog.length;
 
     // Add sort and apply to trigger view changes
-    state.core.sorts.addSort('name', 'asc');
+    state.core.sorts.addSort('data.name', 'asc');
     state.core.sorts.apply();
 
     await waitFor(() => {
@@ -270,7 +270,9 @@ export const SearchCallsFetchRowsWithQuery: Story = {
       expect(state.core.rows).toHaveLength(1);
     });
 
-    expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Alice');
+    expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent(
+      'Alice',
+    );
   },
 };
 

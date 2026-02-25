@@ -2,6 +2,7 @@ import type { SchemaNode } from '@revisium/schema-toolkit';
 import { SystemSchemaIds } from '@revisium/schema-toolkit';
 import { FilterFieldType } from '../../shared/field-types.js';
 import { SYSTEM_FIELD_BY_REF } from '../../shared/system-fields.js';
+import { DATA_FIELD } from '../../TableEditor/model/SchemaContext.js';
 import type { ColumnSpec } from './types.js';
 
 const NODE_TYPE_TO_FIELD_TYPE: Readonly<
@@ -90,14 +91,17 @@ function resolveRefColumn(
 
   const systemDef = SYSTEM_FIELD_BY_REF.get(refValue);
   if (systemDef) {
+    const isDeprecated = child.metadata().deprecated ?? false;
+    const hasFormula = child.hasFormula();
     return {
       field: systemDef.id,
       label: systemDef.label,
       fieldType: systemDef.fieldType,
       isSystem: true,
       systemFieldId: systemDef.id,
-      isDeprecated: child.metadata().deprecated ?? false,
-      hasFormula: child.hasFormula(),
+      isDeprecated,
+      hasFormula,
+      isSortable: !isDeprecated && !hasFormula,
     };
   }
 
@@ -128,17 +132,31 @@ function resolveFileRefColumns(
   return result;
 }
 
+function stripDataPrefix(fieldPath: string): string {
+  if (fieldPath === DATA_FIELD) {
+    return DATA_FIELD;
+  }
+  if (fieldPath.startsWith(`${DATA_FIELD}.`)) {
+    return fieldPath.slice(DATA_FIELD.length + 1);
+  }
+  return fieldPath;
+}
+
 function createColumn(
   fieldPath: string,
   child: SchemaNode,
   fieldType: FilterFieldType,
 ): ColumnSpec {
+  const isDeprecated = child.metadata().deprecated ?? false;
+  const hasFormula = child.hasFormula();
   return {
     field: fieldPath,
-    label: fieldPath,
+    label: stripDataPrefix(fieldPath),
     fieldType,
     isSystem: false,
-    isDeprecated: child.metadata().deprecated ?? false,
-    hasFormula: child.hasFormula(),
+    isDeprecated,
+    hasFormula,
+    isSortable:
+      !isDeprecated && !hasFormula && fieldType !== FilterFieldType.File,
   };
 }

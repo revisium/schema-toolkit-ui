@@ -283,3 +283,26 @@ export const SYSTEM_FIELDS_ROWS: RowDataItem[] = [
     },
   ),
 ];
+
+export const PRIMITIVE_STRING_SCHEMA = str();
+
+export const PRIMITIVE_STRING_ROWS_DATA: string[] = [
+  'Hello world',
+  'Bonjour le monde',
+  'Hola mundo',
+  'Hallo Welt',
+  'Ciao mondo',
+];
+
+export const NAME_CONFLICT_SCHEMA = obj({
+  id: str(),
+  createdAt: str(),
+  title: str(),
+  score: num(),
+});
+
+export const NAME_CONFLICT_ROWS_DATA = [
+  { id: 'user-id-1', createdAt: '2020-01-01', title: 'First', score: 10 },
+  { id: 'user-id-2', createdAt: '2021-06-15', title: 'Second', score: 20 },
+  { id: 'user-id-3', createdAt: '2022-12-31', title: 'Third', score: 30 },
+];

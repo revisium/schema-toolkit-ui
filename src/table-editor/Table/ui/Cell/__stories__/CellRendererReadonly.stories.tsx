@@ -12,7 +12,7 @@ type Story = StoryObj<typeof StoryWrapper>;
 
 export const FormulaCell: Story = {
   args: {
-    field: 'greeting',
+    field: 'data.greeting',
     fieldType: FilterFieldType.String,
     schema: createSchema({
       name: 'string',
@@ -24,7 +24,7 @@ export const FormulaCell: Story = {
 
 export const ReadonlyNumberCell: Story = {
   args: {
-    field: 'total',
+    field: 'data.total',
     fieldType: FilterFieldType.Number,
     schema: createSchema({
       total: { type: 'number', readOnly: true },
@@ -35,7 +35,7 @@ export const ReadonlyNumberCell: Story = {
 
 export const ReadonlyBooleanCell: Story = {
   args: {
-    field: 'expensive',
+    field: 'data.expensive',
     fieldType: FilterFieldType.Boolean,
     schema: createSchema({
       expensive: { type: 'boolean', readOnly: true },

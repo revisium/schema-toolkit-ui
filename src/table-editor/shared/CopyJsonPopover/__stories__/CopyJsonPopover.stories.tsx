@@ -20,8 +20,8 @@ export const Default: Story = {
   args: {
     data: {
       filters: [
-        { field: 'name', operator: 'equals', value: 'Alice' },
-        { field: 'age', operator: 'gt', value: 25 },
+        { field: 'data.name', operator: 'equals', value: 'Alice' },
+        { field: 'data.age', operator: 'gt', value: 25 },
       ],
       logic: 'and',
     },
@@ -33,8 +33,8 @@ export const Default: Story = {
 export const SimpleArray: Story = {
   args: {
     data: [
-      { field: 'name', direction: 'asc' },
-      { field: 'age', direction: 'desc' },
+      { field: 'data.name', direction: 'asc' },
+      { field: 'data.age', direction: 'desc' },
     ],
     tooltipContent: 'Copy sort JSON',
     testId: 'copy-json',

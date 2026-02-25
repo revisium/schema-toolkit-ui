@@ -77,7 +77,7 @@ export const FileColumnDisplaysFileName: Story = {
       expect(state.core.isBootstrapping).toBe(false);
     });
 
-    const cell = canvas.getByTestId('cell-row-1-avatar');
+    const cell = canvas.getByTestId('cell-row-1-data.avatar');
     await waitFor(() => {
       expect(cell).toHaveTextContent('avatar.png');
     });
@@ -98,7 +98,7 @@ export const FileColumnEditable: Story = {
       expect(state.core.isBootstrapping).toBe(false);
     });
 
-    const cell = canvas.getByTestId('cell-row-1-avatar');
+    const cell = canvas.getByTestId('cell-row-1-data.avatar');
     await userEvent.dblClick(cell);
 
     const input = await waitFor(() => {
@@ -116,7 +116,7 @@ export const FileColumnEditable: Story = {
     input.blur();
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-avatar')).toHaveTextContent(
+      expect(canvas.getByTestId('cell-row-1-data.avatar')).toHaveTextContent(
         'photo.jpg',
       );
     });
@@ -144,7 +144,7 @@ export const SubFieldsAvailableViaAddColumn: Story = {
 
     const statusItem = await waitFor(() => {
       const el = document.querySelector(
-        '[data-value="avatar.status"]',
+        '[data-value="data.avatar.status"]',
       ) as HTMLElement;
       expect(el).toBeTruthy();
       return el;
@@ -156,10 +156,64 @@ export const SubFieldsAvailableViaAddColumn: Story = {
       expect(state.core.columns.visibleColumns.length).toBe(visibleBefore + 1);
       expect(
         state.core.columns.visibleColumns.some(
-          (c) => c.field === 'avatar.status',
+          (c) => c.field === 'data.avatar.status',
         ),
       ).toBe(true);
     });
+  },
+};
+
+export const FileColumnNoSortFilterInMenu: Story = {
+  tags: ['test'],
+  render: () => <Wrapper />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const state = (window as any).__testState as TableEditorStoryState;
+
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
+
+    const fileHeader = canvas.getByTestId('header-data.avatar');
+    await userEvent.click(fileHeader);
+
+    await waitFor(() => {
+      const menuContent = document.querySelector('[role="menu"]');
+      expect(menuContent).toBeTruthy();
+    });
+
+    const menuItems = document.querySelectorAll(
+      '[role="menu"] [role="menuitem"]',
+    );
+    const menuTexts = Array.from(menuItems).map((el) => el.textContent);
+    expect(menuTexts.some((t) => t?.includes('Sort'))).toBe(false);
+    expect(menuTexts.some((t) => t?.includes('Add filter'))).toBe(false);
+    expect(menuTexts.some((t) => t?.includes('Hide column'))).toBe(true);
+    expect(menuTexts.some((t) => t?.includes('Copy path'))).toBe(true);
+
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
+
+    const nameHeader = canvas.getByTestId('header-data.name');
+    await userEvent.click(nameHeader);
+
+    await waitFor(() => {
+      const menuContent = document.querySelector('[role="menu"]');
+      expect(menuContent).toBeTruthy();
+    });
+
+    const nameMenuItems = document.querySelectorAll(
+      '[role="menu"] [role="menuitem"]',
+    );
+    const nameMenuTexts = Array.from(nameMenuItems).map((el) => el.textContent);
+    expect(nameMenuTexts.some((t) => t?.includes('Sort'))).toBe(true);
+    expect(nameMenuTexts.some((t) => t?.includes('Add filter'))).toBe(true);
   },
 };
 
@@ -178,12 +232,12 @@ export const SubFieldsNotVisibleByDefault: Story = {
 
     const visibleFields = state.core.columns.visibleColumns.map((c) => c.field);
 
-    expect(visibleFields).not.toContain('avatar.status');
-    expect(visibleFields).not.toContain('avatar.fileId');
-    expect(visibleFields).not.toContain('avatar.url');
-    expect(visibleFields).not.toContain('avatar.fileName');
+    expect(visibleFields).not.toContain('data.avatar.status');
+    expect(visibleFields).not.toContain('data.avatar.fileId');
+    expect(visibleFields).not.toContain('data.avatar.url');
+    expect(visibleFields).not.toContain('data.avatar.fileName');
 
-    expect(visibleFields).toContain('name');
-    expect(visibleFields).toContain('avatar');
+    expect(visibleFields).toContain('data.name');
+    expect(visibleFields).toContain('data.avatar');
   },
 };

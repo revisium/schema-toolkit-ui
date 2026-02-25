@@ -69,7 +69,7 @@ export const FullContextMenuWorkflow: Story = {
     };
 
     // --- 1. Single cell context menu ---
-    const nameCell = canvas.getByTestId('cell-row-1-name');
+    const nameCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(nameCell);
     await waitFor(() => {
       expect(nameCell).toHaveAttribute('tabindex', '0');
@@ -101,7 +101,7 @@ export const FullContextMenuWorkflow: Story = {
     expect(document.activeElement).toBe(nameCell);
 
     await userEvent.keyboard('{ArrowDown}');
-    const nameCell2 = canvas.getByTestId('cell-row-2-name');
+    const nameCell2 = canvas.getByTestId('cell-row-2-data.name');
     await waitFor(() => {
       expect(nameCell2).toHaveAttribute('tabindex', '0');
       expect(nameCell).toHaveAttribute('tabindex', '-1');
@@ -111,7 +111,7 @@ export const FullContextMenuWorkflow: Story = {
     await userEvent.keyboard('{Escape}');
 
     // --- 2. Copy path ---
-    const ageCell = canvas.getByTestId('cell-row-2-age');
+    const ageCell = canvas.getByTestId('cell-row-2-data.age');
     await userEvent.pointer({ keys: '[MouseRight]', target: ageCell });
 
     const copyPathItem = await waitFor(() => {
@@ -123,24 +123,24 @@ export const FullContextMenuWorkflow: Story = {
     await userEvent.click(copyPathItem);
 
     await waitFor(() => {
-      expect(clipboard.getText()).toBe('row-2/age');
+      expect(clipboard.getText()).toBe('row-2/data.age');
     });
 
     // --- 3. Range context menu ---
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+    cellFSM.selectTo({ rowId: 'row-2', field: 'data.age' });
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
 
-    const cellInRange = canvas.getByTestId('cell-row-1-name');
+    const cellInRange = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.pointer({ keys: '[MouseRight]', target: cellInRange });
 
     await waitFor(() => {
@@ -158,11 +158,11 @@ export const FullContextMenuWorkflow: Story = {
     await userEvent.keyboard('{Escape}');
 
     // cleanup: clear selection and focus
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await userEvent.keyboard('{Escape}');
 
     // --- 4. Edit from context menu ---
-    const editTargetCell = canvas.getByTestId('cell-row-1-name');
+    const editTargetCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(editTargetCell);
     await waitFor(() => {
       expect(editTargetCell).toHaveAttribute('tabindex', '0');
@@ -180,7 +180,7 @@ export const FullContextMenuWorkflow: Story = {
     await userEvent.click(editItem);
 
     await waitFor(() => {
-      expect(cellFSM.isCellEditing('row-1', 'name')).toBe(true);
+      expect(cellFSM.isCellEditing('row-1', 'data.name')).toBe(true);
     });
 
     await userEvent.keyboard('{Escape}');
@@ -189,18 +189,18 @@ export const FullContextMenuWorkflow: Story = {
     await userEvent.keyboard('{Escape}');
 
     // --- 5. Range focus restore ---
-    const anchorCell = canvas.getByTestId('cell-row-1-name');
+    const anchorCell = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(anchorCell);
     await waitFor(() => {
       expect(anchorCell).toHaveAttribute('tabindex', '0');
     });
 
-    cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+    cellFSM.selectTo({ rowId: 'row-2', field: 'data.age' });
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
 
-    const nonAnchorCell = canvas.getByTestId('cell-row-2-name');
+    const nonAnchorCell = canvas.getByTestId('cell-row-2-data.name');
     await userEvent.pointer({ keys: '[MouseRight]', target: nonAnchorCell });
 
     await waitFor(() => {
@@ -238,7 +238,7 @@ export const RightClickTransferBetweenCells: Story = {
     };
 
     // Focus cell A and open context menu
-    const cellA = canvas.getByTestId('cell-row-1-name');
+    const cellA = canvas.getByTestId('cell-row-1-data.name');
     await userEvent.click(cellA);
     await waitFor(() => {
       expect(cellA).toHaveAttribute('tabindex', '0');
@@ -251,7 +251,7 @@ export const RightClickTransferBetweenCells: Story = {
     });
 
     // Right-click cell B while menu on cell A is open
-    const cellB = canvas.getByTestId('cell-row-2-age');
+    const cellB = canvas.getByTestId('cell-row-2-data.age');
     await userEvent.pointer({ keys: '[MouseRight]', target: cellB });
 
     // Menu should now be open on cell B
@@ -263,7 +263,7 @@ export const RightClickTransferBetweenCells: Story = {
 
     // Cell B should be focused
     await waitFor(() => {
-      expect(cellFSM.isCellFocused('row-2', 'age')).toBe(true);
+      expect(cellFSM.isCellFocused('row-2', 'data.age')).toBe(true);
     });
 
     // Close and verify

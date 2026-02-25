@@ -12,9 +12,9 @@ describe('FilterModel', () => {
   beforeEach(() => {
     model = new FilterModel();
     model.init([
-      col({ field: 'name' }),
-      col({ field: 'age', fieldType: FilterFieldType.Number }),
-      col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+      col({ field: 'data.name' }),
+      col({ field: 'data.age', fieldType: FilterFieldType.Number }),
+      col({ field: 'data.active', fieldType: FilterFieldType.Boolean }),
       col({ field: 'createdAt', fieldType: FilterFieldType.DateTime }),
     ]);
   });
@@ -24,7 +24,7 @@ describe('FilterModel', () => {
       model.addCondition();
       expect(model.totalConditionCount).toBe(1);
       const condition = model.rootGroup.conditions[0];
-      expect(condition?.field).toBe('name');
+      expect(condition?.field).toBe('data.name');
       expect(condition?.operator).toBe(FilterOperator.Equals);
       expect(condition?.value).toBe('');
     });
@@ -33,22 +33,25 @@ describe('FilterModel', () => {
       model.addCondition();
       const id = model.rootGroup.conditions[0]!.id;
       model.updateCondition(id, { value: 'test' });
-      model.updateCondition(id, { field: 'active' });
+      model.updateCondition(id, { field: 'data.active' });
       const condition = model.rootGroup.conditions[0];
-      expect(condition?.field).toBe('active');
+      expect(condition?.field).toBe('data.active');
       expect(condition?.fieldType).toBe(FilterFieldType.Boolean);
       expect(condition?.operator).toBe(FilterOperator.IsTrue);
       expect(condition?.value).toBe('');
     });
 
     it('updateCondition field preserves value when same type', () => {
-      model.init([col({ field: 'first_name' }), col({ field: 'last_name' })]);
+      model.init([
+        col({ field: 'data.first_name' }),
+        col({ field: 'data.last_name' }),
+      ]);
       model.addCondition();
       const id = model.rootGroup.conditions[0]!.id;
       model.updateCondition(id, { value: 'Alice' });
-      model.updateCondition(id, { field: 'last_name' });
+      model.updateCondition(id, { field: 'data.last_name' });
       const condition = model.rootGroup.conditions[0];
-      expect(condition?.field).toBe('last_name');
+      expect(condition?.field).toBe('data.last_name');
       expect(condition?.value).toBe('Alice');
     });
 
@@ -76,7 +79,7 @@ describe('FilterModel', () => {
 
     it('default operator matches field type', () => {
       model.init([
-        col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+        col({ field: 'data.active', fieldType: FilterFieldType.Boolean }),
       ]);
       model.addCondition();
       expect(model.rootGroup.conditions[0]?.operator).toBe(
@@ -184,7 +187,9 @@ describe('FilterModel', () => {
     });
 
     it('invalid number value', () => {
-      model.init([col({ field: 'age', fieldType: FilterFieldType.Number })]);
+      model.init([
+        col({ field: 'data.age', fieldType: FilterFieldType.Number }),
+      ]);
       model.addCondition();
       const id = model.rootGroup.conditions[0]!.id;
       model.updateCondition(id, { value: 'abc' });
@@ -282,9 +287,9 @@ describe('FilterModel', () => {
     it('init resets dirty state', () => {
       model.addCondition();
       model.init([
-        col({ field: 'name' }),
-        col({ field: 'age', fieldType: FilterFieldType.Number }),
-        col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+        col({ field: 'data.name' }),
+        col({ field: 'data.age', fieldType: FilterFieldType.Number }),
+        col({ field: 'data.active', fieldType: FilterFieldType.Boolean }),
       ]);
       expect(model.hasPendingChanges).toBe(false);
     });
@@ -342,7 +347,7 @@ describe('FilterModel', () => {
       model.setOnApply(onApply);
       model.dispose();
       model = new FilterModel();
-      model.init([col({ field: 'name' })]);
+      model.init([col({ field: 'data.name' })]);
       model.addCondition();
       const id = model.rootGroup.conditions[0]!.id;
       model.updateCondition(id, { value: 'test' });
@@ -358,7 +363,7 @@ describe('FilterModel', () => {
       const c1 = model.rootGroup.conditions[0]!.id;
       const c2 = model.rootGroup.conditions[1]!.id;
       model.updateCondition(c1, { value: 'Alice' });
-      model.updateCondition(c2, { field: 'age' });
+      model.updateCondition(c2, { field: 'data.age' });
       model.updateCondition(c2, { value: '25' });
       model.apply();
       expect(onApply).toHaveBeenCalledWith({
@@ -371,7 +376,7 @@ describe('FilterModel', () => {
 
     it('hasFilterForField returns false before apply', () => {
       model.addCondition();
-      expect(model.hasFilterForField('name')).toBe(false);
+      expect(model.hasFilterForField('data.name')).toBe(false);
     });
 
     it('hasFilterForField returns true for root condition after apply', () => {
@@ -379,8 +384,8 @@ describe('FilterModel', () => {
       const id = model.rootGroup.conditions[0]!.id;
       model.updateCondition(id, { value: 'Alice' });
       model.apply();
-      expect(model.hasFilterForField('name')).toBe(true);
-      expect(model.hasFilterForField('age')).toBe(false);
+      expect(model.hasFilterForField('data.name')).toBe(true);
+      expect(model.hasFilterForField('data.age')).toBe(false);
     });
 
     it('hasFilterForField returns true for group condition after apply', () => {
@@ -388,11 +393,11 @@ describe('FilterModel', () => {
       const groupId = model.rootGroup.groups[0]!.id;
       model.addCondition(groupId);
       const condId = model.rootGroup.groups[0]!.conditions[0]!.id;
-      model.updateCondition(condId, { field: 'age' });
+      model.updateCondition(condId, { field: 'data.age' });
       model.updateCondition(condId, { value: '25' });
       model.apply();
-      expect(model.hasFilterForField('age')).toBe(true);
-      expect(model.hasFilterForField('name')).toBe(false);
+      expect(model.hasFilterForField('data.age')).toBe(true);
+      expect(model.hasFilterForField('data.name')).toBe(false);
     });
 
     it('hasFilterForField returns false after clearAll', () => {
@@ -401,13 +406,13 @@ describe('FilterModel', () => {
       model.updateCondition(id, { value: 'test' });
       model.apply();
       model.clearAll();
-      expect(model.hasFilterForField('name')).toBe(false);
+      expect(model.hasFilterForField('data.name')).toBe(false);
     });
 
     it('addConditionForField adds condition for specific field', () => {
-      model.addConditionForField('age');
+      model.addConditionForField('data.age');
       expect(model.totalConditionCount).toBe(1);
-      expect(model.rootGroup.conditions[0]?.field).toBe('age');
+      expect(model.rootGroup.conditions[0]?.field).toBe('data.age');
       expect(model.rootGroup.conditions[0]?.fieldType).toBe(
         FilterFieldType.Number,
       );
@@ -439,9 +444,9 @@ describe('FilterModel', () => {
       });
 
       model.init([
-        col({ field: 'name' }),
-        col({ field: 'age', fieldType: FilterFieldType.Number }),
-        col({ field: 'active', fieldType: FilterFieldType.Boolean }),
+        col({ field: 'data.name' }),
+        col({ field: 'data.age', fieldType: FilterFieldType.Number }),
+        col({ field: 'data.active', fieldType: FilterFieldType.Boolean }),
       ]);
       model.applySnapshot(snapshot);
       expect(model.totalConditionCount).toBe(3);
