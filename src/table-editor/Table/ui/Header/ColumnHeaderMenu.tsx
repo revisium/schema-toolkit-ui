@@ -29,8 +29,8 @@ export const ColumnHeaderMenu = observer(
     onClose,
   }: ColumnHeaderMenuProps) => {
     const canRemove = columnsModel.canRemoveColumn;
-    const availableFields = columnsModel.availableFieldsToAdd;
-    const hasAvailableFields = availableFields.length > 0;
+    const insertableFields = columnsModel.availableFieldsToInsert;
+    const hasInsertableFields = insertableFields.length > 0;
     const canMove =
       columnsModel.canMoveLeft(column.field) ||
       columnsModel.canMoveRight(column.field);
@@ -131,18 +131,18 @@ export const ColumnHeaderMenu = observer(
             {(canPinLeft || canPinRight) && <Menu.Separator />}
           </>
         )}
-        {hasAvailableFields && (
+        {hasInsertableFields && (
           <>
             <InsertColumnSubmenu
               label="Insert before"
               valuePrefix="before"
-              availableFields={availableFields}
+              availableFields={insertableFields}
               onSelect={handleInsertBefore}
             />
             <InsertColumnSubmenu
               label="Insert after"
               valuePrefix="after"
-              availableFields={availableFields}
+              availableFields={insertableFields}
               onSelect={handleInsertAfter}
             />
             <Menu.Separator />

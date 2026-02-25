@@ -78,6 +78,11 @@ export class ColumnsModel {
     );
   }
 
+  get availableFieldsToInsert(): ColumnSpec[] {
+    const visible = this._visibleFieldSet;
+    return this._allColumns.filter((col) => !visible.has(col.field));
+  }
+
   get availableSystemFieldsToAdd(): ColumnSpec[] {
     const visible = this._visibleFieldSet;
     return this._allColumns.filter(

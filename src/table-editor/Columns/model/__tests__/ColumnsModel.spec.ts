@@ -410,6 +410,42 @@ describe('ColumnsModel', () => {
       expect(fields).toContain('e');
     });
 
+    it('availableFieldsToInsert includes both regular and system hidden fields', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'sys1', isSystem: true }),
+        col({ field: 'sys2', isSystem: true }),
+        col({ field: 'c' }),
+      ]);
+      model.reorderColumns(['a', 'b']);
+      const available = model.availableFieldsToInsert;
+      const fields = available.map((c) => c.field);
+      expect(fields).toContain('sys1');
+      expect(fields).toContain('sys2');
+      expect(fields).toContain('c');
+      expect(fields).not.toContain('a');
+      expect(fields).not.toContain('b');
+    });
+
+    it('availableFieldsToInsert returns empty when all columns visible', () => {
+      model.init([col({ field: 'a' }), col({ field: 'sys', isSystem: true })]);
+      model.addAll();
+      expect(model.availableFieldsToInsert).toHaveLength(0);
+    });
+
+    it('availableFieldsToInsert includes system fields when only system hidden', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'sys', isSystem: true }),
+      ]);
+      model.reorderColumns(['a', 'b']);
+      const available = model.availableFieldsToInsert;
+      expect(available).toHaveLength(1);
+      expect(available[0]?.field).toBe('sys');
+    });
+
     it('availableSystemFieldsToAdd returns hidden system fields', () => {
       model.init([
         col({ field: 'a' }),
