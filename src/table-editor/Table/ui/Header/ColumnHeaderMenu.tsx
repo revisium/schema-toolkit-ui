@@ -137,12 +137,14 @@ export const ColumnHeaderMenu = observer(
               label="Insert before"
               valuePrefix="before"
               availableFields={insertableFields}
+              allColumns={columnsModel.allColumns}
               onSelect={handleInsertBefore}
             />
             <InsertColumnSubmenu
               label="Insert after"
               valuePrefix="after"
               availableFields={insertableFields}
+              allColumns={columnsModel.allColumns}
               onSelect={handleInsertAfter}
             />
             <Menu.Separator />

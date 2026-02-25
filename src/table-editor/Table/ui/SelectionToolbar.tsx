@@ -18,7 +18,7 @@ export const SelectionToolbar = observer(
     return (
       <ActionBar.Root open={selection.isSelectionMode}>
         <Portal>
-          <ActionBar.Positioner>
+          <ActionBar.Positioner zIndex={5}>
             <ActionBar.Content data-testid="selection-toolbar">
               <ActionBar.SelectionTrigger>
                 {selection.selectedCount} selected

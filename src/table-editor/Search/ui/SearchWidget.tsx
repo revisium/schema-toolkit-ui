@@ -80,7 +80,10 @@ export const SearchWidget = observer(({ model }: SearchWidgetProps) => {
           right="0"
           top="50%"
           transform="translateY(-50%)"
-          onClick={() => model.clear()}
+          onClick={() => {
+            model.clear();
+            setExpanded(false);
+          }}
           color="gray.400"
           _hover={{ color: 'black' }}
         >

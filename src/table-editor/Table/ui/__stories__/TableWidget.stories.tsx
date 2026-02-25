@@ -350,6 +350,7 @@ function setAllColumnWidths(
   for (const field of fields) {
     columnsModel.setColumnWidth(field, width);
   }
+  columnsModel.commitColumnWidth();
 }
 
 export const PinnedLeftColumn: Story = {

@@ -137,10 +137,34 @@ export const SubFieldsAvailableViaAddColumn: Story = {
       expect(state.core.isBootstrapping).toBe(false);
     });
 
+    state.core.columns.hideColumn('data.avatar');
+
+    await waitFor(() => {
+      expect(
+        state.core.columns.visibleColumns.some(
+          (c) => c.field === 'data.avatar',
+        ),
+      ).toBe(false);
+    });
+
     const visibleBefore = state.core.columns.visibleColumns.length;
 
     const addButton = canvas.getByTestId('add-column-button');
     await userEvent.click(addButton);
+
+    const fileGroup = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-testid="file-group-data.avatar"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    expect(
+      document.querySelector('[data-value="data.avatar.status"]'),
+    ).toBeNull();
+
+    await userEvent.click(fileGroup);
 
     const statusItem = await waitFor(() => {
       const el = document.querySelector(
@@ -154,6 +178,62 @@ export const SubFieldsAvailableViaAddColumn: Story = {
 
     await waitFor(() => {
       expect(state.core.columns.visibleColumns.length).toBe(visibleBefore + 1);
+      expect(
+        state.core.columns.visibleColumns.some(
+          (c) => c.field === 'data.avatar.status',
+        ),
+      ).toBe(true);
+    });
+  },
+};
+
+export const SubFieldsGroupedWhenParentVisible: Story = {
+  tags: ['test'],
+  render: () => <Wrapper />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const state = (window as any).__testState as TableEditorStoryState;
+
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
+
+    const hasAvatar = state.core.columns.visibleColumns.some(
+      (c) => c.field === 'data.avatar',
+    );
+    expect(hasAvatar).toBe(true);
+
+    const addButton = canvas.getByTestId('add-column-button');
+    await userEvent.click(addButton);
+
+    const fileGroup = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-testid="file-group-data.avatar"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    expect(
+      document.querySelector('[data-value="data.avatar.status"]'),
+    ).toBeNull();
+
+    await userEvent.click(fileGroup);
+
+    const statusItem = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-value="data.avatar.status"]',
+      ) as HTMLElement;
+      expect(el).toBeTruthy();
+      return el;
+    });
+
+    await userEvent.click(statusItem);
+
+    await waitFor(() => {
       expect(
         state.core.columns.visibleColumns.some(
           (c) => c.field === 'data.avatar.status',
