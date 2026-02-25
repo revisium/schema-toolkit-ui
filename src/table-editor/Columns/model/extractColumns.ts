@@ -124,7 +124,9 @@ function resolveFileRefColumns(
       const subFieldPath = buildFieldPath(fieldPath, subField.name());
       const fieldType = NODE_TYPE_TO_FIELD_TYPE[subField.nodeType()];
       if (fieldType) {
-        result.push(createColumn(subFieldPath, subField, fieldType));
+        const subCol = createColumn(subFieldPath, subField, fieldType);
+        subCol.parentFileField = fieldPath;
+        result.push(subCol);
       }
     }
   }

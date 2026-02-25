@@ -11,6 +11,7 @@ export interface ColumnSpec {
   hasFormula: boolean;
   isSortable: boolean;
   foreignKeyTableId?: string;
+  parentFileField?: string;
 }
 
 export type PinSide = 'left' | 'right';
