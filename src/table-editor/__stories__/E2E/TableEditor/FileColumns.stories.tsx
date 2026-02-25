@@ -163,6 +163,60 @@ export const SubFieldsAvailableViaAddColumn: Story = {
   },
 };
 
+export const FileColumnNoSortFilterInMenu: Story = {
+  tags: ['test'],
+  render: () => <Wrapper />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      expect((window as any).__testState).toBeDefined();
+    });
+    const state = (window as any).__testState as TableEditorStoryState;
+
+    await waitFor(() => {
+      expect(state.core.isBootstrapping).toBe(false);
+    });
+
+    const fileHeader = canvas.getByTestId('header-data.avatar');
+    await userEvent.click(fileHeader);
+
+    await waitFor(() => {
+      const menuContent = document.querySelector('[role="menu"]');
+      expect(menuContent).toBeTruthy();
+    });
+
+    const menuItems = document.querySelectorAll(
+      '[role="menu"] [role="menuitem"]',
+    );
+    const menuTexts = Array.from(menuItems).map((el) => el.textContent);
+    expect(menuTexts.some((t) => t?.includes('Sort'))).toBe(false);
+    expect(menuTexts.some((t) => t?.includes('Add filter'))).toBe(false);
+    expect(menuTexts.some((t) => t?.includes('Hide column'))).toBe(true);
+    expect(menuTexts.some((t) => t?.includes('Copy path'))).toBe(true);
+
+    await userEvent.keyboard('{Escape}');
+
+    await waitFor(() => {
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
+
+    const nameHeader = canvas.getByTestId('header-data.name');
+    await userEvent.click(nameHeader);
+
+    await waitFor(() => {
+      const menuContent = document.querySelector('[role="menu"]');
+      expect(menuContent).toBeTruthy();
+    });
+
+    const nameMenuItems = document.querySelectorAll(
+      '[role="menu"] [role="menuitem"]',
+    );
+    const nameMenuTexts = Array.from(nameMenuItems).map((el) => el.textContent);
+    expect(nameMenuTexts.some((t) => t?.includes('Sort'))).toBe(true);
+    expect(nameMenuTexts.some((t) => t?.includes('Add filter'))).toBe(true);
+  },
+};
+
 export const SubFieldsNotVisibleByDefault: Story = {
   tags: ['test'],
   render: () => <Wrapper />,

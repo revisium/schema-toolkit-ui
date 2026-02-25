@@ -18,6 +18,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.age',
@@ -26,6 +27,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.active',
@@ -34,6 +36,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.email',
@@ -42,6 +45,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'createdAt',
@@ -50,6 +54,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     isSystem: true,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
 ];
 

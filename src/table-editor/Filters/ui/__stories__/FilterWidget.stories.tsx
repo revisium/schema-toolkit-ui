@@ -16,6 +16,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.age',
@@ -24,6 +25,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.active',
@@ -32,6 +34,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'createdAt',
@@ -40,6 +43,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: true,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'updatedAt',
@@ -48,6 +52,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: true,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.address.city.name',
@@ -56,6 +61,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.metadata.nested.sub.value',
@@ -64,6 +70,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.stats.monthly.revenue',
@@ -72,6 +79,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
 ];
 

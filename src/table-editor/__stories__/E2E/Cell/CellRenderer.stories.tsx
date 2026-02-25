@@ -24,6 +24,7 @@ function createColumn(field: string, fieldType: FilterFieldType): ColumnSpec {
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   };
 }
 

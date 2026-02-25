@@ -82,13 +82,13 @@ export const ColumnHeaderMenu = observer(
 
     return (
       <Menu.Content minW="180px">
-        {sortModel && !column.hasFormula && (
+        {sortModel && column.isSortable && (
           <>
             <SortSubmenu field={column.field} sortModel={sortModel} />
             <Menu.Separator />
           </>
         )}
-        {filterModel && !column.hasFormula && (
+        {filterModel && column.isSortable && (
           <>
             <Menu.Item value="add-filter" onClick={handleAddFilter}>
               <LuFilter />

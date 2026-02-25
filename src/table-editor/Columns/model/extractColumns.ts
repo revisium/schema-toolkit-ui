@@ -91,14 +91,17 @@ function resolveRefColumn(
 
   const systemDef = SYSTEM_FIELD_BY_REF.get(refValue);
   if (systemDef) {
+    const isDeprecated = child.metadata().deprecated ?? false;
+    const hasFormula = child.hasFormula();
     return {
       field: systemDef.id,
       label: systemDef.label,
       fieldType: systemDef.fieldType,
       isSystem: true,
       systemFieldId: systemDef.id,
-      isDeprecated: child.metadata().deprecated ?? false,
-      hasFormula: child.hasFormula(),
+      isDeprecated,
+      hasFormula,
+      isSortable: !isDeprecated && !hasFormula,
     };
   }
 
@@ -144,12 +147,16 @@ function createColumn(
   child: SchemaNode,
   fieldType: FilterFieldType,
 ): ColumnSpec {
+  const isDeprecated = child.metadata().deprecated ?? false;
+  const hasFormula = child.hasFormula();
   return {
     field: fieldPath,
     label: stripDataPrefix(fieldPath),
     fieldType,
     isSystem: false,
-    isDeprecated: child.metadata().deprecated ?? false,
-    hasFormula: child.hasFormula(),
+    isDeprecated,
+    hasFormula,
+    isSortable:
+      !isDeprecated && !hasFormula && fieldType !== FilterFieldType.File,
   };
 }

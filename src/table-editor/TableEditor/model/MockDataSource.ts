@@ -150,8 +150,7 @@ export class MockDataSource implements ITableDataSource {
 
       const row = this._allRows.find((r) => r.rowId === patch.rowId);
       if (
-        row &&
-        row.data &&
+        row?.data &&
         typeof row.data === 'object' &&
         !Array.isArray(row.data)
       ) {

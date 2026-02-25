@@ -10,6 +10,7 @@ export function testCol(
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
     ...overrides,
   };
 }

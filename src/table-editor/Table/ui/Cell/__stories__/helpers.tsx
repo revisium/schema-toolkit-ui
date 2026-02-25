@@ -67,6 +67,7 @@ function createColumn(
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
     ...options,
   };
 }

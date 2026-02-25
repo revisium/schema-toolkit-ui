@@ -18,6 +18,7 @@ const TEST_FIELDS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.age',
@@ -26,6 +27,7 @@ const TEST_FIELDS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'data.active',
@@ -34,6 +36,7 @@ const TEST_FIELDS: ColumnSpec[] = [
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
 ];
 

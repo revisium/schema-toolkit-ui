@@ -32,6 +32,7 @@ function createColumn(
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: fieldType !== FilterFieldType.File,
     ...overrides,
   };
 }
