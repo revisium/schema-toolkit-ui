@@ -63,7 +63,11 @@ export const FullSearchWorkflow: Story = {
     const clearButton = canvas.getByLabelText('Clear');
     await userEvent.click(clearButton);
 
-    expect(input).toHaveValue('');
+    expect(model.query).toBe('');
+
+    await waitFor(() => {
+      expect(canvas.getByTestId('search-trigger')).toBeVisible();
+    });
 
     await waitFor(
       () => {
@@ -71,5 +75,27 @@ export const FullSearchWorkflow: Story = {
       },
       { timeout: 1000 },
     );
+  },
+};
+
+export const ClearCollapsesToMini: Story = {
+  tags: ['test'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const trigger = canvas.getByTestId('search-trigger');
+    await userEvent.click(trigger);
+
+    const input = await waitFor(() => canvas.getByTestId('search-input'));
+    await userEvent.type(input, 'hello');
+    expect(input).toHaveValue('hello');
+
+    const clearButton = canvas.getByLabelText('Clear');
+    await userEvent.click(clearButton);
+
+    await waitFor(() => {
+      expect(canvas.getByTestId('search-trigger')).toBeVisible();
+    });
+    expect(canvas.queryByTestId('search-input')).toBeNull();
   },
 };

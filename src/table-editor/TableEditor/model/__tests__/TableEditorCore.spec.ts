@@ -100,6 +100,42 @@ describe('TableEditorCore', () => {
       expect(core.rowCount.totalCount).toBe(3);
       expect(core.rowCount.baseTotalCount).toBe(3);
     });
+
+    it('primitive root schema shows data column by default', async () => {
+      const dataSource = new MockDataSource({
+        dataSchema: str(),
+        rows: [
+          MockDataSource.createRow('row-1', 'hello'),
+          MockDataSource.createRow('row-2', 'world'),
+        ],
+      });
+      const core = new TableEditorCore(dataSource, { tableId: 'prim' });
+      await waitForBootstrap(core);
+
+      const visibleFields = core.columns.visibleColumns.map((c) => c.field);
+      expect(visibleFields).toContain('data');
+    });
+
+    it('primitive root data column appears in add menu when hidden by view', async () => {
+      const dataSource = new MockDataSource({
+        dataSchema: str(),
+        rows: [MockDataSource.createRow('row-1', 'hello')],
+        viewState: {
+          columns: [{ field: 'id' }],
+          sorts: [],
+          filters: null,
+          search: '',
+        },
+      });
+      const core = new TableEditorCore(dataSource, { tableId: 'prim' });
+      await waitForBootstrap(core);
+
+      const visibleFields = core.columns.visibleColumns.map((c) => c.field);
+      expect(visibleFields).toEqual(['id']);
+
+      const addable = core.columns.availableFieldsToAdd.map((c) => c.field);
+      expect(addable).toContain('data');
+    });
   });
 
   describe('view state', () => {

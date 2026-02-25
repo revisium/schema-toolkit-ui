@@ -158,6 +158,28 @@ describe('selectDefaultColumns', () => {
     expect(result.map((c) => c.field)).toEqual(['id', 'name', 'email', 'city']);
   });
 
+  it('primitive root schema: id + data column selected', () => {
+    const columns = [
+      col({ field: 'id', isSystem: true }),
+      col({
+        field: 'createdAt',
+        isSystem: true,
+        fieldType: FilterFieldType.DateTime,
+      }),
+      col({
+        field: 'updatedAt',
+        isSystem: true,
+        fieldType: FilterFieldType.DateTime,
+      }),
+      col({ field: 'data' }),
+    ];
+    const result = selectDefaultColumns(columns);
+    const fields = result.map((c) => c.field);
+    expect(fields).toContain('id');
+    expect(fields).toContain('data');
+    expect(fields).toHaveLength(2);
+  });
+
   it('excludes file sub-fields from defaults', () => {
     const columns = [
       col({ field: 'name' }),

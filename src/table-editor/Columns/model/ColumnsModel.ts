@@ -54,6 +54,10 @@ export class ColumnsModel {
 
   // --- Computed Getters ---
 
+  get allColumns(): ColumnSpec[] {
+    return this._allColumns;
+  }
+
   get visibleColumns(): ColumnSpec[] {
     const lookup = this._columnLookup;
     const result: ColumnSpec[] = [];
