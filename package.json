@@ -1,6 +1,6 @@
 {
   "name": "@revisium/schema-toolkit-ui",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "React UI components for JSON Schema manipulation and data editing",
   "keywords": [
     "json-schema",
