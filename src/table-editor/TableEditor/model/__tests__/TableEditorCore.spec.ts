@@ -120,7 +120,12 @@ describe('TableEditorCore', () => {
       const dataSource = new MockDataSource({
         dataSchema: str(),
         rows: [MockDataSource.createRow('row-1', 'hello')],
-        viewState: { columns: [{ field: 'id' }], sorts: [], filters: null, search: '' },
+        viewState: {
+          columns: [{ field: 'id' }],
+          sorts: [],
+          filters: null,
+          search: '',
+        },
       });
       const core = new TableEditorCore(dataSource, { tableId: 'prim' });
       await waitForBootstrap(core);
