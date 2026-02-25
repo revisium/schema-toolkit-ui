@@ -27,13 +27,19 @@ export function groupFileFields(
 
   for (const col of columns) {
     if (col.fieldType === FilterFieldType.File) {
-      const group: FileFieldGroup = {
-        parent: col,
-        children: [],
-        parentVisible: false,
-      };
-      groups.set(col.field, group);
-      result.push(group);
+      const existing = groups.get(col.field);
+      if (existing) {
+        existing.parent = col;
+        existing.parentVisible = false;
+      } else {
+        const group: FileFieldGroup = {
+          parent: col,
+          children: [],
+          parentVisible: false,
+        };
+        groups.set(col.field, group);
+        result.push(group);
+      }
     } else if (col.parentFileField) {
       let group = groups.get(col.parentFileField);
       if (!group) {
