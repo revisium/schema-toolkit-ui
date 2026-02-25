@@ -83,7 +83,75 @@ describe('buildWhereClause', () => {
       ],
     });
     expect(buildWhereClause(group)).toEqual({
-      id: { string_contains: 'abc' },
+      id: { contains: 'abc' },
+    });
+  });
+
+  it('system field (id equals)', () => {
+    const group = createGroup({
+      conditions: [
+        {
+          id: 'c-1',
+          field: 'id',
+          fieldType: FilterFieldType.String,
+          operator: FilterOperator.Equals,
+          value: '502',
+        },
+      ],
+    });
+    expect(buildWhereClause(group)).toEqual({
+      id: { equals: '502' },
+    });
+  });
+
+  it('system field (id not contains)', () => {
+    const group = createGroup({
+      conditions: [
+        {
+          id: 'c-1',
+          field: 'id',
+          fieldType: FilterFieldType.String,
+          operator: FilterOperator.NotContains,
+          value: 'abc',
+        },
+      ],
+    });
+    expect(buildWhereClause(group)).toEqual({
+      id: { not: { contains: 'abc' } },
+    });
+  });
+
+  it('system field (createdId starts with)', () => {
+    const group = createGroup({
+      conditions: [
+        {
+          id: 'c-1',
+          field: 'createdId',
+          fieldType: FilterFieldType.String,
+          operator: FilterOperator.StartsWith,
+          value: 'user',
+        },
+      ],
+    });
+    expect(buildWhereClause(group)).toEqual({
+      createdId: { startsWith: 'user' },
+    });
+  });
+
+  it('system field (versionId ends with)', () => {
+    const group = createGroup({
+      conditions: [
+        {
+          id: 'c-1',
+          field: 'versionId',
+          fieldType: FilterFieldType.String,
+          operator: FilterOperator.EndsWith,
+          value: 'xyz',
+        },
+      ],
+    });
+    expect(buildWhereClause(group)).toEqual({
+      versionId: { endsWith: 'xyz' },
     });
   });
 
