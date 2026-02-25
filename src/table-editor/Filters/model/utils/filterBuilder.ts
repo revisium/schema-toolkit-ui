@@ -21,6 +21,7 @@ function buildOperatorClause(
   operator: FilterOperator,
   value: string,
   fieldType: FilterFieldType,
+  isSystemField: boolean,
 ): Record<string, unknown> {
   const parsed = parseValue(value, fieldType);
 
@@ -30,13 +31,17 @@ function buildOperatorClause(
     case FilterOperator.NotEquals:
       return { not: { equals: parsed } };
     case FilterOperator.Contains:
-      return { string_contains: value };
+      return isSystemField ? { contains: value } : { string_contains: value };
     case FilterOperator.NotContains:
-      return { not: { string_contains: value } };
+      return isSystemField
+        ? { not: { contains: value } }
+        : { not: { string_contains: value } };
     case FilterOperator.StartsWith:
-      return { string_starts_with: value };
+      return isSystemField
+        ? { startsWith: value }
+        : { string_starts_with: value };
     case FilterOperator.EndsWith:
-      return { string_ends_with: value };
+      return isSystemField ? { endsWith: value } : { string_ends_with: value };
     case FilterOperator.Gt:
       return { gt: parsed };
     case FilterOperator.Gte:
@@ -86,13 +91,16 @@ function buildConditionClause(
     };
   }
 
+  const isSystemField = SYSTEM_FIELD_IDS.has(condition.field);
+
   const opClause = buildOperatorClause(
     condition.operator,
     condition.value,
     condition.fieldType,
+    isSystemField,
   );
 
-  if (SYSTEM_FIELD_IDS.has(condition.field)) {
+  if (isSystemField) {
     return { [condition.field]: opClause };
   }
 
