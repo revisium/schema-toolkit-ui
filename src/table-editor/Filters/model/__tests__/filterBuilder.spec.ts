@@ -24,7 +24,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Equals,
           value: 'Alice',
@@ -41,7 +41,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'age',
+          field: 'data.age',
           fieldType: FilterFieldType.Number,
           operator: FilterOperator.Gt,
           value: '18',
@@ -58,7 +58,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'active',
+          field: 'data.active',
           fieldType: FilterFieldType.Boolean,
           operator: FilterOperator.IsTrue,
           value: '',
@@ -92,14 +92,14 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Equals,
           value: 'Alice',
         },
         {
           id: 'c-2',
-          field: 'age',
+          field: 'data.age',
           fieldType: FilterFieldType.Number,
           operator: FilterOperator.Gte,
           value: '21',
@@ -120,14 +120,14 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Equals,
           value: 'Alice',
         },
         {
           id: 'c-2',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Equals,
           value: 'Bob',
@@ -164,7 +164,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Search,
           value: 'hello world',
@@ -188,7 +188,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.NotEquals,
           value: 'Alice',
@@ -205,7 +205,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.NotContains,
           value: 'test',
@@ -222,7 +222,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.StartsWith,
           value: 'Al',
@@ -239,7 +239,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.EndsWith,
           value: 'ice',
@@ -256,7 +256,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'age',
+          field: 'data.age',
           fieldType: FilterFieldType.Number,
           operator: FilterOperator.Lte,
           value: '65',
@@ -273,7 +273,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.IsNotEmpty,
           value: '',
@@ -290,7 +290,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'active',
+          field: 'data.active',
           fieldType: FilterFieldType.Boolean,
           operator: FilterOperator.IsFalse,
           value: '',
@@ -351,7 +351,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Equals,
           value: '',
@@ -366,7 +366,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Equals,
           value: 'Alice',
@@ -379,14 +379,14 @@ describe('buildWhereClause', () => {
           conditions: [
             {
               id: 'c-2',
-              field: 'age',
+              field: 'data.age',
               fieldType: FilterFieldType.Number,
               operator: FilterOperator.Gt,
               value: '18',
             },
             {
               id: 'c-3',
-              field: 'age',
+              field: 'data.age',
               fieldType: FilterFieldType.Number,
               operator: FilterOperator.Lt,
               value: '65',
@@ -413,7 +413,7 @@ describe('buildWhereClause', () => {
       conditions: [
         {
           id: 'c-1',
-          field: 'name',
+          field: 'data.name',
           fieldType: FilterFieldType.String,
           operator: FilterOperator.Equals,
           value: 'Alice',
@@ -423,6 +423,23 @@ describe('buildWhereClause', () => {
     });
     expect(buildWhereClause(group)).toEqual({
       data: { path: 'name', equals: 'Alice' },
+    });
+  });
+
+  it('primitive root field produces empty path', () => {
+    const group = createGroup({
+      conditions: [
+        {
+          id: 'c-1',
+          field: 'data',
+          fieldType: FilterFieldType.String,
+          operator: FilterOperator.Equals,
+          value: 'hello',
+        },
+      ],
+    });
+    expect(buildWhereClause(group)).toEqual({
+      data: { path: '', equals: 'hello' },
     });
   });
 });

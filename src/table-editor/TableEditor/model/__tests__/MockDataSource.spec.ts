@@ -147,16 +147,14 @@ describe('MockDataSource', () => {
 
       const result = await ds.fetchRows({
         where: null,
-        orderBy: [{ field: 'data.name', direction: 'asc' }],
+        orderBy: [{ field: 'name', direction: 'asc' }],
         search: '',
         first: 50,
         after: null,
       });
-      expect(result.rows.map((r) => r.data.name)).toEqual([
-        'Alice',
-        'Bob',
-        'Charlie',
-      ]);
+      expect(
+        result.rows.map((r) => (r.data as Record<string, unknown>).name),
+      ).toEqual(['Alice', 'Bob', 'Charlie']);
     });
 
     it('sorts descending', async () => {
@@ -180,12 +178,14 @@ describe('MockDataSource', () => {
 
       const result = await ds.fetchRows({
         where: null,
-        orderBy: [{ field: 'data.age', direction: 'desc' }],
+        orderBy: [{ field: 'age', direction: 'desc' }],
         search: '',
         first: 50,
         after: null,
       });
-      expect(result.rows.map((r) => r.data.age)).toEqual([35, 30, 25]);
+      expect(
+        result.rows.map((r) => (r.data as Record<string, unknown>).age),
+      ).toEqual([35, 30, 25]);
     });
 
     it('logs queries', async () => {

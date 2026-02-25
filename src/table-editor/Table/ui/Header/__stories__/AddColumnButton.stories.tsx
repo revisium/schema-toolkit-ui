@@ -12,36 +12,40 @@ ensureReactivityProvider();
 
 const ALL_COLUMNS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'email',
+    field: 'data.email',
     label: 'Email',
     fieldType: FilterFieldType.String,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'createdAt',
@@ -50,6 +54,7 @@ const ALL_COLUMNS: ColumnSpec[] = [
     isSystem: true,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
 ];
 

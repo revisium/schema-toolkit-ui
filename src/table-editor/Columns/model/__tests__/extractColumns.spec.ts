@@ -66,6 +66,7 @@ describe('extractColumns', () => {
         isSystem: false,
         isDeprecated: false,
         hasFormula: false,
+        isSortable: true,
       },
     ]);
   });
@@ -134,6 +135,7 @@ describe('extractColumns', () => {
         isSystem: false,
         isDeprecated: false,
         hasFormula: false,
+        isSortable: true,
       },
     ]);
   });
@@ -194,6 +196,22 @@ describe('extractColumns', () => {
       });
     });
 
+    it('file column is not sortable, sub-fields are sortable', () => {
+      const root = parse(
+        obj({
+          avatar: ref(SystemSchemaIds.File),
+        }),
+      );
+      const columns = extractColumns(root);
+      const fileCol = columns.find((c) => c.field === 'avatar');
+      expect(fileCol).toMatchObject({ isSortable: false });
+
+      const subFields = columns.filter((c) => c.field.startsWith('avatar.'));
+      for (const col of subFields) {
+        expect(col.isSortable).toBe(true);
+      }
+    });
+
     it('sub-fields are not system columns', () => {
       const root = parse(
         obj({
@@ -224,6 +242,7 @@ describe('extractColumns', () => {
         systemFieldId: SystemFieldId.CreatedAt,
         isDeprecated: false,
         hasFormula: false,
+        isSortable: true,
       },
     ]);
   });
@@ -244,6 +263,7 @@ describe('extractColumns', () => {
         systemFieldId: SystemFieldId.Id,
         isDeprecated: false,
         hasFormula: false,
+        isSortable: true,
       },
     ]);
   });
@@ -263,6 +283,7 @@ describe('extractColumns', () => {
         isSystem: false,
         isDeprecated: true,
         hasFormula: false,
+        isSortable: false,
       },
     ]);
   });
@@ -283,6 +304,7 @@ describe('extractColumns', () => {
       isSystem: false,
       isDeprecated: false,
       hasFormula: true,
+      isSortable: false,
     });
   });
 

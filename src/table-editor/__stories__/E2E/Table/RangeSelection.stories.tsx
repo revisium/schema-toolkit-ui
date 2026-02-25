@@ -69,36 +69,36 @@ export const FullRangeSelectionWorkflow: Story = {
     const { cellFSM } = state;
 
     // --- Shift-click selection ---
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+    cellFSM.selectTo({ rowId: 'row-2', field: 'data.age' });
 
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
-    expect(cellFSM.isCellInSelection('row-1', 'name')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-1', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'name')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-3', 'name')).toBe(false);
-    expect(cellFSM.isCellInSelection('row-1', 'active')).toBe(false);
+    expect(cellFSM.isCellInSelection('row-1', 'data.name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-1', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-3', 'data.name')).toBe(false);
+    expect(cellFSM.isCellInSelection('row-1', 'data.active')).toBe(false);
 
-    await userEvent.click(canvas.getByTestId('cell-row-3-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-3-data.name'));
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(false);
     });
     await userEvent.keyboard('{Escape}');
 
     // --- Shift-arrow selection ---
-    await userEvent.click(canvas.getByTestId('cell-row-2-age'));
+    await userEvent.click(canvas.getByTestId('cell-row-2-data.age'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-age')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-2-data.age')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -108,14 +108,14 @@ export const FullRangeSelectionWorkflow: Story = {
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
-    expect(cellFSM.isCellInSelection('row-2', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-3', 'age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-3', 'data.age')).toBe(true);
 
     await userEvent.keyboard('{Shift>}{ArrowRight}{/Shift}');
-    expect(cellFSM.isCellInSelection('row-2', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'active')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-3', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-3', 'active')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.active')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-3', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-3', 'data.active')).toBe(true);
 
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => {
@@ -124,27 +124,27 @@ export const FullRangeSelectionWorkflow: Story = {
     await userEvent.keyboard('{Escape}');
 
     // --- Mouse drag ---
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    cellFSM.dragStart({ rowId: 'row-1', field: 'name' });
-    cellFSM.dragExtend({ rowId: 'row-2', field: 'age' });
+    cellFSM.dragStart({ rowId: 'row-1', field: 'data.name' });
+    cellFSM.dragExtend({ rowId: 'row-2', field: 'data.age' });
 
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
-    expect(cellFSM.isCellInSelection('row-1', 'name')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-1', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'name')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-3', 'name')).toBe(false);
+    expect(cellFSM.isCellInSelection('row-1', 'data.name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-1', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-3', 'data.name')).toBe(false);
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(false);
     });
@@ -153,15 +153,15 @@ export const FullRangeSelectionWorkflow: Story = {
     // --- Copy range ---
     const clipboard = mockClipboard();
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+    cellFSM.selectTo({ rowId: 'row-2', field: 'data.age' });
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
@@ -171,21 +171,21 @@ export const FullRangeSelectionWorkflow: Story = {
       expect(clipboard.getText()).toBe('Alice\t30\nBob\t25');
     });
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await userEvent.keyboard('{Escape}');
 
     // --- Paste range ---
     clipboard.setText('X\t99\nY\t88');
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+    cellFSM.selectTo({ rowId: 'row-2', field: 'data.age' });
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
@@ -193,32 +193,34 @@ export const FullRangeSelectionWorkflow: Story = {
     await userEvent.keyboard('{Control>}v{/Control}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('X');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('X');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('99');
+      expect(canvas.getByTestId('cell-row-1-data.age')).toHaveTextContent('99');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('Y');
+      expect(canvas.getByTestId('cell-row-2-data.name')).toHaveTextContent('Y');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-age')).toHaveTextContent('88');
+      expect(canvas.getByTestId('cell-row-2-data.age')).toHaveTextContent('88');
     });
-    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
+    expect(canvas.getByTestId('cell-row-3-data.name')).toHaveTextContent(
+      'Charlie',
+    );
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await userEvent.keyboard('{Escape}');
 
     // --- Delete range ---
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
     });
 
-    cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+    cellFSM.selectTo({ rowId: 'row-2', field: 'data.age' });
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
@@ -226,53 +228,55 @@ export const FullRangeSelectionWorkflow: Story = {
     await userEvent.keyboard('{Delete}');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-age')).toHaveTextContent('0');
+      expect(canvas.getByTestId('cell-row-1-data.age')).toHaveTextContent('0');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-name')).toHaveTextContent('');
+      expect(canvas.getByTestId('cell-row-2-data.name')).toHaveTextContent('');
     });
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-2-age')).toHaveTextContent('0');
+      expect(canvas.getByTestId('cell-row-2-data.age')).toHaveTextContent('0');
     });
-    expect(canvas.getByTestId('cell-row-3-name')).toHaveTextContent('Charlie');
-    expect(canvas.getByTestId('cell-row-3-age')).toHaveTextContent('35');
+    expect(canvas.getByTestId('cell-row-3-data.name')).toHaveTextContent(
+      'Charlie',
+    );
+    expect(canvas.getByTestId('cell-row-3-data.age')).toHaveTextContent('35');
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await userEvent.keyboard('{Escape}');
 
     // --- Drag after column reorder ---
-    state.columnsModel.moveColumnToStart('active');
+    state.columnsModel.moveColumnToStart('data.active');
 
     await waitFor(() => {
-      expect(canvas.getByTestId('header-active')).toBeVisible();
+      expect(canvas.getByTestId('header-data.active')).toBeVisible();
     });
 
-    cellFSM.dragStart({ rowId: 'row-1', field: 'active' });
-    cellFSM.dragExtend({ rowId: 'row-2', field: 'age' });
+    cellFSM.dragStart({ rowId: 'row-1', field: 'data.active' });
+    cellFSM.dragExtend({ rowId: 'row-2', field: 'data.age' });
 
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(true);
     });
-    expect(cellFSM.isCellInSelection('row-1', 'active')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-1', 'name')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-1', 'age')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'active')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'name')).toBe(true);
-    expect(cellFSM.isCellInSelection('row-2', 'age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-1', 'data.active')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-1', 'data.name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-1', 'data.age')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.active')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.name')).toBe(true);
+    expect(cellFSM.isCellInSelection('row-2', 'data.age')).toBe(true);
 
-    await userEvent.click(canvas.getByTestId('cell-row-1-active'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.active'));
     await waitFor(() => {
       expect(cellFSM.hasSelection).toBe(false);
     });
     await userEvent.keyboard('{Escape}');
 
     // --- Clear on edit ---
-    await userEvent.click(canvas.getByTestId('cell-row-1-name'));
+    await userEvent.click(canvas.getByTestId('cell-row-1-data.name'));
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveAttribute(
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveAttribute(
         'tabindex',
         '0',
       );
@@ -299,7 +303,7 @@ export const FullRangeSelectionWorkflow: Story = {
 
     charInput.blur();
     await waitFor(() => {
-      expect(canvas.getByTestId('cell-row-1-name')).toHaveTextContent('Z');
+      expect(canvas.getByTestId('cell-row-1-data.name')).toHaveTextContent('Z');
     });
 
     await userEvent.keyboard('{Escape}');

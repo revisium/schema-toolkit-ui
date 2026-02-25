@@ -35,6 +35,10 @@ import {
   SYSTEM_FIELDS_SCHEMA,
   SYSTEM_FIELDS_ROWS,
   generateManyRows,
+  PRIMITIVE_STRING_SCHEMA,
+  PRIMITIVE_STRING_ROWS_DATA,
+  NAME_CONFLICT_SCHEMA,
+  NAME_CONFLICT_ROWS_DATA,
 } from './tableEditorTestData.js';
 
 ensureReactivityProvider();
@@ -370,6 +374,44 @@ export const ManyRows: Story = {
         spyOnDataSource(s.dataSource);
         return s;
       });
+
+      return <AdminLayoutWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const PrimitiveStringRoot: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableEditorStoryState({
+          dataSchema: PRIMITIVE_STRING_SCHEMA,
+          rowsData: PRIMITIVE_STRING_ROWS_DATA,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: defaultCallbacks,
+        }),
+      );
+
+      return <AdminLayoutWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const NameConflictWithSystemFields: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableEditorStoryState({
+          dataSchema: NAME_CONFLICT_SCHEMA,
+          rowsData: NAME_CONFLICT_ROWS_DATA,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: defaultCallbacks,
+        }),
+      );
 
       return <AdminLayoutWrapper state={state} />;
     });

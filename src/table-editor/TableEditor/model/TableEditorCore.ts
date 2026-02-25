@@ -16,7 +16,7 @@ import type {
   RowDataItem,
   TableQuery,
 } from './ITableDataSource.js';
-import { SchemaContext } from './SchemaContext.js';
+import { SchemaContext, stripDataFieldPrefix } from './SchemaContext.js';
 
 export interface ViewState {
   columns: ViewColumn[];
@@ -240,7 +240,10 @@ export class TableEditorCore {
       where: this.filters.hasActiveFilters
         ? this.filters.buildCurrentWhereClause()
         : null,
-      orderBy: this.sorts.serializeToViewSorts(),
+      orderBy: this.sorts.serializeToViewSorts().map((s) => ({
+        field: stripDataFieldPrefix(s.field),
+        direction: s.direction,
+      })),
       search: this.search.debouncedQuery,
       first: this._pageSize,
       after,
@@ -286,14 +289,14 @@ export class TableEditorCore {
   }
 
   private _createRowVMs(rawRows: RowDataItem[]): RowVM[] {
-    const dataSchema = this._schemaContext.dataSchema;
-    if (!dataSchema) {
+    const wrappedSchema = this._schemaContext.wrappedDataSchema;
+    if (!wrappedSchema) {
       return [];
     }
     const tableModel = createTableModel({
       tableId: this._tableId,
-      schema: dataSchema,
-      rows: rawRows.map((r) => ({ rowId: r.rowId, data: r.data })),
+      schema: wrappedSchema,
+      rows: rawRows.map((r) => ({ rowId: r.rowId, data: { data: r.data } })),
       refSchemas: this._schemaContext.fullRefSchemas,
     });
     const systemValuesMap = new Map<string, Record<string, unknown>>();
@@ -321,14 +324,19 @@ export class TableEditorCore {
     };
   }
 
+  private _toPatchField(field: string): string {
+    return stripDataFieldPrefix(field);
+  }
+
   private async _commitCell(
     rowId: string,
     field: string,
     value: unknown,
     previousValue?: unknown,
   ): Promise<void> {
+    const patchField = this._toPatchField(field);
     const results = await this._dataSource.patchCells([
-      { rowId, field, value },
+      { rowId, field: patchField, value },
     ]);
     const result = results[0];
     if (result && !result.ok) {

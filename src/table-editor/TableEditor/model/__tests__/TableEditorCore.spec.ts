@@ -105,7 +105,7 @@ describe('TableEditorCore', () => {
   describe('view state', () => {
     it('getViewState serializes current state', async () => {
       const { core } = await createCore();
-      core.sorts.addSort('name');
+      core.sorts.addSort('data.name');
       const state = core.getViewState();
       expect(state.columns.length).toBeGreaterThan(0);
       expect(state.sorts).toEqual([{ field: 'data.name', direction: 'asc' }]);
@@ -117,7 +117,7 @@ describe('TableEditorCore', () => {
       const { core } = await createCore();
       const state = core.getViewState();
       const { core: core2 } = await createCore();
-      core2.sorts.addSort('age');
+      core2.sorts.addSort('data.age');
       core2.applyViewState(state);
       expect(core2.sorts.sorts).toHaveLength(0);
     });
@@ -125,7 +125,7 @@ describe('TableEditorCore', () => {
     it('viewBadge detects changes after sort apply', async () => {
       const { core } = await createCore();
       expect(core.viewBadge.hasChanges).toBe(false);
-      core.sorts.addSort('name');
+      core.sorts.addSort('data.name');
       core.sorts.apply();
       expect(core.viewBadge.hasChanges).toBe(true);
     });
@@ -135,14 +135,12 @@ describe('TableEditorCore', () => {
     it('calls fetchRows after sort apply', async () => {
       const { core, dataSource } = await createCore();
       const initialFetchCount = dataSource.fetchLog.length;
-      core.sorts.addSort('name');
+      core.sorts.addSort('data.name');
       core.sorts.apply();
       await flushMicrotasks();
       expect(dataSource.fetchLog.length).toBeGreaterThan(initialFetchCount);
       const lastQuery = dataSource.fetchLog.at(-1);
-      expect(lastQuery?.orderBy).toEqual([
-        { field: 'data.name', direction: 'asc' },
-      ]);
+      expect(lastQuery?.orderBy).toEqual([{ field: 'name', direction: 'asc' }]);
     });
   });
 
@@ -171,7 +169,7 @@ describe('TableEditorCore', () => {
       const row = core.rows[0];
       expect(row).toBeDefined();
       const nameCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'name',
+        (c) => c.field === 'data.name',
       );
       expect(nameCol).toBeDefined();
       const cellVM = row.getCellVM(nameCol!);
@@ -191,7 +189,7 @@ describe('TableEditorCore', () => {
       const row = core.rows[0];
       expect(row).toBeDefined();
       const nameCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'name',
+        (c) => c.field === 'data.name',
       );
       expect(nameCol).toBeDefined();
       const cellVM = row.getCellVM(nameCol!);
@@ -206,7 +204,7 @@ describe('TableEditorCore', () => {
     it('cleans up all models', async () => {
       const { core } = await createCore();
       core.selection.toggle('row-1');
-      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'data.name' });
       core.dispose();
       expect(core.selection.isSelectionMode).toBe(false);
       expect(core.cellFSM.focusedCell).toBeNull();
@@ -216,11 +214,11 @@ describe('TableEditorCore', () => {
   describe('column changes update CellFSM navigation', () => {
     it('clears range selection when column is hidden', async () => {
       const { core } = await createCore();
-      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
-      core.cellFSM.selectTo({ rowId: 'row-2', field: 'age' });
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'data.name' });
+      core.cellFSM.selectTo({ rowId: 'row-2', field: 'data.age' });
       expect(core.cellFSM.hasSelection).toBe(true);
 
-      core.columns.hideColumn('age');
+      core.columns.hideColumn('data.age');
 
       expect(core.cellFSM.hasSelection).toBe(false);
       expect(core.cellFSM.anchorCell).toBeNull();
@@ -228,22 +226,22 @@ describe('TableEditorCore', () => {
 
     it('keeps focus when focused column still visible after hide', async () => {
       const { core } = await createCore();
-      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'data.name' });
 
-      core.columns.hideColumn('age');
+      core.columns.hideColumn('data.age');
 
       expect(core.cellFSM.state).toBe('focused');
       expect(core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'name',
+        field: 'data.name',
       });
     });
 
     it('blurs when focused column is hidden', async () => {
       const { core } = await createCore();
-      core.cellFSM.focusCell({ rowId: 'row-1', field: 'age' });
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'data.age' });
 
-      core.columns.hideColumn('age');
+      core.columns.hideColumn('data.age');
 
       expect(core.cellFSM.state).toBe('idle');
       expect(core.cellFSM.focusedCell).toBeNull();
@@ -251,25 +249,25 @@ describe('TableEditorCore', () => {
 
     it('updates navigation context after column reorder', async () => {
       const { core } = await createCore();
-      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'data.name' });
 
-      core.columns.moveColumnRight('name');
+      core.columns.moveColumnRight('data.name');
 
       expect(core.cellFSM.state).toBe('focused');
       expect(core.cellFSM.focusedCell).toEqual({
         rowId: 'row-1',
-        field: 'name',
+        field: 'data.name',
       });
-      expect(core.cellFSM.columns[0]).not.toBe('name');
+      expect(core.cellFSM.columns[0]).not.toBe('data.name');
     });
 
     it('navigationVersion increments when column is shown', async () => {
       const { core } = await createCore();
-      core.columns.hideColumn('active');
-      core.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      core.columns.hideColumn('data.active');
+      core.cellFSM.focusCell({ rowId: 'row-1', field: 'data.name' });
       const before = core.cellFSM.navigationVersion;
 
-      core.columns.showColumn('active');
+      core.columns.showColumn('data.active');
 
       expect(core.cellFSM.navigationVersion).toBe(before + 1);
     });
@@ -370,7 +368,7 @@ describe('TableEditorCore', () => {
       const row = core.rows[0];
       expect(row).toBeDefined();
       const avatarCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'avatar',
+        (c) => c.field === 'data.avatar',
       );
       expect(avatarCol).toBeDefined();
       const cellVM = row.getCellVM(avatarCol!);
@@ -382,7 +380,7 @@ describe('TableEditorCore', () => {
       const { core } = await createFileCore();
       const row = core.rows[0];
       const avatarCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'avatar',
+        (c) => c.field === 'data.avatar',
       )!;
       const cellVM = row.getCellVM(avatarCol);
       expect(cellVM.isEditable).toBe(true);
@@ -393,7 +391,7 @@ describe('TableEditorCore', () => {
       const { core } = await createFileCore();
       const row = core.rows[0];
       const avatarCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'avatar',
+        (c) => c.field === 'data.avatar',
       )!;
       const cellVM = row.getCellVM(avatarCol);
       expect(cellVM.displayValue).toBe('photo.png');
@@ -403,7 +401,7 @@ describe('TableEditorCore', () => {
       const { core, dataSource } = await createFileCore();
       const row = core.rows[0];
       const avatarCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'avatar',
+        (c) => c.field === 'data.avatar',
       )!;
       const cellVM = row.getCellVM(avatarCol);
 
@@ -425,7 +423,7 @@ describe('TableEditorCore', () => {
       const { core, dataSource } = await createFileCore();
       const row = core.rows[0];
       const avatarCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'avatar',
+        (c) => c.field === 'data.avatar',
       )!;
       const cellVM = row.getCellVM(avatarCol);
 
@@ -467,10 +465,10 @@ describe('TableEditorCore', () => {
 
     it('file sub-field column accesses nested value', async () => {
       const { core } = await createFileCore();
-      core.columns.showColumn('avatar.fileName');
+      core.columns.showColumn('data.avatar.fileName');
       const row = core.rows[0];
       const fileNameCol = core.columns.visibleColumns.find(
-        (c) => c.field === 'avatar.fileName',
+        (c) => c.field === 'data.avatar.fileName',
       );
       expect(fileNameCol).toBeDefined();
       const cellVM = row.getCellVM(fileNameCol!);

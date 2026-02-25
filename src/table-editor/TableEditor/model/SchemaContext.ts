@@ -13,6 +13,7 @@ import {
 } from '@revisium/schema-toolkit';
 import type {
   JsonObjectSchema,
+  JsonSchema,
   RefSchemas,
   SchemaNode,
 } from '@revisium/schema-toolkit';
@@ -20,6 +21,19 @@ import { extractColumns } from '../../Columns/model/extractColumns.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
 import { FilterFieldType } from '../../shared/field-types.js';
 import { SYSTEM_FIELDS } from '../../shared/system-fields.js';
+
+export const DATA_FIELD = 'data';
+
+export function stripDataFieldPrefix(field: string): string {
+  const prefix = `${DATA_FIELD}.`;
+  if (field.startsWith(prefix)) {
+    return field.slice(prefix.length);
+  }
+  if (field === DATA_FIELD) {
+    return '';
+  }
+  return field;
+}
 
 const SYSTEM_REF_SCHEMAS: RefSchemas = {
   [SystemSchemaIds.File]: fileSchema,
@@ -33,7 +47,16 @@ const SYSTEM_REF_SCHEMAS: RefSchemas = {
   [SystemSchemaIds.RowSchemaHash]: rowSchemaHashSchema,
 };
 
-function buildRowSchema(dataSchema: JsonObjectSchema): JsonObjectSchema {
+export function wrapDataSchema(dataSchema: JsonSchema): JsonObjectSchema {
+  return {
+    type: 'object',
+    properties: { [DATA_FIELD]: dataSchema },
+    additionalProperties: false,
+    required: [DATA_FIELD],
+  } as JsonObjectSchema;
+}
+
+function buildRowSchema(wrappedDataSchema: JsonObjectSchema): JsonObjectSchema {
   const systemProperties: Record<string, { $ref: string }> = {};
   for (const sf of SYSTEM_FIELDS) {
     systemProperties[sf.id] = { $ref: sf.ref };
@@ -43,19 +66,17 @@ function buildRowSchema(dataSchema: JsonObjectSchema): JsonObjectSchema {
     type: 'object',
     properties: {
       ...systemProperties,
-      ...dataSchema.properties,
+      ...wrappedDataSchema.properties,
     },
     additionalProperties: false,
-    required: [
-      ...Object.keys(systemProperties),
-      ...(dataSchema.required ?? []),
-    ],
+    required: [...Object.keys(systemProperties), ...wrappedDataSchema.required],
   } as JsonObjectSchema;
 }
 
 export class SchemaContext {
   private _allColumns: ColumnSpec[] = [];
-  private _dataSchema: JsonObjectSchema | null = null;
+  private _dataSchema: JsonSchema | null = null;
+  private _wrappedDataSchema: JsonObjectSchema | null = null;
   private _fullRefSchemas: RefSchemas = {};
   private _rootNode: SchemaNode | null = null;
 
@@ -73,8 +94,12 @@ export class SchemaContext {
     return this.sortableFields;
   }
 
-  get dataSchema(): JsonObjectSchema | null {
+  get dataSchema(): JsonSchema | null {
     return this._dataSchema;
+  }
+
+  get wrappedDataSchema(): JsonObjectSchema | null {
+    return this._wrappedDataSchema;
   }
 
   get fullRefSchemas(): RefSchemas {
@@ -85,11 +110,13 @@ export class SchemaContext {
     return this._rootNode;
   }
 
-  init(dataSchema: JsonObjectSchema, refSchemas?: RefSchemas): void {
+  init(dataSchema: JsonSchema, refSchemas?: RefSchemas): void {
     this._dataSchema = dataSchema;
     this._fullRefSchemas = { ...SYSTEM_REF_SCHEMAS, ...refSchemas };
 
-    const rowSchema = buildRowSchema(dataSchema);
+    const wrapped = wrapDataSchema(dataSchema);
+    this._wrappedDataSchema = wrapped;
+    const rowSchema = buildRowSchema(wrapped);
     const parser = new SchemaParser();
     this._rootNode = parser.parse(rowSchema, this._fullRefSchemas);
     this._allColumns = extractColumns(this._rootNode);

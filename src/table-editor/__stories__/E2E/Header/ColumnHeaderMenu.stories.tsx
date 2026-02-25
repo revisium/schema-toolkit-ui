@@ -29,7 +29,7 @@ const StoryWrapper = observer(() => {
     createTableStoryState({
       dataSchema: TABLE_SCHEMA,
       rowsData: MOCK_ROWS,
-      visibleFields: ['id', 'name', 'age', 'active'],
+      visibleFields: ['id', 'data.name', 'data.age', 'data.active'],
       withSort: true,
       withFilter: true,
     }),
@@ -97,14 +97,14 @@ export const FullHeaderMenuWorkflow: Story = {
     expect(columnsModel.visibleColumns).toHaveLength(4);
     expect(columnsModel.visibleColumns.map((c) => c.field)).toEqual([
       'id',
-      'name',
-      'age',
-      'active',
+      'data.name',
+      'data.age',
+      'data.active',
     ]);
 
     // Step 1: Sort name ascending
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const sortSubmenuTrigger = await waitFor(() => {
@@ -129,8 +129,8 @@ export const FullHeaderMenuWorkflow: Story = {
       await userEvent.click(sortAscItem);
 
       await waitFor(() => {
-        expect(sortModel.isSorted('name')).toBe(true);
-        expect(sortModel.getSortDirection('name')).toBe('asc');
+        expect(sortModel.isSorted('data.name')).toBe(true);
+        expect(sortModel.getSortDirection('data.name')).toBe('asc');
       });
 
       await dismissMenu();
@@ -139,7 +139,7 @@ export const FullHeaderMenuWorkflow: Story = {
     // Step 2: Sort age descending
     // Columns still: [name, age, active]
     {
-      const ageHeader = canvas.getByTestId('header-age');
+      const ageHeader = canvas.getByTestId('header-data.age');
       await userEvent.click(ageHeader);
 
       const sortSubmenuTrigger = await waitFor(() => {
@@ -164,8 +164,8 @@ export const FullHeaderMenuWorkflow: Story = {
       await userEvent.click(sortDescItem);
 
       await waitFor(() => {
-        expect(sortModel.isSorted('age')).toBe(true);
-        expect(sortModel.getSortDirection('age')).toBe('desc');
+        expect(sortModel.isSorted('data.age')).toBe(true);
+        expect(sortModel.getSortDirection('data.age')).toBe('desc');
       });
 
       await dismissMenu();
@@ -174,7 +174,7 @@ export const FullHeaderMenuWorkflow: Story = {
     // Step 3: Copy path "name"
     // Columns still: [name, age, active]
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const copyItem = await waitFor(() => {
@@ -188,7 +188,7 @@ export const FullHeaderMenuWorkflow: Story = {
       await userEvent.click(copyItem);
 
       await waitFor(() => {
-        expect(clipboard.getText()).toBe('name');
+        expect(clipboard.getText()).toBe('data.name');
       });
 
       await dismissMenu();
@@ -199,7 +199,7 @@ export const FullHeaderMenuWorkflow: Story = {
     {
       expect(filterModel.isOpen).toBe(false);
 
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const addFilterItem = await waitFor(() => {
@@ -215,7 +215,7 @@ export const FullHeaderMenuWorkflow: Story = {
       await waitFor(() => {
         expect(filterModel.isOpen).toBe(true);
         expect(filterModel.rootGroup.conditions).toHaveLength(1);
-        expect(filterModel.rootGroup.conditions[0]?.field).toBe('name');
+        expect(filterModel.rootGroup.conditions[0]?.field).toBe('data.name');
       });
 
       await dismissMenu();
@@ -224,7 +224,7 @@ export const FullHeaderMenuWorkflow: Story = {
     // Step 5: Move name right
     // Columns before: [id, name, age, active] -> after: [id, age, name, active]
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const moveSubmenuTrigger = await waitFor(() => {
@@ -251,9 +251,9 @@ export const FullHeaderMenuWorkflow: Story = {
       await waitFor(() => {
         expect(columnsModel.visibleColumns.map((c) => c.field)).toEqual([
           'id',
-          'age',
-          'name',
-          'active',
+          'data.age',
+          'data.name',
+          'data.active',
         ]);
       });
 
@@ -263,7 +263,7 @@ export const FullHeaderMenuWorkflow: Story = {
     // Step 6: Hide active
     // Columns before: [id, age, name, active] -> after: [id, age, name]
     {
-      const activeHeader = canvas.getByTestId('header-active');
+      const activeHeader = canvas.getByTestId('header-data.active');
       await userEvent.click(activeHeader);
 
       const hideItem = await waitFor(() => {
@@ -277,7 +277,7 @@ export const FullHeaderMenuWorkflow: Story = {
       await waitFor(() => {
         expect(columnsModel.visibleColumns).toHaveLength(3);
         expect(
-          columnsModel.visibleColumns.some((c) => c.field === 'active'),
+          columnsModel.visibleColumns.some((c) => c.field === 'data.active'),
         ).toBe(false);
       });
 
@@ -287,7 +287,7 @@ export const FullHeaderMenuWorkflow: Story = {
     // Step 7: Insert active before age
     // Columns before: [id, age, name] -> after: [id, active, age, name]
     {
-      const ageHeader = canvas.getByTestId('header-age');
+      const ageHeader = canvas.getByTestId('header-data.age');
       await userEvent.click(ageHeader);
 
       const insertBeforeTrigger = await waitFor(() => {
@@ -303,7 +303,7 @@ export const FullHeaderMenuWorkflow: Story = {
 
       const activeItem = await waitFor(() => {
         const el = document.querySelector(
-          '[data-value="before-active"]',
+          '[data-value="before-data.active"]',
         ) as HTMLElement;
         expect(el).toBeTruthy();
         return el;
@@ -314,8 +314,8 @@ export const FullHeaderMenuWorkflow: Story = {
       await waitFor(() => {
         expect(columnsModel.visibleColumns).toHaveLength(4);
         const fields = columnsModel.visibleColumns.map((c) => c.field);
-        const ageIndex = fields.indexOf('age');
-        const activeIndex = fields.indexOf('active');
+        const ageIndex = fields.indexOf('data.age');
+        const activeIndex = fields.indexOf('data.active');
         expect(activeIndex).toBeLessThan(ageIndex);
       });
 
@@ -325,7 +325,7 @@ export const FullHeaderMenuWorkflow: Story = {
     // Step 8: Hide-all from active header
     // Columns before: [id, active, age, name] -> after: [id] (hideAll keeps first column)
     {
-      const activeHeader = canvas.getByTestId('header-active');
+      const activeHeader = canvas.getByTestId('header-data.active');
       await userEvent.click(activeHeader);
 
       const hideAllItem = await waitFor(() => {
@@ -387,13 +387,13 @@ export const PinColumnWorkflow: Story = {
     // Initial state: [id, name, age, active], none pinned
     expect(columnsModel.visibleColumns).toHaveLength(4);
     expect(columnsModel.isPinned('id')).toBe(false);
-    expect(columnsModel.isPinned('name')).toBe(false);
-    expect(columnsModel.isPinned('age')).toBe(false);
-    expect(columnsModel.isPinned('active')).toBe(false);
+    expect(columnsModel.isPinned('data.name')).toBe(false);
+    expect(columnsModel.isPinned('data.age')).toBe(false);
+    expect(columnsModel.isPinned('data.active')).toBe(false);
 
     // Step 1: Pin 'name' to left
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const pinLeftItem = await waitFor(() => {
@@ -407,12 +407,12 @@ export const PinColumnWorkflow: Story = {
       await userEvent.click(pinLeftItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(true);
-        expect(columnsModel.getPinState('name')).toBe('left');
+        expect(columnsModel.isPinned('data.name')).toBe(true);
+        expect(columnsModel.getPinState('data.name')).toBe('left');
       });
 
       await waitFor(() => {
-        expect(canvas.getByTestId('pin-indicator-name')).toBeTruthy();
+        expect(canvas.getByTestId('pin-indicator-data.name')).toBeTruthy();
       });
 
       await dismissMenu();
@@ -420,7 +420,7 @@ export const PinColumnWorkflow: Story = {
 
     // Step 2: Verify pinned column menu shows "Unpin" instead of pin options
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       await waitFor(() => {
@@ -445,7 +445,7 @@ export const PinColumnWorkflow: Story = {
 
     // Step 3: Pin 'active' to right
     {
-      const activeHeader = canvas.getByTestId('header-active');
+      const activeHeader = canvas.getByTestId('header-data.active');
       await userEvent.click(activeHeader);
 
       const pinRightItem = await waitFor(() => {
@@ -459,7 +459,7 @@ export const PinColumnWorkflow: Story = {
       await userEvent.click(pinRightItem);
 
       await waitFor(() => {
-        expect(columnsModel.getPinState('active')).toBe('right');
+        expect(columnsModel.getPinState('data.active')).toBe('right');
       });
 
       await dismissMenu();
@@ -469,17 +469,17 @@ export const PinColumnWorkflow: Story = {
     {
       await waitFor(() => {
         expect(columnsModel.visibleColumns.map((c) => c.field)).toEqual([
-          'name',
+          'data.name',
           'id',
-          'age',
-          'active',
+          'data.age',
+          'data.active',
         ]);
       });
     }
 
     // Step 5: Unpin 'name'
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       const unpinItem = await waitFor(() => {
@@ -493,12 +493,14 @@ export const PinColumnWorkflow: Story = {
       await userEvent.click(unpinItem);
 
       await waitFor(() => {
-        expect(columnsModel.isPinned('name')).toBe(false);
+        expect(columnsModel.isPinned('data.name')).toBe(false);
       });
 
       await waitFor(() => {
         expect(
-          canvasElement.querySelector('[data-testid="pin-indicator-name"]'),
+          canvasElement.querySelector(
+            '[data-testid="pin-indicator-data.name"]',
+          ),
         ).toBeNull();
       });
 
@@ -507,7 +509,7 @@ export const PinColumnWorkflow: Story = {
 
     // Step 6: Verify unpinned column menu shows pin options again
     {
-      const nameHeader = canvas.getByTestId('header-name');
+      const nameHeader = canvas.getByTestId('header-data.name');
       await userEvent.click(nameHeader);
 
       await waitFor(() => {

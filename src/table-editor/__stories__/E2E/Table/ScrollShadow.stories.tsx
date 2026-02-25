@@ -43,7 +43,7 @@ function createPinnedLeftState(): TableStoryState {
       s.columnsModel.setColumnWidth(c.field, COLUMN_WIDTH);
     }
     s.columnsModel.commitColumnWidth();
-    s.columnsModel.pinLeft('name');
+    s.columnsModel.pinLeft('data.name');
   });
   return s;
 }
@@ -58,7 +58,7 @@ function createPinnedRightState(): TableStoryState {
       s.columnsModel.setColumnWidth(c.field, COLUMN_WIDTH);
     }
     s.columnsModel.commitColumnWidth();
-    s.columnsModel.pinRight('score');
+    s.columnsModel.pinRight('data.score');
   });
   return s;
 }
@@ -67,7 +67,7 @@ function createAddColumnOnlyState(): TableStoryState {
   const s = createTableStoryState({
     dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS,
-    visibleFields: ['name', 'age', 'active', 'score'],
+    visibleFields: ['data.name', 'data.age', 'data.active', 'data.score'],
   });
   runInAction(() => {
     for (const c of s.columnsModel.visibleColumns) {
@@ -173,7 +173,7 @@ export const PinnedLeftShadowOnScroll: Story = {
     });
     const state = (window as any).__testState as TableStoryState;
 
-    expect(state.columnsModel.isPinned('name')).toBe(true);
+    expect(state.columnsModel.isPinned('data.name')).toBe(true);
 
     const scroller = findScroller(canvasElement);
     expect(scroller).toBeTruthy();
@@ -183,10 +183,10 @@ export const PinnedLeftShadowOnScroll: Story = {
     });
 
     const nameHeaderTh = canvas
-      .getByTestId('header-name')
+      .getByTestId('header-data.name')
       .closest('th') as HTMLElement;
     const nameDataTd = canvas
-      .getByTestId('cell-row-1-name')
+      .getByTestId('cell-row-1-data.name')
       .closest('td') as HTMLElement;
 
     expect(getAfterOpacity(nameHeaderTh)).toBe(0);
@@ -216,7 +216,7 @@ export const PinnedRightShadowOnScroll: Story = {
     });
     const state = (window as any).__testState as TableStoryState;
 
-    expect(state.columnsModel.isPinned('score')).toBe(true);
+    expect(state.columnsModel.isPinned('data.score')).toBe(true);
 
     const scroller = findScroller(canvasElement);
     expect(scroller).toBeTruthy();
@@ -226,10 +226,10 @@ export const PinnedRightShadowOnScroll: Story = {
     });
 
     const scoreHeaderTh = canvas
-      .getByTestId('header-score')
+      .getByTestId('header-data.score')
       .closest('th') as HTMLElement;
     const scoreDataTd = canvas
-      .getByTestId('cell-row-1-score')
+      .getByTestId('cell-row-1-data.score')
       .closest('td') as HTMLElement;
 
     expect(scroller!.scrollLeft).toBe(0);
@@ -350,7 +350,7 @@ export const WindowScrollShadowOnScroll: Story = {
         state.core.columns.setColumnWidth(c.field, COLUMN_WIDTH);
       }
       state.core.columns.commitColumnWidth();
-      state.core.columns.pinLeft('name');
+      state.core.columns.pinLeft('data.name');
     });
 
     const tableWidget = canvas.getByTestId('table-widget');
@@ -360,10 +360,10 @@ export const WindowScrollShadowOnScroll: Story = {
     });
 
     const nameHeaderTh = canvas
-      .getByTestId('header-name')
+      .getByTestId('header-data.name')
       .closest('th') as HTMLElement;
     const nameDataTd = canvas
-      .getByTestId('cell-row-1-name')
+      .getByTestId('cell-row-1-data.name')
       .closest('td') as HTMLElement;
 
     await waitFor(() => {
@@ -391,7 +391,7 @@ function createResizableAddColumnState(): TableStoryState {
   const s = createTableStoryState({
     dataSchema: TABLE_SCHEMA,
     rowsData: MOCK_ROWS,
-    visibleFields: ['name', 'age', 'active', 'score'],
+    visibleFields: ['data.name', 'data.age', 'data.active', 'data.score'],
   });
   runInAction(() => {
     for (const c of s.columnsModel.visibleColumns) {

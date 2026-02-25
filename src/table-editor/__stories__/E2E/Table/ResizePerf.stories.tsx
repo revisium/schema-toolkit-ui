@@ -76,7 +76,7 @@ function createState(): TableStoryState {
       s.columnsModel.setColumnWidth(c.field, COLUMN_WIDTH);
     }
     s.columnsModel.commitColumnWidth();
-    s.columnsModel.pinLeft('name');
+    s.columnsModel.pinLeft('data.name');
   });
   return s;
 }
@@ -215,7 +215,7 @@ export const ColumnResizeMutations: Story = {
     // Simulate drag: 11 steps, 200 → 300
     for (let i = 0; i < 11; i++) {
       runInAction(() => {
-        state.columnsModel.setColumnWidth('name', 200 + i * 10);
+        state.columnsModel.setColumnWidth('data.name', 200 + i * 10);
       });
     }
     await new Promise((r) => setTimeout(r, 100));
@@ -298,7 +298,7 @@ export const RangeSelectionMutations: Story = {
 
     // Focus cell → only the focused cell gets attribute changes
     runInAction(() => {
-      state.cellFSM.focusCell({ rowId: 'row-1', field: 'name' });
+      state.cellFSM.focusCell({ rowId: 'row-1', field: 'data.name' });
     });
     await new Promise((r) => setTimeout(r, 100));
 
@@ -310,7 +310,7 @@ export const RangeSelectionMutations: Story = {
 
     // Select range: 3 rows × 2 cols = 6 cells
     runInAction(() => {
-      state.cellFSM.selectTo({ rowId: 'row-3', field: 'age' });
+      state.cellFSM.selectTo({ rowId: 'row-3', field: 'data.age' });
     });
     await new Promise((r) => setTimeout(r, 100));
 
@@ -322,7 +322,7 @@ export const RangeSelectionMutations: Story = {
 
     // Extend to 5 rows × 4 cols = 20 cells
     runInAction(() => {
-      state.cellFSM.selectTo({ rowId: 'row-5', field: 'email' });
+      state.cellFSM.selectTo({ rowId: 'row-5', field: 'data.email' });
     });
     await new Promise((r) => setTimeout(r, 100));
 

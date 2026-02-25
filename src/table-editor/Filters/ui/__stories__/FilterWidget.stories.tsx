@@ -10,28 +10,31 @@ import { FilterWidget } from '../FilterWidget.js';
 
 export const TEST_COLUMNS: ColumnSpec[] = [
   {
-    field: 'name',
+    field: 'data.name',
     label: 'Name',
     fieldType: FilterFieldType.String,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'age',
+    field: 'data.age',
     label: 'Age',
     fieldType: FilterFieldType.Number,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'active',
+    field: 'data.active',
     label: 'Active',
     fieldType: FilterFieldType.Boolean,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'createdAt',
@@ -40,6 +43,7 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: true,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
     field: 'updatedAt',
@@ -48,30 +52,34 @@ export const TEST_COLUMNS: ColumnSpec[] = [
     isSystem: true,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'address.city.name',
+    field: 'data.address.city.name',
     label: 'address.city.name',
     fieldType: FilterFieldType.String,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'metadata.nested.sub.value',
+    field: 'data.metadata.nested.sub.value',
     label: 'metadata.nested.sub.value',
     fieldType: FilterFieldType.String,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
   {
-    field: 'stats.monthly.revenue',
+    field: 'data.stats.monthly.revenue',
     label: 'stats.monthly.revenue',
     fieldType: FilterFieldType.Number,
     isSystem: false,
     isDeprecated: false,
     hasFormula: false,
+    isSortable: true,
   },
 ];
 
@@ -166,9 +174,9 @@ export const WithNestedFieldPath: Story = {
   args: {
     onApply: fn().mockName('onApply'),
     setup: (m: FilterModel) => {
-      m.addConditionForField('metadata.nested.sub.value');
-      m.addConditionForField('stats.monthly.revenue');
-      m.addConditionForField('address.city.name');
+      m.addConditionForField('data.metadata.nested.sub.value');
+      m.addConditionForField('data.stats.monthly.revenue');
+      m.addConditionForField('data.address.city.name');
     },
   },
 };

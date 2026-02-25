@@ -156,13 +156,13 @@ export const ColumnHeader = observer(
                 {column.label}
               </Text>
               <PinIndicator field={column.field} columnsModel={columnsModel} />
-              {filterModel && !column.hasFormula && (
+              {filterModel && column.isSortable && (
                 <FilterIndicator
                   field={column.field}
                   filterModel={filterModel}
                 />
               )}
-              {sortModel && !column.hasFormula && (
+              {sortModel && column.isSortable && (
                 <SortIndicator field={column.field} sortModel={sortModel} />
               )}
             </Flex>

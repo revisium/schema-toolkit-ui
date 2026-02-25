@@ -129,10 +129,13 @@ describe('ColumnsModel', () => {
   });
 
   describe('serialization', () => {
-    it('serializeToViewColumns prefixes data fields', () => {
-      const columns = [col({ field: 'title' }), col({ field: 'body' })];
+    it('serializeToViewColumns uses field as-is', () => {
+      const columns = [
+        col({ field: 'data.title' }),
+        col({ field: 'data.body' }),
+      ];
       model.init(columns);
-      model.reorderColumns(['title', 'body']);
+      model.reorderColumns(['data.title', 'data.body']);
       const result = model.serializeToViewColumns();
       expect(result).toEqual([{ field: 'data.title' }, { field: 'data.body' }]);
     });
@@ -140,26 +143,29 @@ describe('ColumnsModel', () => {
     it('serializeToViewColumns keeps system fields as-is', () => {
       const columns = [
         col({ field: 'id', isSystem: true }),
-        col({ field: 'title' }),
+        col({ field: 'data.title' }),
       ];
       model.init(columns);
       model.showColumn('id');
-      model.reorderColumns(['id', 'title']);
+      model.reorderColumns(['id', 'data.title']);
       const result = model.serializeToViewColumns();
       expect(result[0]).toEqual({ field: 'id' });
       expect(result[1]).toEqual({ field: 'data.title' });
     });
 
     it('applyViewColumns restores state and ignores invalid fields', () => {
-      const columns = [col({ field: 'title' }), col({ field: 'body' })];
+      const columns = [
+        col({ field: 'data.title' }),
+        col({ field: 'data.body' }),
+      ];
       model.init(columns);
       model.applyViewColumns([
         { field: 'data.body', width: 150 },
         { field: 'data.nonexistent' },
       ]);
       expect(model.visibleColumns).toHaveLength(1);
-      expect(model.visibleColumns[0]?.field).toBe('body');
-      expect(model.getColumnWidth('body')).toBe(150);
+      expect(model.visibleColumns[0]?.field).toBe('data.body');
+      expect(model.getColumnWidth('data.body')).toBe(150);
     });
   });
 
@@ -402,6 +408,42 @@ describe('ColumnsModel', () => {
       expect(fields).not.toContain('a');
       expect(fields).not.toContain('sys');
       expect(fields).toContain('e');
+    });
+
+    it('availableFieldsToInsert includes both regular and system hidden fields', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'sys1', isSystem: true }),
+        col({ field: 'sys2', isSystem: true }),
+        col({ field: 'c' }),
+      ]);
+      model.reorderColumns(['a', 'b']);
+      const available = model.availableFieldsToInsert;
+      const fields = available.map((c) => c.field);
+      expect(fields).toContain('sys1');
+      expect(fields).toContain('sys2');
+      expect(fields).toContain('c');
+      expect(fields).not.toContain('a');
+      expect(fields).not.toContain('b');
+    });
+
+    it('availableFieldsToInsert returns empty when all columns visible', () => {
+      model.init([col({ field: 'a' }), col({ field: 'sys', isSystem: true })]);
+      model.addAll();
+      expect(model.availableFieldsToInsert).toHaveLength(0);
+    });
+
+    it('availableFieldsToInsert includes system fields when only system hidden', () => {
+      model.init([
+        col({ field: 'a' }),
+        col({ field: 'b' }),
+        col({ field: 'sys', isSystem: true }),
+      ]);
+      model.reorderColumns(['a', 'b']);
+      const available = model.availableFieldsToInsert;
+      expect(available).toHaveLength(1);
+      expect(available[0]?.field).toBe('sys');
     });
 
     it('availableSystemFieldsToAdd returns hidden system fields', () => {
@@ -864,15 +906,15 @@ describe('ColumnsModel', () => {
       model.reorderColumns(['a', 'b']);
       model.pinLeft('a');
       const result = model.serializeToViewColumns();
-      expect(result[0]).toEqual({ field: 'data.a', pinned: 'left' });
-      expect(result[1]).toEqual({ field: 'data.b' });
+      expect(result[0]).toEqual({ field: 'a', pinned: 'left' });
+      expect(result[1]).toEqual({ field: 'b' });
     });
 
     it('apply restores pinned state', () => {
       model.init([col({ field: 'a' }), col({ field: 'b' })]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'left' },
-        { field: 'data.b', pinned: 'right' },
+        { field: 'a', pinned: 'left' },
+        { field: 'b', pinned: 'right' },
       ]);
       expect(model.getPinState('a')).toBe('left');
       expect(model.getPinState('b')).toBe('right');
@@ -914,7 +956,7 @@ describe('ColumnsModel', () => {
       model.setColumnWidth('a', 250);
       const result = model.serializeToViewColumns();
       expect(result[0]).toEqual({
-        field: 'data.a',
+        field: 'a',
         pinned: 'left',
         width: 250,
       });
@@ -927,7 +969,7 @@ describe('ColumnsModel', () => {
       model.setColumnWidth('b', 300);
       const result = model.serializeToViewColumns();
       expect(result[1]).toEqual({
-        field: 'data.b',
+        field: 'b',
         pinned: 'right',
         width: 300,
       });
@@ -938,14 +980,14 @@ describe('ColumnsModel', () => {
       model.reorderColumns(['a', 'b']);
       model.pinRight('b');
       const result = model.serializeToViewColumns();
-      expect(result[1]).toEqual({ field: 'data.b', pinned: 'right' });
+      expect(result[1]).toEqual({ field: 'b', pinned: 'right' });
     });
 
     it('apply restores pinned-left with width', () => {
       model.init([col({ field: 'a' }), col({ field: 'b' })]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'left', width: 250 },
-        { field: 'data.b' },
+        { field: 'a', pinned: 'left', width: 250 },
+        { field: 'b' },
       ]);
       expect(model.getPinState('a')).toBe('left');
       expect(model.getColumnWidth('a')).toBe(250);
@@ -954,8 +996,8 @@ describe('ColumnsModel', () => {
     it('apply restores pinned-right with width', () => {
       model.init([col({ field: 'a' }), col({ field: 'b' })]);
       model.applyViewColumns([
-        { field: 'data.a' },
-        { field: 'data.b', pinned: 'right', width: 300 },
+        { field: 'a' },
+        { field: 'b', pinned: 'right', width: 300 },
       ]);
       expect(model.getPinState('b')).toBe('right');
       expect(model.getColumnWidth('b')).toBe(300);
@@ -963,10 +1005,7 @@ describe('ColumnsModel', () => {
 
     it('apply restores pinned without width (uses default)', () => {
       model.init([col({ field: 'a' }), col({ field: 'b' })]);
-      model.applyViewColumns([
-        { field: 'data.a', pinned: 'left' },
-        { field: 'data.b' },
-      ]);
+      model.applyViewColumns([{ field: 'a', pinned: 'left' }, { field: 'b' }]);
       expect(model.getPinState('a')).toBe('left');
       expect(model.getColumnWidth('a')).toBeUndefined();
       expect(model.resolveColumnWidth('a')).toBe(150);
@@ -987,10 +1026,10 @@ describe('ColumnsModel', () => {
 
       const serialized = model.serializeToViewColumns();
       expect(serialized).toEqual([
-        { field: 'data.a', pinned: 'left', width: 200 },
-        { field: 'data.b' },
-        { field: 'data.c', width: 180 },
-        { field: 'data.d', pinned: 'right' },
+        { field: 'a', pinned: 'left', width: 200 },
+        { field: 'b' },
+        { field: 'c', width: 180 },
+        { field: 'd', pinned: 'right' },
       ]);
 
       const model2 = new ColumnsModel();
@@ -1020,9 +1059,9 @@ describe('ColumnsModel', () => {
         col({ field: 'c' }),
       ]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'left' },
-        { field: 'data.b' },
-        { field: 'data.c', pinned: 'right' },
+        { field: 'a', pinned: 'left' },
+        { field: 'b' },
+        { field: 'c', pinned: 'right' },
       ]);
       expect(model.getPinState('a')).toBe('left');
       expect(model.getPinState('b')).toBeUndefined();
@@ -1032,8 +1071,8 @@ describe('ColumnsModel', () => {
     it('valid zone order: all left', () => {
       model.init([col({ field: 'a' }), col({ field: 'b' })]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'left' },
-        { field: 'data.b', pinned: 'left' },
+        { field: 'a', pinned: 'left' },
+        { field: 'b', pinned: 'left' },
       ]);
       expect(model.getPinState('a')).toBe('left');
       expect(model.getPinState('b')).toBe('left');
@@ -1042,8 +1081,8 @@ describe('ColumnsModel', () => {
     it('valid zone order: all right', () => {
       model.init([col({ field: 'a' }), col({ field: 'b' })]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'right' },
-        { field: 'data.b', pinned: 'right' },
+        { field: 'a', pinned: 'right' },
+        { field: 'b', pinned: 'right' },
       ]);
       expect(model.getPinState('a')).toBe('right');
       expect(model.getPinState('b')).toBe('right');
@@ -1051,7 +1090,7 @@ describe('ColumnsModel', () => {
 
     it('valid zone order: all none', () => {
       model.init([col({ field: 'a' }), col({ field: 'b' })]);
-      model.applyViewColumns([{ field: 'data.a' }, { field: 'data.b' }]);
+      model.applyViewColumns([{ field: 'a' }, { field: 'b' }]);
       expect(model.getPinState('a')).toBeUndefined();
       expect(model.getPinState('b')).toBeUndefined();
     });
@@ -1063,9 +1102,9 @@ describe('ColumnsModel', () => {
         col({ field: 'c' }),
       ]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'right' },
-        { field: 'data.b', pinned: 'left' },
-        { field: 'data.c' },
+        { field: 'a', pinned: 'right' },
+        { field: 'b', pinned: 'left' },
+        { field: 'c' },
       ]);
       expect(model.getPinState('a')).toBeUndefined();
       expect(model.getPinState('b')).toBeUndefined();
@@ -1079,9 +1118,9 @@ describe('ColumnsModel', () => {
         col({ field: 'c' }),
       ]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'left' },
-        { field: 'data.b' },
-        { field: 'data.c', pinned: 'left' },
+        { field: 'a', pinned: 'left' },
+        { field: 'b' },
+        { field: 'c', pinned: 'left' },
       ]);
       expect(model.getPinState('a')).toBeUndefined();
       expect(model.getPinState('b')).toBeUndefined();
@@ -1095,9 +1134,9 @@ describe('ColumnsModel', () => {
         col({ field: 'c' }),
       ]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'right' },
-        { field: 'data.b' },
-        { field: 'data.c' },
+        { field: 'a', pinned: 'right' },
+        { field: 'b' },
+        { field: 'c' },
       ]);
       expect(model.getPinState('a')).toBeUndefined();
       expect(model.getPinState('b')).toBeUndefined();
@@ -1111,9 +1150,9 @@ describe('ColumnsModel', () => {
         col({ field: 'c' }),
       ]);
       model.applyViewColumns([
-        { field: 'data.a', pinned: 'right', width: 200 },
-        { field: 'data.b', pinned: 'left', width: 300 },
-        { field: 'data.c' },
+        { field: 'a', pinned: 'right', width: 200 },
+        { field: 'b', pinned: 'left', width: 300 },
+        { field: 'c' },
       ]);
       expect(model.getPinState('a')).toBeUndefined();
       expect(model.getPinState('b')).toBeUndefined();
