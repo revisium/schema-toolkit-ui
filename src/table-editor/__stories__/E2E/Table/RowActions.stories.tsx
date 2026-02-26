@@ -159,6 +159,11 @@ export const FullRowActionsWorkflow: Story = {
     {
       mockDuplicateRow.mockClear();
 
+      // Ensure no menu is open from previous section
+      await waitFor(() => {
+        expect(document.querySelector('[data-value="duplicate"]')).toBeNull();
+      });
+
       const row = canvas.getByTestId('row-row-2');
       await userEvent.hover(row);
 
@@ -180,6 +185,11 @@ export const FullRowActionsWorkflow: Story = {
 
       await waitFor(() => {
         expect(mockDuplicateRow).toHaveBeenCalledWith('row-2');
+      });
+
+      // Wait for menu to fully close before next section
+      await waitFor(() => {
+        expect(document.querySelector('[data-value="duplicate"]')).toBeNull();
       });
     }
 
@@ -236,6 +246,11 @@ export const FullRowActionsWorkflow: Story = {
     {
       mockDeleteRow.mockClear();
 
+      // Ensure no menu is open from previous section
+      await waitFor(() => {
+        expect(document.querySelector('[data-value="delete"]')).toBeNull();
+      });
+
       const row = canvas.getByTestId('row-row-1');
       await userEvent.hover(row);
 
@@ -274,6 +289,13 @@ export const FullRowActionsWorkflow: Story = {
       await waitFor(() => {
         expect(mockDeleteRow).toHaveBeenCalledWith('row-1');
       });
+
+      // Wait for dialog to fully close before next section
+      await waitFor(() => {
+        expect(
+          document.querySelector('[data-testid="delete-confirm-dialog"]'),
+        ).toBeNull();
+      });
     }
 
     // --- Batch delete ---
@@ -289,9 +311,13 @@ export const FullRowActionsWorkflow: Story = {
         ).toBeTruthy();
       });
 
-      const deleteBtn = document.querySelector(
-        '[data-testid="delete-selected"]',
-      ) as HTMLElement;
+      const deleteBtn = await waitFor(() => {
+        const el = document.querySelector(
+          '[data-testid="delete-selected"]',
+        ) as HTMLElement;
+        expect(el).toBeTruthy();
+        return el;
+      });
       await userEvent.click(deleteBtn);
 
       await waitFor(() => {
@@ -312,6 +338,13 @@ export const FullRowActionsWorkflow: Story = {
 
       await waitFor(() => {
         expect(mockDeleteSelected).toHaveBeenCalledWith(['row-1', 'row-2']);
+      });
+
+      // Wait for dialog to fully close before next section
+      await waitFor(() => {
+        expect(
+          document.querySelector('[data-testid="delete-confirm-dialog"]'),
+        ).toBeNull();
       });
 
       selection.exitSelectionMode();
