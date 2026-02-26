@@ -63,7 +63,7 @@ export const Row: FC<RowProps> = ({
       <Guides guides={guides} />
       {showMenu && <NodeMenu node={node} />}
       <Flex width="100%" alignItems="center">
-        <Flex>
+        <Flex flex={skipDot && skipField ? 1 : undefined} minWidth={0}>
           {!skipDot && (
             <Dot
               isCollapsed={isCollapsed}
