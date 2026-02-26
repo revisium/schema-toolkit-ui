@@ -97,15 +97,6 @@ export const ColumnHeaderMenu = observer(
             <Menu.Separator />
           </>
         )}
-        {canMove && (
-          <>
-            <MoveColumnSubmenu
-              field={column.field}
-              columnsModel={columnsModel}
-            />
-            <Menu.Separator />
-          </>
-        )}
         {isPinned ? (
           <>
             <Menu.Item value="unpin" onClick={handleUnpin}>
@@ -129,6 +120,15 @@ export const ColumnHeaderMenu = observer(
               </Menu.Item>
             )}
             {(canPinLeft || canPinRight) && <Menu.Separator />}
+          </>
+        )}
+        {canMove && (
+          <>
+            <MoveColumnSubmenu
+              field={column.field}
+              columnsModel={columnsModel}
+            />
+            <Menu.Separator />
           </>
         )}
         {hasInsertableFields && (
