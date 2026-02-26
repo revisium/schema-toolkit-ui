@@ -62,7 +62,7 @@ export const TableEditor: FC<TableEditorProps> = observer(
               highlightLast={false}
               onSegmentClick={callbacks.onBreadcrumbClick}
               action={
-                !isReadonly && callbacks.onCreateRow ? (
+                callbacks.onCreateRow ? (
                   <PlusButton
                     tooltip="New row"
                     onClick={callbacks.onCreateRow}
