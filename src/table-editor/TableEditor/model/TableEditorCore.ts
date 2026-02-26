@@ -54,6 +54,7 @@ export interface TableEditorCallbacks {
 export interface TableEditorOptions {
   tableId: string;
   pageSize?: number;
+  readonly?: boolean;
   breadcrumbs?: TableEditorBreadcrumb[];
   callbacks?: TableEditorCallbacks;
 }
@@ -89,6 +90,7 @@ export class TableEditorCore {
     this._dataSource = dataSource;
     this._tableId = options.tableId;
     this._pageSize = options.pageSize ?? DEFAULT_PAGE_SIZE;
+    this._readonly = options.readonly ?? false;
     this._breadcrumbs = options.breadcrumbs ?? [];
     this._callbacks = options.callbacks ?? {};
 
@@ -211,8 +213,8 @@ export class TableEditorCore {
       const meta = await this._dataSource.fetchMetadata();
       runInAction(() => {
         this._schemaContext.init(meta.dataSchema, meta.refSchemas);
-        this._readonly = meta.readonly;
-        this.viewBadge.setCanSave(!meta.readonly);
+        this._readonly = this._readonly || meta.readonly;
+        this.viewBadge.setCanSave(!this._readonly);
       });
 
       this.columns.init(this._schemaContext.allColumns);
@@ -314,6 +316,7 @@ export class TableEditorCore {
           (rowId, field, value, previousValue) =>
             this._commitCell(rowId, field, value, previousValue),
           systemValuesMap.get(rowModel.rowId),
+          this._readonly,
         ),
     );
   }

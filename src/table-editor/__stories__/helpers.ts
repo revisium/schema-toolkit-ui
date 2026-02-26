@@ -168,6 +168,7 @@ export function createTableEditorStoryState(
   });
   const core = new TableEditorCore(dataSource, {
     tableId: 'story-table',
+    readonly: params.readonly,
     breadcrumbs: params.breadcrumbs,
     callbacks: params.callbacks,
   });
