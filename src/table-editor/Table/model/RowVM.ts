@@ -12,6 +12,7 @@ export class RowVM {
   private readonly _selection: SelectionModel;
   private readonly _onCellCommit: CellCommitCallback | null;
   private readonly _systemValues: Record<string, unknown>;
+  private readonly _forceReadonly: boolean;
   private readonly _cellCache = new Map<string, CellVM>();
 
   constructor(
@@ -21,6 +22,7 @@ export class RowVM {
     selection: SelectionModel,
     onCellCommit?: CellCommitCallback,
     systemValues?: Record<string, unknown>,
+    forceReadonly?: boolean,
   ) {
     this._rowModel = rowModel;
     this._rowId = rowId;
@@ -28,6 +30,7 @@ export class RowVM {
     this._selection = selection;
     this._onCellCommit = onCellCommit ?? null;
     this._systemValues = systemValues ?? {};
+    this._forceReadonly = forceReadonly ?? false;
     makeAutoObservable(this, {}, { autoBind: true });
   }
 
@@ -59,6 +62,7 @@ export class RowVM {
       this._cellFSM,
       this._onCellCommit ?? undefined,
       column.isSystem ? this._systemValues : undefined,
+      this._forceReadonly,
     );
     this._cellCache.set(column.field, cell);
     return cell;

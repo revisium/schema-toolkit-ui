@@ -44,6 +44,7 @@ function createDataSource(overrides?: {
 
 async function createCore(overrides?: {
   readonly?: boolean;
+  optionsReadonly?: boolean;
   failPatches?: Set<string>;
   pageSize?: number;
 }) {
@@ -51,6 +52,7 @@ async function createCore(overrides?: {
   const core = new TableEditorCore(dataSource, {
     tableId: 'test-table',
     pageSize: overrides?.pageSize,
+    readonly: overrides?.optionsReadonly,
   });
   await waitForBootstrap(core);
   return { core, dataSource };
@@ -88,6 +90,28 @@ describe('TableEditorCore', () => {
       const { core } = await createCore({ readonly: true });
       expect(core.readonly).toBe(true);
       expect(core.viewBadge.canSave).toBe(false);
+    });
+
+    it('sets readonly from options', async () => {
+      const { core } = await createCore({ optionsReadonly: true });
+      expect(core.readonly).toBe(true);
+      expect(core.viewBadge.canSave).toBe(false);
+
+      const row = core.rows[0];
+      const col = core.columns.visibleColumns[0];
+      expect(row).toBeDefined();
+      expect(col).toBeDefined();
+      const cell = row.getCellVM(col);
+      expect(cell.isReadOnly).toBe(true);
+      expect(cell.isEditable).toBe(false);
+    });
+
+    it('options readonly is not overridden by metadata', async () => {
+      const { core } = await createCore({
+        readonly: false,
+        optionsReadonly: true,
+      });
+      expect(core.readonly).toBe(true);
     });
 
     it('sets tableId from options', async () => {
