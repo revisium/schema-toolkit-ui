@@ -18,7 +18,7 @@ export class CellVM {
   private readonly _cellFSM: CellFSM;
   private readonly _onCommit: CellCommitCallback | null;
   private readonly _systemValues: Record<string, unknown> | null;
-  private readonly _forceReadonly: boolean;
+  private readonly _readonly: boolean;
 
   constructor(
     rowModel: RowModel,
@@ -27,7 +27,7 @@ export class CellVM {
     cellFSM: CellFSM,
     onCommit?: CellCommitCallback,
     systemValues?: Record<string, unknown>,
-    forceReadonly?: boolean,
+    readonly?: boolean,
   ) {
     this._rowModel = rowModel;
     this._column = column;
@@ -35,7 +35,7 @@ export class CellVM {
     this._cellFSM = cellFSM;
     this._onCommit = onCommit ?? null;
     this._systemValues = systemValues ?? null;
-    this._forceReadonly = forceReadonly ?? false;
+    this._readonly = readonly ?? false;
     makeAutoObservable(
       this,
       {
@@ -105,7 +105,7 @@ export class CellVM {
   }
 
   get isReadOnly(): boolean {
-    if (this._forceReadonly) {
+    if (this._readonly) {
       return true;
     }
     if (this._systemValues) {
