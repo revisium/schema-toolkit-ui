@@ -12,6 +12,7 @@ export interface RowContextMenuState {
 interface RowContextMenuProps {
   state: RowContextMenuState | null;
   onClose: () => void;
+  onPick?: (rowId: string) => void;
   onOpen?: (rowId: string) => void;
   onSelect?: (rowId: string) => void;
   onDuplicate?: (rowId: string) => void;
@@ -21,12 +22,15 @@ interface RowContextMenuProps {
 export const RowContextMenu: FC<RowContextMenuProps> = ({
   state,
   onClose,
+  onPick,
   onOpen,
   onSelect,
   onDuplicate,
   onDelete,
 }) => {
-  const hasItems = Boolean(onOpen || onSelect || onDuplicate || onDelete);
+  const hasItems = Boolean(
+    onPick || onOpen || onSelect || onDuplicate || onDelete,
+  );
 
   const getAnchorRect = useMemo(() => {
     if (!state) {
@@ -57,11 +61,20 @@ export const RowContextMenu: FC<RowContextMenuProps> = ({
       <Portal>
         <Menu.Positioner>
           <Menu.Content minW="160px" data-testid="row-context-menu">
+            {onPick && state && (
+              <Menu.Item value="pick" onClick={() => onPick(state.rowId)}>
+                <PiCheckSquare />
+                <Text>Pick</Text>
+              </Menu.Item>
+            )}
             {onOpen && state && (
               <Menu.Item value="open" onClick={() => onOpen(state.rowId)}>
                 <PiSidebarSimpleBold />
                 <Text>Open</Text>
               </Menu.Item>
+            )}
+            {(onPick || onOpen) && (onSelect || onDuplicate || onDelete) && (
+              <Menu.Separator />
             )}
             {onSelect && state && (
               <Menu.Item value="select" onClick={() => onSelect(state.rowId)}>
@@ -80,7 +93,7 @@ export const RowContextMenu: FC<RowContextMenuProps> = ({
             )}
             {onDelete && state && (
               <>
-                {(onOpen || onSelect || onDuplicate) && <Menu.Separator />}
+                {(onSelect || onDuplicate) && <Menu.Separator />}
                 <Menu.Item value="delete" onClick={() => onDelete(state.rowId)}>
                   <LuTrash2 />
                   <Text color="red.600">Delete</Text>
