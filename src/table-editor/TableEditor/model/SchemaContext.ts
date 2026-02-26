@@ -1,6 +1,7 @@
 import {
   SchemaParser,
   SystemSchemaIds,
+  createSchemaTree,
   fileSchema,
   rowIdSchema,
   rowCreatedAtSchema,
@@ -119,6 +120,8 @@ export class SchemaContext {
     const rowSchema = buildRowSchema(wrapped);
     const parser = new SchemaParser();
     this._rootNode = parser.parse(rowSchema, this._fullRefSchemas);
+    const tree = createSchemaTree(this._rootNode);
+    parser.parseFormulas(tree);
     this._allColumns = extractColumns(this._rootNode);
   }
 }

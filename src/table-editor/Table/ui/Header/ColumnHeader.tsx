@@ -11,6 +11,7 @@ import { ResizeHandle } from '../ResizeHandle.js';
 import { SortIndicator } from './SortIndicator.js';
 import { PinIndicator } from './PinIndicator.js';
 import { FilterIndicator } from './FilterIndicator.js';
+import { FormulaIndicator } from './FormulaIndicator.js';
 import { ColumnHeaderMenu } from './ColumnHeaderMenu.js';
 import { getFieldTypeIcon } from './getFieldTypeIcon.js';
 
@@ -155,6 +156,7 @@ export const ColumnHeader = observer(
               >
                 {column.label}
               </Text>
+              <FormulaIndicator column={column} />
               <PinIndicator field={column.field} columnsModel={columnsModel} />
               {filterModel && column.isSortable && (
                 <FilterIndicator

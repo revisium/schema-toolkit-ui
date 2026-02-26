@@ -254,16 +254,16 @@ export const RightClickTransferBetweenCells: Story = {
     const cellB = canvas.getByTestId('cell-row-2-data.age');
     await userEvent.pointer({ keys: '[MouseRight]', target: cellB });
 
-    // Menu should now be open on cell B
-    await waitFor(() => {
-      const el = document.querySelector('[data-value="copy-value"]');
-      expect(el).toBeTruthy();
-      expect(el).toBeVisible();
-    });
-
-    // Cell B should be focused
+    // Wait for old menu to close and new menu to open via setTimeout(0)
+    // The transfer goes: close A menu → setTimeout(0) → open B menu
     await waitFor(() => {
       expect(cellFSM.isCellFocused('row-2', 'data.age')).toBe(true);
+    });
+
+    await waitFor(() => {
+      const menus = document.querySelectorAll('[data-value="copy-value"]');
+      expect(menus).toHaveLength(1);
+      expect(menus[0]).toBeVisible();
     });
 
     // Close and verify
