@@ -32,9 +32,7 @@ export const RowActionOverlay: FC<RowActionOverlayProps> = ({
     ? `row-action-pick-${rowId}`
     : `row-action-open-${rowId}`;
 
-  const hasOpenInMenu = Boolean(onPick && onOpen);
-  const hasMenuItems =
-    hasOpenInMenu || Boolean(onSelect || onDuplicate || onDelete);
+  const hasMenuItems = Boolean(onOpen || onSelect || onDuplicate || onDelete);
 
   return (
     <Flex
@@ -108,17 +106,17 @@ export const RowActionOverlay: FC<RowActionOverlayProps> = ({
                   minW="180px"
                   data-testid={`row-action-menu-${rowId}`}
                 >
-                  {hasOpenInMenu && (
+                  {onOpen && (
                     <Menu.Item
                       value="open"
-                      onClick={() => onOpen?.(rowId)}
+                      onClick={() => onOpen(rowId)}
                       data-testid={`row-action-menu-open-${rowId}`}
                     >
                       <PiArrowSquareRightLight />
                       <Text>Open</Text>
                     </Menu.Item>
                   )}
-                  {hasOpenInMenu && (onSelect || onDuplicate || onDelete) && (
+                  {onOpen && (onSelect || onDuplicate || onDelete) && (
                     <Menu.Separator />
                   )}
                   <RowActionMenuItems
