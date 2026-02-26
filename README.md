@@ -236,6 +236,7 @@ All callbacks are optional and passed via `TableEditorOptions.callbacks`:
 | `onBreadcrumbClick` | `(segment, index) => void` | Navigate on breadcrumb click |
 | `onCreateRow` | `() => void` | Create a new row (shows "+" button) |
 | `onOpenRow` | `(rowId: string) => void` | Navigate to row detail view |
+| `onPickRow` | `(rowId: string) => void` | Pick a row (e.g. foreign key selection). When set, the primary row action becomes "Pick" and the table behaves as read-only |
 | `onDuplicateRow` | `(rowId: string) => void` | Duplicate a row |
 | `onSearchForeignKey` | `SearchForeignKeySearchFn` | Foreign key search handler |
 | `onUploadFile` | `(params: { rowId: string; fileId: string; file: File }) => Promise<Record<string, unknown> \| null>` | Upload a file for a file field |

@@ -29,6 +29,7 @@ interface DataRowProps {
   }) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
   onOpenRow?: (rowId: string) => void;
+  onPickRow?: (rowId: string) => void;
   onSelectRow?: (rowId: string) => void;
   onDuplicateRow?: (rowId: string) => void;
   onDeleteRow?: (rowId: string) => void;
@@ -156,12 +157,13 @@ export const DataRow = observer(
     onUploadFile,
     onOpenFile,
     onOpenRow,
+    onPickRow,
     onSelectRow,
     onDuplicateRow,
     onDeleteRow,
   }: DataRowProps) => {
     const hasRowActions = Boolean(
-      onOpenRow || onSelectRow || onDuplicateRow || onDeleteRow,
+      onOpenRow || onPickRow || onSelectRow || onDuplicateRow || onDeleteRow,
     );
 
     const selectionWidth = showSelection ? SELECTION_COLUMN_WIDTH : 0;
@@ -235,6 +237,7 @@ export const DataRow = observer(
                 <RowActionOverlay
                   rowId={row.rowId}
                   onOpen={onOpenRow}
+                  onPick={onPickRow}
                   onSelect={onSelectRow}
                   onDuplicate={onDuplicateRow}
                   onDelete={onDeleteRow}

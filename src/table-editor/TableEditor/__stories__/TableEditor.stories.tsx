@@ -401,6 +401,51 @@ export const PrimitiveStringRoot: Story = {
   },
 };
 
+export const PickMode: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableEditorStoryState({
+          dataSchema: READONLY_SCHEMA,
+          rowsData: MOCK_ROWS_DATA,
+          readonly: true,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: {
+            onPickRow: fn().mockName('onPickRow'),
+          },
+        }),
+      );
+
+      return <AdminLayoutWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
+export const PickModeWithOpen: Story = {
+  render: () => {
+    const Wrapper = observer(() => {
+      const [state] = useState(() =>
+        createTableEditorStoryState({
+          dataSchema: READONLY_SCHEMA,
+          rowsData: MOCK_ROWS_DATA,
+          readonly: true,
+          breadcrumbs: STORY_BREADCRUMBS,
+          callbacks: {
+            onPickRow: fn().mockName('onPickRow'),
+            onOpenRow: fn().mockName('onOpenRow'),
+          },
+        }),
+      );
+
+      return <AdminLayoutWrapper state={state} />;
+    });
+
+    return <Wrapper />;
+  },
+};
+
 export const NameConflictWithSystemFields: Story = {
   render: () => {
     const Wrapper = observer(() => {
