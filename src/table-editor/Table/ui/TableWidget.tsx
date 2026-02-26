@@ -49,6 +49,7 @@ interface TableWidgetProps {
   }) => Promise<Record<string, unknown> | null>;
   onOpenFile?: (url: string) => void;
   onOpenRow?: (rowId: string) => void;
+  onPickRow?: (rowId: string) => void;
   onDeleteSelected?: (ids: string[]) => void;
   onDuplicateSelected?: (ids: string[]) => void;
   onDeleteRow?: (rowId: string) => void;
@@ -76,6 +77,7 @@ export const TableWidget = observer(
     onUploadFile,
     onOpenFile,
     onOpenRow,
+    onPickRow,
     onDeleteSelected,
     onDuplicateSelected,
     onDeleteRow,
@@ -271,6 +273,7 @@ export const TableWidget = observer(
           onUploadFile={onUploadFile}
           onOpenFile={onOpenFile}
           onOpenRow={onOpenRow}
+          onPickRow={onPickRow}
           onSelectRow={canSelect ? handleSelectRow : undefined}
           onDuplicateRow={canDuplicateRow ? onDuplicateRow : undefined}
           onDeleteRow={canDeleteRow ? handleDeleteRowRequest : undefined}
@@ -283,6 +286,7 @@ export const TableWidget = observer(
         onUploadFile,
         onOpenFile,
         onOpenRow,
+        onPickRow,
         canSelect,
         canDeleteRow,
         canDuplicateRow,

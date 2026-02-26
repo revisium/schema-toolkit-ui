@@ -40,6 +40,7 @@ export interface TableEditorCallbacks {
   onBreadcrumbClick?: (segment: TableEditorBreadcrumb, index: number) => void;
   onCreateRow?: () => void;
   onOpenRow?: (rowId: string) => void;
+  onPickRow?: (rowId: string) => void;
   onDuplicateRow?: (rowId: string) => void;
   onSearchForeignKey?: SearchForeignKeySearchFn;
   onCopyPath?: (path: string) => void;

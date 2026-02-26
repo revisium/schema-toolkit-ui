@@ -97,6 +97,7 @@ export const TableEditor: FC<TableEditorProps> = observer(
             isLoadingMore={viewModel.isLoadingMore}
             onEndReached={viewModel.loadMore}
             onOpenRow={callbacks.onOpenRow}
+            onPickRow={callbacks.onPickRow}
             onDeleteRow={
               isReadonly ? undefined : (id) => viewModel.deleteRows([id])
             }
