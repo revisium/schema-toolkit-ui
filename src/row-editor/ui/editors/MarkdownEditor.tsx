@@ -1,5 +1,6 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { Box, Textarea } from '@chakra-ui/react';
+import { useAutoResize } from '../../../hooks/useAutoResize.js';
 
 export interface MarkdownEditorProps {
   value: string;
@@ -15,7 +16,7 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = ({
   dataTestId,
 }) => {
   const [internalValue, setInternalValue] = useState(value);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useAutoResize(internalValue);
 
   useEffect(() => {
     setInternalValue(value);
@@ -46,6 +47,7 @@ export const MarkdownEditor: FC<MarkdownEditorProps> = ({
         lineHeight="1.5"
         minHeight="120px"
         resize="vertical"
+        overflow="hidden"
         borderColor="gray.200"
         _focus={{
           borderColor: 'blue.400',
