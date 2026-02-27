@@ -217,6 +217,28 @@ describe('ColumnsModel', () => {
       expect(filterable).toContain('avatar.url');
       expect(filterable).not.toContain('avatar');
     });
+
+    it('sortableFields includes formula columns', () => {
+      const columns = [
+        col({ field: 'name' }),
+        col({ field: 'computed', hasFormula: true, isSortable: true }),
+      ];
+      model.init(columns);
+      const sortable = model.sortableFields.map((c) => c.field);
+      expect(sortable).toContain('name');
+      expect(sortable).toContain('computed');
+    });
+
+    it('filterableFields includes formula columns', () => {
+      const columns = [
+        col({ field: 'name' }),
+        col({ field: 'computed', hasFormula: true, isSortable: true }),
+      ];
+      model.init(columns);
+      const filterable = model.filterableFields.map((c) => c.field);
+      expect(filterable).toContain('name');
+      expect(filterable).toContain('computed');
+    });
   });
 
   describe('resetToDefaults', () => {
