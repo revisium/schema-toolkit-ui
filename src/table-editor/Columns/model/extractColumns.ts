@@ -101,7 +101,7 @@ function resolveRefColumn(
       systemFieldId: systemDef.id,
       isDeprecated,
       hasFormula,
-      isSortable: !isDeprecated && !hasFormula,
+      isSortable: !isDeprecated,
     };
   }
 
@@ -158,7 +158,6 @@ function createColumn(
     isSystem: false,
     isDeprecated,
     hasFormula,
-    isSortable:
-      !isDeprecated && !hasFormula && fieldType !== FilterFieldType.File,
+    isSortable: !isDeprecated && fieldType !== FilterFieldType.File,
   };
 }

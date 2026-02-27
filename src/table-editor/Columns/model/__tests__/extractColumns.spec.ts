@@ -288,7 +288,7 @@ describe('extractColumns', () => {
     ]);
   });
 
-  it('formula field', () => {
+  it('formula field is sortable and filterable', () => {
     const schema = obj({
       a: str(),
       b: str(),
@@ -304,7 +304,7 @@ describe('extractColumns', () => {
       isSystem: false,
       isDeprecated: false,
       hasFormula: true,
-      isSortable: false,
+      isSortable: true,
     });
   });
 
