@@ -23,10 +23,7 @@ function makeColumnsModel(fields: string[]): ColumnsModel {
   return model;
 }
 
-function makeFSMWithNavigation(
-  fields: string[],
-  rowIds: string[],
-): CellFSM {
+function makeFSMWithNavigation(fields: string[], rowIds: string[]): CellFSM {
   const fsm = new CellFSM();
   fsm.setNavigationContext(fields, rowIds);
   return fsm;
