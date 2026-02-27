@@ -150,7 +150,8 @@ function createColumn(
   fieldType: FilterFieldType,
 ): ColumnSpec {
   const isDeprecated = child.metadata().deprecated ?? false;
-  const hasFormula = child.hasFormula();
+  const formula = child.formula();
+  const hasFormula = formula !== undefined;
   return {
     field: fieldPath,
     label: stripDataPrefix(fieldPath),
@@ -158,6 +159,7 @@ function createColumn(
     isSystem: false,
     isDeprecated,
     hasFormula,
+    formulaExpression: formula?.expression(),
     isSortable: !isDeprecated && fieldType !== FilterFieldType.File,
   };
 }
