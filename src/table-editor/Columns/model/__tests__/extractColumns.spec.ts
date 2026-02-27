@@ -304,6 +304,7 @@ describe('extractColumns', () => {
       isSystem: false,
       isDeprecated: false,
       hasFormula: true,
+      formulaExpression: 'CONCAT(a, b)',
       isSortable: true,
     });
   });

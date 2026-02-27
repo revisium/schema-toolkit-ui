@@ -6,6 +6,7 @@ import { PlusButton } from '../../../components/PlusButton/index.js';
 import { FilterWidget } from '../../Filters/ui/FilterWidget.js';
 import { SearchWidget } from '../../Search/ui/SearchWidget.js';
 import { SortingsWidget } from '../../Sortings/ui/SortingsWidget.js';
+import { CellInfoWidget } from '../../Status/ui/CellInfoWidget.js';
 import { RowCountWidget } from '../../Status/ui/RowCountWidget.js';
 import { ViewSettingsBadge } from '../../Status/ui/ViewSettingsBadge.js';
 import { TableWidget } from '../../Table/ui/TableWidget.js';
@@ -116,7 +117,8 @@ export const TableEditor: FC<TableEditorProps> = observer(
         <Flex
           px={3}
           py={2}
-          justifyContent="space-between"
+          alignItems="center"
+          overflow="hidden"
           {...(useWindowScroll && {
             position: 'sticky' as const,
             bottom: 0,
@@ -125,7 +127,18 @@ export const TableEditor: FC<TableEditorProps> = observer(
           })}
         >
           <RowCountWidget model={viewModel.rowCount} />
-          <ViewSettingsBadge model={viewModel.viewBadge} />
+          <Flex
+            alignItems="center"
+            gap={3}
+            overflow="hidden"
+            flexShrink={1}
+            minW={0}
+            flex={1}
+            justifyContent="flex-end"
+          >
+            <CellInfoWidget model={viewModel.cellInfo} />
+            <ViewSettingsBadge model={viewModel.viewBadge} />
+          </Flex>
         </Flex>
       </Box>
     );
