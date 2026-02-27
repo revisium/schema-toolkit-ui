@@ -5,6 +5,7 @@ import type { ViewColumn } from '../../Columns/model/types.js';
 import { FilterModel } from '../../Filters/model/FilterModel.js';
 import { SearchModel } from '../../Search/model/SearchModel.js';
 import { SortModel } from '../../Sortings/model/SortModel.js';
+import { CellInfoModel } from '../../Status/model/CellInfoModel.js';
 import { RowCountModel } from '../../Status/model/RowCountModel.js';
 import { ViewSettingsBadgeModel } from '../../Status/model/ViewSettingsBadgeModel.js';
 import { CellFSM } from '../../Table/model/CellFSM.js';
@@ -70,6 +71,7 @@ export class TableEditorCore {
   public readonly cellFSM: CellFSM;
   public readonly selection: SelectionModel;
   public readonly rowCount: RowCountModel;
+  public readonly cellInfo: CellInfoModel;
 
   private readonly _dataSource: ITableDataSource;
   private readonly _pageSize: number;
@@ -102,6 +104,7 @@ export class TableEditorCore {
     this.cellFSM = new CellFSM();
     this.selection = new SelectionModel();
     this.rowCount = new RowCountModel();
+    this.cellInfo = new CellInfoModel(this.cellFSM, this.columns);
 
     this.columns.setOnChange(() => this._handleColumnsChange());
     this.filters.setOnChange(() => this._handleFilterChange());
