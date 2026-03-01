@@ -9,6 +9,15 @@ import {
   SEGMENT_COLOR,
 } from './constants';
 
+function getCursor(
+  onClick: (() => void) | undefined,
+  isHighlighted: boolean,
+): string {
+  if (onClick) return 'pointer';
+  if (isHighlighted) return 'text';
+  return 'default';
+}
+
 interface SegmentContentProps {
   segment: BreadcrumbSegment;
   isHighlighted: boolean;
@@ -29,7 +38,8 @@ export const SegmentContent: React.FC<SegmentContentProps> = ({
       borderRadius={BREADCRUMB_BORDER_RADIUS}
       px={BREADCRUMB_PADDING}
       py={BREADCRUMB_PADDING}
-      cursor={onClick ? 'pointer' : isHighlighted ? 'text' : 'default'}
+      cursor={getCursor(onClick, isHighlighted)}
+      type={onClick ? 'button' : undefined}
       border="none"
       background="none"
       outline="none"
