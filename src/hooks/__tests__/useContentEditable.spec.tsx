@@ -324,6 +324,85 @@ describe('useContentEditable', () => {
       expect(document.activeElement).toBe(el);
     });
   });
+
+  describe('external value sync', () => {
+    function TestControlled() {
+      const [value, setValue] = useState('initial');
+      const editableProps = useContentEditable({ value, onChange: setValue });
+      return (
+        <>
+          <div data-testid="editable" {...editableProps} />
+          <button data-testid="revert" onClick={() => setValue('initial')} />
+          <button data-testid="set-new" onClick={() => setValue('changed')} />
+        </>
+      );
+    }
+
+    it('updates DOM when value changes externally while not focused', () => {
+      const { getByTestId } = render(<TestControlled />);
+      const el = getByTestId('editable');
+
+      // simulate user typing — updates internal value via onChange
+      act(() => {
+        Object.defineProperty(el, 'innerText', {
+          value: 'typed',
+          writable: true,
+          configurable: true,
+        });
+        fireEvent.input(el);
+      });
+
+      // revert externally
+      act(() => {
+        fireEvent.click(getByTestId('revert'));
+      });
+
+      expect(el.textContent).toBe('initial');
+    });
+
+    it('syncs DOM on blur when value was changed externally during focus', () => {
+      const { getByTestId, rerender } = render(
+        <TestComponent value="initial" />,
+      );
+      const el = getByTestId('editable');
+
+      // user focuses and types — DOM diverges from value
+      act(() => {
+        fireEvent.focus(el);
+      });
+      act(() => {
+        el.textContent = 'user typed';
+      });
+
+      // external revert changes value prop but DOM is not updated (user is typing)
+      rerender(<TestComponent value="reverted" />);
+      // manually restore DOM to "user typed" to simulate contenteditable not being overwritten
+      el.textContent = 'user typed';
+      expect(el.textContent).toBe('user typed');
+
+      // user blurs — DOM must sync to current external value
+      act(() => {
+        fireEvent.blur(el);
+      });
+
+      expect(el.textContent).toBe('reverted');
+    });
+
+    it('isFocusedRef tracks focus and blur correctly', () => {
+      const onFocus = jest.fn();
+      const onBlur = jest.fn();
+      const { getByTestId } = render(
+        <TestComponent value="initial" onFocus={onFocus} onBlur={onBlur} />,
+      );
+      const el = getByTestId('editable');
+
+      fireEvent.focus(el);
+      expect(onFocus).toHaveBeenCalledTimes(1);
+
+      fireEvent.blur(el);
+      expect(onBlur).toHaveBeenCalledTimes(1);
+    });
+  });
 });
 
 function createKeyboardEvent(

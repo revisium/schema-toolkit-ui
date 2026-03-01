@@ -19,6 +19,10 @@ export function setPendingContextMenu(value: PendingContextMenu): void {
   pendingContextMenu = value;
 }
 
+export function hasPendingContextMenu(): boolean {
+  return pendingContextMenu !== null;
+}
+
 type OpenMenuFn = (clientX: number, clientY: number) => void;
 export const cellMenuRegistry = new WeakMap<HTMLElement, OpenMenuFn>();
 
