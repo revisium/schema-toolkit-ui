@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Box, chakra } from '@chakra-ui/react';
 import React from 'react';
 import { type BreadcrumbSegment } from './Breadcrumbs';
 import {
@@ -9,14 +9,17 @@ import {
   SEGMENT_COLOR,
 } from './constants';
 
-function getCursor(
-  onClick: (() => void) | undefined,
-  isHighlighted: boolean,
-): string {
-  if (onClick) return 'pointer';
-  if (isHighlighted) return 'text';
-  return 'default';
-}
+const StyledButton = chakra('button');
+
+const SHARED_STYLES = {
+  display: 'inline-block',
+  borderRadius: BREADCRUMB_BORDER_RADIUS,
+  px: BREADCRUMB_PADDING,
+  py: BREADCRUMB_PADDING,
+  lineHeight: 'inherit',
+  fontSize: 'inherit',
+  fontFamily: 'inherit',
+} as const;
 
 interface SegmentContentProps {
   segment: BreadcrumbSegment;
@@ -29,28 +32,35 @@ export const SegmentContent: React.FC<SegmentContentProps> = ({
   isHighlighted,
   onClick,
 }) => {
+  if (onClick) {
+    return (
+      <StyledButton
+        type="button"
+        {...SHARED_STYLES}
+        color={SEGMENT_COLOR}
+        cursor="pointer"
+        border="none"
+        background="none"
+        outline="none"
+        _hover={{ bg: HOVER_BG }}
+        _focusVisible={{ bg: HOVER_BG }}
+        onClick={onClick}
+        data-testid={segment.dataTestId}
+      >
+        {segment.label}
+      </StyledButton>
+    );
+  }
+
   return (
     <Box
-      as={onClick ? 'button' : 'span'}
-      display="inline-block"
+      as="span"
+      {...SHARED_STYLES}
       color={isHighlighted ? CURRENT_COLOR : SEGMENT_COLOR}
       fontWeight={isHighlighted ? '600' : undefined}
-      borderRadius={BREADCRUMB_BORDER_RADIUS}
-      px={BREADCRUMB_PADDING}
-      py={BREADCRUMB_PADDING}
-      cursor={getCursor(onClick, isHighlighted)}
-      type={onClick ? 'button' : undefined}
-      border="none"
-      background="none"
-      outline="none"
-      lineHeight="inherit"
-      fontSize="inherit"
-      fontFamily="inherit"
-      _hover={onClick ? { bg: HOVER_BG } : undefined}
-      _focusVisible={onClick ? { bg: HOVER_BG } : undefined}
-      onClick={onClick}
-      data-testid={segment.dataTestId}
+      cursor={isHighlighted ? 'text' : 'default'}
       aria-current={isHighlighted ? 'page' : undefined}
+      data-testid={segment.dataTestId}
     >
       {segment.label}
     </Box>
