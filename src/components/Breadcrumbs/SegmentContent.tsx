@@ -1,5 +1,4 @@
-import { Text } from '@chakra-ui/react';
-import { Breadcrumb } from '@chakra-ui/react/breadcrumb';
+import { Box } from '@chakra-ui/react';
 import React from 'react';
 import { type BreadcrumbSegment } from './Breadcrumbs';
 import {
@@ -21,41 +20,29 @@ export const SegmentContent: React.FC<SegmentContentProps> = ({
   isHighlighted,
   onClick,
 }) => {
-  if (isHighlighted) {
-    return (
-      <Breadcrumb.CurrentLink
-        color={CURRENT_COLOR}
-        fontWeight="600"
-        data-testid={segment.dataTestId}
-      >
-        {segment.label}
-      </Breadcrumb.CurrentLink>
-    );
-  }
-
-  if (onClick) {
-    return (
-      <Breadcrumb.Link
-        as="button"
-        color={SEGMENT_COLOR}
-        borderRadius={BREADCRUMB_BORDER_RADIUS}
-        px={BREADCRUMB_PADDING}
-        py={BREADCRUMB_PADDING}
-        focusRing="none"
-        cursor="pointer"
-        _hover={{ bg: HOVER_BG }}
-        _focusVisible={{ bg: HOVER_BG }}
-        onClick={onClick}
-        data-testid={segment.dataTestId}
-      >
-        {segment.label}
-      </Breadcrumb.Link>
-    );
-  }
-
   return (
-    <Text color={SEGMENT_COLOR} data-testid={segment.dataTestId}>
+    <Box
+      as={onClick ? 'button' : 'span'}
+      display="inline-block"
+      color={isHighlighted ? CURRENT_COLOR : SEGMENT_COLOR}
+      fontWeight={isHighlighted ? '600' : undefined}
+      borderRadius={BREADCRUMB_BORDER_RADIUS}
+      px={BREADCRUMB_PADDING}
+      py={BREADCRUMB_PADDING}
+      cursor={onClick ? 'pointer' : isHighlighted ? 'text' : 'default'}
+      border="none"
+      background="none"
+      outline="none"
+      lineHeight="inherit"
+      fontSize="inherit"
+      fontFamily="inherit"
+      _hover={onClick ? { bg: HOVER_BG } : undefined}
+      _focusVisible={onClick ? { bg: HOVER_BG } : undefined}
+      onClick={onClick}
+      data-testid={segment.dataTestId}
+      aria-current={isHighlighted ? 'page' : undefined}
+    >
       {segment.label}
-    </Text>
+    </Box>
   );
 };
