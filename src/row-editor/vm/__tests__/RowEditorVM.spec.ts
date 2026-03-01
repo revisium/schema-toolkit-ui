@@ -123,6 +123,45 @@ describe('RowEditorVM', () => {
       expect(vm.isDirty).toBe(false);
       expect(vm.getValue()).toEqual({ name: 'John', age: 25 });
     });
+
+    it('reverts rowId to initialRowId', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-renamed');
+      expect(vm.rowId).toBe('row-renamed');
+
+      vm.revert();
+
+      expect(vm.rowId).toBe('row-1');
+      expect(vm.initialRowId).toBe('row-1');
+      expect(vm.isRowIdChanged).toBe(false);
+    });
+
+    it('reverts both rowId and data changes', () => {
+      const vm = new RowEditorVM(
+        simpleSchema,
+        { name: 'John', age: 25 },
+        { rowId: 'row-1' },
+      );
+
+      vm.setRowId('row-renamed');
+      if (vm.root.isObject()) {
+        const nameChild = vm.root.child('name');
+        if (nameChild?.isPrimitive()) {
+          nameChild.setValue('Jane');
+        }
+      }
+
+      vm.revert();
+
+      expect(vm.rowId).toBe('row-1');
+      expect(vm.getValue()).toEqual({ name: 'John', age: 25 });
+      expect(vm.hasChanges).toBe(false);
+    });
   });
 
   describe('isValid', () => {
