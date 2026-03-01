@@ -169,6 +169,7 @@ export class RowEditorVM implements EditorContext {
 
   revert(): void {
     this._rowModel.revert();
+    this._rowId = this._initialRowId;
     this._prevPatchCount = 0;
   }
 
