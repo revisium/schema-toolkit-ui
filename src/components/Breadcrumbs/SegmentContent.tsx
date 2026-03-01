@@ -24,12 +24,14 @@ const SHARED_STYLES = {
 interface SegmentContentProps {
   segment: BreadcrumbSegment;
   isHighlighted: boolean;
+  isLast?: boolean;
   onClick?: () => void;
 }
 
 export const SegmentContent: React.FC<SegmentContentProps> = ({
   segment,
   isHighlighted,
+  isLast,
   onClick,
 }) => {
   if (onClick) {
@@ -60,7 +62,7 @@ export const SegmentContent: React.FC<SegmentContentProps> = ({
       {...SHARED_STYLES}
       color={isHighlighted ? CURRENT_COLOR : SEGMENT_COLOR}
       fontWeight={isHighlighted ? '600' : undefined}
-      cursor={isHighlighted ? 'text' : 'default'}
+      cursor={isHighlighted || isLast ? 'text' : 'default'}
       aria-current={isHighlighted ? 'page' : undefined}
       data-testid={segment.dataTestId}
     >

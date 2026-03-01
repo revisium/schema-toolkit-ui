@@ -72,6 +72,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
                 <SegmentContent
                   segment={segment}
                   isHighlighted={isHighlighted}
+                  isLast={isLast}
                   onClick={isLast ? undefined : handleClick}
                 />
               </Flex>
