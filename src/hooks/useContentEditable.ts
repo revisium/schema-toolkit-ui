@@ -62,6 +62,15 @@ export function useContentEditable(
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
+  const isFocusedRef = useRef(false);
+
+  useEffect(() => {
+    const el = elementRef.current;
+    if (el && !isFocusedRef.current && el.textContent !== value) {
+      el.textContent = value;
+    }
+  }, [value]);
+
   const ref: RefCallback<HTMLElement> = useCallback((node) => {
     elementRef.current = node;
   }, []);
@@ -122,11 +131,17 @@ export function useContentEditable(
   }, []);
 
   const handleBlur: FormEventHandler<HTMLElement> = useCallback(() => {
+    isFocusedRef.current = false;
+    const el = elementRef.current;
+    if (el && el.textContent !== optionsRef.current.value) {
+      el.textContent = optionsRef.current.value;
+    }
     optionsRef.current.onBlur?.();
     cursorPosition.current = null;
   }, []);
 
   const handleFocus: FocusEventHandler<HTMLElement> = useCallback(() => {
+    isFocusedRef.current = true;
     optionsRef.current.onFocus?.();
   }, []);
 

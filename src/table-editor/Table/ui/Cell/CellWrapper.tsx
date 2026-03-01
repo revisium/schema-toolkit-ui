@@ -20,6 +20,7 @@ import { getCellState } from './cellStyles.js';
 import {
   useCellContextMenu,
   setPendingContextMenu,
+  hasPendingContextMenu,
 } from './useCellContextMenu.js';
 import { useCellFocus } from './useCellFocus.js';
 import { useCellKeyboard } from './useCellKeyboard.js';
@@ -143,7 +144,9 @@ export const CellWrapper: FC<CellWrapperProps> = observer(
           e.preventDefault();
         }
         if (e.button === 2) {
-          openContextMenuAt(e.clientX, e.clientY);
+          if (!hasPendingContextMenu()) {
+            openContextMenuAt(e.clientX, e.clientY);
+          }
           return;
         }
         if (!e.shiftKey && e.button === 0 && state !== 'editing') {

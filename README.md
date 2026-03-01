@@ -284,6 +284,54 @@ core.applyViewState(s)  // restore view settings
 core.dispose()          // cleanup
 ```
 
+## Hooks
+
+### `useContentEditable`
+
+A controlled `contenteditable` hook that manages DOM synchronization, cursor position, and keyboard shortcuts.
+
+```tsx
+import { useContentEditable } from '@revisium/schema-toolkit-ui';
+
+const editableProps = useContentEditable({
+  value,
+  onChange: (v) => setValue(v),
+  onBlur: () => { /* called after DOM is synced */ },
+  onFocus: () => {},
+  onEnter: () => { /* Enter key pressed with non-empty value */ },
+  onEscape: () => { /* Escape key pressed */ },
+  restrict: /^[a-z0-9-]$/, // optional — block disallowed keys
+  autoFocus: true,          // optional — focus on mount
+  focusTrigger: n,          // optional — increment to focus programmatically
+});
+
+return <div data-testid="editable" {...editableProps} />;
+```
+
+#### How it works
+
+`dangerouslySetInnerHTML` sets the initial DOM content. After that React does not overwrite the DOM on re-renders (standard contenteditable contract). The hook handles synchronization explicitly:
+
+| Event | Behaviour |
+|-------|-----------|
+| User types | `onChange(value)` called on every `input` event. Cursor position is preserved across re-renders. |
+| `value` prop changes while **not focused** | DOM updated immediately via `textContent`. |
+| `value` prop changes while **focused** | DOM is left untouched so the user can keep typing without interruption. |
+| `blur` | If `value` diverged from DOM (e.g. external revert happened while focused), DOM is synced to `value` before `onBlur` is called. |
+| `Enter` | `blur()` called then `onEnter()` (only when `value` is non-empty). |
+| `Escape` | `blur()` called then `onEscape()`. |
+
+#### Controlled revert pattern
+
+Because DOM sync on blur is guaranteed, a revert triggered while the element is focused will correctly reset the displayed text when the user leaves the field:
+
+```tsx
+// External state revert while user is typing:
+//   value prop → 'original'
+//   DOM         → 'user typed...'  (untouched during focus)
+//   on blur    → DOM is reset to 'original' ✓
+```
+
 ### Cleanup
 
 Call `vm.dispose()` (or `core.dispose()` for `TableEditorCore`) when the editor is unmounted.
