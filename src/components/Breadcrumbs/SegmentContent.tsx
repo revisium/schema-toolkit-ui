@@ -37,7 +37,8 @@ export const SegmentContent: React.FC<SegmentContentProps> = ({
       <StyledButton
         type="button"
         {...SHARED_STYLES}
-        color={SEGMENT_COLOR}
+        color={isHighlighted ? CURRENT_COLOR : SEGMENT_COLOR}
+        fontWeight={isHighlighted ? '600' : undefined}
         cursor="pointer"
         border="none"
         background="none"
@@ -45,6 +46,7 @@ export const SegmentContent: React.FC<SegmentContentProps> = ({
         _hover={{ bg: HOVER_BG }}
         _focusVisible={{ bg: HOVER_BG }}
         onClick={onClick}
+        aria-current={isHighlighted ? 'page' : undefined}
         data-testid={segment.dataTestId}
       >
         {segment.label}
