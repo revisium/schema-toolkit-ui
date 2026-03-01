@@ -1,5 +1,4 @@
-import { Text } from '@chakra-ui/react';
-import { Breadcrumb } from '@chakra-ui/react/breadcrumb';
+import { Box, chakra } from '@chakra-ui/react';
 import React from 'react';
 import { type BreadcrumbSegment } from './Breadcrumbs';
 import {
@@ -9,6 +8,18 @@ import {
   HOVER_BG,
   SEGMENT_COLOR,
 } from './constants';
+
+const StyledButton = chakra('button');
+
+const SHARED_STYLES = {
+  display: 'inline-block',
+  borderRadius: BREADCRUMB_BORDER_RADIUS,
+  px: BREADCRUMB_PADDING,
+  py: BREADCRUMB_PADDING,
+  lineHeight: 'inherit',
+  fontSize: 'inherit',
+  fontFamily: 'inherit',
+} as const;
 
 interface SegmentContentProps {
   segment: BreadcrumbSegment;
@@ -21,41 +32,39 @@ export const SegmentContent: React.FC<SegmentContentProps> = ({
   isHighlighted,
   onClick,
 }) => {
-  if (isHighlighted) {
-    return (
-      <Breadcrumb.CurrentLink
-        color={CURRENT_COLOR}
-        fontWeight="600"
-        data-testid={segment.dataTestId}
-      >
-        {segment.label}
-      </Breadcrumb.CurrentLink>
-    );
-  }
-
   if (onClick) {
     return (
-      <Breadcrumb.Link
-        as="button"
-        color={SEGMENT_COLOR}
-        borderRadius={BREADCRUMB_BORDER_RADIUS}
-        px={BREADCRUMB_PADDING}
-        py={BREADCRUMB_PADDING}
-        focusRing="none"
+      <StyledButton
+        type="button"
+        {...SHARED_STYLES}
+        color={isHighlighted ? CURRENT_COLOR : SEGMENT_COLOR}
+        fontWeight={isHighlighted ? '600' : undefined}
         cursor="pointer"
+        border="none"
+        background="none"
+        outline="none"
         _hover={{ bg: HOVER_BG }}
         _focusVisible={{ bg: HOVER_BG }}
         onClick={onClick}
+        aria-current={isHighlighted ? 'page' : undefined}
         data-testid={segment.dataTestId}
       >
         {segment.label}
-      </Breadcrumb.Link>
+      </StyledButton>
     );
   }
 
   return (
-    <Text color={SEGMENT_COLOR} data-testid={segment.dataTestId}>
+    <Box
+      as="span"
+      {...SHARED_STYLES}
+      color={isHighlighted ? CURRENT_COLOR : SEGMENT_COLOR}
+      fontWeight={isHighlighted ? '600' : undefined}
+      cursor={isHighlighted ? 'text' : 'default'}
+      aria-current={isHighlighted ? 'page' : undefined}
+      data-testid={segment.dataTestId}
+    >
       {segment.label}
-    </Text>
+    </Box>
   );
 };

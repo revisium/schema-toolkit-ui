@@ -1,5 +1,4 @@
 import { Flex, Text } from '@chakra-ui/react';
-import { Breadcrumb } from '@chakra-ui/react/breadcrumb';
 import React, { Fragment } from 'react';
 import {
   BREADCRUMB_FONT_SIZE,
@@ -43,51 +42,66 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   action,
 }) => {
   return (
-    <Flex alignItems="center" gap={BREADCRUMB_PADDING}>
-      <Breadcrumb.Root
+    <Flex
+      as="nav"
+      aria-label="breadcrumb"
+      alignItems="center"
+      gap={BREADCRUMB_PADDING}
+      data-testid={dataTestId}
+    >
+      <Flex
+        as="ol"
+        alignItems="center"
+        listStyleType="none"
+        margin={0}
+        padding={0}
         fontWeight="400"
         fontSize={BREADCRUMB_FONT_SIZE}
-        data-testid={dataTestId}
+        gap={BREADCRUMB_PADDING}
       >
-        <Breadcrumb.List fontSize={BREADCRUMB_FONT_SIZE}>
-          {segments.map((segment, index) => {
-            const isLast = index === segments.length - 1 && !editable;
-            const isHighlighted = isLast && highlightLast;
-            const handleClick = onSegmentClick
-              ? () => onSegmentClick(segment, index)
-              : undefined;
+        {segments.map((segment, index) => {
+          const isLast = index === segments.length - 1 && !editable;
+          const isHighlighted = isLast && highlightLast;
+          const handleClick = onSegmentClick
+            ? () => onSegmentClick(segment, index)
+            : undefined;
 
-            return (
-              <Fragment key={`${segment.label}-${index}`}>
-                <Breadcrumb.Item>
-                  <SegmentContent
-                    segment={segment}
-                    isHighlighted={isHighlighted}
-                    onClick={isLast ? undefined : handleClick}
-                  />
-                </Breadcrumb.Item>
-                {(!isLast || editable) && (
-                  <Breadcrumb.Separator>
-                    <Text color={SEPARATOR_COLOR}>{separator}</Text>
-                  </Breadcrumb.Separator>
-                )}
-              </Fragment>
-            );
-          })}
-          {editable && (
-            <Breadcrumb.Item>
-              <EditableSegment
-                value={editable.value}
-                onChange={editable.onChange}
-                onBlur={editable.onBlur}
-                tooltip={editable.tooltip}
-                placeholder={editable.placeholder}
-                dataTestId={editable.dataTestId}
-              />
-            </Breadcrumb.Item>
-          )}
-        </Breadcrumb.List>
-      </Breadcrumb.Root>
+          return (
+            <Fragment key={`${segment.label}-${index}`}>
+              <Flex as="li" alignItems="center">
+                <SegmentContent
+                  segment={segment}
+                  isHighlighted={isHighlighted}
+                  onClick={isLast ? undefined : handleClick}
+                />
+              </Flex>
+              {(!isLast || editable) && (
+                <Flex as="li" aria-hidden alignItems="center">
+                  <Text
+                    color={SEPARATOR_COLOR}
+                    px={BREADCRUMB_PADDING}
+                    lineHeight={1}
+                  >
+                    {separator}
+                  </Text>
+                </Flex>
+              )}
+            </Fragment>
+          );
+        })}
+        {editable && (
+          <Flex as="li" alignItems="center">
+            <EditableSegment
+              value={editable.value}
+              onChange={editable.onChange}
+              onBlur={editable.onBlur}
+              tooltip={editable.tooltip}
+              placeholder={editable.placeholder}
+              dataTestId={editable.dataTestId}
+            />
+          </Flex>
+        )}
+      </Flex>
       {action}
     </Flex>
   );

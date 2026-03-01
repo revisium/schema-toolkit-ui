@@ -48,7 +48,7 @@ export const TableEditor: FC<TableEditorProps> = observer(
           px={3}
           pt="32px"
           pb="48px"
-          alignItems="center"
+          alignItems="flex-start"
           justifyContent="space-between"
           {...(useWindowScroll && {
             position: 'sticky' as const,
