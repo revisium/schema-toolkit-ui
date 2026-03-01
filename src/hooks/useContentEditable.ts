@@ -67,7 +67,7 @@ export function useContentEditable(
   useEffect(() => {
     const el = elementRef.current;
     if (el && !isFocusedRef.current && el.textContent !== value) {
-      el.innerText = value;
+      el.textContent = value;
     }
   }, [value]);
 
@@ -132,6 +132,10 @@ export function useContentEditable(
 
   const handleBlur: FormEventHandler<HTMLElement> = useCallback(() => {
     isFocusedRef.current = false;
+    const el = elementRef.current;
+    if (el && el.textContent !== optionsRef.current.value) {
+      el.textContent = optionsRef.current.value;
+    }
     optionsRef.current.onBlur?.();
     cursorPosition.current = null;
   }, []);
