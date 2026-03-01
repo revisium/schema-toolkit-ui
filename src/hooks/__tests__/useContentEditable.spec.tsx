@@ -344,7 +344,11 @@ describe('useContentEditable', () => {
 
       // simulate user typing — updates internal value via onChange
       act(() => {
-        Object.defineProperty(el, 'innerText', { value: 'typed', writable: true, configurable: true });
+        Object.defineProperty(el, 'innerText', {
+          value: 'typed',
+          writable: true,
+          configurable: true,
+        });
         fireEvent.input(el);
       });
 
