@@ -367,7 +367,9 @@ describe('useContentEditable', () => {
       const el = getByTestId('editable');
 
       // user focuses and types — DOM diverges from value
-      act(() => { fireEvent.focus(el); });
+      act(() => {
+        fireEvent.focus(el);
+      });
       act(() => {
         el.textContent = 'user typed';
       });
@@ -379,7 +381,9 @@ describe('useContentEditable', () => {
       expect(el.textContent).toBe('user typed');
 
       // user blurs — DOM must sync to current external value
-      act(() => { fireEvent.blur(el); });
+      act(() => {
+        fireEvent.blur(el);
+      });
 
       expect(el.textContent).toBe('reverted');
     });
