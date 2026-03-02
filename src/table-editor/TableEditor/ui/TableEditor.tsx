@@ -1,6 +1,7 @@
 import { FC } from 'react';
-import { Box, Flex, Spinner } from '@chakra-ui/react';
+import { Box, Flex } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
+import { useDelayedVisibility } from '../../../hooks/useDelayedVisibility.js';
 import { Breadcrumbs } from '../../../components/Breadcrumbs/Breadcrumbs.js';
 import { PlusButton } from '../../../components/PlusButton/index.js';
 import { FilterWidget } from '../../Filters/ui/FilterWidget.js';
@@ -11,8 +12,26 @@ import { RowCountWidget } from '../../Status/ui/RowCountWidget.js';
 import { ViewSettingsBadge } from '../../Status/ui/ViewSettingsBadge.js';
 import { TableWidget } from '../../Table/ui/TableWidget.js';
 import type { TableEditorCore } from '../model/TableEditorCore.js';
+import { TableEditorSkeleton } from './TableEditorSkeleton.js';
 
 const noop = () => {};
+
+function getWriteCallbacks(
+  isReadonly: boolean,
+  viewModel: TableEditorCore,
+  callbacks: TableEditorCore['callbacks'],
+) {
+  return {
+    onDeleteRow: isReadonly
+      ? undefined
+      : (id: string) => viewModel.deleteRows([id]),
+    onDuplicateRow: isReadonly ? undefined : callbacks.onDuplicateRow,
+    onDeleteSelected: isReadonly
+      ? undefined
+      : (ids: string[]) => viewModel.deleteRows(ids),
+    onUploadFile: isReadonly ? undefined : callbacks.onUploadFile,
+  };
+}
 
 export interface TableEditorProps {
   viewModel: TableEditorCore;
@@ -21,16 +40,19 @@ export interface TableEditorProps {
 
 export const TableEditor: FC<TableEditorProps> = observer(
   ({ viewModel, useWindowScroll }) => {
+    const showSkeleton = useDelayedVisibility(viewModel.isBootstrapping);
+
     if (viewModel.isBootstrapping) {
+      if (!showSkeleton) return null;
       return (
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          height="100%"
-        >
-          <Spinner />
-        </Box>
+        <TableEditorSkeleton
+          breadcrumbs={viewModel.breadcrumbs}
+          onBreadcrumbClick={viewModel.callbacks.onBreadcrumbClick}
+          showCreateButton={
+            !viewModel.readonly && !!viewModel.callbacks.onCreateRow
+          }
+          useWindowScroll={useWindowScroll}
+        />
       );
     }
 
@@ -99,15 +121,8 @@ export const TableEditor: FC<TableEditorProps> = observer(
             onEndReached={viewModel.loadMore}
             onOpenRow={callbacks.onOpenRow}
             onPickRow={callbacks.onPickRow}
-            onDeleteRow={
-              isReadonly ? undefined : (id) => viewModel.deleteRows([id])
-            }
-            onDuplicateRow={isReadonly ? undefined : callbacks.onDuplicateRow}
-            onDeleteSelected={
-              isReadonly ? undefined : (ids) => viewModel.deleteRows(ids)
-            }
+            {...getWriteCallbacks(isReadonly, viewModel, callbacks)}
             onSearchForeignKey={callbacks.onSearchForeignKey}
-            onUploadFile={isReadonly ? undefined : callbacks.onUploadFile}
             onOpenFile={callbacks.onOpenFile}
             onCopyPath={callbacks.onCopyPath}
             useWindowScroll={useWindowScroll}
