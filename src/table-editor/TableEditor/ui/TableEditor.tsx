@@ -16,6 +16,23 @@ import { TableEditorSkeleton } from './TableEditorSkeleton.js';
 
 const noop = () => {};
 
+function getWriteCallbacks(
+  isReadonly: boolean,
+  viewModel: TableEditorCore,
+  callbacks: TableEditorCore['callbacks'],
+) {
+  return {
+    onDeleteRow: isReadonly
+      ? undefined
+      : (id: string) => viewModel.deleteRows([id]),
+    onDuplicateRow: isReadonly ? undefined : callbacks.onDuplicateRow,
+    onDeleteSelected: isReadonly
+      ? undefined
+      : (ids: string[]) => viewModel.deleteRows(ids),
+    onUploadFile: isReadonly ? undefined : callbacks.onUploadFile,
+  };
+}
+
 export interface TableEditorProps {
   viewModel: TableEditorCore;
   useWindowScroll?: boolean;
@@ -104,15 +121,8 @@ export const TableEditor: FC<TableEditorProps> = observer(
             onEndReached={viewModel.loadMore}
             onOpenRow={callbacks.onOpenRow}
             onPickRow={callbacks.onPickRow}
-            onDeleteRow={
-              isReadonly ? undefined : (id) => viewModel.deleteRows([id])
-            }
-            onDuplicateRow={isReadonly ? undefined : callbacks.onDuplicateRow}
-            onDeleteSelected={
-              isReadonly ? undefined : (ids) => viewModel.deleteRows(ids)
-            }
+            {...getWriteCallbacks(isReadonly, viewModel, callbacks)}
             onSearchForeignKey={callbacks.onSearchForeignKey}
-            onUploadFile={isReadonly ? undefined : callbacks.onUploadFile}
             onOpenFile={callbacks.onOpenFile}
             onCopyPath={callbacks.onCopyPath}
             useWindowScroll={useWindowScroll}

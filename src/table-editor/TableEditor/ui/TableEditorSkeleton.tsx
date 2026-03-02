@@ -84,14 +84,14 @@ export const TableEditorSkeleton: FC<TableEditorSkeletonProps> = ({
         borderColor="gray.100"
       >
         {COLUMN_WIDTHS.map((colWidth, j) => (
-          <Box key={j} width={`${colWidth}px`} flexShrink={0}>
+          <Box key={`h-${j}`} width={`${colWidth}px`} flexShrink={0}>
             <Skeleton height="12px" width="60px" borderRadius="4px" />
           </Box>
         ))}
       </Flex>
       {CONTENT_WIDTHS.slice(0, SKELETON_ROW_COUNT).map((contentWidths, i) => (
         <Flex
-          key={i}
+          key={`r-${i}`}
           height={`${DATA_ROW_HEIGHT}px`}
           alignItems="center"
           px={3}
@@ -99,7 +99,7 @@ export const TableEditorSkeleton: FC<TableEditorSkeletonProps> = ({
           borderColor="gray.100"
         >
           {COLUMN_WIDTHS.map((colWidth, j) => (
-            <Box key={j} width={`${colWidth}px`} flexShrink={0}>
+            <Box key={`r-${i}-c-${j}`} width={`${colWidth}px`} flexShrink={0}>
               <Skeleton
                 height="14px"
                 width={`${contentWidths[j]}px`}
