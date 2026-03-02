@@ -3,6 +3,7 @@ import { Box, Flex, Text } from '@chakra-ui/react';
 import { observer } from 'mobx-react-lite';
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
+import { TableEditorSkeleton } from '../ui/TableEditorSkeleton.js';
 import {
   obj,
   str,
@@ -444,6 +445,47 @@ export const PickModeWithOpen: Story = {
 
     return <Wrapper />;
   },
+};
+
+export const SkeletonState: Story = {
+  render: () => (
+    <Flex minHeight="100vh">
+      <Flex
+        borderRight="1px solid"
+        borderRightColor="gray.200"
+        flexDirection="column"
+        padding="16px"
+        width="288px"
+        minWidth="288px"
+        flexShrink={0}
+        height="100vh"
+        top={0}
+        position="sticky"
+        bg="white"
+      >
+        <Text fontWeight="bold" fontSize="sm" mb={4}>
+          Sidebar
+        </Text>
+      </Flex>
+      <Flex alignItems="center" flex={1} flexDirection="column" width="100%">
+        <Flex
+          flex={1}
+          flexDirection="column"
+          maxWidth="900px"
+          padding="0 1rem 0 1rem"
+          width="100%"
+        >
+          <TableEditorSkeleton
+            breadcrumbs={STORY_BREADCRUMBS}
+            onBreadcrumbClick={fn().mockName('onBreadcrumbClick')}
+            showCreateButton
+            useWindowScroll
+          />
+        </Flex>
+      </Flex>
+    </Flex>
+  ),
+  parameters: { layout: 'fullscreen' },
 };
 
 export const NameConflictWithSystemFields: Story = {
