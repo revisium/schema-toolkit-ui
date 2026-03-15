@@ -24,9 +24,15 @@ export interface TableMetadata {
   refSchemas?: RefSchemas;
 }
 
+export interface OrderByEntry {
+  field: string;
+  direction: string;
+  type?: string;
+}
+
 export interface TableQuery {
   where: Record<string, unknown> | null;
-  orderBy: Array<{ field: string; direction: string }>;
+  orderBy: OrderByEntry[];
   search: string;
   first: number;
   after: string | null;
