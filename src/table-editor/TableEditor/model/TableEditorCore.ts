@@ -260,11 +260,13 @@ export class TableEditorCore {
       this._replaceRowVMs(result.rows);
       this._endCursor = result.endCursor;
       this._hasNextPage = result.hasNextPage;
+      const isFiltering =
+        this.filters.hasActiveFilters || this.search.hasActiveSearch;
       this.rowCount.setTotalCount(result.totalCount);
-      this.rowCount.setBaseTotalCount(result.totalCount);
-      this.rowCount.setIsFiltering(
-        this.filters.hasActiveFilters || this.search.hasActiveSearch,
-      );
+      if (!isFiltering) {
+        this.rowCount.setBaseTotalCount(result.totalCount);
+      }
+      this.rowCount.setIsFiltering(isFiltering);
       this._updateNavigationContext();
     });
   }

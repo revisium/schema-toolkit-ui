@@ -125,6 +125,43 @@ describe('TableEditorCore', () => {
       expect(core.rowCount.baseTotalCount).toBe(3);
     });
 
+    it('preserves baseTotalCount after search filter', async () => {
+      const { core } = await createCore();
+      expect(core.rowCount.totalCount).toBe(3);
+      expect(core.rowCount.baseTotalCount).toBe(3);
+      jest.useFakeTimers();
+      try {
+        core.search.setQuery('Alice');
+        jest.advanceTimersByTime(300);
+        await jest.runAllTimersAsync();
+        expect(core.rowCount.totalCount).toBe(1);
+        expect(core.rowCount.baseTotalCount).toBe(3);
+        expect(core.rowCount.text).toBe('1 of 3 rows');
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('restores baseTotalCount after clearing search', async () => {
+      const { core } = await createCore();
+      jest.useFakeTimers();
+      try {
+        core.search.setQuery('Alice');
+        jest.advanceTimersByTime(300);
+        await jest.runAllTimersAsync();
+        expect(core.rowCount.totalCount).toBe(1);
+        expect(core.rowCount.baseTotalCount).toBe(3);
+
+        core.search.clear();
+        await jest.runAllTimersAsync();
+        expect(core.rowCount.totalCount).toBe(3);
+        expect(core.rowCount.baseTotalCount).toBe(3);
+        expect(core.rowCount.text).toBe('3 rows');
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
     it('primitive root schema shows data column by default', async () => {
       const dataSource = new MockDataSource({
         dataSchema: str(),
