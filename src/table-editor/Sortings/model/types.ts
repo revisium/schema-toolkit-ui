@@ -7,3 +7,9 @@ export interface ViewSort {
   field: string;
   direction: string;
 }
+
+export interface QuerySort {
+  field: string;
+  direction: 'asc' | 'desc';
+  type: string;
+}

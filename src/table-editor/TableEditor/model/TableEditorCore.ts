@@ -246,17 +246,7 @@ export class TableEditorCore {
       where: this.filters.hasActiveFilters
         ? this.filters.buildCurrentWhereClause()
         : null,
-      orderBy: this.sorts.serializeToViewSorts().map((s) => {
-        const field = stripDataFieldPrefix(s.field);
-        const col = this._schemaContext.allColumns.find(
-          (c) => c.field === s.field,
-        );
-        return {
-          field,
-          direction: s.direction,
-          ...(col && { type: col.fieldType }),
-        };
-      }),
+      orderBy: this.sorts.serializeToQuerySorts(),
       search: this.search.debouncedQuery,
       first: this._pageSize,
       after,

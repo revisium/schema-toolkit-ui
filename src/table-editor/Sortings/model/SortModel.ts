@@ -2,8 +2,9 @@ import { makeAutoObservable } from 'mobx';
 import { createRowModel } from '@revisium/schema-toolkit';
 import { ensureReactivityProvider } from '../../../lib/initReactivity.js';
 import type { ColumnSpec } from '../../Columns/model/types.js';
+import { stripDataFieldPrefix } from '../../TableEditor/model/SchemaContext.js';
 import { SORT_SCHEMA } from './sortSchema.js';
-import type { SortEntry, ViewSort } from './types.js';
+import type { SortEntry, ViewSort, QuerySort } from './types.js';
 
 type SortRowModel = ReturnType<typeof createRowModel<typeof SORT_SCHEMA>>;
 type SortRootNode = SortRowModel['root'];
@@ -209,6 +210,15 @@ export class SortModel {
     return this.sorts.map((sort) => ({
       field: sort.field,
       direction: sort.direction,
+    }));
+  }
+
+  serializeToQuerySorts(): QuerySort[] {
+    const lookup = this._fieldLookup;
+    return this.sorts.map((sort) => ({
+      field: stripDataFieldPrefix(sort.field),
+      direction: sort.direction,
+      type: lookup.get(sort.field)?.fieldType ?? 'String',
     }));
   }
 
