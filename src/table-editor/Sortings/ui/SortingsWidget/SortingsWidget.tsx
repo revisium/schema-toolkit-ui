@@ -118,7 +118,7 @@ export const SortingsWidget = observer(
                   )}
                   {model.hasSorts && (
                     <CopyJsonPopover
-                      data={model.serializeToViewSorts()}
+                      data={model.serializeToQuerySorts()}
                       tooltipContent="Copy sort JSON"
                       testId="sort-copy-json"
                     />
