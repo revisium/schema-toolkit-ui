@@ -80,6 +80,16 @@ describe('SortModel', () => {
     ]);
   });
 
+  it('serializeToQuerySorts includes field type', () => {
+    model.addSort('name');
+    model.addSort('age', 'desc');
+    const result = model.serializeToQuerySorts();
+    expect(result).toEqual([
+      { field: 'name', direction: 'asc', type: 'String' },
+      { field: 'age', direction: 'desc', type: 'Number' },
+    ]);
+  });
+
   it('applyViewSorts restores sorts', () => {
     model.applyViewSorts([
       { field: 'age', direction: 'desc' },
