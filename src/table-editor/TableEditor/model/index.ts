@@ -12,6 +12,7 @@ export type {
   SystemFields,
   TableMetadata,
   TableQuery,
+  OrderByEntry,
   FetchRowsResult,
   CellPatch,
   CellPatchResult,

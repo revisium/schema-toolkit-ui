@@ -200,7 +200,42 @@ describe('TableEditorCore', () => {
       await flushMicrotasks();
       expect(dataSource.fetchLog.length).toBeGreaterThan(initialFetchCount);
       const lastQuery = dataSource.fetchLog.at(-1);
-      expect(lastQuery?.orderBy).toEqual([{ field: 'name', direction: 'asc' }]);
+      expect(lastQuery?.orderBy).toEqual([
+        { field: 'name', direction: 'asc', type: 'String' },
+      ]);
+    });
+
+    it('passes correct type for number field sort', async () => {
+      const { core, dataSource } = await createCore();
+      core.sorts.addSort('data.age');
+      core.sorts.apply();
+      await flushMicrotasks();
+      const lastQuery = dataSource.fetchLog.at(-1);
+      expect(lastQuery?.orderBy).toEqual([
+        { field: 'age', direction: 'asc', type: 'Number' },
+      ]);
+    });
+
+    it('passes correct type for boolean field sort', async () => {
+      const { core, dataSource } = await createCore();
+      core.sorts.addSort('data.active');
+      core.sorts.apply();
+      await flushMicrotasks();
+      const lastQuery = dataSource.fetchLog.at(-1);
+      expect(lastQuery?.orderBy).toEqual([
+        { field: 'active', direction: 'asc', type: 'Boolean' },
+      ]);
+    });
+
+    it('passes correct type for system field sort', async () => {
+      const { core, dataSource } = await createCore();
+      core.sorts.addSort('createdAt');
+      core.sorts.apply();
+      await flushMicrotasks();
+      const lastQuery = dataSource.fetchLog.at(-1);
+      expect(lastQuery?.orderBy).toEqual([
+        { field: 'createdAt', direction: 'asc', type: 'DateTime' },
+      ]);
     });
   });
 
