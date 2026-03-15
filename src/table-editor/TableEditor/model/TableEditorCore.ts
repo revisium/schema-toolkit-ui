@@ -246,11 +246,7 @@ export class TableEditorCore {
       where: this.filters.hasActiveFilters
         ? this.filters.buildCurrentWhereClause()
         : null,
-      orderBy: this.sorts.serializeToQuerySorts().map((s) => ({
-        field: stripDataFieldPrefix(s.field),
-        direction: s.direction,
-        type: s.type,
-      })),
+      orderBy: this.sorts.serializeToQuerySorts(),
       search: this.search.debouncedQuery,
       first: this._pageSize,
       after,

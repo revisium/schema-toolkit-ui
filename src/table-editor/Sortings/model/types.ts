@@ -10,6 +10,6 @@ export interface ViewSort {
 
 export interface QuerySort {
   field: string;
-  direction: string;
+  direction: 'asc' | 'desc';
   type: string;
 }

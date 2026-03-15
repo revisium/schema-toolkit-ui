@@ -80,13 +80,25 @@ describe('SortModel', () => {
     ]);
   });
 
-  it('serializeToQuerySorts includes field type', () => {
-    model.addSort('name');
-    model.addSort('age', 'desc');
-    const result = model.serializeToQuerySorts();
+  it('serializeToQuerySorts includes field type and strips data prefix', () => {
+    const m = new SortModel();
+    m.init([
+      col({ field: 'data.name' }),
+      col({ field: 'data.age', fieldType: FilterFieldType.Number }),
+      col({
+        field: 'createdAt',
+        isSystem: true,
+        fieldType: FilterFieldType.DateTime,
+      }),
+    ]);
+    m.addSort('data.name');
+    m.addSort('data.age', 'desc');
+    m.addSort('createdAt');
+    const result = m.serializeToQuerySorts();
     expect(result).toEqual([
       { field: 'name', direction: 'asc', type: 'String' },
       { field: 'age', direction: 'desc', type: 'Number' },
+      { field: 'createdAt', direction: 'asc', type: 'DateTime' },
     ]);
   });
 
